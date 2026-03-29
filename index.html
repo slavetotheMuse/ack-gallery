@@ -3223,12 +3223,10 @@
       border-radius: 0;
       overflow: visible;
       filter: none !important;
-      /* Safari fix: flatten 3D context to prevent compositing blank-out */
+      /* Flatten 3D context — prevents Safari/Chrome mobile compositing blank-out */
       -webkit-transform-style: flat;
       transform-style: flat;
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-      will-change: transform, opacity;
+      will-change: transform;
       /* transform set inline by JS — must not be overridden */
       transition: transform 1.1s cubic-bezier(0.22, 0.61, 0.36, 1),
                   opacity 0.5s ease;
@@ -3241,24 +3239,13 @@
       overflow: visible;
       animation-play-state: paused;
       outline: none;
-      /* Safari fix: flatten 3D and force GPU layer for image visibility */
+      /* Flatten 3D — the parent preserve-3d causes compositing issues with scaled transforms */
       -webkit-transform-style: flat;
       transform-style: flat;
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-      -webkit-transform: translateZ(0);
       box-shadow:
         inset 0 0 0 0.5px rgba(220,150,50,0.35),
         0 4px 12px rgba(0,0,0,0.5),
         0 12px 28px rgba(0,0,0,0.25);
-    }
-    /* Safari: force GPU compositing on focused image to prevent disappearing */
-    .node-graph-inner.focus-mode .node-card.focused .node-preview img,
-    .node-graph-inner.focus-mode .node-card.focused .node-preview video {
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
     }
     /* C4D viewport corner ticks — tiny fixed-size marks */
     .node-frame-ticks {
@@ -14698,14 +14685,6 @@
             _focusImg.src = _origSrc;
           }
         }
-        // Safari fix: force GPU compositing layer and repaint for image visibility
-        if (_focusImg) {
-          _focusImg.style.webkitTransform = 'translateZ(0)';
-          _focusImg.style.transform = 'translateZ(0)';
-          // Safari sometimes needs a forced reflow after transform changes
-          void _focusImg.offsetHeight;
-        }
-
         // Swap thumbnail for full-resolution image
         const artData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
         const _isSpinCoinFocus = artData && artData.spinCoin;
@@ -14810,18 +14789,53 @@
               if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
             };
             if (artData && artData.fullRes) {
-              // On mobile, skip heavy fullRes — keep thumbnail crisp and immediate
-              if (_isMobileFocus) {
+              const _fr = artData.fullRes;
+              const _isRemoteFullRes = _fr.startsWith('http://') || _fr.startsWith('https://');
+              const _isLocalFullRes = !_isRemoteFullRes;
+
+              // Strategy: remote URLs (arweave, IPFS) → load directly
+              // Local relative paths → likely not deployed (too large); try loading
+              //   but also try a higher-res CDN version of the thumbnail as fallback
+              if (_isRealMobile && _isLocalFullRes) {
+                // Real mobile + local fullRes (probably 404) → try ?w=800 of thumb instead
+                if (thumbSrc.includes('?w=')) {
+                  const mobileHiRes = thumbSrc.replace(/\?w=\d+/, '?w=800');
+                  const mp = new Image();
+                  mp.onload = () => { nodeImg.src = mobileHiRes; _clearLoading(); };
+                  mp.onerror = _clearLoading;
+                  mp.src = mobileHiRes;
+                  setTimeout(_clearLoading, 5000);
+                } else {
+                  _clearLoading();
+                }
+              } else if (_isLocalFullRes && !thumbSrc.includes('?w=')) {
+                // Local fullRes + local thumbnail (no CDN) — fullRes probably not deployed
+                // Show thumbnail immediately, attempt fullRes in background without dimming
                 _clearLoading();
+                const bgPre = new Image();
+                bgPre.onload = () => { nodeImg.src = _fr; };
+                bgPre.src = _fr;
               } else {
-              const preloader = new Image();
-              preloader.onload = () => { nodeImg.src = artData.fullRes; _clearLoading(); };
-              preloader.onerror = _clearLoading;
-              preloader.src = artData.fullRes;
-              setTimeout(_clearLoading, 8000);
+                // Remote fullRes (arweave/IPFS) or CDN thumbnail — try loading
+                const preloader = new Image();
+                preloader.onload = () => { nodeImg.src = _fr; _clearLoading(); };
+                preloader.onerror = () => {
+                  // fullRes failed (404 or CORS) — try higher-res CDN thumb as fallback
+                  if (thumbSrc.includes('?w=')) {
+                    const fallbackSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
+                    const fb = new Image();
+                    fb.onload = () => { nodeImg.src = fallbackSrc; _clearLoading(); };
+                    fb.onerror = _clearLoading;
+                    fb.src = fallbackSrc;
+                  } else {
+                    _clearLoading();
+                  }
+                };
+                preloader.src = _fr;
+                setTimeout(_clearLoading, 8000);
               }
             } else if (thumbSrc.includes('?w=')) {
-              let fullResSrc = thumbSrc.replace(/\?w=\d+/, _isMobileFocus ? '?w=600' : '?w=1200');
+              let fullResSrc = thumbSrc.replace(/\?w=\d+/, _isRealMobile ? '?w=800' : '?w=1400');
               const preloader = new Image();
               preloader.onload = () => { nodeImg.src = fullResSrc; _clearLoading(); };
               preloader.onerror = _clearLoading;
