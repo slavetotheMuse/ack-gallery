@@ -401,6 +401,18 @@
       color: #ffa500;
       font-weight: 500;
     }
+    /* Onboarding pulse — collection titles light up orange randomly */
+    @keyframes onboardPulse {
+      0%   { color: inherit; text-shadow: none; }
+      30%  { color: #ffa500; text-shadow: 0 0 6px rgba(255,165,0,0.3); }
+      100% { color: inherit; text-shadow: none; }
+    }
+    .obj-row-collection.onboard-pulse .obj-label {
+      animation: onboardPulse 0.8s ease-out;
+    }
+    .obj-row-collection.onboard-pulse .obj-icon {
+      animation: onboardPulse 0.8s ease-out;
+    }
     .obj-section-label {
       padding: 4px 8px;
       border-bottom: 1px solid rgba(50,50,50,0.4);
@@ -969,108 +981,190 @@
       overflow: hidden;
     }
 
-    /* ── Connect Wallet Node ── */
-    .wallet-node {
-      position: fixed;
-      bottom: 12px;
-      right: 24px;
-      z-index: 21;
-      cursor: pointer;
-      pointer-events: auto;
-      transition: transform 0.3s ease, filter 0.3s ease;
+    /* ── Nav wallet link states ── */
+    .nav-wallet-link.wallet-connected {
+      color: rgba(50,205,50,0.6);
     }
-    .wallet-node:hover { transform: scale(1.04); filter: brightness(1.15); }
-    .wallet-node-body {
-      width: 120px;
-      height: 52px;
-      background: rgba(18,18,22,0.92);
-      border: 1px solid rgba(120,180,255,0.18);
-      border-radius: 4px;
+    .nav-wallet-link.wallet-connected:hover {
+      color: rgba(50,205,50,0.85);
+    }
+    .nav-wallet-link.wallet-connected::after {
+      background: rgba(50,205,50,0.5);
+    }
+
+    /* ── Salesbot — minimized dot + expandable feed ── */
+    .salesbot-node {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      z-index: 200;
+      transition: opacity 0.5s ease;
+    }
+    .salesbot-node.dimmed { opacity: 0.12; pointer-events: none; }
+    .salesbot-dot-trigger {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(60,60,60,0.6);
+      cursor: pointer;
+      transition: all 0.3s ease;
       position: relative;
-      overflow: hidden;
+    }
+    .salesbot-dot-trigger.live {
+      background: rgba(50,205,50,0.5);
+      box-shadow: 0 0 8px rgba(50,205,50,0.3);
+    }
+    .salesbot-dot-trigger:hover {
+      transform: scale(1.5);
+      background: rgba(50,205,50,0.7);
+    }
+    @keyframes salesDotPing {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+    .salesbot-dot-trigger.ping::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      background: rgba(50,205,50,0.4);
+      animation: salesDotPing 1.5s ease-out;
+    }
+    /* Expanded panel */
+    .salesbot-panel {
+      position: absolute;
+      bottom: 16px;
+      left: 0;
+      width: 180px;
+      background: rgba(18,16,20,0.95);
+      border: 1px solid rgba(50,50,50,0.6);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(8px) scale(0.95);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    .salesbot-panel.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .salesbot-panel-header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 0 12px rgba(120,180,255,0.06), inset 0 0 20px rgba(120,180,255,0.03);
-    }
-    .wallet-node-body.connected {
-      border-color: rgba(50,205,50,0.3);
-      box-shadow: 0 0 12px rgba(50,205,50,0.08), inset 0 0 20px rgba(50,205,50,0.03);
-    }
-    .wallet-node-icon {
-      width: 16px;
-      height: 16px;
-      position: relative;
-    }
-    .wallet-node-icon svg { width: 100%; height: 100%; }
-    .wallet-node-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.4rem;
-      letter-spacing: 0.1em;
-      color: rgba(120,180,255,0.7);
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 7px;
+      color: rgba(180,180,180,0.6);
+      letter-spacing: 0.5px;
       text-transform: uppercase;
+    }
+    .salesbot-panel-close {
+      cursor: pointer;
+      color: rgba(150,150,150,0.5);
+      font-size: 9px;
+    }
+    .salesbot-panel-close:hover { color: rgba(200,200,200,0.8); }
+    .salesbot-feed {
+      min-height: 20px;
+      max-height: 160px;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .salesbot-feed::-webkit-scrollbar { display: none; }
+    .salesbot-feed-empty {
+      font-size: 6.5px;
+      color: rgba(120,120,120,0.5);
+      text-align: center;
+      padding: 4px 0;
+    }
+    .salesbot-sale {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(50,50,50,0.3);
+      cursor: pointer;
+    }
+    .salesbot-sale:last-child { border-bottom: none; }
+    .salesbot-sale:hover { background: rgba(50,205,50,0.05); }
+    .salesbot-sale-thumb {
+      width: 22px; height: 22px;
+      border-radius: 2px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .salesbot-sale-info { flex: 1; min-width: 0; }
+    .salesbot-sale-title {
+      font-size: 6.5px;
+      color: rgba(200,200,200,0.8);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .wallet-node-body.connected .wallet-node-label { color: rgba(50,205,50,0.7); }
-    .wallet-node-port {
-      position: absolute;
-      left: -4px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: rgba(120,180,255,0.4);
-      border: 1px solid rgba(120,180,255,0.2);
-      z-index: 2;
+    .salesbot-sale-price {
+      font-size: 7px;
+      color: rgba(50,205,50,0.8);
+      font-weight: 600;
     }
-    .wallet-node-body.connected .wallet-node-port {
-      background: rgba(50,205,50,0.5);
-      border-color: rgba(50,205,50,0.3);
+    .salesbot-sale-time {
+      font-size: 5.5px;
+      color: rgba(120,120,120,0.5);
     }
-    /* Jolt wire animation from motherboard to wallet */
-    .wallet-jolt-wire {
+    /* Toast notification — slides up from bottom-left */
+    .salesbot-toast {
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 19;
+      bottom: 32px;
+      left: 16px;
+      background: rgba(18,16,20,0.95);
+      border: 1px solid rgba(50,205,50,0.3);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 201;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.4s ease;
+      pointer-events: auto;
+      cursor: pointer;
+      max-width: 220px;
     }
-    .wallet-jolt-wire path {
-      fill: none;
-      stroke: rgba(120,180,255,0.6);
-      stroke-width: 1.5;
-      stroke-linecap: round;
-      stroke-dasharray: 200;
-      stroke-dashoffset: 200;
+    .salesbot-toast.show {
+      opacity: 1;
+      transform: translateY(0);
     }
-    .wallet-jolt-wire.active path {
-      animation: walletJolt 0.6s ease-out forwards;
-      filter: drop-shadow(0 0 4px rgba(120,180,255,0.5));
+    .salesbot-toast-thumb {
+      width: 28px; height: 28px;
+      border-radius: 3px;
+      object-fit: cover;
+      flex-shrink: 0;
     }
-    .wallet-jolt-wire.connected path {
-      stroke: rgba(50,205,50,0.4);
-      stroke-dashoffset: 0;
-      filter: drop-shadow(0 0 3px rgba(50,205,50,0.3));
+    .salesbot-toast-info { flex: 1; }
+    .salesbot-toast-label {
+      font-size: 5.5px;
+      color: rgba(50,205,50,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    @keyframes walletJolt {
-      0% { stroke-dashoffset: 200; stroke: rgba(120,180,255,0.8); filter: drop-shadow(0 0 8px rgba(120,180,255,0.8)); }
-      50% { stroke: rgba(200,220,255,0.9); filter: drop-shadow(0 0 12px rgba(200,220,255,0.6)); }
-      100% { stroke-dashoffset: 0; stroke: rgba(50,205,50,0.4); filter: drop-shadow(0 0 3px rgba(50,205,50,0.3)); }
+    .salesbot-toast-title {
+      font-size: 7px;
+      color: rgba(220,220,220,0.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    /* PCB traces on wallet node body */
-    .wallet-node-traces {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      opacity: 0.4;
+    .salesbot-toast-price {
+      font-size: 8px;
+      color: rgba(50,205,50,0.9);
+      font-weight: 700;
     }
-    /* Fade wallet node during focus mode — toggled via JS */
-    .wallet-node.dimmed { opacity: 0.12; pointer-events: none; transition: opacity 0.5s; }
 
     /* Master brain node at top */
     .master-node {
@@ -1441,14 +1535,64 @@
     .node-card.servant-coin-node.focused .node-port.port-out { display: block !important; }
     .node-card.servant-coin-node .node-title-tag { text-align: center; opacity: 0; transition: opacity 0.25s ease; }
     .node-card.servant-coin-node:hover .node-title-tag { opacity: 1; }
-    /* Focused servant coin — crisp rendering + subtle glow */
+    /* Focused servant coin — paused spin, flat crisp face with coin depth */
     .node-card.servant-coin-node.focused .servant-coin-wrap {
-      filter: drop-shadow(0 0 18px rgba(147,0,2,0.35)) drop-shadow(0 0 6px rgba(0,0,0,0.4));
-      image-rendering: -webkit-optimize-contrast;
+      filter: drop-shadow(0 0 20px rgba(147,0,2,0.3)) drop-shadow(0 0 8px rgba(0,0,0,0.5));
+      perspective: none;
     }
-    .node-card.servant-coin-node.focused .servant-coin-face img,
-    .node-card.servant-coin-node.focused .servant-coin-back img {
-      image-rendering: -webkit-optimize-contrast;
+    .node-card.servant-coin-node.focused .servant-coin {
+      animation: none !important;
+      transform: rotateY(0deg);
+      transform-style: flat;
+    }
+    .node-card.servant-coin-node.focused .servant-coin-face {
+      backface-visibility: visible;
+    }
+    .node-card.servant-coin-node.focused .servant-coin-face img {
+      image-rendering: auto;
+    }
+    .node-card.servant-coin-node.focused .servant-coin-back {
+      display: none;
+    }
+    /* Coin rim / depth ring — simulates physical coin edge */
+    .servant-coin-depth-ring {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 2;
+      box-shadow:
+        inset 0 0 0 3px rgba(160,130,80,0.35),
+        inset 0 0 0 5px rgba(100,75,40,0.15),
+        inset 0 2px 4px rgba(255,220,140,0.12),
+        inset 0 -3px 6px rgba(0,0,0,0.25),
+        0 4px 12px rgba(0,0,0,0.4),
+        0 1px 3px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    .node-card.servant-coin-node.focused .servant-coin-depth-ring {
+      opacity: 1;
+    }
+    /* Metallic rim highlight — top edge catch light */
+    .servant-coin-rim-highlight {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 3;
+      background: linear-gradient(
+        170deg,
+        rgba(255,230,160,0.15) 0%,
+        transparent 30%,
+        transparent 70%,
+        rgba(0,0,0,0.1) 100%
+      );
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    .node-card.servant-coin-node.focused .servant-coin-rim-highlight {
+      opacity: 1;
     }
 
     /* Salon layout: thumbnails fill their node entirely */
@@ -4314,6 +4458,18 @@
       .collections-grid { columns: 2; column-gap: 30px; }
       .collection-cell { margin-bottom: 36px; }
     }
+    @keyframes focusPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.75; }
+    }
+    @keyframes glitchScanDrift {
+      0% { transform: translateY(-100px); }
+      100% { transform: translateY(100px); }
+    }
+    @keyframes chromaBleedPulse {
+      0%, 100% { opacity: 0.05; }
+      50% { opacity: 0.2; }
+    }
   </style>
 </head>
 <body>
@@ -4500,7 +4656,7 @@
       </button>
       <div class="nav-right" id="navRight">
         <a class="nav-link" onclick="toggleCatalogOM()">Collections</a>
-        <a class="nav-link" onclick="openObjectManager()">Objects</a>
+        <a class="nav-link nav-wallet-link" id="navWalletLink" onclick="handleNavWallet()">Connect Wallet</a>
         <div class="about-dropdown" id="aboutDropdown">
           <button class="nav-link" onclick="toggleAbout()">About</button>
           <div class="about-panel">
@@ -4730,32 +4886,21 @@
     </div>
   </div>
 
-  <!-- Connect Wallet Node -->
-  <div class="wallet-node" id="walletNode">
-    <div class="wallet-node-body" id="walletNodeBody">
-      <div class="wallet-node-port" id="walletPort"></div>
-      <!-- PCB trace decoration -->
-      <svg class="wallet-node-traces" viewBox="0 0 120 52" preserveAspectRatio="none">
-        <line x1="0" y1="14" x2="35" y2="14" stroke="rgba(120,180,255,0.15)" stroke-width="0.5"/>
-        <line x1="85" y1="14" x2="120" y2="14" stroke="rgba(120,180,255,0.15)" stroke-width="0.5"/>
-        <line x1="0" y1="38" x2="35" y2="38" stroke="rgba(120,180,255,0.12)" stroke-width="0.5"/>
-        <line x1="85" y1="38" x2="120" y2="38" stroke="rgba(120,180,255,0.12)" stroke-width="0.5"/>
-        <polyline points="20,14 30,26 20,38" fill="none" stroke="rgba(120,180,255,0.08)" stroke-width="0.4"/>
-        <polyline points="100,14 90,26 100,38" fill="none" stroke="rgba(120,180,255,0.08)" stroke-width="0.4"/>
-        <line x1="0" y1="14" x2="35" y2="14" stroke="rgba(120,180,255,0.3)" stroke-width="0.5" stroke-dasharray="3 5" style="animation:currentFlow 2s linear infinite"/>
-        <line x1="85" y1="38" x2="120" y2="38" stroke="rgba(120,180,255,0.3)" stroke-width="0.5" stroke-dasharray="3 5" style="animation:currentFlowReverse 2s linear infinite"/>
-      </svg>
-      <div class="wallet-node-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(120,180,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
-          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
-          <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
-        </svg>
+  <!-- Wallet node removed — connect wallet is now integrated into the nav bar -->
+
+  <!-- Salesbot — minimized dot + expandable feed -->
+  <div class="salesbot-node" id="salesbotNode" style="opacity:0;">
+    <div class="salesbot-dot-trigger" id="salesbotDot" title="Sales Feed"></div>
+    <div class="salesbot-panel" id="salesbotPanel">
+      <div class="salesbot-panel-header">
+        <span>Sales_Feed</span>
+        <span class="salesbot-panel-close" id="salesbotClose">✕</span>
       </div>
-      <span class="wallet-node-label" id="walletLabel">CONNECT</span>
+      <div class="salesbot-feed" id="salesbotFeed">
+        <div class="salesbot-feed-empty">monitoring...</div>
+      </div>
     </div>
   </div>
-  <svg class="wallet-jolt-wire" id="walletJoltWire"><path d=""/></svg>
 
   <!-- Detail View Overlay -->
   <div class="detail-overlay" id="detailOverlay">
@@ -4824,11 +4969,7 @@
     (function hoistMasterNode() {
       const mn = document.getElementById('masterNode');
       if (mn) document.body.appendChild(mn);
-      // Also hoist wallet node and jolt wire to body level
-      const wn = document.getElementById('walletNode');
-      if (wn) document.body.appendChild(wn);
-      const jw = document.getElementById('walletJoltWire');
-      if (jw) document.body.appendChild(jw);
+      // (wallet node removed — connect wallet is now in nav bar)
     })();
 
     // ═══════════════════════════════════════════════════════════════
@@ -5177,69 +5318,22 @@
       };
     })();
 
-    // ── Wallet Node Interaction (must be after ACK_CHAIN) ──
-    (function initWalletNode() {
-      var walletNode = document.getElementById('walletNode');
-      var walletBody = document.getElementById('walletNodeBody');
-      var walletLabel = document.getElementById('walletLabel');
-      var walletPort = document.getElementById('walletPort');
-      var joltWire = document.getElementById('walletJoltWire');
-      if (!walletNode || !walletBody) return;
+    // ── Nav Wallet Link (replaces old bulky wallet node) ──
+    (function initNavWallet() {
+      var navLink = document.getElementById('navWalletLink');
+      if (!navLink) return;
 
-      function drawJoltWire(connected) {
-        var masterPort = document.getElementById('masterPort');
-        if (!masterPort || !walletPort || !joltWire) return;
-        var mp = masterPort.getBoundingClientRect();
-        var wp = walletPort.getBoundingClientRect();
-        var sx = mp.left + mp.width / 2;
-        var sy = mp.top + mp.height / 2;
-        var ex = wp.left + wp.width / 2;
-        var ey = wp.top + wp.height / 2;
-        var midY = (sy + ey) / 2;
-        var d = 'M' + sx + ',' + sy + ' C' + sx + ',' + midY + ' ' + ex + ',' + midY + ' ' + ex + ',' + ey;
-        var path = joltWire.querySelector('path');
-        if (path) path.setAttribute('d', d);
-        joltWire.classList.remove('active', 'connected');
-        void joltWire.offsetWidth;
-        if (connected) {
-          joltWire.classList.add('active');
-          setTimeout(function() { joltWire.classList.add('connected'); }, 650);
-        }
-      }
-
-      function updateWalletUI(addr) {
+      function updateNavWalletUI(addr) {
         if (addr) {
-          walletBody.classList.add('connected');
-          walletLabel.textContent = addr.endsWith('.eth') ? addr : (addr.slice(0, 5) + '...' + addr.slice(-3));
-          var svgEl = walletBody.querySelector('.wallet-node-icon svg');
-          if (svgEl) svgEl.setAttribute('stroke', 'rgba(50,205,50,0.6)');
-          drawJoltWire(true);
+          navLink.classList.add('wallet-connected');
+          navLink.textContent = 'My Bags';
         } else {
-          walletBody.classList.remove('connected');
-          walletLabel.textContent = 'CONNECT';
-          joltWire.classList.remove('active', 'connected');
-          var svgEl2 = walletBody.querySelector('.wallet-node-icon svg');
-          if (svgEl2) svgEl2.setAttribute('stroke', 'rgba(120,180,255,0.6)');
+          navLink.classList.remove('wallet-connected');
+          navLink.textContent = 'Connect Wallet';
         }
       }
 
-      walletNode.addEventListener('click', function(ev) {
-        ev.stopPropagation();
-        if (ACK_CHAIN.getConnectedWallet()) {
-          ACK_CHAIN.disconnectWallet();
-        } else {
-          ACK_CHAIN.connectWallet();
-        }
-      });
-
-      ACK_CHAIN.onWalletChange(updateWalletUI);
-
-      window.addEventListener('resize', function() {
-        if (ACK_CHAIN.getConnectedWallet()) {
-          drawJoltWire(false);
-          joltWire.classList.add('connected');
-        }
-      });
+      ACK_CHAIN.onWalletChange(updateNavWalletUI);
     })();
 
     // Collections Data
@@ -5405,7 +5499,7 @@
           description: "servants of the Muse — 69 unique 1-of-1 servant coins by AlphaCentauriKid. Each coin is a token of devotion to the Muse, minted on Ethereum.",
           token: "ERC-721", chain: "Ethereum", contract: "0xd3f9551e9bc926cc180ac8d3e27364f4081df624",
           coinFace: "servant_face_web.png", coinBack: "servant_back_web.png",
-          artworks: (function(){var a=[];for(var t=0;t<69;t++){a.push({title:"servant of the Muse #"+(t+1),image:"servant_face_web.png",backImage:"servant_back_web.png",tokenId:t+1,spinCoin:true})}return a})()
+          artworks: (function(){var a=[];for(var t=0;t<69;t++){a.push({title:"servant of the Muse #"+(t+1),image:"servant_face_web.png",backImage:"servant_back_web.png",fullRes:"servant_muse.mp4",tokenId:t+1,spinCoin:true})}return a})()
         },
         { name: "Opepen Set 030: a.c.k.", image: "opepen/web/opepen_catalog.jpg",
           wallLayout: true,
@@ -8516,12 +8610,29 @@
       }, 300);
       setTimeout(() => { objectManager.classList.add('visible'); }, 500);
 
-      // Phase 2: Show hint to select a guide
+      // Phase 2: Show hint to select a guide + onboarding pulse
       setTimeout(() => {
         introHint.textContent = 'double-click a collection to explore';
         introHint.classList.add('visible');
         // Also make vortex clickable so user can skip
         vortexTarget.classList.add('active');
+
+        // Onboarding pulse: randomly light up collection titles orange
+        const _onboardRows = collectionRows.filter(r => !r.col.comingSoon);
+        let _onboardTimer = null;
+        function _pulseRandom() {
+          if (guideSpawned) { clearInterval(_onboardTimer); return; }
+          const pick = _onboardRows[Math.floor(Math.random() * _onboardRows.length)];
+          if (pick && pick.row) {
+            pick.row.classList.add('onboard-pulse');
+            setTimeout(() => pick.row.classList.remove('onboard-pulse'), 900);
+          }
+        }
+        // Start pulsing every 600ms with slight randomization
+        _onboardTimer = setInterval(_pulseRandom, 700);
+        _pulseRandom(); // first one immediately
+        // Store timer ref so dblclick handlers can clear it
+        window._onboardPulseTimer = _onboardTimer;
       }, 1000);
 
       // ── VORTEX DIRECT CLICK — bypass guides, jump straight into wormhole ──
@@ -8530,6 +8641,9 @@
         vortexTarget.classList.remove('active');
         if (guideSpawned) return; // guide already selected, ignore
         guideSpawned = true; // prevent guide selection after this
+        // Stop onboarding pulse
+        if (window._onboardPulseTimer) { clearInterval(window._onboardPulseTimer); window._onboardPulseTimer = null; }
+        document.querySelectorAll('.onboard-pulse').forEach(el => el.classList.remove('onboard-pulse'));
 
         // Hide UI elements
         introHint.textContent = '';
@@ -8933,6 +9047,9 @@
 
         row.addEventListener('dblclick', function(e) {
           if (guideSpawned) return;
+          // Stop onboarding pulse on first interaction
+          if (window._onboardPulseTimer) { clearInterval(window._onboardPulseTimer); window._onboardPulseTimer = null; }
+          document.querySelectorAll('.onboard-pulse').forEach(el => el.classList.remove('onboard-pulse'));
           const config = COLLECTION_SPAWN_CONFIG[col.name];
 
           if (config && config.type === 'guide') {
@@ -9787,6 +9904,13 @@
             coin.appendChild(face);
             coin.appendChild(back);
             coinWrap.appendChild(coin);
+            // Coin depth elements (visible in focus)
+            const depthRing = document.createElement('div');
+            depthRing.className = 'servant-coin-depth-ring';
+            coinWrap.appendChild(depthRing);
+            const rimHL = document.createElement('div');
+            rimHL.className = 'servant-coin-rim-highlight';
+            coinWrap.appendChild(rimHL);
             thumbnail.appendChild(coinWrap);
           } else if (collection.image) {
             const img = document.createElement('img');
@@ -10012,6 +10136,12 @@
           coin.appendChild(face);
           coin.appendChild(back);
           coinWrap.appendChild(coin);
+          const depthRing2 = document.createElement('div');
+          depthRing2.className = 'servant-coin-depth-ring';
+          coinWrap.appendChild(depthRing2);
+          const rimHL2 = document.createElement('div');
+          rimHL2.className = 'servant-coin-rim-highlight';
+          coinWrap.appendChild(rimHL2);
           thumbnail.appendChild(coinWrap);
         } else if (collection.image) {
           const img = document.createElement('img');
@@ -11990,6 +12120,12 @@
             coin.appendChild(face);
             coin.appendChild(back);
             coinWrap.appendChild(coin);
+            const depthRing3 = document.createElement('div');
+            depthRing3.className = 'servant-coin-depth-ring';
+            coinWrap.appendChild(depthRing3);
+            const rimHL3 = document.createElement('div');
+            rimHL3.className = 'servant-coin-rim-highlight';
+            coinWrap.appendChild(rimHL3);
             preview.appendChild(coinWrap);
             // Use face image for palette extraction
             img = faceImg;
@@ -12699,7 +12835,7 @@
         // ── TEMPTED IN THE GARDEN decoration nodes ──
         var _gardenDecoNodes = [];
         if (collection.name === 'Tempted in the Garden') {
-          const gardenCount = 30; // edition of 30
+          const gardenCount = 12; // reduced from 30 — enough to feel like a garden without overwhelming
           const gardenPositions = [];
           const heroX = nodePositions[0] ? nodePositions[0].x : vpW * 0.3;
           const heroY = nodePositions[0] ? nodePositions[0].y : vpH * 0.15;
@@ -12861,7 +12997,8 @@
                 const aeArt = collection.artworks[aeIdx];
                 const isStarry = aeArt && aeArt.image && aeArt.image.indexOf('lanuit') !== -1;
                 const isLisan = aeArt && aeArt.image && aeArt.image.indexOf('lisan') !== -1;
-                const frameSvg = isStarry ? generateStarryFrame(localW, localH) : (isLisan ? generateLisanFrame(localW, localH) : generateEditionsFrame(localW, localH, pal));
+                const isVoidEngine = aeArt && aeArt.image && aeArt.image.indexOf('void_engine') !== -1;
+                const frameSvg = isStarry ? generateStarryFrame(localW, localH) : (isLisan ? generateLisanFrame(localW, localH) : (isVoidEngine ? generateVoidEngineFrame(localW, localH, pal) : generateEditionsFrame(localW, localH, pal)));
                 frameSvg.style.opacity = '1';
                 frameSvg.style.transition = 'none';
                 frameSvg.dataset.collectionFrame = 'true';
@@ -14255,9 +14392,9 @@
         // Apply focus mode class now that siblings are scattered
         inner.classList.add('focus-mode');
         node.classList.add('focused');
-        // Dim wallet node during focus
-        var _wn = document.getElementById('walletNode');
-        if (_wn) _wn.classList.add('dimmed');
+        // Dim salesbot during focus
+        var _sb = document.getElementById('salesbotNode');
+        if (_sb) _sb.classList.add('dimmed');
         // Allow frame SVGs to extend beyond node bounds without clipping
         var _focusCanvas = inner.closest('.node-graph-canvas');
         if (_focusCanvas) _focusCanvas.style.overflow = 'visible';
@@ -14285,24 +14422,29 @@
             const _onHiresReady = () => {
               _loaded++;
               if (_loaded >= 2) {
-                if (faceImg) faceImg.src = 'servant_face_focus.png';
-                if (backImg) backImg.src = 'servant_back_focus.png';
+                if (faceImg) faceImg.src = 'servant_face.png';
+                if (backImg) backImg.src = 'servant_back.png';
               }
             };
             _fPre.onload = _onHiresReady; _fPre.onerror = _onHiresReady;
             _bPre.onload = _onHiresReady; _bPre.onerror = _onHiresReady;
-            _fPre.src = 'servant_face_focus.png';
-            _bPre.src = 'servant_back_focus.png';
-            // Fallback: swap after 3s even if preload stalls
+            _fPre.src = 'servant_face.png';
+            _bPre.src = 'servant_back.png';
+            // Fallback: swap after 5s even if preload stalls
             setTimeout(() => {
-              if (faceImg && faceImg.src.indexOf('focus') === -1) faceImg.src = 'servant_face_focus.png';
-              if (backImg && backImg.src.indexOf('focus') === -1) backImg.src = 'servant_back_focus.png';
-            }, 3000);
+              if (faceImg && !faceImg.src.endsWith('servant_face.png')) faceImg.src = 'servant_face.png';
+              if (backImg && !backImg.src.endsWith('servant_back.png')) backImg.src = 'servant_back.png';
+            }, 5000);
             // Mark as hi-res swapped for exit restore
             coinWrap.dataset.hiresSwapped = '1';
-            // Slow the spin down for focus — elegant showcase
+            // Pause spin for focus — CSS handles flat rendering via .focused class
             const coinEl = coinWrap.querySelector('.servant-coin');
-            if (coinEl) { coinEl.style.animationDuration = '20s'; }
+            if (coinEl) {
+              // Capture current rotation angle so exit can resume smoothly
+              const cs = window.getComputedStyle(coinEl);
+              const mx = cs.transform;
+              coinEl.dataset.pausedTransform = mx;
+            }
             // Apply servant ritual frame
             setTimeout(() => {
               const localW = parseFloat(node.style.width) || coinWrap.offsetWidth || 300;
@@ -14312,6 +14454,13 @@
               const frameSvg = generateServantFrame(localW, localH, pal, servTitle);
               node.appendChild(frameSvg);
             }, 500);
+            // Click on focused coin → open MP4 in new tab
+            coinWrap.style.cursor = 'pointer';
+            coinWrap._servantClickHandler = function(e) {
+              e.stopPropagation();
+              window.open('servant_muse.mp4', '_blank');
+            };
+            coinWrap.addEventListener('click', coinWrap._servantClickHandler);
           }
         } else {
           const nodeImg = node.querySelector('.node-preview img');
@@ -14585,11 +14734,16 @@
               const localH = img.offsetHeight || preview.offsetHeight || localW;
               const isStarry = artworkData.image && artworkData.image.indexOf('lanuit') !== -1;
               const isLisan = artworkData.image && artworkData.image.indexOf('lisan') !== -1;
+              const isVoidEngine = artworkData.image && artworkData.image.indexOf('void_engine') !== -1;
               if (isStarry) {
                 const frameSvg = generateStarryFrame(localW, localH);
                 node.appendChild(frameSvg);
               } else if (isLisan) {
                 const frameSvg = generateLisanFrame(localW, localH);
+                node.appendChild(frameSvg);
+              } else if (isVoidEngine) {
+                const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['ACK Editions'];
+                const frameSvg = generateVoidEngineFrame(localW, localH, pal);
                 node.appendChild(frameSvg);
               } else {
                 const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['ACK Editions'];
@@ -16814,6 +16968,13 @@
           resolve();
           return;
         }
+        // MP4/video: download directly (can't compress video in canvas)
+        const isMp4 = /\.mp4(\?|$)/i.test(src);
+        if (isMp4) {
+          downloadFile(src, sanitizeFilename(title) + '_x.mp4');
+          resolve();
+          return;
+        }
 
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -17427,6 +17588,42 @@
           els += '<path d="M '+stx+' '+(sty-stR)+' L '+(stx+1.5)+' '+(sty-1.5)+' L '+(stx+stR)+' '+sty+' L '+(stx+1.5)+' '+(sty+1.5)+' L '+stx+' '+(sty+stR)+' L '+(stx-1.5)+' '+(sty+1.5)+' L '+(stx-stR)+' '+sty+' L '+(stx-1.5)+' '+(sty-1.5)+' Z" fill="rgba('+lightR+','+lightG+','+lightB+',0.05)" stroke="rgba('+lightR+','+lightG+','+lightB+',0.14)" stroke-width="0.4"/>';
         }
 
+        // ══════════════════════════════════════════════════════════════════
+        // UNIVERSAL PIANO BLOSSOM FOCUS MODE ENHANCEMENTS
+        // ══════════════════════════════════════════════════════════════════
+
+        // a) Falling petal particles — 4-6 tiny ellipses with slow falling animation
+        const petalCount = 4 + Math.floor(rand()*3);
+        for (let p = 0; p < petalCount; p++) {
+          const px = L - 4 - rand() * 6 + (p % 2) * (W + 10);  // Left or right margin
+          const py = T + H * 0.1 + rand() * H * 0.8;
+          const petalOp = 0.1 + rand() * 0.05;
+          const petalDelay = (p * 0.5).toFixed(1);
+          els += '<ellipse cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" rx="1.2" ry="0.8" fill="rgba('+warmR+','+warmG+','+warmB+','+petalOp+')" opacity="'+petalOp+'"/>';
+        }
+
+        // b) Music staff lines — very faint horizontal parallel lines (5 lines, 2px apart)
+        const staffX = L - 8;
+        const staffY = B - 12;
+        for (let s = 0; s < 5; s++) {
+          const sy = staffY + s * 2;
+          els += '<line x1="'+(staffX)+'" y1="'+sy.toFixed(1)+'" x2="'+(staffX + 20)+'" y2="'+sy.toFixed(1)+'" stroke="rgba('+ar+','+ag+','+ab+',0.04)" stroke-width="0.3"/>';
+        }
+
+        // c) Vine tendril — one delicate curved SVG path along bottom edge
+        const tendrilStartX = L + 10, tendrilStartY = B + 2;
+        let tendrilPath = 'M '+tendrilStartX.toFixed(1)+' '+tendrilStartY.toFixed(1);
+        for (let t = 1; t <= 8; t++) {
+          const tx = tendrilStartX + (t * W * 0.1);
+          const ty = tendrilStartY + Math.sin(t * 0.4) * 4;
+          if (t === 1) {
+            tendrilPath += ' Q '+(tx - W*0.02).toFixed(1)+' '+(ty - 3).toFixed(1)+' '+tx.toFixed(1)+' '+ty.toFixed(1);
+          } else {
+            tendrilPath += ' T '+tx.toFixed(1)+' '+ty.toFixed(1);
+          }
+        }
+        els += '<path d="'+tendrilPath+'" fill="none" stroke="rgba('+warmR+','+warmG+','+warmB+',0.08)" stroke-width="0.5" stroke-linecap="round"/>';
+
       } else {
         // ══════════════════════════════════════════════════════════
         // COLLECTION VIEW — minimal ornamental corners only
@@ -17799,8 +17996,139 @@
       els += `<text x="${L + 2}" y="${B + 8}" style="${textStyle}" fill="${metallic}0.2)">ERC-1155</text>`;
       els += `<text x="${R - 26}" y="${B + 8}" style="${textStyle}" fill="${metallic}0.2)">ETH</text>`;
 
+      // ── Edition counter tick marks (subtle, always visible) ──
+      // 6 evenly-spaced vertical marks along bottom edge inside frame
+      const tickSpacing = (R - L) / 7; // 7 intervals for 6 marks
+      for (let ti = 1; ti < 7; ti++) {
+        const tickX = L + ti * tickSpacing;
+        const tickY = B - 2;
+        els += `<line x1="${tickX.toFixed(1)}" y1="${(tickY - 3).toFixed(1)}" x2="${tickX.toFixed(1)}" y2="${tickY.toFixed(1)}" stroke="${metallic}0.15)" stroke-width="1"/>`;
+      }
+
+      // ── Digital hash fragment (bottom-right, barely visible) ──
+      // Derive first 6 chars of fake hash from RNG
+      const hashVal = ('0x' + Math.floor(rand() * 0xFFFFFF).toString(16).padStart(6, '0')).toUpperCase();
+      const hashStyle = `font-family:'Courier New',monospace;font-size:4px;letter-spacing:0.5px;`;
+      els += `<text x="${R - 2}" y="${B - 1}" text-anchor="end" style="${hashStyle}" fill="${metallic}0.12)">${hashVal}</text>`;
+
       svg.innerHTML = els;
       return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // ── VOID ENGINE FRAME — Ornaments for something thought into existence ──
+    // ══════════════════════════════════════════════════════════════════
+    function generateVoidEngineFrame(imgW, imgH, palette) {
+      // Build the base editions frame first (keeps all existing colors)
+      const baseSvg = generateEditionsFrame(imgW, imgH, palette);
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 18;
+      const W = imgW + pad * 2, H = imgH + pad * 2;
+      const L = pad - 2, T = pad - 2, R = imgW + pad + 2, B = imgH + pad + 2;
+
+      const accent = palette ? palette.accent : 'rgb(24,135,244)';
+      const m = accent.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      const ar = m ? parseInt(m[1]) : 24, ag = m ? parseInt(m[2]) : 135, ab = m ? parseInt(m[3]) : 244;
+      const metallic = `rgba(${ar},${ag},${ab},`;
+
+      // RNG for deterministic placement
+      const rng = (seed) => { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; };
+      const rand = rng(17 * 42 + imgW);
+
+      let ornaments = '';
+
+      // ── Animated style definitions ──
+      ornaments += `<style>
+        @keyframes voidPulse { 0%,100%{opacity:0.15;} 50%{opacity:0.4;} }
+        @keyframes voidOrbit { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+        @keyframes voidDrift { 0%,100%{opacity:0.2;transform:translateY(0);} 50%{opacity:0.5;transform:translateY(-3px);} }
+      </style>`;
+
+      // ── Concentric thought-rings at corners — like ripples from a mind ──
+      const corners = [
+        { cx: L, cy: T },
+        { cx: R, cy: T },
+        { cx: L, cy: B },
+        { cx: R, cy: B }
+      ];
+      corners.forEach((c, ci) => {
+        for (let ring = 0; ring < 3; ring++) {
+          const r = 6 + ring * 5;
+          const op = 0.12 - ring * 0.03;
+          const delay = ci * 0.8 + ring * 0.4;
+          ornaments += `<circle cx="${c.cx}" cy="${c.cy}" r="${r}" fill="none" stroke="${metallic}${op})" stroke-width="0.4" stroke-dasharray="2 3" style="animation:voidPulse ${3 + ring}s ease-in-out ${delay}s infinite;"/>`;
+        }
+      });
+
+      // ── Tiny orbiting dots near top-left and bottom-right — creation in motion ──
+      const orbitCenters = [
+        { cx: L + 6, cy: T + 6 },
+        { cx: R - 6, cy: B - 6 }
+      ];
+      orbitCenters.forEach((oc, oi) => {
+        const orbitR = 10;
+        ornaments += `<g style="transform-origin:${oc.cx}px ${oc.cy}px;animation:voidOrbit ${12 + oi * 4}s linear infinite;">`;
+        ornaments += `<circle cx="${oc.cx + orbitR}" cy="${oc.cy}" r="1" fill="${metallic}0.35)"/>`;
+        ornaments += `<circle cx="${oc.cx - orbitR}" cy="${oc.cy}" r="0.6" fill="${metallic}0.2)"/>`;
+        ornaments += `</g>`;
+      });
+
+      // ── Neural dendrite lines — thought pathways along edges ──
+      // Top edge
+      const dendY = T - 6;
+      for (let i = 0; i < 5; i++) {
+        const x1 = L + 20 + rand() * (R - L - 40);
+        const x2 = x1 + (rand() - 0.5) * 20;
+        const y2 = dendY - 3 - rand() * 6;
+        const op = 0.08 + rand() * 0.12;
+        const dur = 3 + rand() * 4;
+        const del = rand() * 3;
+        ornaments += `<line x1="${x1}" y1="${dendY}" x2="${x2}" y2="${y2}" stroke="${metallic}${op})" stroke-width="0.4" style="animation:voidDrift ${dur}s ease-in-out ${del}s infinite;"/>`;
+        ornaments += `<circle cx="${x2}" cy="${y2}" r="${0.6 + rand() * 0.8}" fill="${metallic}${op * 0.8})" style="animation:voidDrift ${dur}s ease-in-out ${del}s infinite;"/>`;
+      }
+      // Bottom edge
+      const dendYb = B + 6;
+      for (let i = 0; i < 5; i++) {
+        const x1 = L + 20 + rand() * (R - L - 40);
+        const x2 = x1 + (rand() - 0.5) * 20;
+        const y2 = dendYb + 3 + rand() * 6;
+        const op = 0.08 + rand() * 0.12;
+        const dur = 3 + rand() * 4;
+        const del = rand() * 3;
+        ornaments += `<line x1="${x1}" y1="${dendYb}" x2="${x2}" y2="${y2}" stroke="${metallic}${op})" stroke-width="0.4" style="animation:voidDrift ${dur}s ease-in-out ${del}s infinite;"/>`;
+        ornaments += `<circle cx="${x2}" cy="${y2}" r="${0.6 + rand() * 0.8}" fill="${metallic}${op * 0.8})" style="animation:voidDrift ${dur}s ease-in-out ${del}s infinite;"/>`;
+      }
+
+      // ── Void particles — tiny floating motes of creation ──
+      for (let i = 0; i < 10; i++) {
+        const side = Math.floor(rand() * 4); // 0=top, 1=right, 2=bottom, 3=left
+        let px, py;
+        if (side === 0) { px = L + rand() * (R - L); py = T - 4 - rand() * 10; }
+        else if (side === 1) { px = R + 4 + rand() * 10; py = T + rand() * (B - T); }
+        else if (side === 2) { px = L + rand() * (R - L); py = B + 4 + rand() * 10; }
+        else { px = L - 4 - rand() * 10; py = T + rand() * (B - T); }
+        const r = 0.4 + rand() * 1;
+        const dur = 2.5 + rand() * 4;
+        const del = rand() * 5;
+        ornaments += `<circle cx="${px}" cy="${py}" r="${r}" fill="${metallic}0.2)" style="animation:voidPulse ${dur}s ease-in-out ${del}s infinite;"/>`;
+      }
+
+      // ── "VOID ENGINE" text ornament at top center — faint ──
+      const ts = `font-family:'Courier New',monospace;font-size:4.5px;letter-spacing:2px;`;
+      ornaments += `<text x="${(L + R) / 2}" y="${T - 8}" style="${ts}" fill="${metallic}0.15)" text-anchor="middle">VOID ENGINE</text>`;
+
+      // ── "THOUGHT INTO EXISTENCE" faint text at bottom center ──
+      ornaments += `<text x="${(L + R) / 2}" y="${B + 12}" style="${ts}" fill="${metallic}0.12)" text-anchor="middle">THOUGHT INTO EXISTENCE</text>`;
+
+      // Append ornaments to the base SVG
+      const ornamentGroup = document.createElementNS(ns, 'g');
+      ornamentGroup.innerHTML = ornaments;
+      baseSvg.appendChild(ornamentGroup);
+
+      // Rename class for identification
+      baseSvg.classList.add('void-engine-frame');
+
+      return baseSvg;
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -17856,26 +18184,7 @@
       els += `<circle cx="${moonX2}" cy="${moonY2}" r="3" fill="none" stroke="${moon}0.4)" stroke-width="0.4"/>`;
       els += `<circle cx="${moonX2 + 1}" cy="${moonY2 - 0.3}" r="2.5" fill="${dark}0.5)"/>`;
 
-      // ── Sandworm along bottom — sinuous curve ──
-      const wormY = B + 6;
-      const wormStartX = L + 20;
-      const wormEndX = R - 20;
-      const wormMidX = (wormStartX + wormEndX) / 2;
-      // Body — thick undulating path
-      els += `<path d="M${wormStartX},${wormY + 3} Q${wormStartX + 40},${wormY - 8} ${wormMidX - 20},${wormY + 2} T${wormMidX + 30},${wormY - 5} T${wormEndX - 10},${wormY + 4}" fill="none" stroke="${sand}0.45)" stroke-width="3.5" stroke-linecap="round" style="animation:lisanWormUndulate 8s ease-in-out infinite"/>`;
-      // Inner line — segmented body detail
-      els += `<path d="M${wormStartX + 5},${wormY + 3} Q${wormStartX + 42},${wormY - 6} ${wormMidX - 18},${wormY + 2} T${wormMidX + 28},${wormY - 4} T${wormEndX - 15},${wormY + 4}" fill="none" stroke="${spice}0.3)" stroke-width="1" stroke-dasharray="4 3" stroke-linecap="round" style="animation:lisanWormUndulate 8s ease-in-out 0.3s infinite"/>`;
-      // Worm mouth — open tri-jaw at head
-      const headX = wormEndX - 8, headY = wormY + 4;
-      els += `<path d="M${headX},${headY} l6,-4 l-1,4 l1,4 l-6,-4" fill="${sand}0.35)" stroke="${spice}0.5)" stroke-width="0.5"/>`;
-      // Worm segments / rings
-      for (let i = 0; i < 8; i++) {
-        const sx = wormStartX + 15 + i * ((wormEndX - wormStartX - 40) / 8);
-        const sy = wormY + Math.sin(i * 0.8) * 3;
-        els += `<line x1="${sx}" y1="${sy - 2}" x2="${sx}" y2="${sy + 2}" stroke="${sand}0.2)" stroke-width="0.5"/>`;
-      }
-
-      // ── Small sandworm along top — subtle mirror ──
+      // ── Small sandworm along top ──
       const worm2Y = T - 6;
       els += `<path d="M${L + 15},${worm2Y} Q${L + 45},${worm2Y + 5} ${L + 75},${worm2Y - 2} T${L + 110},${worm2Y + 3}" fill="none" stroke="${sand}0.25)" stroke-width="2" stroke-linecap="round" style="animation:lisanWormUndulate 10s ease-in-out 1s infinite"/>`;
       // Small jaw
@@ -17934,6 +18243,13 @@
       els += `<text x="${R - 42}" y="${T - 4}" style="${ts}" fill="${sand}0.25)">ARRAKIS</text>`;
       els += `<text x="${L + 2}" y="${B + 10}" style="${ts}" fill="${blue}0.25)">THE SPICE MUST FLOW</text>`;
       els += `<text x="${R - 32}" y="${B + 10}" style="${ts}" fill="${sand}0.2)">KWISATZ</text>`;
+      // "HADERACK" vertical on right side, H at top descending to K at bottom-right corner meeting KWISATZ
+      const hLetters = ['H','A','D','E','R','A','C','K'];
+      const hSpacing = 7;
+      const hStartY = B - (hLetters.length * hSpacing) + 4;
+      hLetters.forEach((ch, hi) => {
+        els += `<text x="${R + 10}" y="${hStartY + hi * hSpacing}" style="${ts}" fill="${sand}0.2)" text-anchor="middle">${ch}</text>`;
+      });
 
       svg.innerHTML = els;
       return svg;
@@ -18218,6 +18534,48 @@
           const sLen = W * (0.12 + rand() * 0.35);
           const sx = rand() > 0.5 ? L - 5 : R + 5 - sLen;
           els += `<line x1="${sx}" y1="${sy}" x2="${sx + sLen}" y2="${sy}" stroke="rgba(255,0,148,${0.06 + rand() * 0.08})" stroke-width="${0.5 + rand() * 0.8}"/>`;
+        }
+      }
+
+      // ── FOCUS MODE ENHANCEMENTS: Pantone chip, chromatic bleed particles, noise line ──
+      if (focusMode) {
+        // a) Pantone chip — tiny color swatch in bottom-left with white strip
+        els += `<rect x="${L + 2}" y="${B + 4}" width="12" height="8" fill="${ac_(0.3)}" rx="0.5"/>`;
+        els += `<rect x="${L + 2}" y="${B + 4}" width="1.5" height="8" fill="rgba(255,255,255,0.35)"/>`;
+        // Extract Pantone name from title if available
+        const pantoneMatch = title.match(/pantone\s+(\w+)/i);
+        if (pantoneMatch) {
+          const pantoneLabel = pantoneMatch[1].substring(0, 6);
+          els += `<text x="${L + 2}" y="${B + 15}" style="font-family:'Courier New',monospace;font-size:4px;letter-spacing:0.2px;" fill="${ac_(0.15)}">${pantoneLabel}</text>`;
+        }
+
+        // b) Chromatic bleed particles — 6-8 circles along edges with pulse animation
+        const bleedCount = 6 + Math.floor(rand() * 3);
+        for (let i = 0; i < bleedCount; i++) {
+          const edge = i % 4;
+          let bx, by;
+          if (edge === 0) { bx = L + rand() * W; by = T - 4 - rand() * 3; }
+          else if (edge === 1) { bx = R + 4 + rand() * 3; by = T + rand() * H; }
+          else if (edge === 2) { bx = L + rand() * W; by = B + 4 + rand() * 3; }
+          else { bx = L - 4 - rand() * 3; by = T + rand() * H; }
+          const br = 1.5 + rand() * 1.2;
+          const op = 0.05 + rand() * 0.15;
+          els += `<circle cx="${bx}" cy="${by}" r="${br}" fill="${ac_(op)}" style="filter:blur(0.4px);animation:chromaBleedPulse 2.5s ease-in-out infinite;" opacity="${op}"/>`;
+        }
+
+        // c) Noise line — faint horizontal line at bottom with dashed pattern (static)
+        const dashGaps = [];
+        let dashPos = L;
+        while (dashPos < R) {
+          const dashLen = 2 + rand() * 1.5;
+          const gapLen = 1 + rand() * 1.2;
+          dashGaps.push([dashPos, dashLen]);
+          dashPos += dashLen + gapLen;
+        }
+        for (const [dx, dlen] of dashGaps) {
+          if (dx < R) {
+            els += `<line x1="${dx}" y1="${B + 1}" x2="${Math.min(dx + dlen, R)}" y2="${B + 1}" stroke="${ac_(0.06)}" stroke-width="0.35"/>`;
+          }
         }
       }
 
@@ -19006,6 +19364,51 @@
         els += `<line x1="${gx}" y1="${gy - 3}" x2="${gx}" y2="${gy + 3}" stroke="${nCol}0.2)" stroke-width="0.6"/>`;
       }
 
+      // ── FOCUS MODE ENHANCEMENTS: Digital identity tag, glitch scan lines, avatar status indicator ──
+      // a) Digital identity tag — "ID:" label + character name in top-right
+      const charNames = {
+        'timereaper': 'timeReaper',
+        'timreaper': 'timeReaper',
+        'singularity': 'serSingularity',
+        'shady': 'misterShady',
+        'laser': 'laserEyes',
+        'morning': 'morningStar',
+        'star': 'morningStar',
+        'skull': 'skullBoy',
+        'noone': 'noOne',
+        'no one': 'noOne',
+        'pepe': 'cringe pepe',
+        'cringe': 'cringe pepe',
+        'fire': 'fireFace',
+        'greg': 'greg'
+      };
+      let charName = 'unknown';
+      for (const key in charNames) {
+        if (tl.indexOf(key) !== -1) {
+          charName = charNames[key];
+          break;
+        }
+      }
+      const idLabel = `ID:${charName}`;
+      els += `<text x="${R - 2}" y="${T - 2}" text-anchor="end" style="font-family:'Courier New',monospace;font-size:5px;letter-spacing:0.3px;" fill="rgba(${ar},${ag},${ab},0.2)">${idLabel}</text>`;
+
+      // b) Glitch scan lines — 2-3 thin horizontal lines with chromatic aberration effect
+      const scanLineCount = 2 + Math.floor(rand() * 2);
+      for (let s = 0; s < scanLineCount; s++) {
+        const sy = T + 1 + rand() * (H - 2);
+        const sxStart = L + 1;
+        const sxEnd = R - 1;
+        // Red channel offset
+        els += `<line x1="${sxStart + 0.3}" y1="${sy - 0.2}" x2="${sxEnd + 0.3}" y2="${sy - 0.2}" stroke="rgba(${Math.min(255, ar + 80)},${Math.max(0, ag - 60)},${Math.max(0, ab - 60)},0.05)" stroke-width="0.4"/>`;
+        // Blue channel offset
+        els += `<line x1="${sxStart - 0.3}" y1="${sy + 0.2}" x2="${sxEnd - 0.3}" y2="${sy + 0.2}" stroke="rgba(${Math.max(0, ar - 60)},${Math.max(0, ag - 60)},${Math.min(255, ab + 80)},0.05)" stroke-width="0.4"/>`;
+        // Center line with animation reference
+        els += `<line x1="${sxStart}" y1="${sy}" x2="${sxEnd}" y2="${sy}" stroke="rgba(${ar},${ag},${ab},0.08)" stroke-width="0.3" style="animation:glitchScanDrift 4s linear infinite;"/>`;
+      }
+
+      // c) Avatar status indicator — tiny 3px circle in top-left with pulse animation
+      els += `<circle cx="${L + 2}" cy="${T + 2}" r="1.5" fill="rgba(${ar},${ag},${ab},0.4)" style="animation:focusPulse 1.5s ease-in-out infinite;"/>`;
+
       svg.innerHTML = els;
       return svg;
     }
@@ -19087,6 +19490,82 @@
         els += drawKeys(L, T - 7.5, 'right', W);
         els += drawKeys(L - 7.5, T, 'down', H);
         els += drawKeys(R + 1.5, T, 'down', H);
+
+        // ── FOCUS MODE ENHANCEMENT 1: Sound wave lines ──
+        // 3-4 faint sine-wave lines emanating from edges, representing sound escaping the piano
+        const waveCount = 3 + Math.floor(rand() * 2);
+        const soundDrift = Math.random() > 0.5 ? 'left' : 'right';
+        for (let w = 0; w < waveCount; w++) {
+          const amplitude = 1.5 + rand() * 1.2;
+          const frequency = 0.15 + rand() * 0.15;
+          const phase = rand() * Math.PI * 2;
+          const yOffset = T + H * 0.2 + w * H * 0.2 + rand() * H * 0.1;
+          const waveOp = (0.08 + rand() * 0.04).toFixed(2);
+          let wavePath = '';
+          if (soundDrift === 'left') {
+            wavePath = `M${L},${yOffset}`;
+            for (let x = 0; x <= 30; x += 2) {
+              const y = yOffset + Math.sin(x * frequency + phase) * amplitude;
+              wavePath += ` L${L - x},${y}`;
+            }
+          } else {
+            wavePath = `M${R},${yOffset}`;
+            for (let x = 0; x <= 30; x += 2) {
+              const y = yOffset + Math.sin(x * frequency + phase) * amplitude;
+              wavePath += ` L${R + x},${y}`;
+            }
+          }
+          els += `<path d="${wavePath}" fill="none" stroke="${ac_(waveOp)}" stroke-width="0.25" stroke-linecap="round" class="bk-sound-drift"/>`;
+        }
+
+        // ── FOCUS MODE ENHANCEMENT 2: Broken key shards ──
+        // 4-6 tiny rotated angular shapes in frame margins, seeded from title
+        let shardSeed = (ar * 7 + ag * 13 + ab * 3) & 0xFFFF;
+        const shardRand = () => { shardSeed = (shardSeed * 16807 + 11) % 2147483647; return (shardSeed & 0xFFFF) / 0xFFFF; };
+        const shardCount = 4 + Math.floor(shardRand() * 3);
+        for (let s = 0; s < shardCount; s++) {
+          const shardX = rand() > 0.5 ? (L - 2 - shardRand() * 8) : (R + 2 + shardRand() * 8);
+          const shardY = T + H * 0.1 + shardRand() * H * 0.8;
+          const shardW = 2 + shardRand() * 2.5;
+          const shardH = 0.7 + shardRand() * 3.5;
+          const shardAngle = -45 + shardRand() * 90;
+          const shardOp = (0.1 + shardRand() * 0.1).toFixed(2);
+          els += `<rect x="${shardX}" y="${shardY}" width="${shardW}" height="${shardH}" fill="none" stroke="${ac_(shardOp)}" stroke-width="0.35" transform="rotate(${shardAngle},${shardX + shardW/2},${shardY + shardH/2})" class="bk-shard"/>`;
+        }
+
+        // ── FOCUS MODE ENHANCEMENT 3: Title-themed accent ──
+        // Based on artwork title, add ONE subtle thematic element
+        if (tl.indexOf('void') !== -1 || tl.indexOf('darkness') !== -1 || tl.indexOf('demon') !== -1 || tl.indexOf('suffering') !== -1) {
+          // Void/darkness: faint concentric void rings near corner
+          const vx = L - 8, vy = T - 8;
+          els += `<circle cx="${vx}" cy="${vy}" r="6" fill="none" stroke="${ac_(0.09)}" stroke-width="0.3" class="bk-void-ring"/>`;
+          els += `<circle cx="${vx}" cy="${vy}" r="3.5" fill="none" stroke="${ac_(0.06)}" stroke-width="0.25" class="bk-void-ring"/>`;
+        } else if (tl.indexOf('god') !== -1 || tl.indexOf('light') !== -1 || tl.indexOf('beginning') !== -1 || tl.indexOf('fear not') !== -1) {
+          // Light/god: subtle radial glow burst near top
+          const gx = L + W * 0.5, gy = T - 8;
+          for (let g = 0; g < 5; g++) {
+            const angle = (g * Math.PI * 2 / 5) + rand() * 0.2;
+            const len = 5 + rand() * 3;
+            const x1 = gx + Math.cos(angle) * 1;
+            const y1 = gy + Math.sin(angle) * 1;
+            const x2 = gx + Math.cos(angle) * len;
+            const y2 = gy + Math.sin(angle) * len;
+            els += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${ac_(0.08)}" stroke-width="0.3" stroke-linecap="round" class="bk-glow-ray"/>`;
+          }
+        } else if (tl.indexOf('blue') !== -1 || tl.indexOf('bird') !== -1 || tl.indexOf('forest') !== -1) {
+          // Blue/bird/forest: tiny feather-like stroke
+          const fx = R + 4, fy = T - 5;
+          els += `<path d="M${fx},${fy} Q${fx - 2},${fy - 3} ${fx - 1},${fy - 5}" fill="none" stroke="${ac_(0.1)}" stroke-width="0.35" stroke-linecap="round" class="bk-feather"/>`;
+          els += `<path d="M${fx},${fy} L${fx - 1.5},${fy + 4}" fill="none" stroke="${ac_(0.08)}" stroke-width="0.25" stroke-linecap="round" class="bk-feather"/>`;
+        } else if (tl.indexOf('rage') !== -1 || tl.indexOf('fire') !== -1 || tl.indexOf('chaos') !== -1) {
+          // Rage/fire: small flame-like flicker shape
+          const flx = L - 6, fly = B + 4;
+          els += `<path d="M${flx},${fly} Q${flx - 1.5},${fly - 3} ${flx + 0.5},${fly - 5} Q${flx + 1},${fly - 2} ${flx},${fly}" fill="none" stroke="${ac_(0.12)}" stroke-width="0.4" stroke-linecap="round" class="bk-flame"/>`;
+        } else {
+          // Default: single music note symbol (♪) very faintly placed
+          const noteX = R + 5, noteY = T + H * 0.5;
+          els += `<text x="${noteX}" y="${noteY}" font-family="serif" font-size="5" fill="${ac_(0.1)}" text-anchor="middle" class="bk-note">♪</text>`;
+        }
       }
 
       // ══ PER-ARTWORK UNIQUE ELEMENTS ══
@@ -19343,6 +19822,19 @@
           const r = 0.4 + rand() * 0.8;
           els += `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${ac_(0.08 + rand() * 0.06)}"/>`;
         }
+      }
+
+      // Add CSS keyframes for focus mode animations
+      if (focusMode) {
+        els += `<style>
+          @keyframes bkSoundDrift {
+            0% { opacity: 0.08; transform: translateX(0); }
+            50% { opacity: 0.12; }
+            100% { opacity: 0.08; transform: translateX(-2px); }
+          }
+          .bk-sound-drift { animation: bkSoundDrift 8s ease-in-out infinite; }
+          .bk-shard, .bk-void-ring, .bk-glow-ray, .bk-feather, .bk-flame, .bk-note { }
+        </style>`;
       }
 
       svg.innerHTML = els;
@@ -19820,6 +20312,55 @@
           els += `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${ac_(0.08 + rand() * 0.08)}"/>`;
         }
       }
+
+      // ══════════════════════════════════════════════════════════════════
+      // UNIVERSAL WAROTHY ENHANCEMENTS for focus view
+      // ══════════════════════════════════════════════════════════════════
+
+      // a) Ruby slipper sparkle — 4-5 tiny diamond/star shapes along bottom edge
+      for (let i = 0; i < 4 + Math.floor(rand() * 2); i++) {
+        const sx = L + 5 + rand() * (W - 10);
+        const sy = B + 2 + rand() * 3;
+        const sparkleOp = 0.15 + rand() * 0.1;
+        // 4-pointed star
+        const s = 1.2;
+        els += `<polygon points="${sx},${sy-s} ${sx+s*0.4},${sy} ${sx},${sy+s} ${sx-s*0.4},${sy}" fill="${ac_(sparkleOp)}" opacity="${sparkleOp}"/>`;
+        els += `<polygon points="${sx-s*0.6},${sy} ${sx},${sy-s*0.4} ${sx+s*0.6},${sy} ${sx},${sy+s*0.4}" fill="${ac_(sparkleOp*0.6)}" opacity="${sparkleOp*0.6}"/>`;
+      }
+
+      // Add twinkling animation to sparkles
+      if (!document.getElementById('warothy-twinkle-style')) {
+        const style = document.createElement('style');
+        style.id = 'warothy-twinkle-style';
+        style.textContent = `
+          @keyframes twinkle1 { 0%,100% { opacity:0.15; } 50% { opacity:0.25; } }
+          @keyframes twinkle2 { 0%,100% { opacity:0.1; } 50% { opacity:0.2; } }
+          @keyframes twinkle3 { 0%,100% { opacity:0.12; } 50% { opacity:0.22; } }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // b) Yellow brick road hint — very faint dashed line along bottom with 2-3 bricks
+      const goldStroke = `rgba(220,180,50,0.08)`;
+      els += `<line x1="${L + 8}" y1="${B + 1.5}" x2="${R - 8}" y2="${B + 1.5}" stroke="${goldStroke}" stroke-width="0.4" stroke-dasharray="3,2"/>`;
+      // Small brick rectangles
+      for (let i = 0; i < 3; i++) {
+        const bx = L + 10 + i * (W - 20) / 3 + rand() * 5;
+        const by = B + 3;
+        els += `<rect x="${bx}" y="${by}" width="6" height="2.5" rx="0.3" fill="rgba(220,180,50,0.06)" stroke="rgba(220,180,50,0.08)" stroke-width="0.2"/>`;
+      }
+
+      // c) Pop art halftone dots — 6-8 tiny circles in corners at low opacity
+      const cornerOffsets = [[L+3,T+3],[L+3,B-3],[R-3,T+3],[R-3,B-3]];
+      cornerOffsets.forEach(([cx, cy]) => {
+        const dotCount = 1 + Math.floor(rand() * 2);
+        for (let d = 0; d < dotCount; d++) {
+          const dx = cx + (rand() - 0.5) * 8;
+          const dy = cy + (rand() - 0.5) * 8;
+          const dotOp = 0.04 + rand() * 0.04;
+          els += `<circle cx="${dx}" cy="${dy}" r="${0.5 + rand() * 0.5}" fill="${ac_(dotOp)}"/>`;
+        }
+      });
 
       svg.innerHTML = els;
       return svg;
@@ -20794,6 +21335,46 @@
 
       // ═══ FOCUS VIEW ONLY ═══
 
+      // ── Serpent hint — subtle S-curve along left edge ──
+      const serpentCurve = document.createElementNS(ns, 'path');
+      serpentCurve.setAttribute('d', `M${L - 1},${T + 25} Q${L - 4},${T + 35} ${L - 2},${T + 50} Q${L - 3},${T + 65} ${L - 1},${T + 80}`);
+      serpentCurve.setAttribute('stroke', teal(0.08));
+      serpentCurve.setAttribute('stroke-width', '0.6');
+      serpentCurve.setAttribute('fill', 'none');
+      serpentCurve.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(serpentCurve);
+
+      // ── Apple silhouette — tiny circle with stem (top-right margin) ──
+      const appleX = R + 6;
+      const appleY = T - 4;
+      const appleSilhouette = document.createElementNS(ns, 'circle');
+      appleSilhouette.setAttribute('cx', appleX);
+      appleSilhouette.setAttribute('cy', appleY);
+      appleSilhouette.setAttribute('r', '2');
+      appleSilhouette.setAttribute('fill', copper(0.1));
+      svg.appendChild(appleSilhouette);
+      // Tiny stem
+      const appleStem = document.createElementNS(ns, 'line');
+      appleStem.setAttribute('x1', appleX.toFixed(1));
+      appleStem.setAttribute('y1', (appleY - 2).toFixed(1));
+      appleStem.setAttribute('x2', appleX.toFixed(1));
+      appleStem.setAttribute('y2', (appleY - 4).toFixed(1));
+      appleStem.setAttribute('stroke', copper(0.1));
+      appleStem.setAttribute('stroke-width', '0.4');
+      svg.appendChild(appleStem);
+
+      // ── "EDEN" text — faint in bottom-right margin ──
+      const edenText = document.createElementNS(ns, 'text');
+      edenText.setAttribute('x', R - 2);
+      edenText.setAttribute('y', B + 10);
+      edenText.setAttribute('text-anchor', 'end');
+      edenText.setAttribute('font-family', 'JetBrains Mono, monospace');
+      edenText.setAttribute('font-size', '4');
+      edenText.setAttribute('fill', gold(0.08));
+      edenText.setAttribute('letter-spacing', '1.5');
+      edenText.textContent = 'EDEN';
+      svg.appendChild(edenText);
+
       // ── Vine tendrils along edges — organic curling paths ──
       // Top edge vine
       const vineTop = document.createElementNS(ns, 'path');
@@ -21583,7 +22164,7 @@
       const _loSoundBtn = focusedNode.querySelector('#lastOrdersSoundBtn');
       if (_loSoundBtn) _loSoundBtn.remove();
 
-      // Restore servant coin: swap back to low-res images & normal spin speed
+      // Restore servant coin: swap back to low-res images & resume spin, remove click handler
       const _coinWrapExit = focusedNode.querySelector('.servant-coin-wrap');
       if (_coinWrapExit && _coinWrapExit.dataset.hiresSwapped === '1') {
         const _fImg = _coinWrapExit.querySelector('.servant-coin-face img');
@@ -21591,8 +22172,15 @@
         if (_fImg && _fImg.dataset.thumbSrc) _fImg.src = _fImg.dataset.thumbSrc;
         if (_bImg && _bImg.dataset.thumbSrc) _bImg.src = _bImg.dataset.thumbSrc;
         delete _coinWrapExit.dataset.hiresSwapped;
+        // Spin resumes automatically when .focused class is removed (CSS animation: none is gone)
         const _coinEl = _coinWrapExit.querySelector('.servant-coin');
-        if (_coinEl) _coinEl.style.animationDuration = '';
+        if (_coinEl) delete _coinEl.dataset.pausedTransform;
+        // Remove click-to-open-mp4 handler
+        if (_coinWrapExit._servantClickHandler) {
+          _coinWrapExit.removeEventListener('click', _coinWrapExit._servantClickHandler);
+          delete _coinWrapExit._servantClickHandler;
+        }
+        _coinWrapExit.style.cursor = '';
       }
       const nodeImg = focusedNode.querySelector('.node-preview img');
       if (nodeImg && nodeImg.dataset.thumbSrc) {
@@ -21730,9 +22318,9 @@
       const _exitFocusedNode = focusedNode; // capture ref before null
       setTimeout(() => {
         inner.classList.remove('focus-mode');
-        // Undim wallet node
-        var _wn2 = document.getElementById('walletNode');
-        if (_wn2) _wn2.classList.remove('dimmed');
+        // Undim salesbot
+        var _sb2 = document.getElementById('salesbotNode');
+        if (_sb2) _sb2.classList.remove('dimmed');
         // Restore canvas scrolling
         var _unfocusCanvas = inner.closest('.node-graph-canvas');
         if (_unfocusCanvas) _unfocusCanvas.style.overflow = '';
@@ -21810,62 +22398,118 @@
     // motherboard, focus mode, everything.
     // ══════════════════════════════════════════════════════════════
     var _myBagsCollectionIndex = -1; // tracks the injected collection index
+    var _myBagsLoading = false;
 
-    function openObjectManager() {
+    // ── Nav wallet handler: connect if disconnected, open bags if connected ──
+    function handleNavWallet() {
       closeMobileNav();
-
-      // Gather owned artworks from across collections into a single virtual collection
-      // In production this would come from wallet/chain query
-      const ownedRefs = [
-        { collection: 'ACK Editions', title: 'Void Engine' },
-        { collection: 'ACK Editions', title: 'lisan al-gaib' },
-        { collection: 'Broken Keys', title: 'Serendipity' },
-        { collection: 'servants', title: 'servant of the Muse #12' },
-        { collection: 'ACKPFP', title: 'misterShady' },
-        { collection: 'Made these for your girl', title: 'made these for your girl' },
-      ];
-
-      // Build artworks array by looking up real data from COLLECTIONS
-      const bagsArtworks = [];
-      ownedRefs.forEach(ref => {
-        const coll = COLLECTIONS.find(c => c.name === ref.collection);
-        if (!coll || !coll.artworks) return;
-        const art = coll.artworks.find(a => a.title === ref.title);
-        if (!art) return;
-        // Clone the artwork and tag it with source collection
-        const clone = Object.assign({}, art);
-        clone._sourceCollection = ref.collection;
-        // Override description with provenance info
-        clone.description = clone.description || '';
-        bagsArtworks.push(clone);
-      });
-
-      if (bagsArtworks.length === 0) return;
-
-      // Remove any previous "My Bags" virtual collection
-      if (_myBagsCollectionIndex >= 0) {
-        COLLECTIONS.splice(_myBagsCollectionIndex, 1);
-        _myBagsCollectionIndex = -1;
+      var addr = ACK_CHAIN.getConnectedWallet();
+      if (!addr) {
+        // Not connected — trigger wallet connect
+        ACK_CHAIN.connectWallet().then(function(newAddr) {
+          if (newAddr) openMyBags(newAddr);
+        });
+        return;
       }
-
-      // Inject as last collection
-      const bagsCollection = {
-        name: 'My Bags',
-        image: bagsArtworks[0].image,
-        description: 'artlover.eth · 0x7a3b...f29d — connected wallet holdings',
-        token: 'Mixed',
-        chain: 'Ethereum',
-        wallLayout: false,
-        artworks: bagsArtworks,
-        _isMyBags: true  // flag so we can identify it
-      };
-
-      _myBagsCollectionIndex = COLLECTIONS.length;
-      COLLECTIONS.push(bagsCollection);
-
-      // Open through the standard detail path — full node graph experience
-      openDetail(_myBagsCollectionIndex);
+      // Already connected — open bags
+      openMyBags(addr);
     }
+
+    function openMyBags(walletAddr) {
+      if (_myBagsLoading) return;
+      _myBagsLoading = true;
+
+      var shortAddr = ACK_CHAIN.shortAddr(walletAddr);
+      var ackContracts = ACK_CHAIN.getAllACKContracts();
+
+      // Fetch real on-chain holdings
+      ACK_CHAIN.getNFTsForOwner(walletAddr, ackContracts).then(function(ownedNfts) {
+        _myBagsLoading = false;
+
+        // Match on-chain NFTs to our local gallery data
+        var bagsArtworks = [];
+        if (ownedNfts && ownedNfts.length > 0) {
+          ownedNfts.forEach(function(nft) {
+            var nftContract = (nft.contract && nft.contract.address) ? nft.contract.address.toLowerCase() : '';
+            var nftTokenId = nft.tokenId ? parseInt(nft.tokenId) : -1;
+            var nftTitle = (nft.name || nft.title || 'Token #' + nft.tokenId);
+            var nftImage = '';
+            if (nft.image && nft.image.cachedUrl) nftImage = nft.image.cachedUrl;
+            else if (nft.image && nft.image.originalUrl) nftImage = nft.image.originalUrl;
+            else if (nft.rawMetadata && nft.rawMetadata.image) nftImage = nft.rawMetadata.image;
+
+            // Try to find matching local gallery artwork
+            var matched = false;
+            COLLECTIONS.forEach(function(col, ci) {
+              if (matched || !col.contract || !col.artworks) return;
+              if (col.contract.toLowerCase() !== nftContract) return;
+              col.artworks.forEach(function(art, ai) {
+                if (matched) return;
+                var artToken = art.tokenId !== undefined ? parseInt(art.tokenId) : -1;
+                if (artToken === nftTokenId || art.title === nftTitle) {
+                  var clone = Object.assign({}, art);
+                  clone._sourceCollection = col.name;
+                  clone._sourceCollectionIndex = ci;
+                  clone._sourceArtworkIndex = ai;
+                  bagsArtworks.push(clone);
+                  matched = true;
+                }
+              });
+            });
+
+            // If no local match, create entry from on-chain metadata
+            if (!matched && nftImage) {
+              bagsArtworks.push({
+                title: nftTitle,
+                image: nftImage,
+                description: nftContract.slice(0, 6) + '...' + nftContract.slice(-4) + ' · #' + nftTokenId,
+                _sourceCollection: 'On-chain',
+                _onChain: true
+              });
+            }
+          });
+        }
+
+        // If wallet holds nothing by ACK, show a friendly empty state
+        if (bagsArtworks.length === 0) {
+          bagsArtworks.push({
+            title: 'No ACK works found',
+            image: 'ACK_gold_logo.png',
+            description: 'This wallet doesn\'t hold any ACK pieces yet. Browse the collections to find something you love.'
+          });
+        }
+
+        // Remove any previous "My Bags" virtual collection
+        if (_myBagsCollectionIndex >= 0) {
+          COLLECTIONS.splice(_myBagsCollectionIndex, 1);
+          _myBagsCollectionIndex = -1;
+        }
+
+        // Inject as last collection
+        var bagsCollection = {
+          name: 'My Bags',
+          image: bagsArtworks[0].image,
+          description: shortAddr + ' — your ACK collection',
+          token: 'Mixed',
+          chain: 'Ethereum',
+          wallLayout: false,
+          artworks: bagsArtworks,
+          _isMyBags: true
+        };
+
+        _myBagsCollectionIndex = COLLECTIONS.length;
+        COLLECTIONS.push(bagsCollection);
+
+        // Open through the standard detail path
+        openDetail(_myBagsCollectionIndex);
+      }).catch(function(err) {
+        _myBagsLoading = false;
+        console.warn('[My Bags] Error fetching NFTs:', err);
+      });
+    }
+
+    // Keep legacy name for any remaining refs
+    function openObjectManager() { handleNavWallet(); }
 
     function closeObjectManager() {
       closeMobileNav();
@@ -22495,6 +23139,263 @@
       }
     });
 
+
+    // ══════════════════════════════════════════════════════════════════
+    // ── SALESBOT — Live sale feed from on-chain transfers ──
+    // ══════════════════════════════════════════════════════════════════
+    (function initSalesbot() {
+      const sbNode = document.getElementById('salesbotNode');
+      const sbPanel = document.getElementById('salesbotPanel');
+      const sbFeed = document.getElementById('salesbotFeed');
+      const sbDot = document.getElementById('salesbotDot');
+      const sbClose = document.getElementById('salesbotClose');
+
+      // Toggle panel open/close
+      var panelOpen = false;
+      sbDot.addEventListener('click', function(e) {
+        e.stopPropagation();
+        panelOpen = !panelOpen;
+        sbPanel.classList.toggle('open', panelOpen);
+      });
+      if (sbClose) sbClose.addEventListener('click', function(e) {
+        e.stopPropagation();
+        panelOpen = false;
+        sbPanel.classList.remove('open');
+      });
+      document.addEventListener('click', function(e) {
+        if (panelOpen && !sbNode.contains(e.target)) {
+          panelOpen = false;
+          sbPanel.classList.remove('open');
+        }
+      });
+
+      // All ACK contracts to monitor
+      const ACK_CONTRACTS = [];
+      COLLECTIONS.forEach(function(col) {
+        if (col.contract && ACK_CONTRACTS.indexOf(col.contract.toLowerCase()) === -1) {
+          ACK_CONTRACTS.push(col.contract.toLowerCase());
+        }
+        if (col.artworks) {
+          col.artworks.forEach(function(a) {
+            if (a.contract && ACK_CONTRACTS.indexOf(a.contract.toLowerCase()) === -1) {
+              ACK_CONTRACTS.push(a.contract.toLowerCase());
+            }
+          });
+        }
+      });
+
+      // Map contract → collection name + artwork lookup
+      function findArtworkForTransfer(contractAddr, tokenId) {
+        contractAddr = contractAddr.toLowerCase();
+        for (var ci = 0; ci < COLLECTIONS.length; ci++) {
+          var col = COLLECTIONS[ci];
+          if (col.contract && col.contract.toLowerCase() === contractAddr) {
+            // Found collection, now find artwork by tokenId
+            if (col.artworks) {
+              for (var ai = 0; ai < col.artworks.length; ai++) {
+                if (String(col.artworks[ai].tokenId) === String(tokenId)) {
+                  return { collection: col.name, title: col.artworks[ai].title, image: col.artworks[ai].image };
+                }
+              }
+            }
+            return { collection: col.name, title: col.name + ' #' + tokenId, image: col.image || '' };
+          }
+          // Check per-artwork contracts (Color Study items on ACK Editions contract)
+          if (col.artworks) {
+            for (var ai2 = 0; ai2 < col.artworks.length; ai2++) {
+              if (col.artworks[ai2].contract && col.artworks[ai2].contract.toLowerCase() === contractAddr && String(col.artworks[ai2].tokenId) === String(tokenId)) {
+                return { collection: col.name, title: col.artworks[ai2].title, image: col.artworks[ai2].image };
+              }
+            }
+          }
+        }
+        return { collection: 'ACK', title: 'Token #' + tokenId, image: '' };
+      }
+
+      // Track seen tx hashes to avoid dupes
+      var seenTxs = {};
+      var salesHistory = [];
+      var lastBlock = 'latest';
+      var pollInterval = 60000; // 60 seconds
+
+      function weiToEth(weiHex) {
+        // Convert hex wei to ETH (approximate — enough for display)
+        var wei = parseInt(weiHex, 16);
+        if (isNaN(wei)) return 0;
+        return wei / 1e18;
+      }
+
+      function timeAgo(timestamp) {
+        var diff = Math.floor((Date.now() / 1000) - timestamp);
+        if (diff < 60) return diff + 's ago';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+      }
+
+      function renderSale(sale) {
+        var el = document.createElement('div');
+        el.className = 'salesbot-sale';
+        var thumbHtml = sale.image ? '<img class="salesbot-sale-thumb" src="' + sale.image + '" alt="">' : '';
+        el.innerHTML = thumbHtml +
+          '<div class="salesbot-sale-info">' +
+            '<div class="salesbot-sale-title">' + sale.title + '</div>' +
+            '<div class="salesbot-sale-price">' + sale.price.toFixed(3) + ' ETH</div>' +
+            '<div class="salesbot-sale-time">' + sale.timeLabel + '</div>' +
+          '</div>';
+        el.style.cursor = 'pointer';
+        el.title = 'View on Etherscan';
+        el.onclick = function() { window.open('https://etherscan.io/tx/' + sale.txHash, '_blank'); };
+        return el;
+      }
+
+      function addSale(sale) {
+        if (seenTxs[sale.txHash]) return;
+        seenTxs[sale.txHash] = true;
+        salesHistory.unshift(sale);
+        if (salesHistory.length > 20) salesHistory.pop();
+
+        // Clear empty state
+        var empty = sbFeed.querySelector('.salesbot-feed-empty');
+        if (empty) empty.remove();
+
+        // Prepend new sale
+        sbFeed.insertBefore(renderSale(sale), sbFeed.firstChild);
+
+        // Keep feed trimmed
+        while (sbFeed.children.length > 10) {
+          sbFeed.removeChild(sbFeed.lastChild);
+        }
+
+        // Ping the dot
+        sbDot.classList.add('live', 'ping');
+        setTimeout(function() { sbDot.classList.remove('ping'); }, 1500);
+
+        // Show toast notification if panel is closed
+        if (!panelOpen) {
+          showSaleToast(sale);
+        }
+      }
+
+      function showSaleToast(sale) {
+        // Remove any existing toast
+        var old = document.querySelector('.salesbot-toast');
+        if (old) old.remove();
+
+        var toast = document.createElement('div');
+        toast.className = 'salesbot-toast';
+        var thumbHtml = sale.image ? '<img class="salesbot-toast-thumb" src="' + sale.image + '" alt="">' : '';
+        toast.innerHTML = thumbHtml +
+          '<div class="salesbot-toast-info">' +
+            '<div class="salesbot-toast-label">SALE</div>' +
+            '<div class="salesbot-toast-title">' + sale.title + '</div>' +
+            '<div class="salesbot-toast-price">' + sale.price.toFixed(3) + ' ETH</div>' +
+          '</div>';
+        toast.onclick = function() {
+          window.open('https://etherscan.io/tx/' + sale.txHash, '_blank');
+          toast.remove();
+        };
+        document.body.appendChild(toast);
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() { toast.classList.add('show'); });
+        });
+        // Auto-dismiss after 5 seconds
+        setTimeout(function() {
+          toast.classList.remove('show');
+          setTimeout(function() { toast.remove(); }, 400);
+        }, 5000);
+      }
+
+      // Poll Alchemy for asset transfers
+      function pollSales() {
+        if (typeof ACK_CHAIN === 'undefined' || !ACK_CHAIN.ALCHEMY_API_KEY) {
+          setTimeout(pollSales, pollInterval);
+          return;
+        }
+
+        var apiKey = ACK_CHAIN.ALCHEMY_API_KEY;
+        var url = 'https://eth-mainnet.g.alchemy.com/v2/' + apiKey;
+
+        // Use alchemy_getAssetTransfers — fetch recent NFT transfers with value
+        // ~7200 blocks/day * 7 days ≈ 50400 blocks back from latest
+        // We fetch the current block first, then request transfers
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: 0, method: 'eth_blockNumber', params: [] })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(blockData) {
+          var currentBlock = parseInt(blockData.result, 16) || 0;
+          var fromBlock = '0x' + Math.max(0, currentBlock - 50400).toString(16);
+
+        var params = {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'alchemy_getAssetTransfers',
+          params: [{
+            fromBlock: fromBlock,
+            toBlock: 'latest',
+            contractAddresses: ACK_CONTRACTS,
+            category: ['erc721', 'erc1155'],
+            withMetadata: true,
+            excludeZeroValue: false,
+            maxCount: '0x14', // 20 results
+            order: 'desc'
+          }]
+        };
+
+        return fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          sbDot.classList.add('live');
+
+          if (data.result && data.result.transfers) {
+            data.result.transfers.forEach(function(tx) {
+              // Filter: only sales (has value > 0.1 ETH)
+              var ethValue = tx.value || 0;
+              if (typeof ethValue === 'string') ethValue = parseFloat(ethValue);
+              if (ethValue < 0.1) return;
+
+              var contractAddr = (tx.rawContract && tx.rawContract.address) || '';
+              var tokenId = tx.tokenId || (tx.erc1155Metadata && tx.erc1155Metadata[0] && tx.erc1155Metadata[0].tokenId) || '0';
+              // Parse hex tokenId
+              if (typeof tokenId === 'string' && tokenId.startsWith('0x')) tokenId = parseInt(tokenId, 16);
+
+              var artwork = findArtworkForTransfer(contractAddr, tokenId);
+              var timestamp = tx.metadata && tx.metadata.blockTimestamp ? Math.floor(new Date(tx.metadata.blockTimestamp).getTime() / 1000) : Math.floor(Date.now() / 1000);
+
+              addSale({
+                txHash: tx.hash,
+                title: artwork.title,
+                collection: artwork.collection,
+                image: artwork.image,
+                price: ethValue,
+                timeLabel: timeAgo(timestamp),
+                timestamp: timestamp
+              });
+            });
+          }
+        });
+        }) // close blockData .then
+        .catch(function(err) {
+          console.warn('[Salesbot] Poll error:', err);
+        })
+        .finally(function() {
+          setTimeout(pollSales, pollInterval);
+        });
+      }
+
+      // Fade in the node after page loads, start polling
+      setTimeout(function() {
+        sbNode.style.opacity = '1';
+        pollSales();
+      }, 3000);
+    })();
 
     init();
   </script>
