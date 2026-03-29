@@ -4441,11 +4441,12 @@
       /* ── Node graph — tighter padding ── */
       .node-graph-inner { padding: 12px; }
 
-      /* ── Motherboard — smaller on mobile ── */
+      /* ── Motherboard — hide in focus mode on mobile, smaller in grid view ── */
       .master-node-pcb { width: 180px; height: 65px; }
       .master-node-pcb .pcb-chip { transform: scale(0.75); }
       .pcb-label-main { font-size: 0.45rem !important; }
       .pcb-label-sub { font-size: 0.3rem !important; }
+      .node-graph-inner.focus-mode #masterNode { display: none !important; }
 
       /* ── Focus mode ports — hide on mobile (no wire connections) ── */
       .node-graph-inner.focus-mode .node-card.focused .node-port { display: none; }
@@ -4515,6 +4516,100 @@
       .detail-header {
         height: auto !important;
         padding: 8px 12px !important;
+      }
+
+      /* ── Mobile: hide desktop-only panels in focus mode ── */
+      .node-info-panel { display: none !important; }
+      .info-dock { display: none !important; }
+      .coa-overlay-backdrop { display: none !important; }
+      .coa-overlay-panel { display: none !important; }
+      .coa-overlay-wire { display: none !important; }
+      .info-overlay-card { display: none !important; }
+      #focusModeTitle { display: none !important; }
+      /* Hide focus mode wires on mobile */
+      .focus-wire-svg { display: none !important; }
+
+      /* ── Mobile Focus Info Bar — PCB-styled bottom strip ── */
+      .mobile-focus-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 2700;
+        background: linear-gradient(170deg, #1e2230 0%, #1a1e2a 40%, #161a24 100%);
+        border-top: 1px solid rgba(100,140,200,0.2);
+        padding: 14px 18px 20px;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .mobile-focus-bar.visible {
+        transform: translateY(0);
+      }
+      .mobile-focus-bar-title {
+        font-size: 0.55rem;
+        letter-spacing: 0.1em;
+        color: rgba(220,180,120,0.85);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mobile-focus-bar-desc {
+        font-size: 0.4rem;
+        letter-spacing: 0.04em;
+        color: rgba(200,180,150,0.45);
+        line-height: 1.5;
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .mobile-focus-bar-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .mobile-focus-bar-tag {
+        font-size: 0.38rem;
+        letter-spacing: 0.06em;
+        color: rgba(120,180,255,0.5);
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border: 1px solid rgba(120,180,255,0.15);
+        border-radius: 2px;
+      }
+      .mobile-focus-bar-price {
+        font-size: 0.42rem;
+        letter-spacing: 0.06em;
+        color: rgba(50,205,50,0.6);
+      }
+      .mobile-focus-bar-actions {
+        display: flex;
+        gap: 10px;
+      }
+      .mobile-focus-bar-btn {
+        flex: 1;
+        padding: 8px 0;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.4rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(200,180,150,0.6);
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(200,180,150,0.12);
+        border-radius: 3px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mobile-focus-bar-btn:active {
+        background: rgba(220,180,120,0.1);
+        color: rgba(220,180,120,0.8);
       }
     }
 
@@ -6026,8 +6121,89 @@
       'AlphaCentauriKid', 'ACK', 'α Centauri',
     ];
 
+    // ── Mobile: skip intro entirely, show brief message, then gallery ──
+    function _skipIntroForMobile() {
+      const overlay = document.getElementById('intro-overlay');
+      const mainContent = document.getElementById('main-content');
+      const nav = document.querySelector('.top-nav');
+      const bgGrid = document.getElementById('bgGrid');
+      const candles = document.getElementById('viewportCandles');
+
+      // Hide intro overlay immediately
+      if (overlay) {
+        overlay.style.transition = 'opacity 0.8s ease';
+        overlay.style.pointerEvents = 'none';
+      }
+
+      // Show a brief message
+      const mobileMsg = document.createElement('div');
+      mobileMsg.id = 'mobileIntroMsg';
+      mobileMsg.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;' +
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'background:rgba(12,12,16,0.97);padding:40px;text-align:center;';
+      mobileMsg.innerHTML =
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.55rem;letter-spacing:0.2em;' +
+        'color:rgba(220,180,120,0.7);text-transform:uppercase;margin-bottom:16px;">ack.art</div>' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.4rem;letter-spacing:0.08em;' +
+        'color:rgba(200,180,150,0.45);line-height:1.8;max-width:280px;">' +
+        'this experience is built for desktop.<br>you\'re viewing a limited gallery mode.</div>' +
+        '<div style="margin-top:28px;width:24px;height:1px;background:rgba(220,180,120,0.25);"></div>';
+      document.body.appendChild(mobileMsg);
+
+      // Fade out message, reveal gallery
+      setTimeout(() => {
+        mobileMsg.style.transition = 'opacity 0.6s ease';
+        mobileMsg.style.opacity = '0';
+        setTimeout(() => mobileMsg.remove(), 700);
+
+        // Reveal main content
+        if (overlay) overlay.style.opacity = '0';
+        if (mainContent) {
+          mainContent.style.opacity = '1';
+          mainContent.style.visibility = 'visible';
+          mainContent.style.transform = 'none';
+          mainContent.classList.add('reveal');
+        }
+        if (bgGrid) { bgGrid.classList.add('visible'); bgGrid.style.opacity = '0.3'; }
+        if (candles) candles.style.display = 'none';
+
+        // Fade in nav
+        if (nav) {
+          nav.classList.add('revealed');
+          nav.style.transition = 'opacity 0.5s ease';
+          nav.style.opacity = '1';
+          const staticCoin = nav.querySelector('.nav-coin');
+          if (staticCoin) staticCoin.style.opacity = '1';
+        }
+
+        // Reveal collection nodes with stagger
+        const allNodes = document.querySelectorAll('.collection-node');
+        allNodes.forEach((n, i) => {
+          setTimeout(() => {
+            n.style.transition = 'opacity 0.4s ease';
+            n.style.opacity = '1';
+            n.classList.add('revealed');
+          }, 50 + i * 30);
+        });
+
+        // Show masterNode
+        const mn = document.getElementById('masterNode');
+        if (mn) { mn.style.transition = 'opacity 0.5s ease 0.3s'; mn.style.opacity = '1'; }
+
+        // Fade overlay completely
+        setTimeout(() => {
+          if (overlay) overlay.classList.add('fade-out');
+        }, 300);
+      }, 2200); // show message for ~2 seconds
+    }
+
     function init() {
-      runIntroSequence();
+      // ── MOBILE: skip intro, show brief message, go straight to gallery ──
+      if (window.innerWidth < 768) {
+        _skipIntroForMobile();
+      } else {
+        runIntroSequence();
+      }
       renderCollections();
       initScrollScaling();
       buildPersistentGrid();
@@ -11147,8 +11323,9 @@
         }
       };
 
-      // ── BREATHING THUMBNAILS ──
+      // ── BREATHING THUMBNAILS (desktop only — no breathing on mobile) ──
       (function setupBrainBreathe() {
+        if (window.innerWidth < 768) return; // skip breathing on mobile
         const allNodes = grid.querySelectorAll('.collection-node');
         const nodeCount = allNodes.length;
         if (nodeCount === 0) return;
@@ -14551,8 +14728,8 @@
               } else {
                 nodeImg.style.opacity = '1';
               }
-            } else if (nodeImg.dataset.fullGifSrc) {
-              // Color Study: swap static JPG thumb → animated GIF on focus
+            } else if (nodeImg.dataset.fullGifSrc && !_isMobileFocus) {
+              // Color Study: swap static JPG thumb → animated GIF on focus (desktop only — GIFs too heavy for mobile)
               nodeImg.style.transition = 'opacity 0.4s ease';
               nodeImg.style.opacity = '0.5';
               const _gifSrc = nodeImg.dataset.fullGifSrc;
@@ -14560,7 +14737,7 @@
               _gifPreloader.onload = () => { nodeImg.src = _gifSrc; nodeImg.style.opacity = '1'; };
               _gifPreloader.onerror = () => { nodeImg.style.opacity = '1'; };
               _gifPreloader.src = _gifSrc;
-              setTimeout(() => { nodeImg.style.opacity = '1'; }, _isMobileFocus ? 20000 : 12000); // more time on mobile
+              setTimeout(() => { nodeImg.style.opacity = '1'; }, 12000);
             } else {
             // Add loading shimmer while higher-res loads
             nodeImg.style.transition = 'opacity 0.4s ease';
@@ -14575,12 +14752,16 @@
               if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
             };
             if (artData && artData.fullRes) {
-              // On mobile, still load fullRes for GIFs/images but with generous timeout
+              // On mobile, skip heavy fullRes — keep thumbnail crisp and immediate
+              if (_isMobileFocus) {
+                _clearLoading();
+              } else {
               const preloader = new Image();
               preloader.onload = () => { nodeImg.src = artData.fullRes; _clearLoading(); };
               preloader.onerror = _clearLoading;
               preloader.src = artData.fullRes;
-              setTimeout(_clearLoading, _isMobileFocus ? 15000 : 8000);
+              setTimeout(_clearLoading, 8000);
+              }
             } else if (thumbSrc.includes('?w=')) {
               let fullResSrc = thumbSrc.replace(/\?w=\d+/, _isMobileFocus ? '?w=600' : '?w=1200');
               const preloader = new Image();
@@ -14667,6 +14848,57 @@
       updateMotherboardTickers(_focusCollection, _focusArtwork);
 
       // Fixed-position title — appears after scale-up
+      if (_isMobileFocus) {
+        // ── MOBILE: Show PCB-styled info bar at bottom instead of desktop title ──
+        setTimeout(() => {
+          const _mfArt = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
+          const _mfColl = COLLECTIONS[collectionIndex];
+          var _mfBar = document.getElementById('mobileFocusBar');
+          if (!_mfBar) {
+            _mfBar = document.createElement('div');
+            _mfBar.id = 'mobileFocusBar';
+            _mfBar.className = 'mobile-focus-bar';
+            document.body.appendChild(_mfBar);
+          }
+          // Build content
+          var _mfTitle = _mfArt ? (_mfArt.title || '') : artworkTitle;
+          var _mfDesc = _mfArt ? (_mfArt.description || '') : '';
+          var _mfType = _mfArt ? (_mfArt.edition || '1/1') : '';
+          var _mfPrice = '';
+          if (_mfArt && _mfArt.winningBid) _mfPrice = _mfArt.winningBid;
+          else if (_mfArt && _mfArt.lastSale) _mfPrice = _mfArt.lastSale;
+
+          var _mfHTML = '<div class="mobile-focus-bar-title">' + _mfTitle + '</div>';
+          if (_mfDesc) _mfHTML += '<div class="mobile-focus-bar-desc">' + _mfDesc + '</div>';
+          _mfHTML += '<div class="mobile-focus-bar-meta">';
+          if (_mfType) _mfHTML += '<span class="mobile-focus-bar-tag">' + _mfType + '</span>';
+          if (_mfPrice) _mfHTML += '<span class="mobile-focus-bar-price">' + _mfPrice + '</span>';
+          if (_mfColl) _mfHTML += '<span class="mobile-focus-bar-tag">' + _mfColl.name + '</span>';
+          _mfHTML += '</div>';
+          _mfHTML += '<div class="mobile-focus-bar-actions">';
+          if (_mfArt && _mfArt.fullRes) {
+            _mfHTML += '<div class="mobile-focus-bar-btn" data-action="download">Download</div>';
+          }
+          _mfHTML += '<div class="mobile-focus-bar-btn" data-action="close">Close</div>';
+          _mfHTML += '</div>';
+          _mfBar.innerHTML = _mfHTML;
+
+          // Wire up buttons
+          _mfBar.querySelectorAll('.mobile-focus-bar-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              if (btn.dataset.action === 'download') {
+                downloadArtwork(collectionIndex, artworkIndex, 'full');
+              } else if (btn.dataset.action === 'close') {
+                exitFocusMode();
+              }
+            });
+          });
+
+          requestAnimationFrame(() => { _mfBar.classList.add('visible'); });
+        }, _scatterWait + 200);
+      } else {
+      // ── DESKTOP: Floating title at bottom-left ──
       setTimeout(() => {
         const focusTitleEl = document.createElement('div');
         focusTitleEl.id = 'focusModeTitle';
@@ -14675,6 +14907,7 @@
         document.body.appendChild(focusTitleEl);
         requestAnimationFrame(() => { focusTitleEl.style.opacity = '1'; });
       }, _scatterWait + 300);
+      }
 
       // Draw focus wires early — energy pathways form before COA materializes
       setTimeout(() => {
@@ -22203,6 +22436,10 @@
       // Remove fixed-position focus title
       const focTitle = document.getElementById('focusModeTitle');
       if (focTitle) focTitle.remove();
+
+      // Remove mobile focus bar
+      const _mfBar = document.getElementById('mobileFocusBar');
+      if (_mfBar) { _mfBar.classList.remove('visible'); setTimeout(() => _mfBar.remove(), 400); }
 
       // Clean up masterwork frame + pan/zoom if active
       cleanupMasterworkFrame(focusedNode);
