@@ -13498,6 +13498,78 @@
           });
         }
 
+        // ── MY BAGS: apply per-artwork frames based on _sourceCollection ──
+        if (collection._isMyBags) {
+          const allBagsCards = inner.querySelectorAll('.node-card');
+          allBagsCards.forEach((bagNode, bagIdx) => {
+            if (bagNode.classList.contains('info-card-node')) return;
+            const bagArt = collection.artworks[bagIdx];
+            if (!bagArt || !bagArt._sourceCollection) return;
+            const srcCol = bagArt._sourceCollection;
+            const _applyBagFrame = () => {
+              const preview = bagNode.querySelector('.node-preview');
+              const img = preview ? preview.querySelector('img') : null;
+              if (preview && img && img.naturalWidth > 0) {
+                const localW = parseFloat(bagNode.style.width) || preview.offsetWidth;
+                const localH = img.offsetHeight || preview.offsetHeight || localW;
+                const pal = ARTWORK_PALETTES[bagArt.image] || COLLECTION_PALETTES[srcCol] || null;
+                let frameSvg = null;
+                let frameClass = '';
+                if (srcCol === 'Piano Blossoms') {
+                  frameSvg = generateBlossomFrame(localW, localH, pal, bagArt.title || '', false);
+                  frameClass = 'has-blossom-frame';
+                } else if (srcCol === 'Clown Party') {
+                  frameSvg = generateClownFrame(localW, localH, pal);
+                  frameClass = 'has-clown-frame';
+                } else if (srcCol === 'ACK Editions') {
+                  const isStarry = bagArt.image && bagArt.image.indexOf('lanuit') !== -1;
+                  const isLisan = bagArt.image && bagArt.image.indexOf('lisan') !== -1;
+                  const isVoidEngine = bagArt.image && bagArt.image.indexOf('void_engine') !== -1;
+                  frameSvg = isStarry ? generateStarryFrame(localW, localH) : (isLisan ? generateLisanFrame(localW, localH) : (isVoidEngine ? generateVoidEngineFrame(localW, localH, pal) : generateEditionsFrame(localW, localH, pal)));
+                  frameClass = 'has-editions-frame';
+                } else if (srcCol === 'The Great Color Study') {
+                  frameSvg = generateColorStudyFrame(localW, localH, pal, bagArt.title || '', false);
+                  frameClass = 'has-colorstudy-frame';
+                } else if (srcCol === 'ACKPFP') {
+                  frameSvg = generatePfpFrame(localW, localH, pal, bagArt.title || '');
+                  frameClass = 'has-pfp-frame';
+                } else if (srcCol === 'Warothys') {
+                  frameSvg = generateWarothyFrame(localW, localH, pal, bagArt.title || '');
+                  frameClass = 'has-warothy-frame';
+                } else if (srcCol === 'Broken Keys') {
+                  frameSvg = generateBrokenKeysFrame(localW, localH, pal, bagArt.title || '', false);
+                  frameClass = 'has-brokenkeys-frame';
+                } else if (srcCol === 'Opepen Set 030: a.c.k.') {
+                  frameSvg = generateOpepenFrame(localW, localH, pal, bagArt.title || '', false);
+                  frameClass = 'has-opepen-frame';
+                } else if (srcCol === 'Heart You') {
+                  frameSvg = generateHeartYouFrame(localW, localH, pal, bagArt.title || '', false);
+                  frameClass = 'has-heartyou-frame';
+                } else if (srcCol === 'Made these for your girl') {
+                  frameSvg = generateBotanicalFrame(localW, localH);
+                  frameClass = 'has-botanical-frame';
+                } else if (srcCol === 'Last Orders') {
+                  frameSvg = generateBarFrame(localW, localH, false);
+                  frameClass = 'has-bar-frame';
+                } else if (srcCol === 'Tempted in the Garden') {
+                  frameSvg = generateTemptedFrame(localW, localH, false);
+                  frameClass = 'has-tempted-frame';
+                }
+                if (frameSvg) {
+                  frameSvg.style.opacity = '1';
+                  frameSvg.style.transition = 'none';
+                  frameSvg.dataset.collectionFrame = 'true';
+                  bagNode.appendChild(frameSvg);
+                  if (frameClass) bagNode.classList.add(frameClass);
+                }
+              } else {
+                setTimeout(_applyBagFrame, 500);
+              }
+            };
+            setTimeout(_applyBagFrame, 800 + bagIdx * 200);
+          });
+        }
+
         // ── Live resize for custom layouts — recompute positions without rebuilding DOM ──
         if (_usingCustomLayout) {
           inner._resizeCustomLayout = function() {
@@ -14450,6 +14522,10 @@
       focusedCollectionIndex = collectionIndex;
       focusedArtworkIndex = artworkIndex;
 
+      // Resolve effective collection name early — for My Bags clones, use the source collection
+      const _earlyArt = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks ? COLLECTIONS[collectionIndex].artworks[artworkIndex] : null;
+      const _focusColNameEarly = (_earlyArt && _earlyArt._sourceCollection) ? _earlyArt._sourceCollection : (COLLECTIONS[collectionIndex] ? COLLECTIONS[collectionIndex].name : '');
+
       // Calculate where the node needs to fly to center it in the viewport
       const canvas = inner.closest('.node-graph-canvas');
       const scrollLeft = canvas ? canvas.scrollLeft : 0;
@@ -14488,7 +14564,7 @@
       let scaleFactor = Math.min(maxW / nodeW, maxH / nodeH);
 
       // Piano Blossoms — reduce by 20% (artwork + frame feel oversized)
-      const _isPianoBlossomsFocus = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Piano Blossoms';
+      const _isPianoBlossomsFocus = _focusColNameEarly === 'Piano Blossoms';
       if (_isPianoBlossomsFocus && !_isMobileFocus) {
         scaleFactor *= 0.80;
       }
@@ -14504,9 +14580,9 @@
       }
 
       // ACK Editions / Color Study / Heart You — reduce by 15% AFTER square cap (glitch frames feel large)
-      const _isEditionsFocus = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'ACK Editions';
-      const _isColorStudyFocus = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'The Great Color Study';
-      const _isHeartYouFocus = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Heart You';
+      const _isEditionsFocus = _focusColNameEarly === 'ACK Editions';
+      const _isColorStudyFocus = _focusColNameEarly === 'The Great Color Study';
+      const _isHeartYouFocus = _focusColNameEarly === 'Heart You';
       if ((_isEditionsFocus || _isColorStudyFocus || _isHeartYouFocus) && !_isMobileFocus) {
         scaleFactor *= 0.85;
       }
@@ -14713,7 +14789,7 @@
 
             // Piano Blossoms: load higher-res physical image for focus (not the fullRes master digital)
             // Master digital is accessible via COA "View Master Digital" link
-            const _isPBFocusSwap = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Piano Blossoms';
+            const _isPBFocusSwap = _focusColNameEarly === 'Piano Blossoms';
             if (_isPBFocusSwap) {
               // Derive focus-res path from the thumbnail: _physical_web.jpg → _physical_focus.jpg
               const focusSrc = thumbSrc.replace('_physical_web.jpg', '_physical_focus.jpg').replace('_catalog.jpg', '_physical_focus.jpg');
@@ -14938,6 +15014,8 @@
 
       // ── Masterwork enhancement: ornate frame + pan/zoom ──
       const artworkData = COLLECTIONS[collectionIndex].artworks[artworkIndex];
+      // Resolve effective collection name — for My Bags, use the source collection
+      const _focusColName = (artworkData && artworkData._sourceCollection) ? artworkData._sourceCollection : (COLLECTIONS[collectionIndex] ? COLLECTIONS[collectionIndex].name : '');
       if (artworkData && artworkData.masterwork) {
         node.classList.add('masterwork-node');
 
@@ -14952,7 +15030,7 @@
 
             // Generate per-collection frame — blossom, clown, or ornate
             // If a collection frame already exists, keep it (don't stack a second)
-            const _colName = COLLECTIONS[collectionIndex] ? COLLECTIONS[collectionIndex].name : '';
+            const _colName = _focusColName;
             const hasCollectionFrame = node.querySelector('[data-collection-frame]');
             // Piano Blossoms: hide collection frame, add focus frame with per-artwork elements
             if (_colName === 'Piano Blossoms') {
@@ -15003,7 +15081,7 @@
       }
 
       // ── Clown Party frame in focus view (non-masterwork) ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Clown Party') {
+      if (_focusColName === 'Clown Party') {
         setTimeout(() => {
           if (node.querySelector('.clown-frame-svg')) return; // already has one
           const preview = node.querySelector('.node-preview');
@@ -15019,7 +15097,7 @@
       }
 
       // ── ACK Editions frame in focus view (non-masterwork) ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'ACK Editions') {
+      if (_focusColName === 'ACK Editions') {
         setTimeout(() => {
           if (!node.querySelector('.editions-frame-svg') && !node.querySelector('.starry-frame-svg') && !node.querySelector('.lisan-frame-svg')) {
             const preview = node.querySelector('.node-preview');
@@ -15125,7 +15203,7 @@
       }
 
       // ── Color Study frame in focus view ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'The Great Color Study') {
+      if (_focusColName === 'The Great Color Study') {
         setTimeout(() => {
           // Hide collection frame, show focus frame
           const oldCSFrame = node.querySelector('.colorstudy-frame-svg[data-collection-frame]');
@@ -15186,7 +15264,7 @@
       }
 
       // ── ACKPFP frame in focus view (non-masterwork) ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'ACKPFP') {
+      if (_focusColName === 'ACKPFP') {
         setTimeout(() => {
           if (node.querySelector('.pfp-frame-svg')) return;
           const preview = node.querySelector('.node-preview');
@@ -15202,7 +15280,7 @@
       }
 
       // ── Warothys frame in focus view (non-masterwork) ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Warothys') {
+      if (_focusColName === 'Warothys') {
         setTimeout(() => {
           if (node.querySelector('.warothy-frame-svg')) return;
           const preview = node.querySelector('.node-preview');
@@ -15218,7 +15296,7 @@
       }
 
       // ── Broken Keys frame in focus view (non-masterwork) ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Broken Keys') {
+      if (_focusColName === 'Broken Keys') {
         setTimeout(() => {
           if (node.querySelector('.brokenkeys-frame-svg')) return;
           const preview = node.querySelector('.node-preview');
@@ -15234,7 +15312,7 @@
       }
 
       // ── Opepen frame in focus view ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Opepen Set 030: a.c.k.') {
+      if (_focusColName === 'Opepen Set 030: a.c.k.') {
         setTimeout(() => {
           const oldOpFrame = node.querySelector('.opepen-frame-svg[data-collection-frame]');
           if (oldOpFrame) oldOpFrame.style.display = 'none';
@@ -15251,7 +15329,7 @@
       }
 
       // ── Heart You frame in focus view ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Heart You') {
+      if (_focusColName === 'Heart You') {
         setTimeout(() => {
           const oldHyFrame = node.querySelector('.heartyou-frame-svg[data-collection-frame]');
           if (oldHyFrame) oldHyFrame.style.display = 'none';
@@ -15270,7 +15348,7 @@
       // ── Botanical frame for "Made these for your girl" ──
       // The collection-view frame (data-collection-frame) persists through focus.
       // Only add a focus-specific frame if none exists yet (e.g. navigated directly).
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Made these for your girl') {
+      if (_focusColName === 'Made these for your girl') {
         setTimeout(() => {
           if (node.querySelector('.botanical-frame-svg')) return; // already has one
           const preview = node.querySelector('.node-preview');
@@ -15286,7 +15364,7 @@
 
       // ── Bar frame for "Last Orders" ──
       // Hide collection frame, generate focus frame with full ornaments
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Last Orders') {
+      if (_focusColName === 'Last Orders') {
         setTimeout(() => {
           const oldBarFrame = node.querySelector('.bar-frame-svg[data-collection-frame]');
           if (oldBarFrame) oldBarFrame.style.display = 'none';
@@ -15302,7 +15380,7 @@
       }
 
       // ── Tempted in the Garden frame on focus ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Tempted in the Garden') {
+      if (_focusColName === 'Tempted in the Garden') {
         setTimeout(() => {
           const oldTgFrame = node.querySelector('.tempted-frame-svg[data-collection-frame]');
           if (oldTgFrame) oldTgFrame.style.display = 'none';
@@ -15318,7 +15396,7 @@
       }
 
       // ── Last Orders: swap still image to video on focus ──
-      if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'Last Orders') {
+      if (_focusColName === 'Last Orders') {
         setTimeout(() => {
           const preview = node.querySelector('.node-preview');
           const img = preview ? preview.querySelector('img') : null;
@@ -16568,7 +16646,7 @@
       } else {
         // Fallback: dynamic canvas extraction (works on http://)
         // If that fails, use collection-level palette
-        const collName = COLLECTIONS[collectionIndex] ? COLLECTIONS[collectionIndex].name : '';
+        const collName = (artwork && artwork._sourceCollection) ? artwork._sourceCollection : (COLLECTIONS[collectionIndex] ? COLLECTIONS[collectionIndex].name : '');
         const collFallback = COLLECTION_PALETTES[collName] || null;
         function applyWithFallback(pal) {
           if (pal) { applyExtractedPalette(pal); }
@@ -22725,22 +22803,19 @@
       ACK_CHAIN.getNFTsForOwner(walletAddr, ackContracts).then(function(ownedNfts) {
         _myBagsLoading = false;
 
-        // Match on-chain NFTs to our local gallery data
+        // Match on-chain NFTs to local gallery data ONLY — skip unrecognized tokens
         var bagsArtworks = [];
         if (ownedNfts && ownedNfts.length > 0) {
           ownedNfts.forEach(function(nft) {
             var nftContract = (nft.contract && nft.contract.address) ? nft.contract.address.toLowerCase() : '';
             var nftTokenId = nft.tokenId ? parseInt(nft.tokenId) : -1;
             var nftTitle = (nft.name || nft.title || 'Token #' + nft.tokenId);
-            var nftImage = '';
-            if (nft.image && nft.image.cachedUrl) nftImage = nft.image.cachedUrl;
-            else if (nft.image && nft.image.originalUrl) nftImage = nft.image.originalUrl;
-            else if (nft.rawMetadata && nft.rawMetadata.image) nftImage = nft.rawMetadata.image;
 
-            // Try to find matching local gallery artwork
+            // Only include if we can match to a known gallery artwork
             var matched = false;
             COLLECTIONS.forEach(function(col, ci) {
               if (matched || !col.contract || !col.artworks) return;
+              if (col._isMyBags) return; // skip previous bags injection
               if (col.contract.toLowerCase() !== nftContract) return;
               col.artworks.forEach(function(art, ai) {
                 if (matched) return;
@@ -22755,19 +22830,23 @@
                 }
               });
             });
-
-            // If no local match, create entry from on-chain metadata
-            if (!matched && nftImage) {
-              bagsArtworks.push({
-                title: nftTitle,
-                image: nftImage,
-                description: nftContract.slice(0, 6) + '...' + nftContract.slice(-4) + ' · #' + nftTokenId,
-                _sourceCollection: 'On-chain',
-                _onChain: true
-              });
-            }
+            // Non-matching tokens (unrevealed opepen, non-ACK works on shared contracts) are dropped
           });
         }
+
+        // Sort by source collection so works from the same collection are grouped together
+        // Use the order they appear in COLLECTIONS for a natural grouping
+        var collectionOrder = {};
+        COLLECTIONS.forEach(function(col, ci) { if (!col._isMyBags) collectionOrder[col.name] = ci; });
+        bagsArtworks.sort(function(a, b) {
+          var orderA = collectionOrder[a._sourceCollection] !== undefined ? collectionOrder[a._sourceCollection] : 999;
+          var orderB = collectionOrder[b._sourceCollection] !== undefined ? collectionOrder[b._sourceCollection] : 999;
+          if (orderA !== orderB) return orderA - orderB;
+          // Within same collection, sort by original artwork index
+          var aiA = a._sourceArtworkIndex !== undefined ? a._sourceArtworkIndex : 999;
+          var aiB = b._sourceArtworkIndex !== undefined ? b._sourceArtworkIndex : 999;
+          return aiA - aiB;
+        });
 
         // If wallet holds nothing by ACK, show a friendly empty state
         if (bagsArtworks.length === 0) {
