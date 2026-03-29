@@ -3,7 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ACK | Full Catalog</title>
+  <title>slave to the Muse</title>
+  <meta name="description" content="Interactive art gallery by AlphaCentauriKid — Cinema 4D node editor-styled catalog of on-chain artworks.">
+
+  <!-- Open Graph / Social sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="slave to the Muse">
+  <meta property="og:description" content="Interactive art gallery by AlphaCentauriKid">
+  <meta property="og:image" id="ogImage" content="https://ack.art/broken-keys-web/the_void.jpg">
+  <meta property="og:url" content="https://ack.art">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="slave to the Muse">
+  <meta name="twitter:description" content="Interactive art gallery by AlphaCentauriKid">
+  <meta name="twitter:image" id="twImage" content="https://ack.art/broken-keys-web/the_void.jpg">
+  <script>
+    (function(){
+      var imgs = [
+        'broken-keys-web/the_void.jpg',
+        'broken-keys-web/god_of_light.jpg',
+        'broken-keys-web/serendipity.jpg',
+        'broken-keys-web/the_rose_labyrinth.jpg',
+        'broken-keys-web/rage.jpg',
+        'selfportraitnew_web.jpg',
+        'supernatural_web.jpg',
+        'there_is_no_piano_web.jpg',
+        'greatrestoration.jpg',
+        'tinman_web.jpg',
+        'servant_face_web.png'
+      ];
+      var pick = imgs[Math.floor(Math.random() * imgs.length)];
+      var og = document.getElementById('ogImage');
+      var tw = document.getElementById('twImage');
+      if (og) og.setAttribute('content', pick);
+      if (tw) tw.setAttribute('content', pick);
+    })();
+  </script>
+
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
@@ -2250,6 +2285,27 @@
       transition: opacity 1s ease 0.3s;
     }
     .node-card.focused .starry-frame-svg { opacity: 1; }
+    .lisan-frame-svg {
+      position: absolute;
+      pointer-events: none;
+      z-index: 5;
+      overflow: visible;
+      opacity: 0;
+      transition: opacity 1.2s ease 0.3s;
+    }
+    .node-card.focused .lisan-frame-svg { opacity: 1; }
+    @keyframes lisanWormUndulate {
+      0%, 100% { transform: translateY(0) scaleY(1); }
+      50% { transform: translateY(-2px) scaleY(1.04); }
+    }
+    @keyframes lisanSpiceFloat {
+      0%, 100% { opacity: 0.3; transform: translateY(0); }
+      50% { opacity: 0.7; transform: translateY(-4px); }
+    }
+    @keyframes lisanMoonGlow {
+      0%, 100% { opacity: 0.5; filter: drop-shadow(0 0 2px rgba(200,170,100,0.3)); }
+      50% { opacity: 0.8; filter: drop-shadow(0 0 6px rgba(200,170,100,0.5)); }
+    }
     .pfp-frame-svg {
       position: absolute;
       pointer-events: none;
@@ -8687,7 +8743,7 @@
           aerialWaterLevel = window.innerHeight * 0.70;
         }
 
-        // Auto-fly after brief hover — faster pace
+        // Auto-fly after brief hover — fast for aerial, normal for void
         setTimeout(() => {
           guideSprite.classList.remove('hovering');
           if (guideType === 'aerial') {
@@ -8695,7 +8751,7 @@
           } else {
             startGuideFlight(spawnX, spawnY);
           }
-        }, 1800);
+        }, guideType === 'aerial' ? 800 : 1800);
       }
 
       function spawnPNGForCollection(config, collectionIndex, row) {
@@ -9056,17 +9112,16 @@
         const vortexCY = H / 2;
 
         // ── Fade out OM (rain + waves already started at spawn) ──
-        objectManager.style.transition = 'opacity 1.5s ease';
+        objectManager.style.transition = 'opacity 0.8s ease';
         objectManager.style.opacity = '0';
 
         aerialWaterLevel = waterLevel;
 
         // ── Unified animation: rain → descent → hover-save → cruise → wormhole ──
-        // Descent begins once the Object Manager finishes fading out (1.5s fade + 200ms buffer)
-        const omFadeDur = 1700;
-        const descentDur = 2800;     // falls toward water (slightly longer for smoother arc)
-        const hoverSaveDur = 1400;   // catches itself — frantic spin, wind spray
-        const cruiseDur = 11000;
+        const omFadeDur = 900;       // quick OM fade
+        const descentDur = 2000;     // brisk descent
+        const hoverSaveDur = 1000;   // catches itself — quick recovery
+        const cruiseDur = 9000;      // smooth cruise to vortex
 
         const hoverY = waterLevel - SPRITE_FH - 15; // resting position above water
         const nearMissY = waterLevel - SPRITE_FH - 5; // catches itself just above water (never touches)
@@ -9108,8 +9163,8 @@
             guideSprite.style.top = y + 'px';
             guideSprite.style.transform = `scale(1) rotate(${tiltDeg}deg)`;
 
-            // Trigger wind disturbance early in the descent (when getting close to water)
-            if (t > 0.7 && !aerialSplashTime) {
+            // Trigger splash right as screw nearly touches water
+            if (t > 0.92 && !aerialSplashTime) {
               aerialSplashTime = now;
               aerialSplashX = x + SPRITE_FW / 2;
             }
@@ -9156,35 +9211,38 @@
 
           // ── CRUISE: side-scroll → suction → wormhole ──
           const t = Math.min(1, phaseElapsed / cruiseDur);
-          const rawS = t * t * (3 - 2 * t);
-          const s = rawS * 0.7 + Math.pow(t, 1.3) * 0.3;
+          // Single smooth ease-in-out — starts gentle, accelerates into vortex
+          const s = t < 0.5
+            ? 2 * t * t                        // ease-in first half
+            : 1 - Math.pow(-2 * t + 2, 2) / 2; // ease-out second half
 
           const screwStartCX = hoverX + SPRITE_FW / 2;
-          // Funnel/suction starts later — only when screw is closer to the vortex
-          const suckRaw = Math.max(0, (s - 0.55) / 0.45);
+          // Suction kicks in at 60% — smooth ramp
+          const suckRaw = Math.max(0, (s - 0.6) / 0.4);
           const suck = suckRaw * suckRaw * (3 - 2 * suckRaw);
 
           // X position
           const x = screwStartCX + (vortexCX - screwStartCX) * s;
 
-          // Y: blend between flat water and bezier curve toward vortex
-          // Use hoverY (where bob ended) so there's no positional jump
+          // Y: blend between flat cruising and smooth curve up toward vortex
+          // Use hoverY (where save ended) so there's no positional jump
           const flatY = hoverY;
-          const bBaseY = waterLevel;
+          const bBaseY = hoverY;
           const bDestY = vortexCY;
-          const bCp1y = bBaseY - (bBaseY - bDestY) * 0.2;  // stays near water much longer
-          const bCp2y = bDestY + (bBaseY - bDestY) * 0.35;  // approaches vortex more gradually
-          const bOmt = 1 - s;
-          const bezY = bOmt*bOmt*bOmt*bBaseY + 3*bOmt*bOmt*s*bCp1y + 3*bOmt*s*s*bCp2y + s*s*s*bDestY;
-          let y = flatY + (bezY - SPRITE_FH / 2 - flatY) * suck;
+          // Control points keep screw near water level most of the way, then arc up smoothly
+          const bCp1y = bBaseY - (bBaseY - bDestY) * 0.08;  // nearly flat early on
+          const bCp2y = bDestY + (bBaseY - bDestY) * 0.25;  // smooth approach to vortex
+          const bOmt = 1 - suck;
+          const bezY = bOmt*bOmt*bOmt*bBaseY + 3*bOmt*bOmt*suck*bCp1y + 3*bOmt*suck*suck*bCp2y + suck*suck*suck*bDestY;
+          let y = bezY - SPRITE_FH / 2;
 
           // Wave bob — gentle, fades as suction takes over
           const bobStrength = Math.max(0, 1 - suck * 2);
           y += Math.sin(now * 0.0018) * 3.5 * bobStrength;
 
-          // Tilt: slight forward lean during cruise, banks into suction curve
+          // Tilt: slight forward lean during cruise, smooth bank into suction curve
           const cruiseLean = 2 * (1 - suck);
-          const suctionBank = suck * 12 * (x < vortexCX ? 1 : -1) * Math.min(1, suck);
+          const suctionBank = suck * suck * 10 * (x < vortexCX ? 1 : -1);
           const tiltDeg = cruiseLean + suctionBank;
 
           // Scale: full size until final 15%
@@ -12802,12 +12860,13 @@
                 const pal = artworkPalettes[aeIdx] || COLLECTION_PALETTES['ACK Editions'];
                 const aeArt = collection.artworks[aeIdx];
                 const isStarry = aeArt && aeArt.image && aeArt.image.indexOf('lanuit') !== -1;
-                const frameSvg = isStarry ? generateStarryFrame(localW, localH) : generateEditionsFrame(localW, localH, pal);
+                const isLisan = aeArt && aeArt.image && aeArt.image.indexOf('lisan') !== -1;
+                const frameSvg = isStarry ? generateStarryFrame(localW, localH) : (isLisan ? generateLisanFrame(localW, localH) : generateEditionsFrame(localW, localH, pal));
                 frameSvg.style.opacity = '1';
                 frameSvg.style.transition = 'none';
                 frameSvg.dataset.collectionFrame = 'true';
                 aeNode.appendChild(frameSvg);
-                aeNode.classList.add(isStarry ? 'has-starry-frame' : 'has-editions-frame');
+                aeNode.classList.add(isStarry ? 'has-starry-frame' : (isLisan ? 'has-editions-frame' : 'has-editions-frame'));
               } else {
                 setTimeout(_applyEditionsFrame, 500);
               }
@@ -14213,18 +14272,37 @@
         const artData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
         const _isSpinCoinFocus = artData && artData.spinCoin;
         if (_isSpinCoinFocus) {
-          // Swap coin images to hi-res 600px versions for focus mode
+          // Preload hi-res coin images, then swap once loaded for crisp focus
           const coinWrap = node.querySelector('.servant-coin-wrap');
           if (coinWrap) {
             const faceImg = coinWrap.querySelector('.servant-coin-face img');
             const backImg = coinWrap.querySelector('.servant-coin-back img');
-            if (faceImg) { faceImg.dataset.thumbSrc = faceImg.src; faceImg.src = 'servant_face_focus.png'; }
-            if (backImg) { backImg.dataset.thumbSrc = backImg.src; backImg.src = 'servant_back_focus.png'; }
+            if (faceImg) faceImg.dataset.thumbSrc = faceImg.src;
+            if (backImg) backImg.dataset.thumbSrc = backImg.src;
+            // Preload both hi-res images before swapping
+            const _fPre = new Image(); const _bPre = new Image();
+            let _loaded = 0;
+            const _onHiresReady = () => {
+              _loaded++;
+              if (_loaded >= 2) {
+                if (faceImg) faceImg.src = 'servant_face_focus.png';
+                if (backImg) backImg.src = 'servant_back_focus.png';
+              }
+            };
+            _fPre.onload = _onHiresReady; _fPre.onerror = _onHiresReady;
+            _bPre.onload = _onHiresReady; _bPre.onerror = _onHiresReady;
+            _fPre.src = 'servant_face_focus.png';
+            _bPre.src = 'servant_back_focus.png';
+            // Fallback: swap after 3s even if preload stalls
+            setTimeout(() => {
+              if (faceImg && faceImg.src.indexOf('focus') === -1) faceImg.src = 'servant_face_focus.png';
+              if (backImg && backImg.src.indexOf('focus') === -1) backImg.src = 'servant_back_focus.png';
+            }, 3000);
             // Mark as hi-res swapped for exit restore
             coinWrap.dataset.hiresSwapped = '1';
-            // Slow the spin down for focus — more stately
+            // Slow the spin down for focus — elegant showcase
             const coinEl = coinWrap.querySelector('.servant-coin');
-            if (coinEl) { coinEl.style.animationDuration = '12s'; }
+            if (coinEl) { coinEl.style.animationDuration = '20s'; }
             // Apply servant ritual frame
             setTimeout(() => {
               const localW = parseFloat(node.style.width) || coinWrap.offsetWidth || 300;
@@ -14499,15 +14577,19 @@
       // ── ACK Editions frame in focus view (non-masterwork) ──
       if (COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].name === 'ACK Editions') {
         setTimeout(() => {
-          if (!node.querySelector('.editions-frame-svg') && !node.querySelector('.starry-frame-svg')) {
+          if (!node.querySelector('.editions-frame-svg') && !node.querySelector('.starry-frame-svg') && !node.querySelector('.lisan-frame-svg')) {
             const preview = node.querySelector('.node-preview');
             const img = preview ? preview.querySelector('img') : null;
             if (preview && img) {
               const localW = parseFloat(node.style.width) || preview.offsetWidth;
               const localH = img.offsetHeight || preview.offsetHeight || localW;
               const isStarry = artworkData.image && artworkData.image.indexOf('lanuit') !== -1;
+              const isLisan = artworkData.image && artworkData.image.indexOf('lisan') !== -1;
               if (isStarry) {
                 const frameSvg = generateStarryFrame(localW, localH);
+                node.appendChild(frameSvg);
+              } else if (isLisan) {
+                const frameSvg = generateLisanFrame(localW, localH);
                 node.appendChild(frameSvg);
               } else {
                 const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['ACK Editions'];
@@ -17716,6 +17798,142 @@
       els += `<text x="${R - 30}" y="${T - 4}" style="${textStyle}" fill="${metallic}0.25)">${('ED.' + Math.floor(rand() * 48 + 1)).toUpperCase()}</text>`;
       els += `<text x="${L + 2}" y="${B + 8}" style="${textStyle}" fill="${metallic}0.2)">ERC-1155</text>`;
       els += `<text x="${R - 26}" y="${B + 8}" style="${textStyle}" fill="${metallic}0.2)">ETH</text>`;
+
+      svg.innerHTML = els;
+      return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // ── LISAN AL-GAIB FRAME — Dune: sandworms, moons, spice particles ──
+    // ══════════════════════════════════════════════════════════════════
+    function generateLisanFrame(imgW, imgH) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 24;
+      const svg = document.createElementNS(ns, 'svg');
+      const W = imgW + pad * 2, H = imgH + pad * 2;
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.style.cssText = 'position:absolute;top:-' + pad + 'px;left:-' + pad + 'px;width:' + W + 'px;height:' + H + 'px;pointer-events:none;';
+      svg.classList.add('lisan-frame-svg');
+
+      const L = pad - 2, T = pad - 2, R = imgW + pad + 2, B = imgH + pad + 2;
+
+      // Dune palette
+      const sand = 'rgba(194,160,100,';
+      const spice = 'rgba(220,140,40,';
+      const blue = 'rgba(52,128,197,';   // eyes of ibad
+      const dark = 'rgba(60,45,25,';
+      const moon = 'rgba(220,200,150,';
+
+      let els = '';
+
+      // ── Defs ──
+      els += '<defs>';
+      // Desert sand gradient for border
+      els += `<linearGradient id="lisanSand" x1="0%" y1="0%" x2="100%" y2="100%">`;
+      els += `<stop offset="0%" stop-color="${sand}0.5)"/>`;
+      els += `<stop offset="40%" stop-color="${spice}0.4)"/>`;
+      els += `<stop offset="70%" stop-color="${blue}0.3)"/>`;
+      els += `<stop offset="100%" stop-color="${sand}0.45)"/>`;
+      els += '</linearGradient>';
+      // Spice glow filter
+      els += '<filter id="lisanGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+      els += '</defs>';
+
+      // ── Outer border — desert sand ──
+      els += `<rect x="${L}" y="${T}" width="${R - L}" height="${B - T}" rx="2" ry="2" fill="none" stroke="${sand}0.4)" stroke-width="1.5"/>`;
+      els += `<rect x="${L + 3}" y="${T + 3}" width="${R - L - 6}" height="${B - T - 6}" rx="1" ry="1" fill="none" stroke="url(#lisanSand)" stroke-width="0.7"/>`;
+
+      // ── Twin moons — top right ──
+      const moonX1 = R - 18, moonY1 = T - 10;
+      const moonX2 = R - 6, moonY2 = T - 14;
+      // Larger moon
+      els += `<circle cx="${moonX1}" cy="${moonY1}" r="6" fill="${moon}0.25)" style="animation:lisanMoonGlow 6s ease-in-out infinite"/>`;
+      els += `<circle cx="${moonX1}" cy="${moonY1}" r="5" fill="none" stroke="${moon}0.5)" stroke-width="0.5"/>`;
+      // Crescent shadow
+      els += `<circle cx="${moonX1 + 1.5}" cy="${moonY1 - 0.5}" r="4.5" fill="${dark}0.6)"/>`;
+      // Smaller moon
+      els += `<circle cx="${moonX2}" cy="${moonY2}" r="3.5" fill="${moon}0.2)" style="animation:lisanMoonGlow 8s ease-in-out 2s infinite"/>`;
+      els += `<circle cx="${moonX2}" cy="${moonY2}" r="3" fill="none" stroke="${moon}0.4)" stroke-width="0.4"/>`;
+      els += `<circle cx="${moonX2 + 1}" cy="${moonY2 - 0.3}" r="2.5" fill="${dark}0.5)"/>`;
+
+      // ── Sandworm along bottom — sinuous curve ──
+      const wormY = B + 6;
+      const wormStartX = L + 20;
+      const wormEndX = R - 20;
+      const wormMidX = (wormStartX + wormEndX) / 2;
+      // Body — thick undulating path
+      els += `<path d="M${wormStartX},${wormY + 3} Q${wormStartX + 40},${wormY - 8} ${wormMidX - 20},${wormY + 2} T${wormMidX + 30},${wormY - 5} T${wormEndX - 10},${wormY + 4}" fill="none" stroke="${sand}0.45)" stroke-width="3.5" stroke-linecap="round" style="animation:lisanWormUndulate 8s ease-in-out infinite"/>`;
+      // Inner line — segmented body detail
+      els += `<path d="M${wormStartX + 5},${wormY + 3} Q${wormStartX + 42},${wormY - 6} ${wormMidX - 18},${wormY + 2} T${wormMidX + 28},${wormY - 4} T${wormEndX - 15},${wormY + 4}" fill="none" stroke="${spice}0.3)" stroke-width="1" stroke-dasharray="4 3" stroke-linecap="round" style="animation:lisanWormUndulate 8s ease-in-out 0.3s infinite"/>`;
+      // Worm mouth — open tri-jaw at head
+      const headX = wormEndX - 8, headY = wormY + 4;
+      els += `<path d="M${headX},${headY} l6,-4 l-1,4 l1,4 l-6,-4" fill="${sand}0.35)" stroke="${spice}0.5)" stroke-width="0.5"/>`;
+      // Worm segments / rings
+      for (let i = 0; i < 8; i++) {
+        const sx = wormStartX + 15 + i * ((wormEndX - wormStartX - 40) / 8);
+        const sy = wormY + Math.sin(i * 0.8) * 3;
+        els += `<line x1="${sx}" y1="${sy - 2}" x2="${sx}" y2="${sy + 2}" stroke="${sand}0.2)" stroke-width="0.5"/>`;
+      }
+
+      // ── Small sandworm along top — subtle mirror ──
+      const worm2Y = T - 6;
+      els += `<path d="M${L + 15},${worm2Y} Q${L + 45},${worm2Y + 5} ${L + 75},${worm2Y - 2} T${L + 110},${worm2Y + 3}" fill="none" stroke="${sand}0.25)" stroke-width="2" stroke-linecap="round" style="animation:lisanWormUndulate 10s ease-in-out 1s infinite"/>`;
+      // Small jaw
+      els += `<path d="M${L + 112},${worm2Y + 3} l4,-2.5 l-0.5,2.5 l0.5,2.5 l-4,-2.5" fill="${sand}0.2)" stroke="${spice}0.3)" stroke-width="0.4"/>`;
+
+      // ── Spice particles — floating amber dots ──
+      const rng = (seed) => { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; };
+      const rand = rng(42069);
+      // Left side spice
+      for (let i = 0; i < 12; i++) {
+        const px = L - 4 + rand() * 14;
+        const py = T + 20 + rand() * (B - T - 40);
+        const pr = 0.6 + rand() * 1.8;
+        const op = 0.15 + rand() * 0.4;
+        const dur = 4 + rand() * 5;
+        const delay = rand() * -8;
+        els += `<circle cx="${px}" cy="${py}" r="${pr}" fill="${spice}${op})" style="animation:lisanSpiceFloat ${dur}s ease-in-out ${delay}s infinite"/>`;
+      }
+      // Right side spice
+      for (let i = 0; i < 12; i++) {
+        const px = R - 10 + rand() * 14;
+        const py = T + 20 + rand() * (B - T - 40);
+        const pr = 0.6 + rand() * 1.8;
+        const op = 0.15 + rand() * 0.4;
+        const dur = 4 + rand() * 5;
+        const delay = rand() * -8;
+        els += `<circle cx="${px}" cy="${py}" r="${pr}" fill="${spice}${op})" style="animation:lisanSpiceFloat ${dur}s ease-in-out ${delay}s infinite"/>`;
+      }
+      // A few blue spice (Eyes of Ibad — the spice changes you)
+      for (let i = 0; i < 5; i++) {
+        const side = rand() > 0.5;
+        const px = side ? (L - 2 + rand() * 10) : (R - 8 + rand() * 10);
+        const py = T + 30 + rand() * (B - T - 60);
+        const pr = 0.5 + rand() * 1.2;
+        const op = 0.2 + rand() * 0.35;
+        const dur = 5 + rand() * 4;
+        const delay = rand() * -6;
+        els += `<circle cx="${px}" cy="${py}" r="${pr}" fill="${blue}${op})" filter="url(#lisanGlow)" style="animation:lisanSpiceFloat ${dur}s ease-in-out ${delay}s infinite"/>`;
+      }
+
+      // ── Corner brackets — desert metal ──
+      const bLen = 16, bW = 1.5;
+      els += `<line x1="${L}" y1="${T}" x2="${L + bLen}" y2="${T}" stroke="${sand}0.55)" stroke-width="${bW}"/>`;
+      els += `<line x1="${L}" y1="${T}" x2="${L}" y2="${T + bLen}" stroke="${sand}0.55)" stroke-width="${bW}"/>`;
+      els += `<line x1="${R}" y1="${T}" x2="${R - bLen}" y2="${T}" stroke="${sand}0.55)" stroke-width="${bW}"/>`;
+      els += `<line x1="${R}" y1="${T}" x2="${R}" y2="${T + bLen}" stroke="${sand}0.55)" stroke-width="${bW}"/>`;
+      els += `<line x1="${L}" y1="${B}" x2="${L + bLen}" y2="${B}" stroke="${sand}0.55)" stroke-width="${bW}"/>`;
+      els += `<line x1="${L}" y1="${B}" x2="${L}" y2="${B - bLen}" stroke="${sand}0.55)" stroke-width="${bW}"/>`;
+      els += `<line x1="${R}" y1="${B}" x2="${R - bLen}" y2="${B}" stroke="${sand}0.55)" stroke-width="${bW}"/>`;
+      els += `<line x1="${R}" y1="${B}" x2="${R}" y2="${B - bLen}" stroke="${sand}0.55)" stroke-width="${bW}"/>`;
+
+      // ── Text fragments — Dune lore ──
+      const fontSize = 5;
+      const ts = `font-family:'Courier New',monospace;font-size:${fontSize}px;letter-spacing:1.5px;`;
+      els += `<text x="${L + 2}" y="${T - 4}" style="${ts}" fill="${spice}0.3)">MUAD'DIB</text>`;
+      els += `<text x="${R - 42}" y="${T - 4}" style="${ts}" fill="${sand}0.25)">ARRAKIS</text>`;
+      els += `<text x="${L + 2}" y="${B + 10}" style="${ts}" fill="${blue}0.25)">THE SPICE MUST FLOW</text>`;
+      els += `<text x="${R - 32}" y="${B + 10}" style="${ts}" fill="${sand}0.2)">KWISATZ</text>`;
 
       svg.innerHTML = els;
       return svg;
@@ -21347,7 +21565,7 @@
       cleanupMasterworkFrame(focusedNode);
 
       // Clean up focus-added frames, but preserve the collection-view ones
-      focusedNode.querySelectorAll('.botanical-frame-svg, .bar-frame-svg, .blossom-frame-svg, .clown-frame-svg, .editions-frame-svg, .starry-frame-svg, .pfp-frame-svg, .warothy-frame-svg, .brokenkeys-frame-svg, .colorstudy-frame-svg, .opepen-frame-svg, .heartyou-frame-svg, .tempted-frame-svg, .servant-frame-svg').forEach(bf => {
+      focusedNode.querySelectorAll('.botanical-frame-svg, .bar-frame-svg, .blossom-frame-svg, .clown-frame-svg, .editions-frame-svg, .starry-frame-svg, .lisan-frame-svg, .pfp-frame-svg, .warothy-frame-svg, .brokenkeys-frame-svg, .colorstudy-frame-svg, .opepen-frame-svg, .heartyou-frame-svg, .tempted-frame-svg, .servant-frame-svg').forEach(bf => {
         if (!bf.dataset.collectionFrame) bf.remove();
         else bf.style.display = ''; // unhide collection frames (Piano Blossoms hides them on focus)
       });
