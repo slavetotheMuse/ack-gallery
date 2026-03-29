@@ -4636,6 +4636,36 @@
       }
     }
 
+    /* ── ESC hint — subtle bottom-right indicator ── */
+    .esc-hint {
+      position: fixed;
+      bottom: 18px;
+      right: 20px;
+      z-index: 2500;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.42rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(200,180,150,0.3);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .esc-hint.visible { opacity: 1; }
+    .esc-hint kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      border: 1px solid rgba(200,180,150,0.2);
+      border-radius: 3px;
+      font-family: inherit;
+      font-size: inherit;
+      color: rgba(200,180,150,0.45);
+      margin-right: 4px;
+    }
+    @media (max-width: 768px) {
+      .esc-hint { display: none !important; }
+    }
+
     /* Tablet tweaks */
     @media (min-width: 769px) and (max-width: 1200px) {
       .gallery-container { padding: 0 30px; padding-top: 75px; }
@@ -9717,7 +9747,7 @@
 
       // Portal opening animation
       const revealStart = performance.now();
-      const revealDur = goingDirect ? 1400 : 2200; // faster for direct-to-collection
+      const revealDur = goingDirect ? 1000 : 1400; // faster reveal
       const cx = window.innerWidth / 2;
       const cy = window.innerHeight / 2;
       const maxR = Math.sqrt(cx * cx + cy * cy);
@@ -9754,20 +9784,20 @@
         // ── DIRECT TO COLLECTION: skip catalog animations, go straight to detail ──
         // Nav appears quickly
         setTimeout(() => {
-          nav.style.transition = 'opacity 0.4s ease';
+          nav.style.transition = 'opacity 0.3s ease';
           nav.classList.add('revealed');
           nav.style.opacity = '1';
           const staticCoin = nav.querySelector('.nav-coin');
           if (staticCoin) staticCoin.style.opacity = '0';
-          setTimeout(() => runNavLogoSweep(nav, staticCoin), 300);
-        }, 400);
+          setTimeout(() => runNavLogoSweep(nav, staticCoin), 200);
+        }, 200);
 
         // Candles appear
         setTimeout(() => {
           candles.classList.add('visible');
-          candles.style.transition = 'opacity 0.6s ease';
+          candles.style.transition = 'opacity 0.4s ease';
           candles.style.opacity = '1';
-        }, 600);
+        }, 350);
 
         // Open collection detail immediately after portal opens
         // Collection nodes stay hidden — user goes straight to detail
@@ -9781,49 +9811,49 @@
           if (masterNodeEl) { masterNodeEl.style.opacity = '1'; masterNodeEl.style.transition = ''; }
           if (homeWires) { homeWires.style.opacity = '1'; homeWires.style.transition = ''; }
           openDetail(targetCollectionIndex, true);
-        }, 1600);
+        }, 1000);
       } else {
         // ── FULL CATALOG REVEAL: existing phased animation ──
 
         // Phase 2: Nav slides down
         setTimeout(() => {
-          nav.style.transition = 'opacity 0.5s ease';
+          nav.style.transition = 'opacity 0.4s ease';
           nav.classList.add('revealed');
           nav.style.opacity = '1';
           const staticCoin = nav.querySelector('.nav-coin');
           if (staticCoin) staticCoin.style.opacity = '0';
-          setTimeout(() => runNavLogoSweep(nav, staticCoin), 400);
-        }, 600);
+          setTimeout(() => runNavLogoSweep(nav, staticCoin), 250);
+        }, 300);
 
         // Phase 3: Master brain node fades in
         setTimeout(() => {
           if (masterNodeEl) {
-            masterNodeEl.style.transition = 'opacity 0.5s ease';
+            masterNodeEl.style.transition = 'opacity 0.4s ease';
             masterNodeEl.style.opacity = '1';
           }
-        }, 900);
+        }, 500);
 
         // Phase 4: Collection nodes rise up
         setTimeout(() => {
           allCollectionNodes.forEach((n, i) => {
             setTimeout(() => {
-              n.style.transition = 'opacity 0.6s ease';
+              n.style.transition = 'opacity 0.5s ease';
               n.style.opacity = '1';
               n.classList.add('revealed');
-            }, i * 40);
+            }, i * 30);
           });
-        }, 1000);
+        }, 600);
 
         // Phase 5: Wires + candles fade in
         setTimeout(() => {
           if (homeWires) {
-            homeWires.style.transition = 'opacity 0.8s ease';
+            homeWires.style.transition = 'opacity 0.6s ease';
             homeWires.style.opacity = '1';
           }
           candles.classList.add('visible');
-          candles.style.transition = 'opacity 0.8s ease';
+          candles.style.transition = 'opacity 0.6s ease';
           candles.style.opacity = '1';
-        }, 1600);
+        }, 900);
 
         // Clean up transitions
         setTimeout(() => {
@@ -9834,7 +9864,7 @@
           allCollectionNodes.forEach(n => { n.style.transition = ''; });
           if (masterNodeEl) masterNodeEl.style.transition = '';
           if (homeWires) homeWires.style.transition = '';
-        }, 3500);
+        }, 2200);
       }
 
       // Set up global cursor tracking (always on)
@@ -14377,6 +14407,9 @@
         // Clear re-entrancy guard once the view is fully built and visible
         _openDetailBusy = false;
 
+        // Show ESC hint on collection detail entry
+        showEscHint('to go back');
+
         // ── FLASH DETECTOR: monitor for unexpected DOM changes ──
         if (collection.wallLayout) {
           const _flashInner = contentEl.querySelector('.node-graph-inner');
@@ -14730,6 +14763,7 @@
         // Apply focus mode class now that siblings are scattered
         inner.classList.add('focus-mode');
         node.classList.add('focused');
+        showEscHint('to exit focus');
         // Dim salesbot during focus
         var _sb = document.getElementById('salesbotNode');
         if (_sb) _sb.classList.add('dimmed');
@@ -16142,6 +16176,8 @@
     function createInfoPanel(node, inner, collectionIndex, artworkIndex) {
       const collection = COLLECTIONS[collectionIndex];
       const artwork = collection.artworks[artworkIndex];
+      // Resolve display name — for My Bags clones, show the source collection
+      const _displayColName = (artwork && artwork._sourceCollection) ? artwork._sourceCollection : collection.name;
 
       // Create info panel
       let infoPanel = document.getElementById('nodeInfoPanel');
@@ -16161,7 +16197,7 @@
         : '';
       // Physical print / ChromaSculpt badge
       const _physicalPrintCollections = ['Warothys', 'Piano Blossoms', 'Clown Party', 'Tempted in the Garden'];
-      const _hasPhysicalPrint = _physicalPrintCollections.indexOf(collection.name) !== -1;
+      const _hasPhysicalPrint = _physicalPrintCollections.indexOf(_displayColName) !== -1;
       const physicalPrintLine = _hasPhysicalPrint
         ? `<div class="node-info-line" style="margin-top:6px;margin-bottom:6px;">
             <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:3px;border:1px solid rgba(195,155,55,0.3);background:rgba(195,155,55,0.06);">
@@ -16218,7 +16254,7 @@
             ${physicalPrintLine}
             <div class="node-info-line">
               <div class="node-info-label">Collection</div>
-              <div class="node-info-value">${collection.name}</div>
+              <div class="node-info-value">${_displayColName}</div>
             </div>
             <div class="node-info-line">
               <div class="node-info-label">Artist</div>
@@ -22531,6 +22567,7 @@
     function exitFocusMode() {
       const inner = document.querySelector('.node-graph-inner.focus-mode');
       if (!inner || !focusedNode) return;
+      hideEscHint();
 
       // Clean up touch swipe listeners
       if (focusedNode._swipeCleanup) {
@@ -22935,6 +22972,7 @@
 
     function closeDetail() {
       _openDetailBusy = false; // clear re-entrancy guard
+      hideEscHint();
       _stopServantMusic(); // stop servant music on any collection close
       exitFocusMode();
       clearDetailConnectionWires();
@@ -23533,6 +23571,29 @@
         settingsDropdown.classList.remove('active');
       }
     });
+
+    // ── ESC hint — shows on detail/focus entry, fades out after a few seconds ──
+    var _escHintEl = null;
+    var _escHintTimer = null;
+    function showEscHint(text) {
+      if (window.innerWidth < 768) return; // no hint on mobile
+      if (!_escHintEl) {
+        _escHintEl = document.createElement('div');
+        _escHintEl.className = 'esc-hint';
+        document.body.appendChild(_escHintEl);
+      }
+      _escHintEl.innerHTML = '<kbd>esc</kbd> ' + (text || 'to go back');
+      _escHintEl.classList.remove('visible');
+      requestAnimationFrame(() => { _escHintEl.classList.add('visible'); });
+      clearTimeout(_escHintTimer);
+      _escHintTimer = setTimeout(() => {
+        if (_escHintEl) _escHintEl.classList.remove('visible');
+      }, 3500);
+    }
+    function hideEscHint() {
+      if (_escHintEl) _escHintEl.classList.remove('visible');
+      clearTimeout(_escHintTimer);
+    }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
