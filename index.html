@@ -6,7 +6,7 @@
   <script>
     // Force desktop-width rendering on mobile — full experience, just scaled down
     if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768) {
-      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.3, user-scalable=yes');
+      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.3, user-scalable=no');
     }
   </script>
   <title>slave to the Muse</title>
@@ -4479,6 +4479,7 @@
     <!-- ACK Logo removed from intro — now scattered as propellers in bgGrid -->
     <!-- Intro Hint -->
     <div class="intro-hint" id="introHint">double-click a collection to explore</div>
+    <script>if(/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){document.getElementById('introHint').textContent='tap a collection to explore';}</script>
     <!-- C4D Object Manager Panel -->
     <div class="c4d-object-manager" id="objectManager">
       <div class="obj-header">
@@ -6086,6 +6087,7 @@
 
     // Persistent background grid with vortex distortion (animated canvas)
     let bgGridAnimFrame = null;
+    let bgGridPaused = false; // pause on mobile when inside collection views
     let bgGridIntersections = [];
     let bgGridEqParticles = [];
     // Grid warp-in reveal: 0 = fully collapsed to center, 1 = normal
@@ -6301,7 +6303,8 @@
         // Equations — ONLY on intro page, not on main gallery
         // (equations are drawn in the intro canvas animation instead)
 
-        // Throttle to ~20fps on mobile for performance
+        // On mobile: pause entirely when in collection view, throttle otherwise
+        if (bgGridPaused) { bgGridAnimFrame = null; return; }
         if (_isRealMobile) {
           setTimeout(function() { bgGridAnimFrame = requestAnimationFrame(drawFrame); }, 50);
         } else {
@@ -8699,7 +8702,7 @@
 
       // Phase 2: Show hint to select a guide + onboarding pulse
       setTimeout(() => {
-        introHint.textContent = 'double-click a collection to explore';
+        introHint.textContent = _isRealMobile ? 'tap a collection to explore' : 'double-click a collection to explore';
         introHint.classList.add('visible');
         // Also make vortex clickable so user can skip
         vortexTarget.classList.add('active');
@@ -9103,8 +9106,8 @@
         }, 4000);
       }
 
-      // "All Collections" double-click → full catalog via vortex (no specific collection)
-      allCollRow.addEventListener('dblclick', function() {
+      // "All Collections" double-click (single tap on mobile) → full catalog via vortex
+      allCollRow.addEventListener(_isRealMobile ? 'click' : 'dblclick', function() {
         if (guideSpawned) return;
         guideSpawned = true;
         allCollRow.classList.add('selected');
@@ -9128,11 +9131,12 @@
         }, 7000);
       });
 
-      // Attach double-click handlers to all collection rows
+      // Attach double-click handlers to all collection rows (single tap on mobile)
+      const _omClickEvent = _isRealMobile ? 'click' : 'dblclick';
       collectionRows.forEach(({ row, col, idx }) => {
         if (col.comingSoon) return; // no interaction for coming soon
 
-        row.addEventListener('dblclick', function(e) {
+        row.addEventListener(_omClickEvent, function(e) {
           if (guideSpawned) return;
           // Stop onboarding pulse on first interaction
           if (window._onboardPulseTimer) { clearInterval(window._onboardPulseTimer); window._onboardPulseTimer = null; }
@@ -9737,7 +9741,14 @@
         setTimeout(() => runNavLogoSweep(nav, staticCoin), 600);
       }, 1200);
       setTimeout(() => { revealCellsCascade(); }, 1800);
-      setTimeout(() => { overlay.style.display = 'none'; }, 4000);
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        // On mobile: hide intro canvas to free GPU memory
+        if (_isRealMobile) {
+          var introGrid = document.getElementById('viewportGrid');
+          if (introGrid) introGrid.style.display = 'none';
+        }
+      }, 4000);
     }
 
     function revealCellsCascade() {
@@ -10004,7 +10015,7 @@
             const img = document.createElement('img');
             img.src = collection.image;
             img.alt = collection.name;
-            img.loading = 'lazy';
+            img.loading = 'lazy'; if (_isRealMobile) img.decoding = 'async';
             img.onerror = () => { thumbnail.textContent = 'ACK'; };
             thumbnail.appendChild(img);
           }
@@ -10235,7 +10246,7 @@
           const img = document.createElement('img');
           img.src = collection.image;
           img.alt = collection.name;
-          img.loading = 'lazy';
+          img.loading = 'lazy'; if (_isRealMobile) img.decoding = 'async';
           img.onerror = () => { thumbnail.textContent = 'ACK'; };
           thumbnail.appendChild(img);
         }
@@ -11033,7 +11044,7 @@
               img.src = artwork.image;
             }
             img.alt = artwork.title;
-            img.loading = 'lazy';
+            img.loading = 'lazy'; if (_isRealMobile) img.decoding = 'async';
             thumb.appendChild(img);
             node.appendChild(thumb);
 
@@ -11556,9 +11567,10 @@
       const titleEl = document.getElementById('detailTitle');
       const contentEl = document.getElementById('detailContent');
 
-      // Mobile: show back button, hide candles in detail view
+      // Mobile: show back button, hide candles, pause background grid
       _showMobileBack('detail');
       _hideCandlesOnMobile();
+      if (_isRealMobile) bgGridPaused = true;
 
       titleEl.textContent = collection.name;
 
@@ -12263,7 +12275,7 @@
           } else {
             img = document.createElement('img');
             img.alt = artwork.title;
-            img.loading = 'lazy';
+            img.loading = 'lazy'; if (_isRealMobile) img.decoding = 'async';
           }
 
           // C4D crystallize/materialize loading for heavy assets (GIFs)
@@ -23006,6 +23018,11 @@
       // Mobile: hide back button, restore candles
       _hideMobileBack();
       _showCandlesOnMobile();
+      // Resume background grid on mobile
+      if (_isRealMobile && bgGridPaused) {
+        bgGridPaused = false;
+        if (typeof buildPersistentGrid === 'function') buildPersistentGrid();
+      }
       // Reset tickers to catalog defaults
       updateMotherboardTickers(null, null);
       const overlay = document.getElementById('detailOverlay');
