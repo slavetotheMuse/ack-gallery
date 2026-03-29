@@ -1491,8 +1491,7 @@
       height: 100%;
       position: relative;
       transform-style: preserve-3d;
-      animation: servantCoinSpin var(--coin-dur, 8s) linear infinite;
-      animation-delay: var(--coin-delay, 0s);
+      /* spinning removed — show face only */
     }
     .servant-coin-face,
     .servant-coin-back {
@@ -4441,15 +4440,40 @@
       /* ── Node graph — tighter padding ── */
       .node-graph-inner { padding: 12px; }
 
-      /* ── Motherboard — hide in focus mode on mobile, smaller in grid view ── */
+      /* ── Motherboard — smaller in grid view, repositioned in focus mode ── */
       .master-node-pcb { width: 180px; height: 65px; }
       .master-node-pcb .pcb-chip { transform: scale(0.75); }
       .pcb-label-main { font-size: 0.45rem !important; }
       .pcb-label-sub { font-size: 0.3rem !important; }
-      .node-graph-inner.focus-mode #masterNode { display: none !important; }
 
-      /* ── Focus mode ports — hide on mobile (no wire connections) ── */
-      .node-graph-inner.focus-mode .node-card.focused .node-port { display: none; }
+      /* ── Mobile focus: motherboard fills bottom of screen ── */
+      .node-graph-inner.focus-mode #masterNode {
+        position: fixed !important;
+        bottom: 16px !important;
+        left: 50% !important;
+        top: auto !important;
+        transform: translateX(-50%) !important;
+        z-index: 2600 !important;
+      }
+      .node-graph-inner.focus-mode .master-node-pcb {
+        width: calc(100vw - 32px) !important;
+        height: 85px !important;
+      }
+      .node-graph-inner.focus-mode .master-node-pcb .pcb-chip {
+        transform: scale(1) !important;
+      }
+      .node-graph-inner.focus-mode .pcb-ticker {
+        width: 100px !important;
+        height: 52px !important;
+      }
+      .node-graph-inner.focus-mode .pcb-ticker-line {
+        font-size: 0.36rem !important;
+      }
+      .node-graph-inner.focus-mode .pcb-chip-label {
+        font-size: 0.4rem !important;
+      }
+
+      /* ── Focus mode ports — hide info panel ports on mobile ── */
       .info-port-in, .info-port-out { display: none !important; }
       .overlay-port-in, .overlay-port-out { display: none !important; }
 
@@ -4526,8 +4550,7 @@
       .coa-overlay-wire { display: none !important; }
       .info-overlay-card { display: none !important; }
       #focusModeTitle { display: none !important; }
-      /* Hide focus mode wires on mobile */
-      .focus-wire-svg { display: none !important; }
+      /* Keep focus mode wires visible on mobile — connects artwork to motherboard */
 
       /* ── Mobile Focus Info Bar — PCB-styled bottom strip ── */
       .mobile-focus-bar {
@@ -11641,17 +11664,13 @@
     var _servantGain = null;
     function _startServantMusic() {
       if (_servantAudio) return;
-      _servantAudio = new Audio('servantoutput.wav');
+      _servantAudio = new Audio('servant_muse.m4a');
       _servantAudio.loop = true;
-      _servantAudio.playbackRate = 0.7;           // slow & stretch
-      _servantAudio.preservesPitch = false;        // pitch drops with speed — eerie
-      // Web Audio graph: source → gain → output (no filters)
+      // No filters — play the audio as-is, just keep it quiet
       _servantAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
       var src = _servantAudioCtx.createMediaElementSource(_servantAudio);
-      // Gain node for volume control + fade
       _servantGain = _servantAudioCtx.createGain();
       _servantGain.gain.value = 0;
-      // Connect: source → gain → speakers
       src.connect(_servantGain);
       _servantGain.connect(_servantAudioCtx.destination);
       // Resume AudioContext if suspended (browser autoplay policy)
@@ -11665,8 +11684,8 @@
       // Fade in to low volume
       var _fadeIn = setInterval(function() {
         if (!_servantGain) { clearInterval(_fadeIn); return; }
-        if (_servantGain.gain.value < 0.18) {
-          _servantGain.gain.value = Math.min(0.18, _servantGain.gain.value + 0.01);
+        if (_servantGain.gain.value < 0.10) {
+          _servantGain.gain.value = Math.min(0.10, _servantGain.gain.value + 0.005);
         } else { clearInterval(_fadeIn); }
       }, 50);
     }
@@ -14925,53 +14944,61 @@
 
       // Fixed-position title — appears after scale-up
       if (_isMobileFocus) {
-        // ── MOBILE: Show PCB-styled info bar at bottom instead of desktop title ──
+        // ── MOBILE: Populate motherboard tickers with artwork info ──
         setTimeout(() => {
           const _mfArt = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
           const _mfColl = COLLECTIONS[collectionIndex];
-          var _mfBar = document.getElementById('mobileFocusBar');
-          if (!_mfBar) {
-            _mfBar = document.createElement('div');
-            _mfBar.id = 'mobileFocusBar';
-            _mfBar.className = 'mobile-focus-bar';
-            document.body.appendChild(_mfBar);
-          }
-          // Build content
           var _mfTitle = _mfArt ? (_mfArt.title || '') : artworkTitle;
           var _mfDesc = _mfArt ? (_mfArt.description || '') : '';
           var _mfType = _mfArt ? (_mfArt.edition || '1/1') : '';
-          var _mfPrice = '';
-          if (_mfArt && _mfArt.winningBid) _mfPrice = _mfArt.winningBid;
-          else if (_mfArt && _mfArt.lastSale) _mfPrice = _mfArt.lastSale;
+          var _mfColName = '';
+          if (_mfArt && _mfArt._sourceCollection) _mfColName = _mfArt._sourceCollection;
+          else if (_mfColl) _mfColName = _mfColl.name;
 
-          var _mfHTML = '<div class="mobile-focus-bar-title">' + _mfTitle + '</div>';
-          if (_mfDesc) _mfHTML += '<div class="mobile-focus-bar-desc">' + _mfDesc + '</div>';
-          _mfHTML += '<div class="mobile-focus-bar-meta">';
-          if (_mfType) _mfHTML += '<span class="mobile-focus-bar-tag">' + _mfType + '</span>';
-          if (_mfPrice) _mfHTML += '<span class="mobile-focus-bar-price">' + _mfPrice + '</span>';
-          if (_mfColl) _mfHTML += '<span class="mobile-focus-bar-tag">' + _mfColl.name + '</span>';
-          _mfHTML += '</div>';
-          _mfHTML += '<div class="mobile-focus-bar-actions">';
-          if (_mfArt && _mfArt.fullRes) {
-            _mfHTML += '<div class="mobile-focus-bar-btn" data-action="download">Download</div>';
+          // Update billboard chip label with artwork title
+          const chipLabel = document.querySelector('.pcb-chip-label');
+          if (chipLabel) {
+            chipLabel.textContent = _mfTitle;
+            chipLabel.classList.add('marquee');
+            chipLabel.style.setProperty('--marquee-dur', Math.max(3, _mfTitle.length * 0.25) + 's');
           }
-          _mfHTML += '<div class="mobile-focus-bar-btn" data-action="close">Close</div>';
-          _mfHTML += '</div>';
-          _mfBar.innerHTML = _mfHTML;
 
-          // Wire up buttons
-          _mfBar.querySelectorAll('.mobile-focus-bar-btn').forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-              e.stopPropagation();
-              if (btn.dataset.action === 'download') {
-                downloadArtwork(collectionIndex, artworkIndex, 'full');
-              } else if (btn.dataset.action === 'close') {
-                exitFocusMode();
-              }
-            });
-          });
+          // Left ticker: artwork info
+          const leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
+          if (leftTicker) {
+            leftTicker._origHTML = leftTicker.innerHTML;
+            leftTicker.style.animation = 'none'; // stop auto-scroll, show static info
+            var leftHTML = '';
+            leftHTML += '<span class="pcb-ticker-line bright">' + _mfTitle + '</span>';
+            if (_mfType) leftHTML += '<span class="pcb-ticker-line dim">' + _mfType + '</span>';
+            if (_mfColName) leftHTML += '<span class="pcb-ticker-line">' + _mfColName + '</span>';
+            leftTicker.innerHTML = leftHTML;
+          }
 
-          requestAnimationFrame(() => { _mfBar.classList.add('visible'); });
+          // Right ticker: description
+          const rightTicker = document.querySelector('.pcb-ticker.right .pcb-ticker-inner');
+          if (rightTicker) {
+            rightTicker._origHTML = rightTicker.innerHTML;
+            rightTicker.style.animation = 'none';
+            var rightHTML = '';
+            if (_mfDesc) {
+              // Split description into short lines for ticker display
+              var words = _mfDesc.split(' ');
+              var line = '';
+              words.forEach(function(w) {
+                if ((line + ' ' + w).length > 18) {
+                  rightHTML += '<span class="pcb-ticker-line">' + line.trim() + '</span>';
+                  line = w;
+                } else {
+                  line += ' ' + w;
+                }
+              });
+              if (line.trim()) rightHTML += '<span class="pcb-ticker-line">' + line.trim() + '</span>';
+            } else {
+              rightHTML += '<span class="pcb-ticker-line dim">—</span>';
+            }
+            rightTicker.innerHTML = rightHTML;
+          }
         }, _scatterWait + 200);
       } else {
       // ── DESKTOP: Floating title at bottom-left ──
@@ -22515,9 +22542,19 @@
       const focTitle = document.getElementById('focusModeTitle');
       if (focTitle) focTitle.remove();
 
-      // Remove mobile focus bar
-      const _mfBar = document.getElementById('mobileFocusBar');
-      if (_mfBar) { _mfBar.classList.remove('visible'); setTimeout(() => _mfBar.remove(), 400); }
+      // Restore motherboard tickers (mobile focus populates them with artwork info)
+      const leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
+      if (leftTicker && leftTicker._origHTML) {
+        leftTicker.innerHTML = leftTicker._origHTML;
+        leftTicker.style.animation = '';
+        delete leftTicker._origHTML;
+      }
+      const rightTicker = document.querySelector('.pcb-ticker.right .pcb-ticker-inner');
+      if (rightTicker && rightTicker._origHTML) {
+        rightTicker.innerHTML = rightTicker._origHTML;
+        rightTicker.style.animation = '';
+        delete rightTicker._origHTML;
+      }
 
       // Clean up masterwork frame + pan/zoom if active
       cleanupMasterworkFrame(focusedNode);
