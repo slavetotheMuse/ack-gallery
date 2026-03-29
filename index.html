@@ -4447,30 +4447,30 @@
       .pcb-label-sub { font-size: 0.3rem !important; }
 
       /* ── Mobile focus: motherboard fills bottom of screen ── */
-      .node-graph-inner.focus-mode #masterNode {
-        position: fixed !important;
-        bottom: 16px !important;
-        left: 50% !important;
-        top: auto !important;
-        transform: translateX(-50%) !important;
+      #masterNode.mobile-focus-expanded {
+        bottom: 12px !important;
         z-index: 2600 !important;
       }
-      .node-graph-inner.focus-mode .master-node-pcb {
-        width: calc(100vw - 32px) !important;
-        height: 85px !important;
+      #masterNode.mobile-focus-expanded .master-node-pcb {
+        width: calc(100vw - 24px) !important;
+        height: 90px !important;
       }
-      .node-graph-inner.focus-mode .master-node-pcb .pcb-chip {
+      #masterNode.mobile-focus-expanded .master-node-pcb .pcb-chip {
         transform: scale(1) !important;
       }
-      .node-graph-inner.focus-mode .pcb-ticker {
-        width: 100px !important;
-        height: 52px !important;
+      #masterNode.mobile-focus-expanded .pcb-ticker {
+        width: calc((100vw - 24px) * 0.3) !important;
+        height: 56px !important;
       }
-      .node-graph-inner.focus-mode .pcb-ticker-line {
-        font-size: 0.36rem !important;
+      #masterNode.mobile-focus-expanded .pcb-ticker-line {
+        font-size: 0.34rem !important;
+        line-height: 1.5 !important;
       }
-      .node-graph-inner.focus-mode .pcb-chip-label {
-        font-size: 0.4rem !important;
+      #masterNode.mobile-focus-expanded .pcb-chip-label {
+        font-size: 0.38rem !important;
+      }
+      #masterNode.mobile-focus-expanded .pcb-label {
+        font-size: 0.28rem !important;
       }
 
       /* ── Focus mode ports — hide info panel ports on mobile ── */
@@ -4508,13 +4508,24 @@
         -webkit-overflow-scrolling: touch;
       }
 
-      /* ── Mobile: collection nodes — bigger tap targets, cleaner look ── */
+      /* ── Mobile: collection nodes — uniform, clean, no frame overflow ── */
       .collection-node {
         -webkit-tap-highlight-color: transparent;
+        overflow: hidden;
       }
       .collection-node .collection-thumbnail {
         border-radius: 4px;
         overflow: hidden;
+      }
+      /* Hide decorative frames on mobile catalog — they cause size inconsistency */
+      .collections-grid .ornate-frame-svg,
+      .collections-grid .botanical-frame-svg,
+      .collections-grid .clown-frame-svg,
+      .collections-grid .tempted-frame-svg,
+      .collections-grid .bar-frame-svg,
+      .collections-grid .blossom-frame-svg,
+      .collections-grid .editions-frame-svg {
+        display: none !important;
       }
       .collection-node .collection-name {
         font-size: 0.45rem !important;
@@ -10132,8 +10143,8 @@
         // ── MOBILE: 2-column scrollable grid — big art, clean breathing room ──
         // ══════════════════════════════════════════════════
         const cols = 2;
-        const pad = 16;
-        const gap = 14;
+        const pad = 24;
+        const gap = 16;
         const colW = Math.floor((vpW - pad * 2 - gap * (cols - 1)) / cols);
         let colHeights = new Array(cols).fill(navHeight + pad + 8);
 
@@ -14777,6 +14788,18 @@
           _mnFocus.style.pointerEvents = 'none';
         }
 
+        // Force lazy images to load — on mobile, transform-based focus doesn't trigger lazy loading
+        const _focusImg = node.querySelector('.node-preview img');
+        if (_focusImg && _focusImg.loading === 'lazy') {
+          _focusImg.loading = 'eager';
+          // If src was never loaded due to lazy, trigger a reload
+          if (!_focusImg.naturalWidth) {
+            const _origSrc = _focusImg.src;
+            _focusImg.src = '';
+            _focusImg.src = _origSrc;
+          }
+        }
+
         // Swap thumbnail for full-resolution image
         const artData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
         const _isSpinCoinFocus = artData && artData.spinCoin;
@@ -14978,6 +15001,10 @@
 
       // Fixed-position title — appears after scale-up
       if (_isMobileFocus) {
+        // ── MOBILE: Expand motherboard to full width ──
+        const _mnMobile = document.getElementById('masterNode');
+        if (_mnMobile) _mnMobile.classList.add('mobile-focus-expanded');
+
         // ── MOBILE: Populate motherboard tickers with artwork info ──
         setTimeout(() => {
           const _mfArt = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
@@ -16730,8 +16757,7 @@
 
     // ── Focus mode wires: motherboard → artwork + motherboard → COA ──
     function drawFocusModeWires(artworkNode, infoPanelEl) {
-      // Skip wires on mobile — stacked layout doesn't need horizontal connections
-      if (window.innerWidth < 768) return;
+      var _isMobileWire = window.innerWidth < 768;
 
       // Remove any existing focus wires
       var existing = document.getElementById('focusModeWires');
@@ -16794,8 +16820,8 @@
         drawWire(artBottomX, artBottomY, mbX - 30, mbY, 2.8);
       }
 
-      // Wire 2: COA card bottom → Motherboard top
-      if (infoPanelEl) {
+      // Wire 2: COA card bottom → Motherboard top (desktop only)
+      if (infoPanelEl && !_isMobileWire) {
         var pRect = infoPanelEl.getBoundingClientRect();
         var panelBottomX = pRect.left + pRect.width / 2;
         var panelBottomY = pRect.top + pRect.height + 4;
@@ -22578,6 +22604,10 @@
       // Remove fixed-position focus title
       const focTitle = document.getElementById('focusModeTitle');
       if (focTitle) focTitle.remove();
+
+      // Remove mobile-focus-expanded from motherboard
+      const _mnExitMobile = document.getElementById('masterNode');
+      if (_mnExitMobile) _mnExitMobile.classList.remove('mobile-focus-expanded');
 
       // Restore motherboard tickers (mobile focus populates them with artwork info)
       const leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
