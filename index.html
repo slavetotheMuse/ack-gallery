@@ -143,9 +143,6 @@
       animation: candleFloat 8s ease-in-out infinite 4s;
     }
     /* Hide candles on mobile — reclaim horizontal space for art */
-    @media (max-width: 768px) {
-      .viewport-candles { display: none !important; }
-    }
     @keyframes candleFloat {
       0%, 100% { transform: translateY(-50%) translateX(0); }
       25% { transform: translateY(calc(-50% - 4px)) translateX(1px); }
@@ -1761,13 +1758,6 @@
       overflow: hidden;
       cursor: none;
     }
-    @media (max-width: 768px) {
-      .detail-overlay {
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        cursor: default;
-      }
-    }
 
     .detail-overlay.active {
       opacity: 1;
@@ -2001,15 +1991,6 @@
       box-shadow: 0 0 4px rgba(100, 200, 100, 0.3);
     }
 
-    @media (max-width: 768px) {
-      .obj-manager-container { padding: 60px 12px 40px; }
-      .obj-mgr-header { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
-      .obj-mgr-stats { padding: 6px 12px; gap: 12px; flex-wrap: wrap; }
-      .obj-tree-item { padding: 6px 12px 6px 28px; gap: 8px; }
-      .obj-tree-thumb { width: 36px; height: 36px; }
-      .obj-tree-tags { display: none; }
-      .obj-mgr-wallet { font-size: 0.45rem; }
-    }
 
 
     /* ══════════════════════════════════════════════════
@@ -4255,419 +4236,6 @@
       .node-graph-canvas:active { cursor: default !important; }
     }
 
-    @media (max-width: 768px) {
-      /* ── Nav: hamburger ── */
-      .hamburger-btn { display: block; }
-      .top-nav {
-        padding: 0 16px;
-        height: 52px;
-      }
-      .nav-title {
-        font-size: 0.85rem;
-        letter-spacing: 0.2em;
-      }
-      .nav-coin { width: 28px; height: 28px; }
-      .nav-right {
-        position: fixed;
-        top: 52px;
-        right: 0;
-        width: 220px;
-        background: rgba(42, 42, 42, 0.97);
-        border-left: 1px solid rgba(220,150,50,0.15);
-        border-bottom: 1px solid rgba(220,150,50,0.15);
-        flex-direction: column;
-        gap: 0;
-        padding: 12px 0;
-        transform: translateX(100%);
-        transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
-        z-index: 1001;
-        border-radius: 0 0 0 6px;
-      }
-      .nav-right.mobile-open {
-        transform: translateX(0);
-      }
-      .nav-right .nav-link,
-      .nav-right .about-dropdown > button,
-      .nav-right .c4d-settings-dropdown > button {
-        display: block;
-        width: 100%;
-        text-align: left;
-        padding: 12px 24px;
-        font-size: 0.6rem;
-      }
-      .nav-right .nav-link:hover,
-      .nav-right .about-dropdown > button:hover,
-      .nav-right .c4d-settings-dropdown > button:hover {
-        background: rgba(220,150,50,0.06);
-      }
-      /* Drop-down panels go full width inside mobile nav */
-      .about-panel,
-      .c4d-settings-panel {
-        position: relative;
-        top: 0;
-        right: 0;
-        width: 100%;
-        border: none;
-        border-top: 1px solid rgba(220,150,50,0.1);
-        border-radius: 0;
-        box-shadow: none;
-      }
-
-      /* ── Catalog / Home ── */
-      .gallery-container {
-        padding: 0 16px;
-        padding-top: 68px;
-      }
-      .collections-grid { columns: unset; }
-      .collection-cell { margin-bottom: 40px; }
-
-      /* ── Collection detail view ── */
-      .detail-container { padding: 12px; }
-      .detail-header { padding: 6px 12px; }
-      .detail-title { font-size: 0.55rem; }
-      .detail-back-btn { right: 12px; width: 28px; height: 28px; }
-
-      .artworks-grid { columns: 2; column-gap: 12px; }
-      .artwork-card { margin-bottom: 12px; }
-
-      /* ── Focus mode — artwork hero on mobile: full screen art showcase ── */
-      .node-graph-inner.focus-mode .node-card.focused {
-        transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
-                    opacity 0.3s ease;
-      }
-      .node-graph-inner.focus-mode .node-card.focused .node-preview {
-        box-shadow:
-          0 8px 40px rgba(0,0,0,0.7),
-          0 2px 8px rgba(0,0,0,0.5) !important;
-        border-radius: 2px;
-      }
-      .node-graph-inner.focus-mode .node-card.focused .node-preview img {
-        image-rendering: -webkit-optimize-contrast;
-      }
-      /* Hide frame ticks on mobile — too tiny to appreciate */
-      .node-graph-inner.focus-mode .node-frame-ticks { opacity: 0 !important; }
-      /* Hide ornate frame SVGs on mobile — too small to see details */
-      .ornate-frame-svg,
-      .botanical-frame-svg { display: none !important; }
-
-      /* ── COA panel — compact on mobile ── */
-      .node-info-panel {
-        max-width: 90vw !important;
-        font-size: 0.45rem !important;
-        line-height: 1.35 !important;
-      }
-      .node-info-panel-body {
-        padding: 5px 8px 8px !important;
-      }
-      .node-info-panel-header {
-        padding: 2px 6px !important;
-      }
-      .node-info-panel-header-title {
-        font-size: 0.45rem !important;
-      }
-      .node-info-panel-title {
-        font-size: 0.5rem !important;
-        margin-bottom: 2px !important;
-      }
-      .node-info-line {
-        margin-bottom: 3px !important;
-      }
-      .node-info-label {
-        font-size: 0.4rem !important;
-        margin-bottom: 0 !important;
-      }
-      .node-info-value {
-        font-size: 0.45rem !important;
-      }
-
-      /* ── Info dock — compact bottom strip on mobile ── */
-      .info-dock {
-        right: auto !important;
-        left: 50% !important;
-        top: auto !important;
-        bottom: 8px !important;
-        transform: translateX(-50%) !important;
-        width: calc(100vw - 24px) !important;
-        height: 90px !important;
-        border-radius: 6px !important;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-      }
-      .info-dock .dock-port-in {
-        display: none !important;
-      }
-
-      /* ── Info overlay card — bottom sheet style on mobile ── */
-      .info-overlay-card {
-        width: 100vw !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        top: auto !important;
-        max-height: 55vh !important;
-        border-radius: 12px 12px 0 0 !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-      }
-
-      /* ── COA overlay — bottom sheet on mobile ── */
-      .coa-overlay-panel {
-        width: 100vw !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        top: auto !important;
-        max-height: 80vh;
-        overflow-y: auto;
-        border-radius: 12px 12px 0 0 !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-      }
-
-      /* ── Lightbox ── */
-      .lightbox-content { padding: 60px 12px 30px; }
-      .lightbox-info-title { font-size: 1.2rem; }
-      .lightbox-image-container img { max-height: 55vh; }
-      .lightbox-close { top: 12px; right: 12px; }
-
-      /* ── Intro ── */
-      #intro-overlay { padding: 16px; }
-      .typewriter-container { padding: 0 16px; }
-      #typewriter-text { max-width: 95%; font-size: 0.9rem; }
-
-      /* ── Download buttons — stack better ── */
-      .overlay-downloads { gap: 8px; }
-      .download-btn { font-size: 0.44rem; padding: 6px 8px; }
-
-      /* ── Masterwork frame ticks — smaller on mobile ── */
-      .node-frame-ticks .th { width: 18px; }
-      .node-frame-ticks .tv { height: 18px; }
-
-      /* ── Node graph — tighter padding ── */
-      .node-graph-inner { padding: 12px; }
-
-      /* ── Motherboard — smaller in grid view, repositioned in focus mode ── */
-      .master-node-pcb { width: 180px; height: 65px; }
-      .master-node-pcb .pcb-chip { transform: scale(0.75); }
-      .pcb-label-main { font-size: 0.45rem !important; }
-      .pcb-label-sub { font-size: 0.3rem !important; }
-
-      /* ── Mobile focus: motherboard fills bottom of screen as info/detail card ── */
-      #masterNode.mobile-focus-expanded {
-        bottom: 8px !important;
-        left: 6px !important;
-        right: 6px !important;
-        z-index: 2600 !important;
-      }
-      #masterNode.mobile-focus-expanded .master-node-pcb {
-        width: calc(100vw - 12px) !important;
-        height: 105px !important;
-      }
-      #masterNode.mobile-focus-expanded .master-node-pcb .pcb-chip {
-        transform: scale(1) !important;
-      }
-      #masterNode.mobile-focus-expanded .pcb-ticker {
-        width: calc((100vw - 12px) * 0.33) !important;
-        height: 68px !important;
-        overflow-y: auto !important;
-      }
-      #masterNode.mobile-focus-expanded .pcb-ticker-line {
-        font-size: 0.32rem !important;
-        line-height: 1.5 !important;
-      }
-      #masterNode.mobile-focus-expanded .pcb-ticker-line.bright {
-        font-size: 0.35rem !important;
-        color: rgba(220,200,170,0.85) !important;
-      }
-      #masterNode.mobile-focus-expanded .pcb-chip-label {
-        font-size: 0.36rem !important;
-      }
-      #masterNode.mobile-focus-expanded .pcb-label {
-        font-size: 0.26rem !important;
-      }
-
-      /* ── Mobile focus: lock page scroll ── */
-      body.mobile-focus-locked {
-        overflow: hidden !important;
-        position: fixed !important;
-        width: 100% !important;
-        touch-action: none !important;
-      }
-
-      /* ── Focus mode ports — hide info panel ports on mobile ── */
-      .info-port-in, .info-port-out { display: none !important; }
-      .overlay-port-in, .overlay-port-out { display: none !important; }
-
-      /* ── Swipe hint for mobile focus mode ── */
-      .mobile-swipe-hint {
-        position: fixed;
-        bottom: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.45rem;
-        color: rgba(200,180,150,0.35);
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        pointer-events: none;
-        z-index: 2600;
-      }
-
-      /* ── Mobile performance: reduce heavy effects ── */
-      .pixel-scatter-container { display: none !important; }
-      .node-graph-inner .connection-wire { stroke-width: 0.5 !important; }
-      .master-node-pcb .pcb-led { animation: none !important; }
-      .viewport-grid { opacity: 0.3 !important; }
-      .detail-overlay::after { display: none; }
-
-      /* ── Mobile: smooth scroll everywhere ── */
-      .node-graph-canvas {
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-      }
-      .detail-overlay {
-        -webkit-overflow-scrolling: touch;
-      }
-
-      /* ── Mobile: collection nodes — uniform, clean, no frame overflow ── */
-      .collection-node {
-        -webkit-tap-highlight-color: transparent;
-        overflow: hidden;
-      }
-      .collection-node .collection-thumbnail {
-        border-radius: 4px;
-        overflow: hidden;
-      }
-      /* Hide decorative frames on mobile catalog — they cause size inconsistency */
-      .collections-grid .ornate-frame-svg,
-      .collections-grid .botanical-frame-svg,
-      .collections-grid .clown-frame-svg,
-      .collections-grid .tempted-frame-svg,
-      .collections-grid .bar-frame-svg,
-      .collections-grid .blossom-frame-svg,
-      .collections-grid .editions-frame-svg {
-        display: none !important;
-      }
-      .collection-node .collection-name {
-        font-size: 0.45rem !important;
-        margin-top: 4px;
-        opacity: 0.7;
-      }
-
-      /* ── Mobile: node cards in detail — cleaner, bigger ── */
-      .node-card .node-port { display: none !important; }
-      .node-card .node-title { font-size: 0.42rem !important; }
-
-      /* ── Mobile: hide salesbot entirely (too small for mobile UX) ── */
-      .salesbot-node { display: none !important; }
-
-      /* ── Mobile: download buttons — bigger tap targets ── */
-      .overlay-downloads .download-btn {
-        padding: 10px 14px !important;
-        font-size: 0.48rem !important;
-        min-height: 36px;
-      }
-
-      /* ── Mobile: collection detail header — compact ── */
-      .detail-header {
-        height: auto !important;
-        padding: 8px 12px !important;
-      }
-
-      /* ── Mobile: hide desktop-only panels in focus mode ── */
-      .node-info-panel { display: none !important; }
-      .info-dock { display: none !important; }
-      .coa-overlay-backdrop { display: none !important; }
-      .coa-overlay-panel { display: none !important; }
-      .coa-overlay-wire { display: none !important; }
-      .info-overlay-card { display: none !important; }
-      #focusModeTitle { display: none !important; }
-      /* Keep focus mode wires visible on mobile — connects artwork to motherboard */
-
-      /* ── Mobile Focus Info Bar — PCB-styled bottom strip ── */
-      .mobile-focus-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 2700;
-        background: linear-gradient(170deg, #1e2230 0%, #1a1e2a 40%, #161a24 100%);
-        border-top: 1px solid rgba(100,140,200,0.2);
-        padding: 14px 18px 20px;
-        transform: translateY(100%);
-        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-        font-family: 'JetBrains Mono', monospace;
-      }
-      .mobile-focus-bar.visible {
-        transform: translateY(0);
-      }
-      .mobile-focus-bar-title {
-        font-size: 0.55rem;
-        letter-spacing: 0.1em;
-        color: rgba(220,180,120,0.85);
-        text-transform: uppercase;
-        margin-bottom: 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .mobile-focus-bar-desc {
-        font-size: 0.4rem;
-        letter-spacing: 0.04em;
-        color: rgba(200,180,150,0.45);
-        line-height: 1.5;
-        margin-bottom: 8px;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-      .mobile-focus-bar-meta {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 10px;
-      }
-      .mobile-focus-bar-tag {
-        font-size: 0.38rem;
-        letter-spacing: 0.06em;
-        color: rgba(120,180,255,0.5);
-        text-transform: uppercase;
-        padding: 2px 6px;
-        border: 1px solid rgba(120,180,255,0.15);
-        border-radius: 2px;
-      }
-      .mobile-focus-bar-price {
-        font-size: 0.42rem;
-        letter-spacing: 0.06em;
-        color: rgba(50,205,50,0.6);
-      }
-      .mobile-focus-bar-actions {
-        display: flex;
-        gap: 10px;
-      }
-      .mobile-focus-bar-btn {
-        flex: 1;
-        padding: 8px 0;
-        text-align: center;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.4rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: rgba(200,180,150,0.6);
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(200,180,150,0.12);
-        border-radius: 3px;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .mobile-focus-bar-btn:active {
-        background: rgba(220,180,120,0.1);
-        color: rgba(220,180,120,0.8);
-      }
-
-    }
 
     /* ── ESC hint — subtle bottom-right indicator ── */
     .esc-hint {
@@ -4695,37 +4263,34 @@
       color: rgba(200,180,150,0.45);
       margin-right: 4px;
     }
-    @media (max-width: 768px) {
-      .esc-hint { display: none !important; }
-    }
 
     /* ── Mobile: motherboard always expanded as info machine (works with 1400px viewport) ── */
     #masterNode.mobile-expanded .master-node-pcb {
       width: 900px !important;
-      height: 120px !important;
+      height: 220px !important;
     }
     #masterNode.mobile-expanded .master-node-pcb .pcb-chip {
-      transform: scale(1.1) !important;
+      transform: scale(1.2) !important;
     }
     #masterNode.mobile-expanded .pcb-chip-label {
-      width: 140px !important;
-      font-size: 0.55rem !important;
+      width: 160px !important;
+      font-size: 0.65rem !important;
     }
     #masterNode.mobile-expanded .pcb-ticker {
-      width: 280px !important;
-      height: 76px !important;
+      width: 300px !important;
+      height: 160px !important;
       overflow-y: auto !important;
     }
     #masterNode.mobile-expanded .pcb-ticker-line {
-      font-size: 0.45rem !important;
-      line-height: 1.5 !important;
+      font-size: 0.6rem !important;
+      line-height: 1.6 !important;
     }
     #masterNode.mobile-expanded .pcb-ticker-line.bright {
-      font-size: 0.5rem !important;
+      font-size: 0.7rem !important;
       color: rgba(220,200,170,0.85) !important;
     }
     #masterNode.mobile-expanded .pcb-label {
-      font-size: 0.35rem !important;
+      font-size: 0.45rem !important;
     }
 
     /* ── Mobile focus: lock page scroll ── */
@@ -4734,6 +4299,129 @@
       position: fixed !important;
       width: 100% !important;
       touch-action: pan-x !important; /* allow horizontal swipe, block vertical */
+    }
+
+    /* ── Mobile Object Manager — scaled up for readability ── */
+    body.is-real-mobile .c4d-object-manager {
+      width: 520px !important;
+      font-size: 22px !important;
+      max-height: 80vh !important;
+      left: 30px !important;
+      top: 80px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-header {
+      padding: 14px 18px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-header-title {
+      font-size: 24px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-header-btn {
+      font-size: 28px !important;
+      width: 32px !important;
+      height: 32px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-list {
+      max-height: 70vh !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-row {
+      padding: 10px 14px !important;
+      min-height: 36px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-indent {
+      width: 28px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-icon {
+      font-size: 22px !important;
+      margin-right: 10px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-label {
+      font-size: 22px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-eye,
+    body.is-real-mobile .c4d-object-manager .obj-check,
+    body.is-real-mobile .c4d-object-manager .obj-add {
+      font-size: 22px !important;
+    }
+    body.is-real-mobile .c4d-object-manager .obj-row .collection-icon {
+      font-size: 20px !important;
+    }
+
+    /* ── Mobile candles: hide in detail view to reclaim artwork space ── */
+    body.is-real-mobile .viewport-candles.mobile-candles-hidden {
+      display: none !important;
+    }
+    /* Shrink candles on mobile home catalog */
+    body.is-real-mobile .candle-left,
+    body.is-real-mobile .candle-right {
+      transform: translateY(-50%) scale(0.6) !important;
+    }
+    body.is-real-mobile .candle-left { left: -10px !important; }
+    body.is-real-mobile .candle-right { right: -10px !important; }
+
+    /* ── Mobile back button ── */
+    .mobile-back-btn {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 30;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: rgba(30,30,34,0.85);
+      border: 1.5px solid rgba(220,180,120,0.25);
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: opacity 0.3s ease, transform 0.2s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .mobile-back-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mobile-back-btn:active {
+      transform: scale(0.9);
+    }
+    .mobile-back-btn svg {
+      width: 44px;
+      height: 44px;
+      stroke: rgba(220,180,120,0.6);
+      stroke-width: 2.5;
+      fill: none;
+    }
+    body.is-real-mobile .mobile-back-btn {
+      display: flex;
+    }
+
+    /* ── Mobile GIF loading placeholder ── */
+    .mobile-gif-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(20,20,24,0.9);
+      z-index: 2;
+      transition: opacity 0.6s ease;
+    }
+    .mobile-gif-loading .loading-bar {
+      width: 60%;
+      height: 4px;
+      background: rgba(60,60,60,0.5);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .mobile-gif-loading .loading-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: rgba(220,180,120,0.5);
+      transition: width 0.3s ease;
     }
 
     /* Tablet tweaks */
@@ -4925,6 +4613,11 @@
     <div id="guideSprite" class="guide-sprite"></div>
     <!-- Vortex click target at dead center -->
     <div class="vortex-target" id="vortexTarget"></div>
+  </div>
+
+  <!-- Mobile back button -->
+  <div class="mobile-back-btn" id="mobileBackBtn" onclick="mobileGoBack()">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
   </div>
 
   <!-- Main Content -->
@@ -6247,6 +5940,57 @@
     // ── Mobile: skip intro entirely, show brief message, then gallery ──
     // Detect real mobile device (viewport trick makes innerWidth=1400)
     var _isRealMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (_isRealMobile) document.body.classList.add('is-real-mobile');
+
+    // ── Mobile back button logic ──
+    var _mobileBackContext = null; // 'detail' or 'focus'
+    function mobileGoBack() {
+      if (!_isRealMobile) return;
+      if (_mobileBackContext === 'focus') {
+        // Exit focus mode
+        if (typeof exitFocusMode === 'function') exitFocusMode();
+      } else if (_mobileBackContext === 'detail') {
+        // Exit detail/collection view
+        if (typeof closeDetail === 'function') closeDetail();
+      }
+    }
+    function _showMobileBack(context) {
+      if (!_isRealMobile) return;
+      _mobileBackContext = context;
+      var btn = document.getElementById('mobileBackBtn');
+      if (btn) btn.classList.add('visible');
+    }
+    function _hideMobileBack() {
+      if (!_isRealMobile) return;
+      _mobileBackContext = null;
+      var btn = document.getElementById('mobileBackBtn');
+      if (btn) btn.classList.remove('visible');
+    }
+
+    // ── Mobile candle helpers ──
+    function _hideCandlesOnMobile() {
+      if (!_isRealMobile) return;
+      var vc = document.getElementById('viewportCandles');
+      if (vc) vc.classList.add('mobile-candles-hidden');
+    }
+    function _showCandlesOnMobile() {
+      if (!_isRealMobile) return;
+      var vc = document.getElementById('viewportCandles');
+      if (vc) vc.classList.remove('mobile-candles-hidden');
+    }
+
+    // ── Mobile image optimization: get static version of GIF ──
+    function _mobileOptimizedSrc(imagePath) {
+      if (!_isRealMobile) return imagePath;
+      if (!imagePath || !imagePath.endsWith('.gif')) return imagePath;
+      // Color Study thumbs already handled elsewhere
+      if (imagePath.startsWith('colorstudys/') && !imagePath.includes('thumbs/')) {
+        var gifName = imagePath.replace('colorstudys/', '').replace('.gif', '');
+        return 'colorstudys/thumbs/' + gifName + '_thumb.jpg';
+      }
+      // For other GIFs, return as-is but mark for lazy loading
+      return imagePath;
+    }
 
     function _showMobileWarningThenIntro() {
       // Show brief "built for desktop" message, then run the full desktop intro
@@ -6354,7 +6098,8 @@
       ctx.scale(dpr, dpr);
 
       const shorter = Math.min(w, h);
-      const spacing = Math.max(30, Math.round(shorter / 20));
+      // Wider grid spacing on mobile for performance
+      const spacing = _isRealMobile ? Math.max(60, Math.round(shorter / 12)) : Math.max(30, Math.round(shorter / 20));
       const majorEvery = 5;
       const cx = w / 2;
       const cy = h / 2;
@@ -6548,7 +6293,12 @@
         // Equations — ONLY on intro page, not on main gallery
         // (equations are drawn in the intro canvas animation instead)
 
-        bgGridAnimFrame = requestAnimationFrame(drawFrame);
+        // Throttle to ~20fps on mobile for performance
+        if (_isRealMobile) {
+          setTimeout(function() { bgGridAnimFrame = requestAnimationFrame(drawFrame); }, 50);
+        } else {
+          bgGridAnimFrame = requestAnimationFrame(drawFrame);
+        }
       }
 
       drawFrame();
@@ -6831,7 +6581,7 @@
     let introAnimFrame = null;
     let introEqParticles = [];
     let gridIntersections = []; // Pre-calculated for warp deformation
-    const GRID_SPACING = 60;
+    const GRID_SPACING = _isRealMobile ? 100 : 60;
     const WARP_RADIUS = 150;
     const WARP_STRENGTH = 1.5;
 
@@ -8478,7 +8228,9 @@
 
         // ── RAIN ──
         const rainIntensity = Math.min(1, at / 6);
-        const rainCount = Math.floor(rainIntensity * (300 + storm * 200));
+        const _rainMax = _isRealMobile ? 80 : 300;
+        const _rainStormMax = _isRealMobile ? 60 : 200;
+        const rainCount = Math.floor(rainIntensity * (_rainMax + storm * _rainStormMax));
         for (let i = 0; i < rainCount; i++) {
           const seed = (i * 7727) % 10000;
           let rx = (seed / 10000) * w;
@@ -10150,7 +9902,7 @@
 
       const vpW = window.innerWidth;
       const vpH = window.innerHeight;
-      const isMobile = vpW < 768;
+      const isMobile = _isRealMobile;
       const navHeight = isMobile ? 52 : 60;
 
       // Build a name→origIndex lookup
@@ -10510,7 +10262,8 @@
 
       // ── WIRES FROM BOTTOM — master node at bottom, wires reach upward ──
       const masterPortX = vpW / 2;
-      const masterPortY = vpH - 80; // top of the master node card
+      // On mobile with expanded motherboard (220px PCB + 10px port), adjust wire origin
+      const masterPortY = _isRealMobile ? vpH - 240 : vpH - 80; // top of the master node card
 
       // Populate artwork count
       const totalArtworks = displayCollections.reduce((sum, c) => sum + (c.artworks ? c.artworks.length : 0), 0);
@@ -11410,7 +11163,7 @@
 
       // ── BREATHING THUMBNAILS (desktop only — no breathing on mobile) ──
       (function setupBrainBreathe() {
-        if (window.innerWidth < 768) return; // skip breathing on mobile
+        if (_isRealMobile) return; // skip breathing on mobile
         const allNodes = grid.querySelectorAll('.collection-node');
         const nodeCount = allNodes.length;
         if (nodeCount === 0) return;
@@ -11482,11 +11235,16 @@
 
         // ── ADAPTIVE GRID: scale density to node size + adjust for perf ──
         // Small cards get fewer fragments, big cards get more (but capped)
+        // On mobile: use fewer fragments for smoother performance
         var nodeArea = rect.width * rect.height;
         var gridCols, gridRows;
         if (opts.cols && opts.rows) {
           gridCols = opts.cols;
           gridRows = opts.rows;
+        } else if (_isRealMobile) {
+          // Mobile: always use minimal fragments for performance
+          gridCols = nodeArea < 25000 ? 2 : 3;
+          gridRows = gridCols;
         } else if (nodeArea < 8000) {
           // Tiny cards: 2×2 = 4 fragments (fast)
           gridCols = 2; gridRows = 2;
@@ -11789,6 +11547,10 @@
       const titleEl = document.getElementById('detailTitle');
       const contentEl = document.getElementById('detailContent');
 
+      // Mobile: show back button, hide candles in detail view
+      _showMobileBack('detail');
+      _hideCandlesOnMobile();
+
       titleEl.textContent = collection.name;
 
       // Servant ambient music — starts on open, stops on close
@@ -11950,7 +11712,7 @@
         const count = artworks.length;
         const vpW = window.innerWidth;
         const vpH = window.innerHeight - 60;
-        const isMobile = vpW < 768;
+        const isMobile = _isRealMobile;
         canvas.style.overflow = isMobile ? 'auto' : 'hidden';
 
         let nodeW, nodePositions = [], outputX, outputY, totalW, totalH;
@@ -12561,6 +12323,31 @@
               img.src = _thumbPath;
               // Store full GIF path so focus swap can load it
               img.dataset.fullGifSrc = artwork.image;
+            } else if (_isRealMobile && artwork.image && artwork.image.endsWith('.gif')) {
+              // Mobile GIF optimization: defer GIF loading via intersection observer
+              // Show placeholder first, then load when card scrolls into view
+              img.dataset.lazySrc = artwork.image;
+              img.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%231a1a1e" width="400" height="400"/><text x="200" y="200" text-anchor="middle" fill="%23555" font-family="monospace" font-size="14">loading...</text></svg>');
+              // Intersection observer will swap to real src when visible
+              if (!window._mobileGifObserver) {
+                window._mobileGifObserver = new IntersectionObserver(function(entries) {
+                  entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                      var lazyImg = entry.target.querySelector('img[data-lazy-src]');
+                      if (lazyImg && lazyImg.dataset.lazySrc) {
+                        lazyImg.src = lazyImg.dataset.lazySrc;
+                        delete lazyImg.dataset.lazySrc;
+                      }
+                      window._mobileGifObserver.unobserve(entry.target);
+                    }
+                  });
+                }, { rootMargin: '200px' });
+              }
+              // Observe the card (parent node) once it's in the DOM
+              setTimeout(function() {
+                var cardEl = img.closest('.node-card');
+                if (cardEl) window._mobileGifObserver.observe(cardEl);
+              }, 100);
             } else {
               img.src = artwork.image;
             }
@@ -12580,9 +12367,14 @@
             }
 
             // Extract palette for per-artwork wire coloring + motherboard tint
+            // On mobile: skip expensive canvas palette extraction, use precomputed or collection fallback
             const precomp = ARTWORK_PALETTES[artwork.image];
             if (precomp) {
               onArtworkPaletteReady(i, precomp);
+            } else if (_isRealMobile) {
+              // Mobile: skip canvas extraction entirely — use collection palette
+              const collPal = COLLECTION_PALETTES[collection.name];
+              if (collPal) onArtworkPaletteReady(i, collPal);
             } else {
               // Check if extraction will definitely fail (cross-origin or file:// protocol)
               const isCrossOrigin = artwork.image.startsWith('http');
@@ -13733,6 +13525,20 @@
         let curOutY = outputY;
 
         function getOutPort() {
+          // On mobile, the visible motherboard is position:fixed at viewport bottom.
+          // The invisible output node is somewhere in the scrollable canvas.
+          // We need to return the motherboard's position in canvas (inner) coordinates.
+          if (_isRealMobile) {
+            var masterPort = document.getElementById('masterPort');
+            if (masterPort) {
+              var portRect = masterPort.getBoundingClientRect();
+              var innerRect = inner.getBoundingClientRect();
+              return {
+                x: (portRect.left + portRect.width / 2) - innerRect.left,
+                y: (portRect.top + portRect.height / 2) - innerRect.top
+              };
+            }
+          }
           // Port-in is always at top center of the output node (bottom-up layout)
           const outW = inner._scaledOutputW || outputNodeW;
           return { x: curOutX + outW / 2, y: curOutY };
@@ -13946,6 +13752,33 @@
           }
 
           _noodlesDrawn = true;
+        }
+
+        // On mobile, redraw noodle wires on scroll so they track the fixed motherboard
+        if (_isRealMobile) {
+          var _noodleScrollRaf = 0;
+          canvas.addEventListener('scroll', function() {
+            if (_noodleScrollRaf) return;
+            _noodleScrollRaf = requestAnimationFrame(function() {
+              _noodleScrollRaf = 0;
+              if (!inner.classList.contains('focus-mode')) {
+                // Resize wiresSvg to accommodate the shifted masterPort position
+                var _mbPort = document.getElementById('masterPort');
+                if (_mbPort) {
+                  var _innerR = inner.getBoundingClientRect();
+                  var _portR = _mbPort.getBoundingClientRect();
+                  var _neededH = (_portR.bottom - _innerR.top) + 40;
+                  var _curH = parseInt(wiresSvg.getAttribute('height')) || 0;
+                  if (_neededH > _curH) {
+                    wiresSvg.setAttribute('height', Math.ceil(_neededH));
+                    inner.style.height = Math.ceil(_neededH) + 'px';
+                  }
+                }
+                _noodlesDrawn = false; // allow redraw
+                drawNoodles();
+              }
+            });
+          }, { passive: true });
         }
 
         // Hover wire highlight — brighten the wire connected to hovered node
@@ -14350,6 +14183,8 @@
 
         // ── Ambient particles — warm motes drifting through the node space ──
         (function spawnParticles() {
+          // Skip ambient particles on mobile for performance
+          if (_isRealMobile) return;
           const particleLayer = document.createElement('div');
           particleLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;';
           canvas.appendChild(particleLayer);
@@ -14795,6 +14630,7 @@
         // Apply focus mode class now that siblings are scattered
         inner.classList.add('focus-mode');
         node.classList.add('focused');
+        _showMobileBack('focus');
         showEscHint('to exit focus');
         // Dim salesbot during focus
         var _sb = document.getElementById('salesbotNode');
@@ -16488,7 +16324,7 @@
       // Position info panel — mobile: below artwork, desktop: right of artwork
       const vpW = window.innerWidth;
       const vpH = window.innerHeight;
-      const _isMobileCoa = vpW < 768;
+      const _isMobileCoa = _isRealMobile;
 
       if (_isMobileCoa) {
         // Mobile: COA panel below artwork, matched to artwork width
@@ -16907,7 +16743,7 @@
 
     // ── Focus mode wires: motherboard → artwork + motherboard → COA ──
     function drawFocusModeWires(artworkNode, infoPanelEl) {
-      var _isMobileWire = window.innerWidth < 768;
+      var _isMobileWire = _isRealMobile;
 
       // Remove any existing focus wires
       var existing = document.getElementById('focusModeWires');
@@ -16992,7 +16828,7 @@
     }
 
     function drawInfoPanelWire(portOutEl, portInEl) {
-      if (window.innerWidth < 768) return; // Skip wires on mobile
+      if (_isRealMobile) return; // Skip wires on mobile
       let wireSvg = document.getElementById('nodeInfoWire');
       if (!wireSvg) {
         wireSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -17050,7 +16886,7 @@
 
     function createInfoDock() {
       // On mobile, skip the dock — users tap COA to see details instead
-      if (window.innerWidth < 768) return null;
+      if (_isRealMobile) return null;
 
       let dock = document.getElementById('infoDock');
       if (!dock) {
@@ -17420,7 +17256,7 @@
       const coaPanel = document.getElementById('nodeInfoPanel');
       const vpW = window.innerWidth;
       const vpH = window.innerHeight;
-      const _isMobileOverlay = vpW < 768;
+      const _isMobileOverlay = _isRealMobile;
 
       if (_isMobileOverlay) {
         // Mobile: full width, positioned by CSS, just set top
@@ -22744,6 +22580,8 @@
       const inner = document.querySelector('.node-graph-inner.focus-mode');
       if (!inner || !focusedNode) return;
       hideEscHint();
+      // Mobile: switch back button to detail context
+      _showMobileBack('detail');
 
       // Clean up touch swipe listeners
       if (focusedNode._swipeCleanup) {
@@ -23155,6 +22993,9 @@
       _stopServantMusic(); // stop servant music on any collection close
       exitFocusMode();
       clearDetailConnectionWires();
+      // Mobile: hide back button, restore candles
+      _hideMobileBack();
+      _showCandlesOnMobile();
       // Reset tickers to catalog defaults
       updateMotherboardTickers(null, null);
       const overlay = document.getElementById('detailOverlay');
@@ -23755,7 +23596,7 @@
     var _escHintEl = null;
     var _escHintTimer = null;
     function showEscHint(text) {
-      if (window.innerWidth < 768) return; // no hint on mobile
+      if (_isRealMobile) return; // no hint on mobile
       if (!_escHintEl) {
         _escHintEl = document.createElement('div');
         _escHintEl.className = 'esc-hint';
