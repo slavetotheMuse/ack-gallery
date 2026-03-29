@@ -4125,10 +4125,19 @@
       .artworks-grid { columns: 2; column-gap: 12px; }
       .artwork-card { margin-bottom: 12px; }
 
-      /* ── Focus mode — stacked vertical layout ── */
+      /* ── Focus mode — artwork hero on mobile ── */
       .node-graph-inner.focus-mode .node-card.focused {
         transition: transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
                     opacity 0.4s ease;
+      }
+      .node-graph-inner.focus-mode .node-card.focused .node-preview {
+        box-shadow:
+          inset 0 0 0 0.5px rgba(220,150,50,0.4),
+          0 8px 32px rgba(0,0,0,0.6),
+          0 2px 8px rgba(0,0,0,0.4) !important;
+      }
+      .node-graph-inner.focus-mode .node-card.focused .node-preview img {
+        image-rendering: -webkit-optimize-contrast;
       }
 
       /* ── COA panel — compact on mobile ── */
@@ -5321,14 +5330,14 @@
           description: "Limited edition animated works by AlphaCentauriKid. ERC-1155 on Ethereum.",
           token: "ERC-1155", chain: "Ethereum", contract: "0x232a68a51d6e07357ae025d2a459c16077327102",
           artworks: [
-            {title:"Void Engine",image:"ackeditions_gallery/web/void_engine_web.gif",fullRes:"ackeditions_gallery/void_engine.gif",edition:"Edition of 6",tokenId:1},
-            {title:"lisan al-gaib",image:"ackeditions_gallery/web/lisan_web.gif",fullRes:"ackeditions_gallery/lisan.gif",edition:"Edition of 10",tokenId:2},
-            {title:"Exodus",image:"ackeditions_gallery/web/exodus_web.gif",fullRes:"ackeditions_gallery/exodus.gif",edition:"Edition of 5",tokenId:9},
-            {title:"Aerial Screw",image:"ackeditions_gallery/web/aerial_screw_web.gif",fullRes:"ackeditions_gallery/aerial_screw.gif",hoverImage:"ackeditions_gallery/web/Specchio_Vortice_web.gif",edition:"Edition of 14",tokenId:11},
+            {title:"Void Engine",image:"ackeditions_gallery/web/void_engine_web.gif",fullRes:"ackeditions_gallery/void_engine.gif",edition:"Edition of 6",tokenId:17},
+            {title:"lisan al-gaib",image:"ackeditions_gallery/web/lisan_web.gif",fullRes:"ackeditions_gallery/lisan.gif",edition:"Edition of 10",tokenId:20},
+            {title:"Exodus",image:"ackeditions_gallery/web/exodus_web.gif",fullRes:"ackeditions_gallery/exodus.gif",edition:"Edition of 5",tokenId:16},
+            {title:"Aerial Screw",image:"ackeditions_gallery/web/aerial_screw_web.gif",fullRes:"ackeditions_gallery/aerial_screw.gif",hoverImage:"ackeditions_gallery/web/Specchio_Vortice_web.gif",edition:"Edition of 14",tokenId:19},
             {title:"pink elephant on parade",image:"ackeditions_gallery/web/pink_elephant_on_parade_web.gif",fullRes:"ackeditions_gallery/pink_elephant_on_parade.gif",edition:"Edition of 48",tokenId:5},
             {title:"majestic white elephant",image:"ackeditions_gallery/web/majestic_white_elephant_web.gif",fullRes:"ackeditions_gallery/majestic_white_elephant.gif",edition:"Edition of 47",tokenId:6},
-            {title:"circus elephant",image:"ackeditions_gallery/web/circus_elephant_web.gif",fullRes:"ackeditions_gallery/circus_elephant.gif",edition:"Edition of 9",tokenId:13},
-            {title:"Skelekart",image:"ackeditions_gallery/web/skelekart_web.gif",fullRes:"ackeditions_gallery/skelekart.gif",edition:"Edition of 13",tokenId:16},
+            {title:"circus elephant",image:"ackeditions_gallery/web/circus_elephant_web.gif",fullRes:"ackeditions_gallery/circus_elephant.gif",edition:"Edition of 9",tokenId:11},
+            {title:"Skelekart",image:"ackeditions_gallery/web/skelekart_web.gif",fullRes:"ackeditions_gallery/skelekart.gif",edition:"Edition of 13",tokenId:18},
             {title:"la nuit étoilée",image:"ackeditions_gallery/web/lanuit_web.gif",fullRes:"ackeditions_gallery/lanuit.gif",edition:"Edition of 300",tokenId:8},
             {title:"max pain v2",image:"ackeditions_gallery/web/maxpainv2_web.gif",fullRes:"ackeditions_gallery/maxpainv2.gif",edition:"Edition of 613",tokenId:14},
             {title:"NGMI Burn Token",image:"ackeditions_gallery/web/ngmi_bottle_web.gif",fullRes:"ackeditions_gallery/ngmi_bottle.gif",edition:"Edition of 8",tokenId:3},
@@ -11484,8 +11493,8 @@
           } else {
           // Responsive columns: mobile 2, tablet 5, desktop 8
           const isTablet = !isMobile && vpW < 1200;
-          const wallCols = isMobile ? 3 : (isTablet ? 5 : 8);
-          const wallPad = isMobile ? 16 : (isTablet ? 35 : 50);
+          const wallCols = isMobile ? 2 : (isTablet ? 5 : 8);
+          const wallPad = isMobile ? 20 : (isTablet ? 35 : 50);
           const outputNodeH = 100; // motherboard PCB height
           const outputGap = 16; // space between grid and output node
           const outputBottomPad = 40; // breathing room below output node so it's not glued to bottom
@@ -11599,8 +11608,8 @@
             }
 
             const _isHeartYouGap = collection.name === 'Heart You';
-            const gap = isMobile ? 12 : (_isHeartYouGap ? 56 : 44);
-            const pad = isMobile ? 10 : 60;
+            const gap = isMobile ? 16 : (_isHeartYouGap ? 56 : 44);
+            const pad = isMobile ? 16 : 60;
             const outputBottomReserve = 170;
 
             const availW = vpW - pad * 2;
@@ -14028,9 +14037,9 @@
       let targetCenterX, targetCenterY, maxW, maxH;
       if (_isMobileFocus) {
         targetCenterX = vpW * 0.5; // dead center horizontally
-        targetCenterY = vpH * 0.35; // upper portion — leave room for COA below
-        maxW = vpW * 0.88; // generous width, small margins
-        maxH = vpH * 0.52; // upper half of viewport
+        targetCenterY = vpH * 0.38; // slightly higher — hero the artwork
+        maxW = vpW * 0.92; // near full-width, small margins
+        maxH = vpH * 0.58; // generous height — artwork is the star
       } else {
         targetCenterX = vpW * (isMasterwork ? 0.42 : 0.40);
         targetCenterY = vpH * 0.5;
@@ -14076,7 +14085,7 @@
       const scaledH = nodeH * scaleFactor;
       const rightChainReserve = _isMobileFocus ? edgePad : Math.min(320, vpW * 0.22);
       const availW = vpW - candleReserve - rightChainReserve;
-      const availH = _isMobileFocus ? (vpH * 0.55 - navReserve) : (vpH - navReserve - edgePad * 2);
+      const availH = _isMobileFocus ? (vpH * 0.62 - navReserve) : (vpH - navReserve - edgePad * 2);
       if (scaledW > availW || scaledH > availH) {
         scaleFactor = Math.min(availW / nodeW, availH / nodeH, scaleFactor);
       }
@@ -14099,7 +14108,7 @@
       if (clampedCenterY - finalH / 2 < navReserve + edgePad) {
         clampedCenterY = navReserve + edgePad + finalH / 2;
       }
-      const bottomLimit = _isMobileFocus ? vpH * 0.58 : vpH - edgePad;
+      const bottomLimit = _isMobileFocus ? vpH * 0.65 : vpH - edgePad;
       if (clampedCenterY + finalH / 2 > bottomLimit) {
         clampedCenterY = bottomLimit - finalH / 2;
       }
@@ -14249,8 +14258,8 @@
               } else {
                 nodeImg.style.opacity = '1';
               }
-            } else if (nodeImg.dataset.fullGifSrc) {
-              // Color Study: swap static JPG thumb → full animated GIF on focus
+            } else if (nodeImg.dataset.fullGifSrc && !_isMobileFocus) {
+              // Color Study: swap static JPG thumb → full animated GIF on focus (desktop only — GIFs too heavy for mobile)
               nodeImg.style.transition = 'opacity 0.4s ease';
               nodeImg.style.opacity = '0.5';
               const _gifSrc = nodeImg.dataset.fullGifSrc;
@@ -14273,13 +14282,18 @@
               if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
             };
             if (artData && artData.fullRes) {
+              // On mobile, skip heavy fullRes swap — keep the thumbnail visible and crisp
+              if (_isMobileFocus) {
+                _clearLoading();
+              } else {
               const preloader = new Image();
               preloader.onload = () => { nodeImg.src = artData.fullRes; _clearLoading(); };
               preloader.onerror = _clearLoading;
               preloader.src = artData.fullRes;
               setTimeout(_clearLoading, 8000); // fallback timeout
+              }
             } else if (thumbSrc.includes('?w=')) {
-              let fullResSrc = thumbSrc.replace(/\?w=\d+/, '?w=1200');
+              let fullResSrc = thumbSrc.replace(/\?w=\d+/, _isMobileFocus ? '?w=600' : '?w=1200');
               const preloader = new Image();
               preloader.onload = () => { nodeImg.src = fullResSrc; _clearLoading(); };
               preloader.onerror = _clearLoading;
@@ -15629,12 +15643,12 @@
 
       if (_isMobileCoa) {
         // Mobile: COA panel below artwork, matched to artwork width
-        const artBottom = node._focusBottomEdge || vpH * 0.55;
-        const artWidth = node._focusWidth || vpW * 0.88;
+        const artBottom = node._focusBottomEdge || vpH * 0.6;
+        const artWidth = node._focusWidth || vpW * 0.92;
         const artLeft = node._focusLeftEdge || (vpW - artWidth) / 2;
-        let panelTop = artBottom + 12;
-        panelTop = Math.max(panelTop, vpH * 0.48);
-        panelTop = Math.min(panelTop, vpH * 0.68);
+        let panelTop = artBottom + 14;
+        panelTop = Math.max(panelTop, vpH * 0.55);
+        panelTop = Math.min(panelTop, vpH * 0.75);
         infoPanel.style.left = artLeft + 'px';
         infoPanel.style.top = panelTop + 'px';
         infoPanel.style.width = artWidth + 'px';
