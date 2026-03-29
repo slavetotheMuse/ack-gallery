@@ -1406,6 +1406,15 @@
     .node-card.servant-coin-node.focused .node-port.port-out { display: block !important; }
     .node-card.servant-coin-node .node-title-tag { text-align: center; opacity: 0; transition: opacity 0.25s ease; }
     .node-card.servant-coin-node:hover .node-title-tag { opacity: 1; }
+    /* Focused servant coin — crisp rendering + subtle glow */
+    .node-card.servant-coin-node.focused .servant-coin-wrap {
+      filter: drop-shadow(0 0 18px rgba(147,0,2,0.35)) drop-shadow(0 0 6px rgba(0,0,0,0.4));
+      image-rendering: -webkit-optimize-contrast;
+    }
+    .node-card.servant-coin-node.focused .servant-coin-face img,
+    .node-card.servant-coin-node.focused .servant-coin-back img {
+      image-rendering: -webkit-optimize-contrast;
+    }
 
     /* Salon layout: thumbnails fill their node entirely */
     .collections-grid .collection-node .collection-thumbnail {
@@ -11196,30 +11205,14 @@
       _servantAudio.loop = true;
       _servantAudio.playbackRate = 0.7;           // slow & stretch
       _servantAudio.preservesPitch = false;        // pitch drops with speed — eerie
-      // Web Audio graph: source → lowpass → distortion → gain → output
+      // Web Audio graph: source → gain → output (no filters)
       _servantAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
       var src = _servantAudioCtx.createMediaElementSource(_servantAudio);
-      // Low-pass filter — muffle / remove highs
-      var lpf = _servantAudioCtx.createBiquadFilter();
-      lpf.type = 'lowpass';
-      lpf.frequency.value = 800;    // cut everything above 800Hz
-      lpf.Q.value = 0.7;
-      // Waveshaper for subtle distortion
-      var distortion = _servantAudioCtx.createWaveShaper();
-      var _curve = new Float32Array(256);
-      for (var i = 0; i < 256; i++) {
-        var x = (i / 128) - 1;
-        _curve[i] = (Math.PI + 3) * x / (Math.PI + 3 * Math.abs(x));
-      }
-      distortion.curve = _curve;
-      distortion.oversample = '2x';
       // Gain node for volume control + fade
       _servantGain = _servantAudioCtx.createGain();
       _servantGain.gain.value = 0;
-      // Connect: source → lowpass → distortion → gain → speakers
-      src.connect(lpf);
-      lpf.connect(distortion);
-      distortion.connect(_servantGain);
+      // Connect: source → gain → speakers
+      src.connect(_servantGain);
       _servantGain.connect(_servantAudioCtx.destination);
       // Resume AudioContext if suspended (browser autoplay policy)
       if (_servantAudioCtx.state === 'suspended') {
@@ -14211,26 +14204,21 @@
         const artData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
         const _isSpinCoinFocus = artData && artData.spinCoin;
         if (_isSpinCoinFocus) {
-          // Replace spinning coin with full-res MP4 video in focus view
+          // Swap coin images to hi-res 600px versions for focus mode
           const coinWrap = node.querySelector('.servant-coin-wrap');
           if (coinWrap) {
-            coinWrap.style.display = 'none';
-            const vidWrap = document.createElement('div');
-            vidWrap.id = 'servantFocusVideo';
-            vidWrap.style.cssText = 'width:100%;aspect-ratio:1;position:relative;border-radius:50%;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3);';
-            const vid = document.createElement('video');
-            vid.src = 'servant_muse.mp4';
-            vid.autoplay = true;
-            vid.loop = true;
-            vid.muted = true;
-            vid.playsInline = true;
-            vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;background:transparent;border-radius:50%;transform:scale(1.18);';
-            vidWrap.appendChild(vid);
-            const preview = node.querySelector('.node-preview');
-            if (preview) preview.appendChild(vidWrap);
+            const faceImg = coinWrap.querySelector('.servant-coin-face img');
+            const backImg = coinWrap.querySelector('.servant-coin-back img');
+            if (faceImg) { faceImg.dataset.thumbSrc = faceImg.src; faceImg.src = 'servant_face_focus.png'; }
+            if (backImg) { backImg.dataset.thumbSrc = backImg.src; backImg.src = 'servant_back_focus.png'; }
+            // Mark as hi-res swapped for exit restore
+            coinWrap.dataset.hiresSwapped = '1';
+            // Slow the spin down for focus — more stately
+            const coinEl = coinWrap.querySelector('.servant-coin');
+            if (coinEl) { coinEl.style.animationDuration = '12s'; }
             // Apply servant ritual frame
             setTimeout(() => {
-              const localW = parseFloat(node.style.width) || vidWrap.offsetWidth || 300;
+              const localW = parseFloat(node.style.width) || coinWrap.offsetWidth || 300;
               const localH = localW; // square
               const pal = COLLECTION_PALETTES['servants'] || {};
               const servTitle = artData ? artData.title : '';
@@ -21363,17 +21351,16 @@
       const _loSoundBtn = focusedNode.querySelector('#lastOrdersSoundBtn');
       if (_loSoundBtn) _loSoundBtn.remove();
 
-      // Restore servant coin: remove video, show coin animation again
-      const _focusVid = focusedNode.querySelector('#servantFocusVideo');
-      if (_focusVid) {
-        const _vidEl = _focusVid.querySelector('video');
-        if (_vidEl) { _vidEl.pause(); _vidEl.src = ''; }
-        _focusVid.remove();
-        const _coinWrapExit = focusedNode.querySelector('.servant-coin-wrap');
-        if (_coinWrapExit) {
-          _coinWrapExit.style.display = '';
-          _coinWrapExit.style.perspective = '';
-        }
+      // Restore servant coin: swap back to low-res images & normal spin speed
+      const _coinWrapExit = focusedNode.querySelector('.servant-coin-wrap');
+      if (_coinWrapExit && _coinWrapExit.dataset.hiresSwapped === '1') {
+        const _fImg = _coinWrapExit.querySelector('.servant-coin-face img');
+        const _bImg = _coinWrapExit.querySelector('.servant-coin-back img');
+        if (_fImg && _fImg.dataset.thumbSrc) _fImg.src = _fImg.dataset.thumbSrc;
+        if (_bImg && _bImg.dataset.thumbSrc) _bImg.src = _bImg.dataset.thumbSrc;
+        delete _coinWrapExit.dataset.hiresSwapped;
+        const _coinEl = _coinWrapExit.querySelector('.servant-coin');
+        if (_coinEl) _coinEl.style.animationDuration = '';
       }
       const nodeImg = focusedNode.querySelector('.node-preview img');
       if (nodeImg && nodeImg.dataset.thumbSrc) {
