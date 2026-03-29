@@ -981,97 +981,154 @@
       overflow: hidden;
     }
 
-    /* ── Nav wallet link states ── */
-    .nav-wallet-link.wallet-connected {
-      color: rgba(50,205,50,0.6);
-    }
-    .nav-wallet-link.wallet-connected:hover {
-      color: rgba(50,205,50,0.85);
-    }
-    .nav-wallet-link.wallet-connected::after {
-      background: rgba(50,205,50,0.5);
-    }
-
-    /* ── Salesbot — minimized dot + expandable feed ── */
-    .salesbot-node {
+    /* ── Connect Wallet Node ── */
+    .wallet-node {
       position: fixed;
-      bottom: 16px;
-      left: 16px;
-      z-index: 200;
-      transition: opacity 0.5s ease;
-    }
-    .salesbot-node.dimmed { opacity: 0.12; pointer-events: none; }
-    .salesbot-dot-trigger {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: rgba(60,60,60,0.6);
+      bottom: 12px;
+      right: 24px;
+      z-index: 21;
       cursor: pointer;
-      transition: all 0.3s ease;
+      pointer-events: auto;
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+    .wallet-node:hover { transform: scale(1.04); filter: brightness(1.15); }
+    .wallet-node-body {
+      width: 120px;
+      height: 52px;
+      background: rgba(18,18,22,0.92);
+      border: 1px solid rgba(120,180,255,0.18);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 0 12px rgba(120,180,255,0.06), inset 0 0 20px rgba(120,180,255,0.03);
+    }
+    .wallet-node-body.connected {
+      border-color: rgba(50,205,50,0.3);
+      box-shadow: 0 0 12px rgba(50,205,50,0.08), inset 0 0 20px rgba(50,205,50,0.03);
+    }
+    .wallet-node-icon {
+      width: 16px;
+      height: 16px;
       position: relative;
     }
-    .salesbot-dot-trigger.live {
+    .wallet-node-icon svg { width: 100%; height: 100%; }
+    .wallet-node-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.4rem;
+      letter-spacing: 0.1em;
+      color: rgba(120,180,255,0.7);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .wallet-node-body.connected .wallet-node-label { color: rgba(50,205,50,0.7); }
+    .wallet-node-port {
+      position: absolute;
+      left: -4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(120,180,255,0.4);
+      border: 1px solid rgba(120,180,255,0.2);
+      z-index: 2;
+    }
+    .wallet-node-body.connected .wallet-node-port {
       background: rgba(50,205,50,0.5);
-      box-shadow: 0 0 8px rgba(50,205,50,0.3);
+      border-color: rgba(50,205,50,0.3);
     }
-    .salesbot-dot-trigger:hover {
-      transform: scale(1.5);
-      background: rgba(50,205,50,0.7);
+    /* Jolt wire animation from motherboard to wallet */
+    .wallet-jolt-wire {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 19;
     }
-    @keyframes salesDotPing {
-      0% { transform: scale(1); opacity: 1; }
-      100% { transform: scale(3); opacity: 0; }
+    .wallet-jolt-wire path {
+      fill: none;
+      stroke: rgba(120,180,255,0.6);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
     }
-    .salesbot-dot-trigger.ping::after {
-      content: '';
+    .wallet-jolt-wire.active path {
+      animation: walletJolt 0.6s ease-out forwards;
+      filter: drop-shadow(0 0 4px rgba(120,180,255,0.5));
+    }
+    .wallet-jolt-wire.connected path {
+      stroke: rgba(50,205,50,0.4);
+      stroke-dashoffset: 0;
+      filter: drop-shadow(0 0 3px rgba(50,205,50,0.3));
+    }
+    @keyframes walletJolt {
+      0% { stroke-dashoffset: 200; stroke: rgba(120,180,255,0.8); filter: drop-shadow(0 0 8px rgba(120,180,255,0.8)); }
+      50% { stroke: rgba(200,220,255,0.9); filter: drop-shadow(0 0 12px rgba(200,220,255,0.6)); }
+      100% { stroke-dashoffset: 0; stroke: rgba(50,205,50,0.4); filter: drop-shadow(0 0 3px rgba(50,205,50,0.3)); }
+    }
+    /* PCB traces on wallet node body */
+    .wallet-node-traces {
       position: absolute;
       top: 0; left: 0;
-      width: 100%; height: 100%;
-      border-radius: 50%;
-      background: rgba(50,205,50,0.4);
-      animation: salesDotPing 1.5s ease-out;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.4;
     }
-    /* Expanded panel */
-    .salesbot-panel {
-      position: absolute;
-      bottom: 16px;
-      left: 0;
-      width: 180px;
-      background: rgba(18,16,20,0.95);
+    /* Fade wallet node during focus mode — toggled via JS */
+    .wallet-node.dimmed { opacity: 0.12; pointer-events: none; transition: opacity 0.5s; }
+
+    /* ── Salesbot node ── */
+    .salesbot-node {
+      position: fixed;
+      bottom: 80px;
+      right: 24px;
+      z-index: 200;
+      cursor: grab;
+      transition: opacity 0.5s ease;
+      user-select: none;
+    }
+    .salesbot-node.dimmed { opacity: 0.12; pointer-events: none; }
+    .salesbot-node.dragging { cursor: grabbing; transition: none; }
+    .salesbot-node-body {
+      width: 140px;
+      background: rgba(18,16,20,0.92);
       border: 1px solid rgba(50,50,50,0.6);
       border-radius: 4px;
       padding: 8px 10px;
       font-family: 'JetBrains Mono', monospace;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(8px) scale(0.95);
-      transition: all 0.25s ease;
-      pointer-events: none;
+      position: relative;
+      overflow: hidden;
     }
-    .salesbot-panel.open {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0) scale(1);
-      pointer-events: auto;
-    }
-    .salesbot-panel-header {
+    .salesbot-node-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 6px;
       margin-bottom: 6px;
       font-size: 7px;
       color: rgba(180,180,180,0.6);
       letter-spacing: 0.5px;
       text-transform: uppercase;
     }
-    .salesbot-panel-close {
-      cursor: pointer;
-      color: rgba(150,150,150,0.5);
-      font-size: 9px;
+    .salesbot-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(80,80,80,0.5);
+      transition: background 0.3s, box-shadow 0.3s;
     }
-    .salesbot-panel-close:hover { color: rgba(200,200,200,0.8); }
+    .salesbot-dot.live {
+      background: rgba(50,205,50,0.8);
+      box-shadow: 0 0 6px rgba(50,205,50,0.4);
+    }
     .salesbot-feed {
       min-height: 20px;
-      max-height: 160px;
+      max-height: 120px;
       overflow-y: auto;
       scrollbar-width: none;
     }
@@ -1088,17 +1145,23 @@
       gap: 6px;
       padding: 4px 0;
       border-bottom: 1px solid rgba(50,50,50,0.3);
-      cursor: pointer;
+      animation: salePop 0.4s ease-out;
     }
     .salesbot-sale:last-child { border-bottom: none; }
-    .salesbot-sale:hover { background: rgba(50,205,50,0.05); }
+    @keyframes salePop {
+      0% { opacity: 0; transform: translateY(-8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
     .salesbot-sale-thumb {
       width: 22px; height: 22px;
       border-radius: 2px;
       object-fit: cover;
       flex-shrink: 0;
     }
-    .salesbot-sale-info { flex: 1; min-width: 0; }
+    .salesbot-sale-info {
+      flex: 1;
+      min-width: 0;
+    }
     .salesbot-sale-title {
       font-size: 6.5px;
       color: rgba(200,200,200,0.8);
@@ -1115,55 +1178,41 @@
       font-size: 5.5px;
       color: rgba(120,120,120,0.5);
     }
-    /* Toast notification — slides up from bottom-left */
-    .salesbot-toast {
-      position: fixed;
-      bottom: 32px;
-      left: 16px;
-      background: rgba(18,16,20,0.95);
-      border: 1px solid rgba(50,205,50,0.3);
-      border-radius: 4px;
-      padding: 8px 12px;
-      font-family: 'JetBrains Mono', monospace;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 201;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.4s ease;
-      pointer-events: auto;
-      cursor: pointer;
-      max-width: 220px;
+    /* PCB traces on salesbot */
+    .salesbot-traces {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      opacity: 0.3;
     }
-    .salesbot-toast.show {
-      opacity: 1;
-      transform: translateY(0);
+    /* Pulse border on new sale */
+    @keyframes salesbotPulse {
+      0% { border-color: rgba(50,205,50,0.6); box-shadow: 0 0 12px rgba(50,205,50,0.2); }
+      100% { border-color: rgba(50,50,50,0.6); box-shadow: none; }
     }
-    .salesbot-toast-thumb {
-      width: 28px; height: 28px;
-      border-radius: 3px;
-      object-fit: cover;
-      flex-shrink: 0;
+    .salesbot-node-body.sale-pulse {
+      animation: salesbotPulse 1.5s ease-out;
     }
-    .salesbot-toast-info { flex: 1; }
-    .salesbot-toast-label {
-      font-size: 5.5px;
-      color: rgba(50,205,50,0.6);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    /* Port dot */
+    .salesbot-port {
+      position: absolute;
+      top: 50%;
+      left: -4px;
+      transform: translateY(-50%);
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(30,28,32,0.9);
+      border: 1px solid rgba(80,80,80,0.5);
     }
-    .salesbot-toast-title {
-      font-size: 7px;
-      color: rgba(220,220,220,0.9);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .salesbot-toast-price {
-      font-size: 8px;
-      color: rgba(50,205,50,0.9);
-      font-weight: 700;
+    .salesbot-port::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: rgba(50,205,50,0.4);
     }
 
     /* Master brain node at top */
@@ -4325,25 +4374,20 @@
       .artworks-grid { columns: 2; column-gap: 12px; }
       .artwork-card { margin-bottom: 12px; }
 
-      /* ── Focus mode — artwork hero on mobile: full screen art showcase ── */
+      /* ── Focus mode — artwork hero on mobile ── */
       .node-graph-inner.focus-mode .node-card.focused {
-        transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
-                    opacity 0.3s ease;
+        transition: transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
+                    opacity 0.4s ease;
       }
       .node-graph-inner.focus-mode .node-card.focused .node-preview {
         box-shadow:
-          0 8px 40px rgba(0,0,0,0.7),
-          0 2px 8px rgba(0,0,0,0.5) !important;
-        border-radius: 2px;
+          inset 0 0 0 0.5px rgba(220,150,50,0.4),
+          0 8px 32px rgba(0,0,0,0.6),
+          0 2px 8px rgba(0,0,0,0.4) !important;
       }
       .node-graph-inner.focus-mode .node-card.focused .node-preview img {
         image-rendering: -webkit-optimize-contrast;
       }
-      /* Hide frame ticks on mobile — too tiny to appreciate */
-      .node-graph-inner.focus-mode .node-frame-ticks { opacity: 0 !important; }
-      /* Hide ornate frame SVGs on mobile — too small to see details */
-      .ornate-frame-svg,
-      .botanical-frame-svg { display: none !important; }
 
       /* ── COA panel — compact on mobile ── */
       .node-info-panel {
@@ -4375,48 +4419,37 @@
         font-size: 0.45rem !important;
       }
 
-      /* ── Info dock — compact bottom strip on mobile ── */
+      /* ── Info dock — bottom of screen on mobile ── */
       .info-dock {
         right: auto !important;
         left: 50% !important;
         top: auto !important;
-        bottom: 8px !important;
+        bottom: 12px !important;
         transform: translateX(-50%) !important;
-        width: calc(100vw - 24px) !important;
-        height: 90px !important;
-        border-radius: 6px !important;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        width: calc(100vw - 32px) !important;
+        height: 120px !important;
       }
       .info-dock .dock-port-in {
-        display: none !important;
+        left: 50% !important;
+        top: -6px !important;
+        transform: translateX(-50%) !important;
       }
 
-      /* ── Info overlay card — bottom sheet style on mobile ── */
+      /* ── Info overlay card — full width on mobile ── */
       .info-overlay-card {
-        width: 100vw !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        top: auto !important;
-        max-height: 55vh !important;
-        border-radius: 12px 12px 0 0 !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        width: calc(100vw - 32px) !important;
+        left: 16px !important;
+        right: auto !important;
+        max-height: 50vh !important;
       }
 
-      /* ── COA overlay — bottom sheet on mobile ── */
+      /* ── COA overlay — full screen on mobile ── */
       .coa-overlay-panel {
-        width: 100vw !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        top: auto !important;
+        width: calc(100vw - 32px) !important;
+        left: 16px !important;
+        right: auto !important;
         max-height: 80vh;
         overflow-y: auto;
-        border-radius: 12px 12px 0 0 !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
       }
 
       /* ── Lightbox ── */
@@ -4433,6 +4466,13 @@
       /* ── Download buttons — stack better ── */
       .overlay-downloads { gap: 8px; }
       .download-btn { font-size: 0.44rem; padding: 6px 8px; }
+
+      /* ── Salesbot — compact on mobile ── */
+      .salesbot-node { bottom: 60px; right: 12px; }
+      .salesbot-node-body { width: 110px; padding: 6px 8px; }
+      .salesbot-sale-thumb { width: 18px; height: 18px; }
+      .salesbot-sale-title { font-size: 5.5px; }
+      .salesbot-sale-price { font-size: 6px; }
 
       /* ── Masterwork frame ticks — smaller on mobile ── */
       .node-frame-ticks .th { width: 18px; }
@@ -4466,56 +4506,6 @@
         pointer-events: none;
         z-index: 2600;
       }
-
-      /* ── Mobile performance: reduce heavy effects ── */
-      .pixel-scatter-container { display: none !important; }
-      .node-graph-inner .connection-wire { stroke-width: 0.5 !important; }
-      .master-node-pcb .pcb-led { animation: none !important; }
-      .viewport-grid { opacity: 0.3 !important; }
-      .detail-overlay::after { display: none; }
-
-      /* ── Mobile: smooth scroll everywhere ── */
-      .node-graph-canvas {
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-      }
-      .detail-overlay {
-        -webkit-overflow-scrolling: touch;
-      }
-
-      /* ── Mobile: collection nodes — bigger tap targets, cleaner look ── */
-      .collection-node {
-        -webkit-tap-highlight-color: transparent;
-      }
-      .collection-node .collection-thumbnail {
-        border-radius: 4px;
-        overflow: hidden;
-      }
-      .collection-node .collection-name {
-        font-size: 0.45rem !important;
-        margin-top: 4px;
-        opacity: 0.7;
-      }
-
-      /* ── Mobile: node cards in detail — cleaner, bigger ── */
-      .node-card .node-port { display: none !important; }
-      .node-card .node-title { font-size: 0.42rem !important; }
-
-      /* ── Mobile: hide salesbot entirely (too small for mobile UX) ── */
-      .salesbot-node { display: none !important; }
-
-      /* ── Mobile: download buttons — bigger tap targets ── */
-      .overlay-downloads .download-btn {
-        padding: 10px 14px !important;
-        font-size: 0.48rem !important;
-        min-height: 36px;
-      }
-
-      /* ── Mobile: collection detail header — compact ── */
-      .detail-header {
-        height: auto !important;
-        padding: 8px 12px !important;
-      }
     }
 
     /* Tablet tweaks */
@@ -4523,18 +4513,6 @@
       .gallery-container { padding: 0 30px; padding-top: 75px; }
       .collections-grid { columns: 2; column-gap: 30px; }
       .collection-cell { margin-bottom: 36px; }
-    }
-    @keyframes focusPulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.75; }
-    }
-    @keyframes glitchScanDrift {
-      0% { transform: translateY(-100px); }
-      100% { transform: translateY(100px); }
-    }
-    @keyframes chromaBleedPulse {
-      0%, 100% { opacity: 0.05; }
-      50% { opacity: 0.2; }
     }
   </style>
 </head>
@@ -4722,7 +4700,7 @@
       </button>
       <div class="nav-right" id="navRight">
         <a class="nav-link" onclick="toggleCatalogOM()">Collections</a>
-        <a class="nav-link nav-wallet-link" id="navWalletLink" onclick="handleNavWallet()">Connect Wallet</a>
+        <a class="nav-link" onclick="openObjectManager()">Objects</a>
         <div class="about-dropdown" id="aboutDropdown">
           <button class="nav-link" onclick="toggleAbout()">About</button>
           <div class="about-panel">
@@ -4952,15 +4930,46 @@
     </div>
   </div>
 
-  <!-- Wallet node removed — connect wallet is now integrated into the nav bar -->
+  <!-- Connect Wallet Node -->
+  <div class="wallet-node" id="walletNode">
+    <div class="wallet-node-body" id="walletNodeBody">
+      <div class="wallet-node-port" id="walletPort"></div>
+      <!-- PCB trace decoration -->
+      <svg class="wallet-node-traces" viewBox="0 0 120 52" preserveAspectRatio="none">
+        <line x1="0" y1="14" x2="35" y2="14" stroke="rgba(120,180,255,0.15)" stroke-width="0.5"/>
+        <line x1="85" y1="14" x2="120" y2="14" stroke="rgba(120,180,255,0.15)" stroke-width="0.5"/>
+        <line x1="0" y1="38" x2="35" y2="38" stroke="rgba(120,180,255,0.12)" stroke-width="0.5"/>
+        <line x1="85" y1="38" x2="120" y2="38" stroke="rgba(120,180,255,0.12)" stroke-width="0.5"/>
+        <polyline points="20,14 30,26 20,38" fill="none" stroke="rgba(120,180,255,0.08)" stroke-width="0.4"/>
+        <polyline points="100,14 90,26 100,38" fill="none" stroke="rgba(120,180,255,0.08)" stroke-width="0.4"/>
+        <line x1="0" y1="14" x2="35" y2="14" stroke="rgba(120,180,255,0.3)" stroke-width="0.5" stroke-dasharray="3 5" style="animation:currentFlow 2s linear infinite"/>
+        <line x1="85" y1="38" x2="120" y2="38" stroke="rgba(120,180,255,0.3)" stroke-width="0.5" stroke-dasharray="3 5" style="animation:currentFlowReverse 2s linear infinite"/>
+      </svg>
+      <div class="wallet-node-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(120,180,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+          <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
+        </svg>
+      </div>
+      <span class="wallet-node-label" id="walletLabel">CONNECT</span>
+    </div>
+  </div>
+  <svg class="wallet-jolt-wire" id="walletJoltWire"><path d=""/></svg>
 
-  <!-- Salesbot — minimized dot + expandable feed -->
+  <!-- Salesbot node — live sale alerts -->
   <div class="salesbot-node" id="salesbotNode" style="opacity:0;">
-    <div class="salesbot-dot-trigger" id="salesbotDot" title="Sales Feed"></div>
-    <div class="salesbot-panel" id="salesbotPanel">
-      <div class="salesbot-panel-header">
+    <div class="salesbot-node-body" id="salesbotBody">
+      <div class="salesbot-port"></div>
+      <svg class="salesbot-traces" viewBox="0 0 140 80" preserveAspectRatio="none">
+        <line x1="0" y1="12" x2="30" y2="12" stroke="rgba(50,205,50,0.15)" stroke-width="0.5"/>
+        <line x1="110" y1="12" x2="140" y2="12" stroke="rgba(50,205,50,0.15)" stroke-width="0.5"/>
+        <line x1="0" y1="65" x2="30" y2="65" stroke="rgba(50,205,50,0.1)" stroke-width="0.5"/>
+        <line x1="110" y1="65" x2="140" y2="65" stroke="rgba(50,205,50,0.1)" stroke-width="0.5"/>
+      </svg>
+      <div class="salesbot-node-header">
+        <div class="salesbot-dot" id="salesbotDot"></div>
         <span>Sales_Feed</span>
-        <span class="salesbot-panel-close" id="salesbotClose">✕</span>
       </div>
       <div class="salesbot-feed" id="salesbotFeed">
         <div class="salesbot-feed-empty">monitoring...</div>
@@ -5035,7 +5044,11 @@
     (function hoistMasterNode() {
       const mn = document.getElementById('masterNode');
       if (mn) document.body.appendChild(mn);
-      // (wallet node removed — connect wallet is now in nav bar)
+      // Also hoist wallet node and jolt wire to body level
+      const wn = document.getElementById('walletNode');
+      if (wn) document.body.appendChild(wn);
+      const jw = document.getElementById('walletJoltWire');
+      if (jw) document.body.appendChild(jw);
     })();
 
     // ═══════════════════════════════════════════════════════════════
@@ -5384,22 +5397,69 @@
       };
     })();
 
-    // ── Nav Wallet Link (replaces old bulky wallet node) ──
-    (function initNavWallet() {
-      var navLink = document.getElementById('navWalletLink');
-      if (!navLink) return;
+    // ── Wallet Node Interaction (must be after ACK_CHAIN) ──
+    (function initWalletNode() {
+      var walletNode = document.getElementById('walletNode');
+      var walletBody = document.getElementById('walletNodeBody');
+      var walletLabel = document.getElementById('walletLabel');
+      var walletPort = document.getElementById('walletPort');
+      var joltWire = document.getElementById('walletJoltWire');
+      if (!walletNode || !walletBody) return;
 
-      function updateNavWalletUI(addr) {
-        if (addr) {
-          navLink.classList.add('wallet-connected');
-          navLink.textContent = 'My Bags';
-        } else {
-          navLink.classList.remove('wallet-connected');
-          navLink.textContent = 'Connect Wallet';
+      function drawJoltWire(connected) {
+        var masterPort = document.getElementById('masterPort');
+        if (!masterPort || !walletPort || !joltWire) return;
+        var mp = masterPort.getBoundingClientRect();
+        var wp = walletPort.getBoundingClientRect();
+        var sx = mp.left + mp.width / 2;
+        var sy = mp.top + mp.height / 2;
+        var ex = wp.left + wp.width / 2;
+        var ey = wp.top + wp.height / 2;
+        var midY = (sy + ey) / 2;
+        var d = 'M' + sx + ',' + sy + ' C' + sx + ',' + midY + ' ' + ex + ',' + midY + ' ' + ex + ',' + ey;
+        var path = joltWire.querySelector('path');
+        if (path) path.setAttribute('d', d);
+        joltWire.classList.remove('active', 'connected');
+        void joltWire.offsetWidth;
+        if (connected) {
+          joltWire.classList.add('active');
+          setTimeout(function() { joltWire.classList.add('connected'); }, 650);
         }
       }
 
-      ACK_CHAIN.onWalletChange(updateNavWalletUI);
+      function updateWalletUI(addr) {
+        if (addr) {
+          walletBody.classList.add('connected');
+          walletLabel.textContent = addr.endsWith('.eth') ? addr : (addr.slice(0, 5) + '...' + addr.slice(-3));
+          var svgEl = walletBody.querySelector('.wallet-node-icon svg');
+          if (svgEl) svgEl.setAttribute('stroke', 'rgba(50,205,50,0.6)');
+          drawJoltWire(true);
+        } else {
+          walletBody.classList.remove('connected');
+          walletLabel.textContent = 'CONNECT';
+          joltWire.classList.remove('active', 'connected');
+          var svgEl2 = walletBody.querySelector('.wallet-node-icon svg');
+          if (svgEl2) svgEl2.setAttribute('stroke', 'rgba(120,180,255,0.6)');
+        }
+      }
+
+      walletNode.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        if (ACK_CHAIN.getConnectedWallet()) {
+          ACK_CHAIN.disconnectWallet();
+        } else {
+          ACK_CHAIN.connectWallet();
+        }
+      });
+
+      ACK_CHAIN.onWalletChange(updateWalletUI);
+
+      window.addEventListener('resize', function() {
+        if (ACK_CHAIN.getConnectedWallet()) {
+          drawJoltWire(false);
+          joltWire.classList.add('connected');
+        }
+      });
     })();
 
     // Collections Data
@@ -9900,11 +9960,11 @@
 
       if (isMobile) {
         // ══════════════════════════════════════════════════
-        // ── MOBILE: 2-column scrollable grid — big art, clean breathing room ──
+        // ── MOBILE: 2-column scrollable grid ──
         // ══════════════════════════════════════════════════
-        const cols = 2;
+        const cols = 3;
         const pad = 16;
-        const gap = 14;
+        const gap = 10;
         const colW = Math.floor((vpW - pad * 2 - gap * (cols - 1)) / cols);
         let colHeights = new Array(cols).fill(navHeight + pad + 8);
 
@@ -12901,7 +12961,7 @@
         // ── TEMPTED IN THE GARDEN decoration nodes ──
         var _gardenDecoNodes = [];
         if (collection.name === 'Tempted in the Garden') {
-          const gardenCount = 12; // reduced from 30 — enough to feel like a garden without overwhelming
+          const gardenCount = 30; // edition of 30
           const gardenPositions = [];
           const heroX = nodePositions[0] ? nodePositions[0].x : vpW * 0.3;
           const heroY = nodePositions[0] ? nodePositions[0].y : vpH * 0.15;
@@ -14347,7 +14407,7 @@
       const scaledH = nodeH * scaleFactor;
       const rightChainReserve = _isMobileFocus ? edgePad : Math.min(320, vpW * 0.22);
       const availW = vpW - candleReserve - rightChainReserve;
-      const availH = _isMobileFocus ? (vpH * 0.75 - navReserve) : (vpH - navReserve - edgePad * 2);
+      const availH = _isMobileFocus ? (vpH * 0.62 - navReserve) : (vpH - navReserve - edgePad * 2);
       if (scaledW > availW || scaledH > availH) {
         scaleFactor = Math.min(availW / nodeW, availH / nodeH, scaleFactor);
       }
@@ -14370,7 +14430,7 @@
       if (clampedCenterY - finalH / 2 < navReserve + edgePad) {
         clampedCenterY = navReserve + edgePad + finalH / 2;
       }
-      const bottomLimit = _isMobileFocus ? vpH * 0.82 : vpH - edgePad;
+      const bottomLimit = _isMobileFocus ? vpH * 0.65 : vpH - edgePad;
       if (clampedCenterY + finalH / 2 > bottomLimit) {
         clampedCenterY = bottomLimit - finalH / 2;
       }
@@ -14458,7 +14518,9 @@
         // Apply focus mode class now that siblings are scattered
         inner.classList.add('focus-mode');
         node.classList.add('focused');
-        // Dim salesbot during focus
+        // Dim wallet node and salesbot during focus
+        var _wn = document.getElementById('walletNode');
+        if (_wn) _wn.classList.add('dimmed');
         var _sb = document.getElementById('salesbotNode');
         if (_sb) _sb.classList.add('dimmed');
         // Allow frame SVGs to extend beyond node bounds without clipping
@@ -14551,8 +14613,8 @@
               } else {
                 nodeImg.style.opacity = '1';
               }
-            } else if (nodeImg.dataset.fullGifSrc) {
-              // Color Study: swap static JPG thumb → animated GIF on focus
+            } else if (nodeImg.dataset.fullGifSrc && !_isMobileFocus) {
+              // Color Study: swap static JPG thumb → full animated GIF on focus (desktop only — GIFs too heavy for mobile)
               nodeImg.style.transition = 'opacity 0.4s ease';
               nodeImg.style.opacity = '0.5';
               const _gifSrc = nodeImg.dataset.fullGifSrc;
@@ -14560,7 +14622,7 @@
               _gifPreloader.onload = () => { nodeImg.src = _gifSrc; nodeImg.style.opacity = '1'; };
               _gifPreloader.onerror = () => { nodeImg.style.opacity = '1'; };
               _gifPreloader.src = _gifSrc;
-              setTimeout(() => { nodeImg.style.opacity = '1'; }, _isMobileFocus ? 20000 : 12000); // more time on mobile
+              setTimeout(() => { nodeImg.style.opacity = '1'; }, 12000); // generous timeout for large GIFs
             } else {
             // Add loading shimmer while higher-res loads
             nodeImg.style.transition = 'opacity 0.4s ease';
@@ -14575,12 +14637,16 @@
               if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
             };
             if (artData && artData.fullRes) {
-              // On mobile, still load fullRes for GIFs/images but with generous timeout
+              // On mobile, skip heavy fullRes swap — keep the thumbnail visible and crisp
+              if (_isMobileFocus) {
+                _clearLoading();
+              } else {
               const preloader = new Image();
               preloader.onload = () => { nodeImg.src = artData.fullRes; _clearLoading(); };
               preloader.onerror = _clearLoading;
               preloader.src = artData.fullRes;
-              setTimeout(_clearLoading, _isMobileFocus ? 15000 : 8000);
+              setTimeout(_clearLoading, 8000); // fallback timeout
+              }
             } else if (thumbSrc.includes('?w=')) {
               let fullResSrc = thumbSrc.replace(/\?w=\d+/, _isMobileFocus ? '?w=600' : '?w=1200');
               const preloader = new Image();
@@ -17650,42 +17716,6 @@
           els += '<path d="M '+stx+' '+(sty-stR)+' L '+(stx+1.5)+' '+(sty-1.5)+' L '+(stx+stR)+' '+sty+' L '+(stx+1.5)+' '+(sty+1.5)+' L '+stx+' '+(sty+stR)+' L '+(stx-1.5)+' '+(sty+1.5)+' L '+(stx-stR)+' '+sty+' L '+(stx-1.5)+' '+(sty-1.5)+' Z" fill="rgba('+lightR+','+lightG+','+lightB+',0.05)" stroke="rgba('+lightR+','+lightG+','+lightB+',0.14)" stroke-width="0.4"/>';
         }
 
-        // ══════════════════════════════════════════════════════════════════
-        // UNIVERSAL PIANO BLOSSOM FOCUS MODE ENHANCEMENTS
-        // ══════════════════════════════════════════════════════════════════
-
-        // a) Falling petal particles — 4-6 tiny ellipses with slow falling animation
-        const petalCount = 4 + Math.floor(rand()*3);
-        for (let p = 0; p < petalCount; p++) {
-          const px = L - 4 - rand() * 6 + (p % 2) * (W + 10);  // Left or right margin
-          const py = T + H * 0.1 + rand() * H * 0.8;
-          const petalOp = 0.1 + rand() * 0.05;
-          const petalDelay = (p * 0.5).toFixed(1);
-          els += '<ellipse cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" rx="1.2" ry="0.8" fill="rgba('+warmR+','+warmG+','+warmB+','+petalOp+')" opacity="'+petalOp+'"/>';
-        }
-
-        // b) Music staff lines — very faint horizontal parallel lines (5 lines, 2px apart)
-        const staffX = L - 8;
-        const staffY = B - 12;
-        for (let s = 0; s < 5; s++) {
-          const sy = staffY + s * 2;
-          els += '<line x1="'+(staffX)+'" y1="'+sy.toFixed(1)+'" x2="'+(staffX + 20)+'" y2="'+sy.toFixed(1)+'" stroke="rgba('+ar+','+ag+','+ab+',0.04)" stroke-width="0.3"/>';
-        }
-
-        // c) Vine tendril — one delicate curved SVG path along bottom edge
-        const tendrilStartX = L + 10, tendrilStartY = B + 2;
-        let tendrilPath = 'M '+tendrilStartX.toFixed(1)+' '+tendrilStartY.toFixed(1);
-        for (let t = 1; t <= 8; t++) {
-          const tx = tendrilStartX + (t * W * 0.1);
-          const ty = tendrilStartY + Math.sin(t * 0.4) * 4;
-          if (t === 1) {
-            tendrilPath += ' Q '+(tx - W*0.02).toFixed(1)+' '+(ty - 3).toFixed(1)+' '+tx.toFixed(1)+' '+ty.toFixed(1);
-          } else {
-            tendrilPath += ' T '+tx.toFixed(1)+' '+ty.toFixed(1);
-          }
-        }
-        els += '<path d="'+tendrilPath+'" fill="none" stroke="rgba('+warmR+','+warmG+','+warmB+',0.08)" stroke-width="0.5" stroke-linecap="round"/>';
-
       } else {
         // ══════════════════════════════════════════════════════════
         // COLLECTION VIEW — minimal ornamental corners only
@@ -18057,21 +18087,6 @@
       els += `<text x="${R - 30}" y="${T - 4}" style="${textStyle}" fill="${metallic}0.25)">${('ED.' + Math.floor(rand() * 48 + 1)).toUpperCase()}</text>`;
       els += `<text x="${L + 2}" y="${B + 8}" style="${textStyle}" fill="${metallic}0.2)">ERC-1155</text>`;
       els += `<text x="${R - 26}" y="${B + 8}" style="${textStyle}" fill="${metallic}0.2)">ETH</text>`;
-
-      // ── Edition counter tick marks (subtle, always visible) ──
-      // 6 evenly-spaced vertical marks along bottom edge inside frame
-      const tickSpacing = (R - L) / 7; // 7 intervals for 6 marks
-      for (let ti = 1; ti < 7; ti++) {
-        const tickX = L + ti * tickSpacing;
-        const tickY = B - 2;
-        els += `<line x1="${tickX.toFixed(1)}" y1="${(tickY - 3).toFixed(1)}" x2="${tickX.toFixed(1)}" y2="${tickY.toFixed(1)}" stroke="${metallic}0.15)" stroke-width="1"/>`;
-      }
-
-      // ── Digital hash fragment (bottom-right, barely visible) ──
-      // Derive first 6 chars of fake hash from RNG
-      const hashVal = ('0x' + Math.floor(rand() * 0xFFFFFF).toString(16).padStart(6, '0')).toUpperCase();
-      const hashStyle = `font-family:'Courier New',monospace;font-size:4px;letter-spacing:0.5px;`;
-      els += `<text x="${R - 2}" y="${B - 1}" text-anchor="end" style="${hashStyle}" fill="${metallic}0.12)">${hashVal}</text>`;
 
       svg.innerHTML = els;
       return svg;
@@ -18596,48 +18611,6 @@
           const sLen = W * (0.12 + rand() * 0.35);
           const sx = rand() > 0.5 ? L - 5 : R + 5 - sLen;
           els += `<line x1="${sx}" y1="${sy}" x2="${sx + sLen}" y2="${sy}" stroke="rgba(255,0,148,${0.06 + rand() * 0.08})" stroke-width="${0.5 + rand() * 0.8}"/>`;
-        }
-      }
-
-      // ── FOCUS MODE ENHANCEMENTS: Pantone chip, chromatic bleed particles, noise line ──
-      if (focusMode) {
-        // a) Pantone chip — tiny color swatch in bottom-left with white strip
-        els += `<rect x="${L + 2}" y="${B + 4}" width="12" height="8" fill="${ac_(0.3)}" rx="0.5"/>`;
-        els += `<rect x="${L + 2}" y="${B + 4}" width="1.5" height="8" fill="rgba(255,255,255,0.35)"/>`;
-        // Extract Pantone name from title if available
-        const pantoneMatch = title.match(/pantone\s+(\w+)/i);
-        if (pantoneMatch) {
-          const pantoneLabel = pantoneMatch[1].substring(0, 6);
-          els += `<text x="${L + 2}" y="${B + 15}" style="font-family:'Courier New',monospace;font-size:4px;letter-spacing:0.2px;" fill="${ac_(0.15)}">${pantoneLabel}</text>`;
-        }
-
-        // b) Chromatic bleed particles — 6-8 circles along edges with pulse animation
-        const bleedCount = 6 + Math.floor(rand() * 3);
-        for (let i = 0; i < bleedCount; i++) {
-          const edge = i % 4;
-          let bx, by;
-          if (edge === 0) { bx = L + rand() * W; by = T - 4 - rand() * 3; }
-          else if (edge === 1) { bx = R + 4 + rand() * 3; by = T + rand() * H; }
-          else if (edge === 2) { bx = L + rand() * W; by = B + 4 + rand() * 3; }
-          else { bx = L - 4 - rand() * 3; by = T + rand() * H; }
-          const br = 1.5 + rand() * 1.2;
-          const op = 0.05 + rand() * 0.15;
-          els += `<circle cx="${bx}" cy="${by}" r="${br}" fill="${ac_(op)}" style="filter:blur(0.4px);animation:chromaBleedPulse 2.5s ease-in-out infinite;" opacity="${op}"/>`;
-        }
-
-        // c) Noise line — faint horizontal line at bottom with dashed pattern (static)
-        const dashGaps = [];
-        let dashPos = L;
-        while (dashPos < R) {
-          const dashLen = 2 + rand() * 1.5;
-          const gapLen = 1 + rand() * 1.2;
-          dashGaps.push([dashPos, dashLen]);
-          dashPos += dashLen + gapLen;
-        }
-        for (const [dx, dlen] of dashGaps) {
-          if (dx < R) {
-            els += `<line x1="${dx}" y1="${B + 1}" x2="${Math.min(dx + dlen, R)}" y2="${B + 1}" stroke="${ac_(0.06)}" stroke-width="0.35"/>`;
-          }
         }
       }
 
@@ -19426,51 +19399,6 @@
         els += `<line x1="${gx}" y1="${gy - 3}" x2="${gx}" y2="${gy + 3}" stroke="${nCol}0.2)" stroke-width="0.6"/>`;
       }
 
-      // ── FOCUS MODE ENHANCEMENTS: Digital identity tag, glitch scan lines, avatar status indicator ──
-      // a) Digital identity tag — "ID:" label + character name in top-right
-      const charNames = {
-        'timereaper': 'timeReaper',
-        'timreaper': 'timeReaper',
-        'singularity': 'serSingularity',
-        'shady': 'misterShady',
-        'laser': 'laserEyes',
-        'morning': 'morningStar',
-        'star': 'morningStar',
-        'skull': 'skullBoy',
-        'noone': 'noOne',
-        'no one': 'noOne',
-        'pepe': 'cringe pepe',
-        'cringe': 'cringe pepe',
-        'fire': 'fireFace',
-        'greg': 'greg'
-      };
-      let charName = 'unknown';
-      for (const key in charNames) {
-        if (tl.indexOf(key) !== -1) {
-          charName = charNames[key];
-          break;
-        }
-      }
-      const idLabel = `ID:${charName}`;
-      els += `<text x="${R - 2}" y="${T - 2}" text-anchor="end" style="font-family:'Courier New',monospace;font-size:5px;letter-spacing:0.3px;" fill="rgba(${ar},${ag},${ab},0.2)">${idLabel}</text>`;
-
-      // b) Glitch scan lines — 2-3 thin horizontal lines with chromatic aberration effect
-      const scanLineCount = 2 + Math.floor(rand() * 2);
-      for (let s = 0; s < scanLineCount; s++) {
-        const sy = T + 1 + rand() * (H - 2);
-        const sxStart = L + 1;
-        const sxEnd = R - 1;
-        // Red channel offset
-        els += `<line x1="${sxStart + 0.3}" y1="${sy - 0.2}" x2="${sxEnd + 0.3}" y2="${sy - 0.2}" stroke="rgba(${Math.min(255, ar + 80)},${Math.max(0, ag - 60)},${Math.max(0, ab - 60)},0.05)" stroke-width="0.4"/>`;
-        // Blue channel offset
-        els += `<line x1="${sxStart - 0.3}" y1="${sy + 0.2}" x2="${sxEnd - 0.3}" y2="${sy + 0.2}" stroke="rgba(${Math.max(0, ar - 60)},${Math.max(0, ag - 60)},${Math.min(255, ab + 80)},0.05)" stroke-width="0.4"/>`;
-        // Center line with animation reference
-        els += `<line x1="${sxStart}" y1="${sy}" x2="${sxEnd}" y2="${sy}" stroke="rgba(${ar},${ag},${ab},0.08)" stroke-width="0.3" style="animation:glitchScanDrift 4s linear infinite;"/>`;
-      }
-
-      // c) Avatar status indicator — tiny 3px circle in top-left with pulse animation
-      els += `<circle cx="${L + 2}" cy="${T + 2}" r="1.5" fill="rgba(${ar},${ag},${ab},0.4)" style="animation:focusPulse 1.5s ease-in-out infinite;"/>`;
-
       svg.innerHTML = els;
       return svg;
     }
@@ -19552,82 +19480,6 @@
         els += drawKeys(L, T - 7.5, 'right', W);
         els += drawKeys(L - 7.5, T, 'down', H);
         els += drawKeys(R + 1.5, T, 'down', H);
-
-        // ── FOCUS MODE ENHANCEMENT 1: Sound wave lines ──
-        // 3-4 faint sine-wave lines emanating from edges, representing sound escaping the piano
-        const waveCount = 3 + Math.floor(rand() * 2);
-        const soundDrift = Math.random() > 0.5 ? 'left' : 'right';
-        for (let w = 0; w < waveCount; w++) {
-          const amplitude = 1.5 + rand() * 1.2;
-          const frequency = 0.15 + rand() * 0.15;
-          const phase = rand() * Math.PI * 2;
-          const yOffset = T + H * 0.2 + w * H * 0.2 + rand() * H * 0.1;
-          const waveOp = (0.08 + rand() * 0.04).toFixed(2);
-          let wavePath = '';
-          if (soundDrift === 'left') {
-            wavePath = `M${L},${yOffset}`;
-            for (let x = 0; x <= 30; x += 2) {
-              const y = yOffset + Math.sin(x * frequency + phase) * amplitude;
-              wavePath += ` L${L - x},${y}`;
-            }
-          } else {
-            wavePath = `M${R},${yOffset}`;
-            for (let x = 0; x <= 30; x += 2) {
-              const y = yOffset + Math.sin(x * frequency + phase) * amplitude;
-              wavePath += ` L${R + x},${y}`;
-            }
-          }
-          els += `<path d="${wavePath}" fill="none" stroke="${ac_(waveOp)}" stroke-width="0.25" stroke-linecap="round" class="bk-sound-drift"/>`;
-        }
-
-        // ── FOCUS MODE ENHANCEMENT 2: Broken key shards ──
-        // 4-6 tiny rotated angular shapes in frame margins, seeded from title
-        let shardSeed = (ar * 7 + ag * 13 + ab * 3) & 0xFFFF;
-        const shardRand = () => { shardSeed = (shardSeed * 16807 + 11) % 2147483647; return (shardSeed & 0xFFFF) / 0xFFFF; };
-        const shardCount = 4 + Math.floor(shardRand() * 3);
-        for (let s = 0; s < shardCount; s++) {
-          const shardX = rand() > 0.5 ? (L - 2 - shardRand() * 8) : (R + 2 + shardRand() * 8);
-          const shardY = T + H * 0.1 + shardRand() * H * 0.8;
-          const shardW = 2 + shardRand() * 2.5;
-          const shardH = 0.7 + shardRand() * 3.5;
-          const shardAngle = -45 + shardRand() * 90;
-          const shardOp = (0.1 + shardRand() * 0.1).toFixed(2);
-          els += `<rect x="${shardX}" y="${shardY}" width="${shardW}" height="${shardH}" fill="none" stroke="${ac_(shardOp)}" stroke-width="0.35" transform="rotate(${shardAngle},${shardX + shardW/2},${shardY + shardH/2})" class="bk-shard"/>`;
-        }
-
-        // ── FOCUS MODE ENHANCEMENT 3: Title-themed accent ──
-        // Based on artwork title, add ONE subtle thematic element
-        if (tl.indexOf('void') !== -1 || tl.indexOf('darkness') !== -1 || tl.indexOf('demon') !== -1 || tl.indexOf('suffering') !== -1) {
-          // Void/darkness: faint concentric void rings near corner
-          const vx = L - 8, vy = T - 8;
-          els += `<circle cx="${vx}" cy="${vy}" r="6" fill="none" stroke="${ac_(0.09)}" stroke-width="0.3" class="bk-void-ring"/>`;
-          els += `<circle cx="${vx}" cy="${vy}" r="3.5" fill="none" stroke="${ac_(0.06)}" stroke-width="0.25" class="bk-void-ring"/>`;
-        } else if (tl.indexOf('god') !== -1 || tl.indexOf('light') !== -1 || tl.indexOf('beginning') !== -1 || tl.indexOf('fear not') !== -1) {
-          // Light/god: subtle radial glow burst near top
-          const gx = L + W * 0.5, gy = T - 8;
-          for (let g = 0; g < 5; g++) {
-            const angle = (g * Math.PI * 2 / 5) + rand() * 0.2;
-            const len = 5 + rand() * 3;
-            const x1 = gx + Math.cos(angle) * 1;
-            const y1 = gy + Math.sin(angle) * 1;
-            const x2 = gx + Math.cos(angle) * len;
-            const y2 = gy + Math.sin(angle) * len;
-            els += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${ac_(0.08)}" stroke-width="0.3" stroke-linecap="round" class="bk-glow-ray"/>`;
-          }
-        } else if (tl.indexOf('blue') !== -1 || tl.indexOf('bird') !== -1 || tl.indexOf('forest') !== -1) {
-          // Blue/bird/forest: tiny feather-like stroke
-          const fx = R + 4, fy = T - 5;
-          els += `<path d="M${fx},${fy} Q${fx - 2},${fy - 3} ${fx - 1},${fy - 5}" fill="none" stroke="${ac_(0.1)}" stroke-width="0.35" stroke-linecap="round" class="bk-feather"/>`;
-          els += `<path d="M${fx},${fy} L${fx - 1.5},${fy + 4}" fill="none" stroke="${ac_(0.08)}" stroke-width="0.25" stroke-linecap="round" class="bk-feather"/>`;
-        } else if (tl.indexOf('rage') !== -1 || tl.indexOf('fire') !== -1 || tl.indexOf('chaos') !== -1) {
-          // Rage/fire: small flame-like flicker shape
-          const flx = L - 6, fly = B + 4;
-          els += `<path d="M${flx},${fly} Q${flx - 1.5},${fly - 3} ${flx + 0.5},${fly - 5} Q${flx + 1},${fly - 2} ${flx},${fly}" fill="none" stroke="${ac_(0.12)}" stroke-width="0.4" stroke-linecap="round" class="bk-flame"/>`;
-        } else {
-          // Default: single music note symbol (♪) very faintly placed
-          const noteX = R + 5, noteY = T + H * 0.5;
-          els += `<text x="${noteX}" y="${noteY}" font-family="serif" font-size="5" fill="${ac_(0.1)}" text-anchor="middle" class="bk-note">♪</text>`;
-        }
       }
 
       // ══ PER-ARTWORK UNIQUE ELEMENTS ══
@@ -19884,19 +19736,6 @@
           const r = 0.4 + rand() * 0.8;
           els += `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${ac_(0.08 + rand() * 0.06)}"/>`;
         }
-      }
-
-      // Add CSS keyframes for focus mode animations
-      if (focusMode) {
-        els += `<style>
-          @keyframes bkSoundDrift {
-            0% { opacity: 0.08; transform: translateX(0); }
-            50% { opacity: 0.12; }
-            100% { opacity: 0.08; transform: translateX(-2px); }
-          }
-          .bk-sound-drift { animation: bkSoundDrift 8s ease-in-out infinite; }
-          .bk-shard, .bk-void-ring, .bk-glow-ray, .bk-feather, .bk-flame, .bk-note { }
-        </style>`;
       }
 
       svg.innerHTML = els;
@@ -20374,55 +20213,6 @@
           els += `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${ac_(0.08 + rand() * 0.08)}"/>`;
         }
       }
-
-      // ══════════════════════════════════════════════════════════════════
-      // UNIVERSAL WAROTHY ENHANCEMENTS for focus view
-      // ══════════════════════════════════════════════════════════════════
-
-      // a) Ruby slipper sparkle — 4-5 tiny diamond/star shapes along bottom edge
-      for (let i = 0; i < 4 + Math.floor(rand() * 2); i++) {
-        const sx = L + 5 + rand() * (W - 10);
-        const sy = B + 2 + rand() * 3;
-        const sparkleOp = 0.15 + rand() * 0.1;
-        // 4-pointed star
-        const s = 1.2;
-        els += `<polygon points="${sx},${sy-s} ${sx+s*0.4},${sy} ${sx},${sy+s} ${sx-s*0.4},${sy}" fill="${ac_(sparkleOp)}" opacity="${sparkleOp}"/>`;
-        els += `<polygon points="${sx-s*0.6},${sy} ${sx},${sy-s*0.4} ${sx+s*0.6},${sy} ${sx},${sy+s*0.4}" fill="${ac_(sparkleOp*0.6)}" opacity="${sparkleOp*0.6}"/>`;
-      }
-
-      // Add twinkling animation to sparkles
-      if (!document.getElementById('warothy-twinkle-style')) {
-        const style = document.createElement('style');
-        style.id = 'warothy-twinkle-style';
-        style.textContent = `
-          @keyframes twinkle1 { 0%,100% { opacity:0.15; } 50% { opacity:0.25; } }
-          @keyframes twinkle2 { 0%,100% { opacity:0.1; } 50% { opacity:0.2; } }
-          @keyframes twinkle3 { 0%,100% { opacity:0.12; } 50% { opacity:0.22; } }
-        `;
-        document.head.appendChild(style);
-      }
-
-      // b) Yellow brick road hint — very faint dashed line along bottom with 2-3 bricks
-      const goldStroke = `rgba(220,180,50,0.08)`;
-      els += `<line x1="${L + 8}" y1="${B + 1.5}" x2="${R - 8}" y2="${B + 1.5}" stroke="${goldStroke}" stroke-width="0.4" stroke-dasharray="3,2"/>`;
-      // Small brick rectangles
-      for (let i = 0; i < 3; i++) {
-        const bx = L + 10 + i * (W - 20) / 3 + rand() * 5;
-        const by = B + 3;
-        els += `<rect x="${bx}" y="${by}" width="6" height="2.5" rx="0.3" fill="rgba(220,180,50,0.06)" stroke="rgba(220,180,50,0.08)" stroke-width="0.2"/>`;
-      }
-
-      // c) Pop art halftone dots — 6-8 tiny circles in corners at low opacity
-      const cornerOffsets = [[L+3,T+3],[L+3,B-3],[R-3,T+3],[R-3,B-3]];
-      cornerOffsets.forEach(([cx, cy]) => {
-        const dotCount = 1 + Math.floor(rand() * 2);
-        for (let d = 0; d < dotCount; d++) {
-          const dx = cx + (rand() - 0.5) * 8;
-          const dy = cy + (rand() - 0.5) * 8;
-          const dotOp = 0.04 + rand() * 0.04;
-          els += `<circle cx="${dx}" cy="${dy}" r="${0.5 + rand() * 0.5}" fill="${ac_(dotOp)}"/>`;
-        }
-      });
 
       svg.innerHTML = els;
       return svg;
@@ -21397,46 +21187,6 @@
 
       // ═══ FOCUS VIEW ONLY ═══
 
-      // ── Serpent hint — subtle S-curve along left edge ──
-      const serpentCurve = document.createElementNS(ns, 'path');
-      serpentCurve.setAttribute('d', `M${L - 1},${T + 25} Q${L - 4},${T + 35} ${L - 2},${T + 50} Q${L - 3},${T + 65} ${L - 1},${T + 80}`);
-      serpentCurve.setAttribute('stroke', teal(0.08));
-      serpentCurve.setAttribute('stroke-width', '0.6');
-      serpentCurve.setAttribute('fill', 'none');
-      serpentCurve.setAttribute('stroke-linecap', 'round');
-      svg.appendChild(serpentCurve);
-
-      // ── Apple silhouette — tiny circle with stem (top-right margin) ──
-      const appleX = R + 6;
-      const appleY = T - 4;
-      const appleSilhouette = document.createElementNS(ns, 'circle');
-      appleSilhouette.setAttribute('cx', appleX);
-      appleSilhouette.setAttribute('cy', appleY);
-      appleSilhouette.setAttribute('r', '2');
-      appleSilhouette.setAttribute('fill', copper(0.1));
-      svg.appendChild(appleSilhouette);
-      // Tiny stem
-      const appleStem = document.createElementNS(ns, 'line');
-      appleStem.setAttribute('x1', appleX.toFixed(1));
-      appleStem.setAttribute('y1', (appleY - 2).toFixed(1));
-      appleStem.setAttribute('x2', appleX.toFixed(1));
-      appleStem.setAttribute('y2', (appleY - 4).toFixed(1));
-      appleStem.setAttribute('stroke', copper(0.1));
-      appleStem.setAttribute('stroke-width', '0.4');
-      svg.appendChild(appleStem);
-
-      // ── "EDEN" text — faint in bottom-right margin ──
-      const edenText = document.createElementNS(ns, 'text');
-      edenText.setAttribute('x', R - 2);
-      edenText.setAttribute('y', B + 10);
-      edenText.setAttribute('text-anchor', 'end');
-      edenText.setAttribute('font-family', 'JetBrains Mono, monospace');
-      edenText.setAttribute('font-size', '4');
-      edenText.setAttribute('fill', gold(0.08));
-      edenText.setAttribute('letter-spacing', '1.5');
-      edenText.textContent = 'EDEN';
-      svg.appendChild(edenText);
-
       // ── Vine tendrils along edges — organic curling paths ──
       // Top edge vine
       const vineTop = document.createElementNS(ns, 'path');
@@ -22380,7 +22130,9 @@
       const _exitFocusedNode = focusedNode; // capture ref before null
       setTimeout(() => {
         inner.classList.remove('focus-mode');
-        // Undim salesbot
+        // Undim wallet node and salesbot
+        var _wn2 = document.getElementById('walletNode');
+        if (_wn2) _wn2.classList.remove('dimmed');
         var _sb2 = document.getElementById('salesbotNode');
         if (_sb2) _sb2.classList.remove('dimmed');
         // Restore canvas scrolling
@@ -22460,118 +22212,62 @@
     // motherboard, focus mode, everything.
     // ══════════════════════════════════════════════════════════════
     var _myBagsCollectionIndex = -1; // tracks the injected collection index
-    var _myBagsLoading = false;
 
-    // ── Nav wallet handler: connect if disconnected, open bags if connected ──
-    function handleNavWallet() {
+    function openObjectManager() {
       closeMobileNav();
-      var addr = ACK_CHAIN.getConnectedWallet();
-      if (!addr) {
-        // Not connected — trigger wallet connect
-        ACK_CHAIN.connectWallet().then(function(newAddr) {
-          if (newAddr) openMyBags(newAddr);
-        });
-        return;
-      }
-      // Already connected — open bags
-      openMyBags(addr);
-    }
 
-    function openMyBags(walletAddr) {
-      if (_myBagsLoading) return;
-      _myBagsLoading = true;
+      // Gather owned artworks from across collections into a single virtual collection
+      // In production this would come from wallet/chain query
+      const ownedRefs = [
+        { collection: 'ACK Editions', title: 'Void Engine' },
+        { collection: 'ACK Editions', title: 'lisan al-gaib' },
+        { collection: 'Broken Keys', title: 'Serendipity' },
+        { collection: 'servants', title: 'servant of the Muse #12' },
+        { collection: 'ACKPFP', title: 'misterShady' },
+        { collection: 'Made these for your girl', title: 'made these for your girl' },
+      ];
 
-      var shortAddr = ACK_CHAIN.shortAddr(walletAddr);
-      var ackContracts = ACK_CHAIN.getAllACKContracts();
-
-      // Fetch real on-chain holdings
-      ACK_CHAIN.getNFTsForOwner(walletAddr, ackContracts).then(function(ownedNfts) {
-        _myBagsLoading = false;
-
-        // Match on-chain NFTs to our local gallery data
-        var bagsArtworks = [];
-        if (ownedNfts && ownedNfts.length > 0) {
-          ownedNfts.forEach(function(nft) {
-            var nftContract = (nft.contract && nft.contract.address) ? nft.contract.address.toLowerCase() : '';
-            var nftTokenId = nft.tokenId ? parseInt(nft.tokenId) : -1;
-            var nftTitle = (nft.name || nft.title || 'Token #' + nft.tokenId);
-            var nftImage = '';
-            if (nft.image && nft.image.cachedUrl) nftImage = nft.image.cachedUrl;
-            else if (nft.image && nft.image.originalUrl) nftImage = nft.image.originalUrl;
-            else if (nft.rawMetadata && nft.rawMetadata.image) nftImage = nft.rawMetadata.image;
-
-            // Try to find matching local gallery artwork
-            var matched = false;
-            COLLECTIONS.forEach(function(col, ci) {
-              if (matched || !col.contract || !col.artworks) return;
-              if (col.contract.toLowerCase() !== nftContract) return;
-              col.artworks.forEach(function(art, ai) {
-                if (matched) return;
-                var artToken = art.tokenId !== undefined ? parseInt(art.tokenId) : -1;
-                if (artToken === nftTokenId || art.title === nftTitle) {
-                  var clone = Object.assign({}, art);
-                  clone._sourceCollection = col.name;
-                  clone._sourceCollectionIndex = ci;
-                  clone._sourceArtworkIndex = ai;
-                  bagsArtworks.push(clone);
-                  matched = true;
-                }
-              });
-            });
-
-            // If no local match, create entry from on-chain metadata
-            if (!matched && nftImage) {
-              bagsArtworks.push({
-                title: nftTitle,
-                image: nftImage,
-                description: nftContract.slice(0, 6) + '...' + nftContract.slice(-4) + ' · #' + nftTokenId,
-                _sourceCollection: 'On-chain',
-                _onChain: true
-              });
-            }
-          });
-        }
-
-        // If wallet holds nothing by ACK, show a friendly empty state
-        if (bagsArtworks.length === 0) {
-          bagsArtworks.push({
-            title: 'No ACK works found',
-            image: 'ACK_gold_logo.png',
-            description: 'This wallet doesn\'t hold any ACK pieces yet. Browse the collections to find something you love.'
-          });
-        }
-
-        // Remove any previous "My Bags" virtual collection
-        if (_myBagsCollectionIndex >= 0) {
-          COLLECTIONS.splice(_myBagsCollectionIndex, 1);
-          _myBagsCollectionIndex = -1;
-        }
-
-        // Inject as last collection
-        var bagsCollection = {
-          name: 'My Bags',
-          image: bagsArtworks[0].image,
-          description: shortAddr + ' — your ACK collection',
-          token: 'Mixed',
-          chain: 'Ethereum',
-          wallLayout: false,
-          artworks: bagsArtworks,
-          _isMyBags: true
-        };
-
-        _myBagsCollectionIndex = COLLECTIONS.length;
-        COLLECTIONS.push(bagsCollection);
-
-        // Open through the standard detail path
-        openDetail(_myBagsCollectionIndex);
-      }).catch(function(err) {
-        _myBagsLoading = false;
-        console.warn('[My Bags] Error fetching NFTs:', err);
+      // Build artworks array by looking up real data from COLLECTIONS
+      const bagsArtworks = [];
+      ownedRefs.forEach(ref => {
+        const coll = COLLECTIONS.find(c => c.name === ref.collection);
+        if (!coll || !coll.artworks) return;
+        const art = coll.artworks.find(a => a.title === ref.title);
+        if (!art) return;
+        // Clone the artwork and tag it with source collection
+        const clone = Object.assign({}, art);
+        clone._sourceCollection = ref.collection;
+        // Override description with provenance info
+        clone.description = clone.description || '';
+        bagsArtworks.push(clone);
       });
-    }
 
-    // Keep legacy name for any remaining refs
-    function openObjectManager() { handleNavWallet(); }
+      if (bagsArtworks.length === 0) return;
+
+      // Remove any previous "My Bags" virtual collection
+      if (_myBagsCollectionIndex >= 0) {
+        COLLECTIONS.splice(_myBagsCollectionIndex, 1);
+        _myBagsCollectionIndex = -1;
+      }
+
+      // Inject as last collection
+      const bagsCollection = {
+        name: 'My Bags',
+        image: bagsArtworks[0].image,
+        description: 'artlover.eth · 0x7a3b...f29d — connected wallet holdings',
+        token: 'Mixed',
+        chain: 'Ethereum',
+        wallLayout: false,
+        artworks: bagsArtworks,
+        _isMyBags: true  // flag so we can identify it
+      };
+
+      _myBagsCollectionIndex = COLLECTIONS.length;
+      COLLECTIONS.push(bagsCollection);
+
+      // Open through the standard detail path — full node graph experience
+      openDetail(_myBagsCollectionIndex);
+    }
 
     function closeObjectManager() {
       closeMobileNav();
@@ -23207,29 +22903,9 @@
     // ══════════════════════════════════════════════════════════════════
     (function initSalesbot() {
       const sbNode = document.getElementById('salesbotNode');
-      const sbPanel = document.getElementById('salesbotPanel');
+      const sbBody = document.getElementById('salesbotBody');
       const sbFeed = document.getElementById('salesbotFeed');
       const sbDot = document.getElementById('salesbotDot');
-      const sbClose = document.getElementById('salesbotClose');
-
-      // Toggle panel open/close
-      var panelOpen = false;
-      sbDot.addEventListener('click', function(e) {
-        e.stopPropagation();
-        panelOpen = !panelOpen;
-        sbPanel.classList.toggle('open', panelOpen);
-      });
-      if (sbClose) sbClose.addEventListener('click', function(e) {
-        e.stopPropagation();
-        panelOpen = false;
-        sbPanel.classList.remove('open');
-      });
-      document.addEventListener('click', function(e) {
-        if (panelOpen && !sbNode.contains(e.target)) {
-          panelOpen = false;
-          sbPanel.classList.remove('open');
-        }
-      });
 
       // All ACK contracts to monitor
       const ACK_CONTRACTS = [];
@@ -23329,43 +23005,10 @@
           sbFeed.removeChild(sbFeed.lastChild);
         }
 
-        // Ping the dot
-        sbDot.classList.add('live', 'ping');
-        setTimeout(function() { sbDot.classList.remove('ping'); }, 1500);
-
-        // Show toast notification if panel is closed
-        if (!panelOpen) {
-          showSaleToast(sale);
-        }
-      }
-
-      function showSaleToast(sale) {
-        // Remove any existing toast
-        var old = document.querySelector('.salesbot-toast');
-        if (old) old.remove();
-
-        var toast = document.createElement('div');
-        toast.className = 'salesbot-toast';
-        var thumbHtml = sale.image ? '<img class="salesbot-toast-thumb" src="' + sale.image + '" alt="">' : '';
-        toast.innerHTML = thumbHtml +
-          '<div class="salesbot-toast-info">' +
-            '<div class="salesbot-toast-label">SALE</div>' +
-            '<div class="salesbot-toast-title">' + sale.title + '</div>' +
-            '<div class="salesbot-toast-price">' + sale.price.toFixed(3) + ' ETH</div>' +
-          '</div>';
-        toast.onclick = function() {
-          window.open('https://etherscan.io/tx/' + sale.txHash, '_blank');
-          toast.remove();
-        };
-        document.body.appendChild(toast);
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() { toast.classList.add('show'); });
-        });
-        // Auto-dismiss after 5 seconds
-        setTimeout(function() {
-          toast.classList.remove('show');
-          setTimeout(function() { toast.remove(); }, 400);
-        }, 5000);
+        // Pulse the node
+        sbBody.classList.remove('sale-pulse');
+        void sbBody.offsetWidth; // force reflow
+        sbBody.classList.add('sale-pulse');
       }
 
       // Poll Alchemy for asset transfers
@@ -23451,6 +23094,30 @@
           setTimeout(pollSales, pollInterval);
         });
       }
+
+      // ── Drag to reposition ──
+      var isDragging = false, dragOffX = 0, dragOffY = 0;
+      sbNode.addEventListener('mousedown', function(e) {
+        if (e.target.closest('.salesbot-sale')) return; // don't drag when clicking a sale
+        isDragging = true;
+        dragOffX = e.clientX - sbNode.getBoundingClientRect().left;
+        dragOffY = e.clientY - sbNode.getBoundingClientRect().top;
+        sbNode.classList.add('dragging');
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        sbNode.style.left = (e.clientX - dragOffX) + 'px';
+        sbNode.style.top = (e.clientY - dragOffY) + 'px';
+        sbNode.style.right = 'auto';
+        sbNode.style.bottom = 'auto';
+      });
+      document.addEventListener('mouseup', function() {
+        if (isDragging) {
+          isDragging = false;
+          sbNode.classList.remove('dragging');
+        }
+      });
 
       // Fade in the node after page loads, start polling
       setTimeout(function() {
