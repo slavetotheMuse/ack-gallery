@@ -4645,6 +4645,152 @@
         background: rgba(220,180,120,0.1);
         color: rgba(220,180,120,0.8);
       }
+
+      /* ── Mobile Object Manager — full-screen landing page ── */
+      .mobile-om {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 3000;
+        background: rgba(12,12,16,0.98);
+        display: flex;
+        flex-direction: column;
+        font-family: 'JetBrains Mono', monospace;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-om-header {
+        padding: 20px 24px 12px;
+        text-align: center;
+      }
+      .mobile-om-title {
+        font-size: 0.55rem;
+        letter-spacing: 0.25em;
+        color: rgba(220,180,120,0.7);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .mobile-om-sub {
+        font-size: 0.35rem;
+        letter-spacing: 0.08em;
+        color: rgba(200,180,150,0.35);
+        line-height: 1.6;
+      }
+      .mobile-om-list {
+        flex: 1;
+        padding: 8px 20px 100px;
+      }
+      .mobile-om-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(100,140,200,0.08);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.2s ease;
+      }
+      .mobile-om-row:active {
+        background: rgba(220,180,120,0.06);
+      }
+      .mobile-om-row.coming-soon {
+        opacity: 0.3;
+        pointer-events: none;
+      }
+      .mobile-om-icon {
+        font-size: 1.1rem;
+        width: 28px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .mobile-om-label {
+        font-size: 0.42rem;
+        letter-spacing: 0.08em;
+        color: rgba(200,195,185,0.7);
+        flex: 1;
+      }
+      .mobile-om-count {
+        font-size: 0.32rem;
+        letter-spacing: 0.06em;
+        color: rgba(120,180,255,0.35);
+      }
+      .mobile-om-arrow {
+        font-size: 0.4rem;
+        color: rgba(220,180,120,0.3);
+      }
+
+      /* ── Mobile Carousel — single artwork focus ── */
+      .mobile-carousel {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 2900;
+        background: rgba(12,12,16,1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .mobile-carousel-art {
+        position: relative;
+        max-width: calc(100vw - 32px);
+        max-height: 55vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mobile-carousel-art img {
+        max-width: 100%;
+        max-height: 55vh;
+        object-fit: contain;
+        border-radius: 2px;
+        box-shadow:
+          0 8px 40px rgba(0,0,0,0.7),
+          0 2px 8px rgba(0,0,0,0.5);
+        transition: opacity 0.4s ease;
+      }
+      .mobile-carousel-back {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 3100;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: rgba(200,180,150,0.5);
+        background: rgba(30,30,40,0.7);
+        border: 1px solid rgba(200,180,150,0.12);
+        border-radius: 50%;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mobile-carousel-back:active {
+        background: rgba(220,180,120,0.15);
+      }
+      .mobile-carousel-counter {
+        position: fixed;
+        top: 22px;
+        right: 16px;
+        z-index: 3100;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.35rem;
+        letter-spacing: 0.1em;
+        color: rgba(200,180,150,0.3);
+      }
+      /* Materialize loading overlay */
+      .mobile-carousel-loading {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.35rem;
+        letter-spacing: 0.15em;
+        color: rgba(120,180,255,0.4);
+        text-transform: uppercase;
+      }
     }
 
     /* ── ESC hint — subtle bottom-right indicator ── */
@@ -6185,80 +6331,426 @@
       'AlphaCentauriKid', 'ACK', 'α Centauri',
     ];
 
-    // ── Mobile: skip intro entirely, show brief message, then gallery ──
+    // ── Mobile: Object Manager landing + single-artwork carousel ──
+    var _mobileCarouselActive = false;
+    var _mobileCarouselColIdx = -1;
+    var _mobileCarouselArtIdx = 0;
+
     function _skipIntroForMobile() {
       const overlay = document.getElementById('intro-overlay');
       const mainContent = document.getElementById('main-content');
-      const nav = document.querySelector('.top-nav');
-      const bgGrid = document.getElementById('bgGrid');
       const candles = document.getElementById('viewportCandles');
 
       // Hide intro overlay immediately
       if (overlay) {
-        overlay.style.transition = 'opacity 0.8s ease';
+        overlay.style.transition = 'opacity 0.6s ease';
+        overlay.style.opacity = '0';
         overlay.style.pointerEvents = 'none';
+        setTimeout(() => { if (overlay) overlay.classList.add('fade-out'); }, 700);
+      }
+      // Hide main content (we use Object Manager instead)
+      if (mainContent) {
+        mainContent.style.opacity = '0';
+        mainContent.style.visibility = 'hidden';
+      }
+      if (candles) candles.style.display = 'none';
+
+      // Build and show Object Manager
+      setTimeout(() => _buildMobileObjectManager(), 400);
+    }
+
+    function _buildMobileObjectManager() {
+      // Remove existing if any
+      var existing = document.getElementById('mobileOM');
+      if (existing) existing.remove();
+
+      var om = document.createElement('div');
+      om.id = 'mobileOM';
+      om.className = 'mobile-om';
+      om.style.opacity = '0';
+
+      // Header
+      var header = '<div class="mobile-om-header">' +
+        '<div class="mobile-om-title">ack.art</div>' +
+        '<div class="mobile-om-sub">object manager</div>' +
+        '</div>';
+
+      // Collection list
+      var listHTML = '<div class="mobile-om-list">';
+      var collectionIcons = {
+        'Broken Keys': '\u{1F3B9}',
+        'Piano Blossoms': '\u{1F338}',
+        'Tempted in the Garden': '\u{1F34E}',
+        'Clown Party': '\u{1F921}',
+        'ACK Editions': '\u{2728}',
+        'servants': '\u{1F451}',
+        'Opepen Set 030: a.c.k.': '\u{1F7E3}',
+        'ROI': '\u{1F4B0}',
+        'The Great Color Study': '\u{1F3A8}',
+        '1 of 1s': '\u{1F48E}',
+        'Right Click Print': '\u{1F5A8}',
+        'ACKFTW': '\u{1F525}',
+        'Last Orders': '\u{1F943}',
+        'Made these for your girl': '\u{1F49D}',
+        'Her Favorite Flowers': '\u{1F33A}',
+        'Heart You': '\u{2764}',
+        'Warothys': '\u{1F9D9}',
+        'Ackstract': '\u{1F30C}',
+        'ACKPFP': '\u{1F464}',
+        '6529': '\u{1F3DB}',
+        'Noble Gallery': '\u{1F3F0}',
+        'ACKek': '\u{1F438}',
+        'SuperRare': '\u{1F48E}',
+        'Opepen': '\u{1F7E2}',
+        'notxcopy': '\u{1F480}'
+      };
+
+      COLLECTIONS.forEach(function(col, idx) {
+        if (col._isMyBags) return; // skip My Bags on mobile
+        var count = col.artworks ? col.artworks.length : 0;
+        var isEmpty = count === 0;
+        var icon = collectionIcons[col.name] || '\u{1F4C1}';
+        listHTML += '<div class="mobile-om-row' + (isEmpty ? ' coming-soon' : '') + '" data-col-idx="' + idx + '">' +
+          '<div class="mobile-om-icon">' + icon + '</div>' +
+          '<div class="mobile-om-label">' + col.name + '</div>' +
+          '<div class="mobile-om-count">' + (isEmpty ? 'soon' : count) + '</div>' +
+          '<div class="mobile-om-arrow">\u203A</div>' +
+          '</div>';
+      });
+      listHTML += '</div>';
+
+      om.innerHTML = header + listHTML;
+      document.body.appendChild(om);
+
+      // Fade in
+      requestAnimationFrame(() => {
+        om.style.transition = 'opacity 0.5s ease';
+        om.style.opacity = '1';
+      });
+
+      // Attach click handlers
+      om.querySelectorAll('.mobile-om-row:not(.coming-soon)').forEach(function(row) {
+        row.addEventListener('click', function() {
+          var colIdx = parseInt(row.dataset.colIdx, 10);
+          _openMobileCarousel(colIdx);
+        });
+      });
+
+      // Show masterNode (motherboard) at bottom
+      var mn = document.getElementById('masterNode');
+      if (mn) {
+        mn.style.transition = 'opacity 0.5s ease 0.3s';
+        mn.style.opacity = '1';
+      }
+    }
+
+    function _openMobileCarousel(colIdx) {
+      var col = COLLECTIONS[colIdx];
+      if (!col || !col.artworks || col.artworks.length === 0) return;
+
+      _mobileCarouselActive = true;
+      _mobileCarouselColIdx = colIdx;
+      _mobileCarouselArtIdx = 0;
+
+      // Hide Object Manager
+      var om = document.getElementById('mobileOM');
+      if (om) {
+        om.style.transition = 'opacity 0.3s ease';
+        om.style.opacity = '0';
+        setTimeout(() => { om.style.display = 'none'; }, 350);
       }
 
-      // Show a brief message
-      const mobileMsg = document.createElement('div');
-      mobileMsg.id = 'mobileIntroMsg';
-      mobileMsg.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;' +
-        'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-        'background:rgba(12,12,16,0.97);padding:40px;text-align:center;';
-      mobileMsg.innerHTML =
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.55rem;letter-spacing:0.2em;' +
-        'color:rgba(220,180,120,0.7);text-transform:uppercase;margin-bottom:16px;">ack.art</div>' +
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.4rem;letter-spacing:0.08em;' +
-        'color:rgba(200,180,150,0.45);line-height:1.8;max-width:280px;">' +
-        'this experience is built for desktop.<br>you\'re viewing a limited gallery mode.</div>' +
-        '<div style="margin-top:28px;width:24px;height:1px;background:rgba(220,180,120,0.25);"></div>';
-      document.body.appendChild(mobileMsg);
+      // Create carousel container
+      var carousel = document.createElement('div');
+      carousel.id = 'mobileCarousel';
+      carousel.className = 'mobile-carousel';
+      carousel.style.opacity = '0';
 
-      // Fade out message, reveal gallery
+      // Back button
+      carousel.innerHTML = '<div class="mobile-carousel-back" id="mobileCarouselBack">\u2190</div>' +
+        '<div class="mobile-carousel-counter" id="mobileCarouselCounter">1 / ' + col.artworks.length + '</div>' +
+        '<div class="mobile-carousel-art" id="mobileCarouselArt">' +
+        '<div class="mobile-carousel-loading">materializing\u2026</div>' +
+        '</div>';
+      document.body.appendChild(carousel);
+
+      // Expand motherboard
+      var mn = document.getElementById('masterNode');
+      if (mn) mn.classList.add('mobile-focus-expanded');
+
+      // Fade in carousel
+      requestAnimationFrame(() => {
+        carousel.style.transition = 'opacity 0.4s ease';
+        carousel.style.opacity = '1';
+      });
+
+      // Load first artwork
+      setTimeout(() => _showMobileCarouselArt(0), 300);
+
+      // Back button handler
+      document.getElementById('mobileCarouselBack').addEventListener('click', _closeMobileCarousel);
+
+      // Swipe handling
+      var _touchStartX = 0;
+      var _touchStartY = 0;
+      var _touchMoved = false;
+      carousel.addEventListener('touchstart', function(e) {
+        _touchStartX = e.touches[0].clientX;
+        _touchStartY = e.touches[0].clientY;
+        _touchMoved = false;
+      }, { passive: true });
+      carousel.addEventListener('touchmove', function(e) {
+        _touchMoved = true;
+      }, { passive: true });
+      carousel.addEventListener('touchend', function(e) {
+        if (!_touchMoved) return;
+        var dx = e.changedTouches[0].clientX - _touchStartX;
+        var dy = e.changedTouches[0].clientY - _touchStartY;
+        if (Math.abs(dx) < 40 || Math.abs(dy) > Math.abs(dx)) return; // too short or vertical
+        var artCount = COLLECTIONS[_mobileCarouselColIdx].artworks.length;
+        if (dx < 0 && _mobileCarouselArtIdx < artCount - 1) {
+          // Swipe left → next
+          _mobileCarouselTransition(_mobileCarouselArtIdx + 1);
+        } else if (dx > 0 && _mobileCarouselArtIdx > 0) {
+          // Swipe right → prev
+          _mobileCarouselTransition(_mobileCarouselArtIdx - 1);
+        }
+      }, { passive: true });
+    }
+
+    function _showMobileCarouselArt(artIdx) {
+      var col = COLLECTIONS[_mobileCarouselColIdx];
+      if (!col || !col.artworks[artIdx]) return;
+      _mobileCarouselArtIdx = artIdx;
+      var art = col.artworks[artIdx];
+
+      var artContainer = document.getElementById('mobileCarouselArt');
+      if (!artContainer) return;
+
+      // Build image
+      var img = new Image();
+      img.style.opacity = '0';
+      img.style.transition = 'opacity 0.5s ease';
+      img.alt = art.title || '';
+
+      // Determine image source
+      var imgSrc = art.image || '';
+      if (imgSrc && !imgSrc.startsWith('http')) {
+        // local file — use as-is
+      }
+      img.src = imgSrc;
+
+      img.onload = function() {
+        artContainer.innerHTML = '';
+        artContainer.appendChild(img);
+        requestAnimationFrame(() => { img.style.opacity = '1'; });
+      };
+      img.onerror = function() {
+        artContainer.innerHTML = '';
+        artContainer.appendChild(img);
+        img.style.opacity = '1';
+      };
+
+      // Update counter
+      var counter = document.getElementById('mobileCarouselCounter');
+      if (counter) counter.textContent = (artIdx + 1) + ' / ' + col.artworks.length;
+
+      // Populate motherboard with artwork info
+      _populateMobileMotherboard(col, art);
+
+      // Draw wire from artwork to motherboard
+      setTimeout(() => _drawMobileCarouselWire(), 600);
+    }
+
+    function _mobileCarouselTransition(newIdx) {
+      var col = COLLECTIONS[_mobileCarouselColIdx];
+      if (!col || !col.artworks[newIdx]) return;
+      if (newIdx === _mobileCarouselArtIdx) return;
+
+      var artContainer = document.getElementById('mobileCarouselArt');
+      if (!artContainer) return;
+
+      // Dissolve current artwork
+      var currentImg = artContainer.querySelector('img');
+      if (currentImg) {
+        currentImg.style.transition = 'opacity 0.3s ease';
+        currentImg.style.opacity = '0';
+      }
+
+      // Remove old wire
+      var oldWire = document.getElementById('mobileCarouselWire');
+      if (oldWire) {
+        oldWire.style.transition = 'opacity 0.2s ease';
+        oldWire.style.opacity = '0';
+        setTimeout(() => { if (oldWire.parentNode) oldWire.remove(); }, 250);
+      }
+
+      // After dissolve, materialize new artwork
       setTimeout(() => {
-        mobileMsg.style.transition = 'opacity 0.6s ease';
-        mobileMsg.style.opacity = '0';
-        setTimeout(() => mobileMsg.remove(), 700);
+        _showMobileCarouselArt(newIdx);
+      }, 350);
+    }
 
-        // Reveal main content
-        if (overlay) overlay.style.opacity = '0';
-        if (mainContent) {
-          mainContent.style.opacity = '1';
-          mainContent.style.visibility = 'visible';
-          mainContent.style.transform = 'none';
-          mainContent.classList.add('reveal');
+    function _populateMobileMotherboard(col, art) {
+      var title = art.title || '';
+      var desc = art.description || '';
+      var colName = (art._sourceCollection) ? art._sourceCollection : col.name;
+
+      // Billboard chip label
+      var chipLabel = document.querySelector('.pcb-chip-label');
+      if (chipLabel) {
+        chipLabel.textContent = title;
+        chipLabel.classList.add('marquee');
+        chipLabel.style.setProperty('--marquee-dur', Math.max(3, title.length * 0.25) + 's');
+      }
+
+      // Left ticker: title, collection, sale status
+      var leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
+      if (leftTicker) {
+        if (!leftTicker._origHTML) leftTicker._origHTML = leftTicker.innerHTML;
+        leftTicker.style.animation = 'none';
+        var leftHTML = '';
+        leftHTML += '<span class="pcb-ticker-line bright">' + title + '</span>';
+        leftHTML += '<span class="pcb-ticker-line">' + colName + '</span>';
+        // Sale status
+        if (art.isListed && art.listingPriceEth) {
+          var ethPrice = parseFloat(art.listingPriceEth);
+          leftHTML += '<span class="pcb-ticker-line" style="color:rgba(100,220,100,0.7);">listed: ' + ethPrice.toFixed(2) + ' ETH</span>';
         }
-        if (bgGrid) { bgGrid.classList.add('visible'); bgGrid.style.opacity = '0.3'; }
-        if (candles) candles.style.display = 'none';
-
-        // Fade in nav
-        if (nav) {
-          nav.classList.add('revealed');
-          nav.style.transition = 'opacity 0.5s ease';
-          nav.style.opacity = '1';
-          const staticCoin = nav.querySelector('.nav-coin');
-          if (staticCoin) staticCoin.style.opacity = '1';
+        // Best offer (only if above 1 ETH)
+        if (art.hasOffer && art.bestOfferEth && parseFloat(art.bestOfferEth) >= 1.0) {
+          leftHTML += '<span class="pcb-ticker-line" style="color:rgba(120,180,255,0.7);">offer: ' + parseFloat(art.bestOfferEth).toFixed(2) + ' ETH</span>';
         }
+        leftTicker.innerHTML = leftHTML;
+      }
 
-        // Reveal collection nodes with stagger
-        const allNodes = document.querySelectorAll('.collection-node');
-        allNodes.forEach((n, i) => {
-          setTimeout(() => {
-            n.style.transition = 'opacity 0.4s ease';
-            n.style.opacity = '1';
-            n.classList.add('revealed');
-          }, 50 + i * 30);
+      // Right ticker: description
+      var rightTicker = document.querySelector('.pcb-ticker.right .pcb-ticker-inner');
+      if (rightTicker) {
+        if (!rightTicker._origHTML) rightTicker._origHTML = rightTicker.innerHTML;
+        rightTicker.style.animation = 'none';
+        var rightHTML = '';
+        if (desc) {
+          var words = desc.split(' ');
+          var line = '';
+          words.forEach(function(w) {
+            if ((line + ' ' + w).length > 18) {
+              rightHTML += '<span class="pcb-ticker-line">' + line.trim() + '</span>';
+              line = w;
+            } else {
+              line += ' ' + w;
+            }
+          });
+          if (line.trim()) rightHTML += '<span class="pcb-ticker-line">' + line.trim() + '</span>';
+        } else {
+          rightHTML += '<span class="pcb-ticker-line dim">\u2014</span>';
+        }
+        rightTicker.innerHTML = rightHTML;
+      }
+    }
+
+    function _drawMobileCarouselWire() {
+      // Remove existing
+      var existing = document.getElementById('mobileCarouselWire');
+      if (existing) existing.remove();
+
+      var artContainer = document.getElementById('mobileCarouselArt');
+      var masterPCB = document.querySelector('#masterNode .master-node-pcb');
+      if (!artContainer || !masterPCB) return;
+
+      var artImg = artContainer.querySelector('img');
+      if (!artImg) return;
+
+      var aRect = artImg.getBoundingClientRect();
+      var pcbRect = masterPCB.getBoundingClientRect();
+
+      var fromX = aRect.left + aRect.width / 2;
+      var fromY = aRect.top + aRect.height + 4;
+      var toX = pcbRect.left + pcbRect.width / 2;
+      var toY = pcbRect.top;
+
+      var vpW = window.innerWidth;
+      var vpH = window.innerHeight;
+
+      var wireSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      wireSvg.id = 'mobileCarouselWire';
+      wireSvg.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:15;pointer-events:none;opacity:0;transition:opacity 0.6s ease;';
+      wireSvg.setAttribute('width', vpW);
+      wireSvg.setAttribute('height', vpH);
+      document.body.appendChild(wireSvg);
+
+      var dy = Math.abs(toY - fromY);
+      var pull = Math.min(dy * 0.4, 150);
+      var d = 'M' + fromX + ',' + fromY + ' C' + fromX + ',' + (fromY + pull) + ' ' + toX + ',' + (toY - pull) + ' ' + toX + ',' + toY;
+
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'rgba(220,150,50,0.2)');
+      path.setAttribute('stroke-width', '1.2');
+      path.setAttribute('stroke-linecap', 'round');
+      wireSvg.appendChild(path);
+
+      var flow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      flow.setAttribute('d', d);
+      flow.setAttribute('fill', 'none');
+      flow.setAttribute('stroke', 'rgba(220,150,50,0.15)');
+      flow.setAttribute('stroke-width', '2');
+      flow.setAttribute('stroke-dasharray', '5 18');
+      flow.setAttribute('stroke-linecap', 'round');
+      flow.style.animation = 'wireFlow 2.8s linear infinite';
+      wireSvg.appendChild(flow);
+
+      setTimeout(function() { wireSvg.style.opacity = '1'; }, 50);
+    }
+
+    function _closeMobileCarousel() {
+      _mobileCarouselActive = false;
+
+      // Remove carousel
+      var carousel = document.getElementById('mobileCarousel');
+      if (carousel) {
+        carousel.style.transition = 'opacity 0.3s ease';
+        carousel.style.opacity = '0';
+        setTimeout(() => { if (carousel.parentNode) carousel.remove(); }, 350);
+      }
+
+      // Remove wire
+      var wire = document.getElementById('mobileCarouselWire');
+      if (wire) wire.remove();
+
+      // Restore motherboard
+      var mn = document.getElementById('masterNode');
+      if (mn) mn.classList.remove('mobile-focus-expanded');
+      var leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
+      if (leftTicker && leftTicker._origHTML) {
+        leftTicker.innerHTML = leftTicker._origHTML;
+        leftTicker.style.animation = '';
+        delete leftTicker._origHTML;
+      }
+      var rightTicker = document.querySelector('.pcb-ticker.right .pcb-ticker-inner');
+      if (rightTicker && rightTicker._origHTML) {
+        rightTicker.innerHTML = rightTicker._origHTML;
+        rightTicker.style.animation = '';
+        delete rightTicker._origHTML;
+      }
+      var chipLabel = document.querySelector('.pcb-chip-label');
+      if (chipLabel) {
+        chipLabel.textContent = 'ACK';
+        chipLabel.classList.remove('marquee');
+      }
+
+      // Show Object Manager again
+      var om = document.getElementById('mobileOM');
+      if (om) {
+        om.style.display = '';
+        requestAnimationFrame(() => {
+          om.style.transition = 'opacity 0.4s ease';
+          om.style.opacity = '1';
         });
-
-        // Show masterNode
-        const mn = document.getElementById('masterNode');
-        if (mn) { mn.style.transition = 'opacity 0.5s ease 0.3s'; mn.style.opacity = '1'; }
-
-        // Fade overlay completely
-        setTimeout(() => {
-          if (overlay) overlay.classList.add('fade-out');
-        }, 300);
-      }, 2200); // show message for ~2 seconds
+      } else {
+        _buildMobileObjectManager();
+      }
     }
 
     function init() {
@@ -23627,8 +24119,10 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        // Priority: output popup > lightbox > focus mode > detail
-        if (document.getElementById('outputInfoPopup').classList.contains('active')) {
+        // Priority: mobile carousel > output popup > lightbox > focus mode > detail
+        if (_mobileCarouselActive) {
+          _closeMobileCarousel();
+        } else if (document.getElementById('outputInfoPopup').classList.contains('active')) {
           closeOutputInfo();
         } else if (document.getElementById('lightboxOverlay').classList.contains('active')) {
           closeLightbox();
