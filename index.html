@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    // Force desktop-width rendering on mobile — full experience, just scaled down
+    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768) {
+      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.3, user-scalable=yes');
+    }
+  </script>
   <title>slave to the Muse</title>
   <meta name="description" content="Interactive art gallery by AlphaCentauriKid — Cinema 4D node editor-styled catalog of on-chain artworks.">
 
@@ -4693,6 +4699,43 @@
       .esc-hint { display: none !important; }
     }
 
+    /* ── Mobile: motherboard always expanded as info machine (works with 1400px viewport) ── */
+    #masterNode.mobile-expanded .master-node-pcb {
+      width: 900px !important;
+      height: 120px !important;
+    }
+    #masterNode.mobile-expanded .master-node-pcb .pcb-chip {
+      transform: scale(1.1) !important;
+    }
+    #masterNode.mobile-expanded .pcb-chip-label {
+      width: 140px !important;
+      font-size: 0.55rem !important;
+    }
+    #masterNode.mobile-expanded .pcb-ticker {
+      width: 280px !important;
+      height: 76px !important;
+      overflow-y: auto !important;
+    }
+    #masterNode.mobile-expanded .pcb-ticker-line {
+      font-size: 0.45rem !important;
+      line-height: 1.5 !important;
+    }
+    #masterNode.mobile-expanded .pcb-ticker-line.bright {
+      font-size: 0.5rem !important;
+      color: rgba(220,200,170,0.85) !important;
+    }
+    #masterNode.mobile-expanded .pcb-label {
+      font-size: 0.35rem !important;
+    }
+
+    /* ── Mobile focus: lock page scroll ── */
+    body.mobile-focus-locked {
+      overflow: hidden !important;
+      position: fixed !important;
+      width: 100% !important;
+      touch-action: pan-x !important; /* allow horizontal swipe, block vertical */
+    }
+
     /* Tablet tweaks */
     @media (min-width: 769px) and (max-width: 1200px) {
       .gallery-container { padding: 0 30px; padding-top: 75px; }
@@ -6202,85 +6245,40 @@
     ];
 
     // ── Mobile: skip intro entirely, show brief message, then gallery ──
-    function _skipIntroForMobile() {
-      const overlay = document.getElementById('intro-overlay');
-      const mainContent = document.getElementById('main-content');
-      const nav = document.querySelector('.top-nav');
-      const bgGrid = document.getElementById('bgGrid');
-      const candles = document.getElementById('viewportCandles');
+    // Detect real mobile device (viewport trick makes innerWidth=1400)
+    var _isRealMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-      // Hide intro overlay immediately
-      if (overlay) {
-        overlay.style.transition = 'opacity 0.8s ease';
-        overlay.style.pointerEvents = 'none';
-      }
-
-      // Show a brief message
+    function _showMobileWarningThenIntro() {
+      // Show brief "built for desktop" message, then run the full desktop intro
       const mobileMsg = document.createElement('div');
       mobileMsg.id = 'mobileIntroMsg';
       mobileMsg.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;' +
         'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
         'background:rgba(12,12,16,0.97);padding:40px;text-align:center;';
       mobileMsg.innerHTML =
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.55rem;letter-spacing:0.2em;' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;letter-spacing:0.2em;' +
         'color:rgba(220,180,120,0.7);text-transform:uppercase;margin-bottom:16px;">ack.art</div>' +
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.4rem;letter-spacing:0.08em;' +
-        'color:rgba(200,180,150,0.45);line-height:1.8;max-width:280px;">' +
-        'this experience is built for desktop.<br>you\'re viewing a limited gallery mode.</div>' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:0.08em;' +
+        'color:rgba(200,180,150,0.45);line-height:1.8;max-width:380px;">' +
+        'this experience is built for desktop.<br>you\'re viewing a scaled gallery mode.</div>' +
         '<div style="margin-top:28px;width:24px;height:1px;background:rgba(220,180,120,0.25);"></div>';
       document.body.appendChild(mobileMsg);
 
-      // Fade out message, reveal gallery
+      // After 2s, fade message out, then run full desktop intro
       setTimeout(() => {
         mobileMsg.style.transition = 'opacity 0.6s ease';
         mobileMsg.style.opacity = '0';
-        setTimeout(() => mobileMsg.remove(), 700);
-
-        // Reveal main content
-        if (overlay) overlay.style.opacity = '0';
-        if (mainContent) {
-          mainContent.style.opacity = '1';
-          mainContent.style.visibility = 'visible';
-          mainContent.style.transform = 'none';
-          mainContent.classList.add('reveal');
-        }
-        if (bgGrid) { bgGrid.classList.add('visible'); bgGrid.style.opacity = '0.3'; }
-        if (candles) candles.style.display = 'none';
-
-        // Fade in nav
-        if (nav) {
-          nav.classList.add('revealed');
-          nav.style.transition = 'opacity 0.5s ease';
-          nav.style.opacity = '1';
-          const staticCoin = nav.querySelector('.nav-coin');
-          if (staticCoin) staticCoin.style.opacity = '1';
-        }
-
-        // Reveal collection nodes with stagger
-        const allNodes = document.querySelectorAll('.collection-node');
-        allNodes.forEach((n, i) => {
-          setTimeout(() => {
-            n.style.transition = 'opacity 0.4s ease';
-            n.style.opacity = '1';
-            n.classList.add('revealed');
-          }, 50 + i * 30);
-        });
-
-        // Show masterNode
-        const mn = document.getElementById('masterNode');
-        if (mn) { mn.style.transition = 'opacity 0.5s ease 0.3s'; mn.style.opacity = '1'; }
-
-        // Fade overlay completely
         setTimeout(() => {
-          if (overlay) overlay.classList.add('fade-out');
-        }, 300);
-      }, 2200); // show message for ~2 seconds
+          mobileMsg.remove();
+          runIntroSequence();
+        }, 700);
+      }, 2000);
     }
 
     function init() {
-      // ── MOBILE: skip intro, show brief message, go straight to gallery ──
-      if (window.innerWidth < 768) {
-        _skipIntroForMobile();
+      // ── MOBILE: show brief warning, then run full desktop intro ──
+      if (_isRealMobile) {
+        _showMobileWarningThenIntro();
       } else {
         runIntroSequence();
       }
@@ -6288,6 +6286,13 @@
       initScrollScaling();
       buildPersistentGrid();
       renderCandles();
+      // ── MOBILE: always expand motherboard ──
+      if (_isRealMobile) {
+        setTimeout(() => {
+          const mn = document.getElementById('masterNode');
+          if (mn) mn.classList.add('mobile-expanded');
+        }, 100);
+      }
       window.addEventListener('resize', debounce(() => {
         buildPersistentGrid();
         spawnGridPropellers();
@@ -14620,7 +14625,7 @@
       const vpW = window.innerWidth;
       const vpH = window.innerHeight;
       const isMasterwork = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex].masterwork;
-      const _isMobileFocus = vpW < 768;
+      const _isMobileFocus = vpW < 768; // false on mobile with 1400px viewport — desktop layout applies
 
       // ── MOBILE: artwork centered horizontally, upper 45% of screen ──
       // ── DESKTOP: artwork offset left, room for COA chain to the right ──
@@ -15016,10 +15021,8 @@
       updateMotherboardTickers(_focusCollection, _focusArtwork);
 
       // Fixed-position title — appears after scale-up
-      if (_isMobileFocus) {
-        // ── MOBILE: Expand motherboard to full width + lock scroll ──
-        const _mnMobile = document.getElementById('masterNode');
-        if (_mnMobile) _mnMobile.classList.add('mobile-focus-expanded');
+      if (_isRealMobile) {
+        // ── MOBILE: Lock scroll in focus mode (motherboard already expanded) ──
         document.body.classList.add('mobile-focus-locked');
 
         // ── MOBILE: Populate motherboard tickers with artwork info ──
@@ -15581,7 +15584,7 @@
         let _swipeStartX = 0, _swipeStartY = 0, _swipeDelta = 0;
         let _swipeTransitioning = false;
         const _swipeThreshold = 60;
-        const _isMobileSwipe = window.innerWidth < 768;
+        const _isMobileSwipe = _isRealMobile;
         const onTouchStart = (evt) => {
           if (_swipeTransitioning) return;
           _swipeStartX = evt.touches[0].clientX;
@@ -16345,6 +16348,9 @@
     }
 
     function createInfoPanel(node, inner, collectionIndex, artworkIndex) {
+      // On mobile, motherboard is the info machine — skip the COA info panel
+      if (_isRealMobile) return;
+
       const collection = COLLECTIONS[collectionIndex];
       const artwork = collection.artworks[artworkIndex];
       // Resolve display name — for My Bags clones, show the source collection
@@ -22749,9 +22755,7 @@
       const focTitle = document.getElementById('focusModeTitle');
       if (focTitle) focTitle.remove();
 
-      // Remove mobile-focus-expanded from motherboard + unlock scroll
-      const _mnExitMobile = document.getElementById('masterNode');
-      if (_mnExitMobile) _mnExitMobile.classList.remove('mobile-focus-expanded');
+      // Unlock scroll on mobile (motherboard stays expanded)
       document.body.classList.remove('mobile-focus-locked');
 
       // Restore motherboard tickers (mobile focus populates them with artwork info)
