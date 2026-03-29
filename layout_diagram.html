@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gallery Layout Diagram</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #eee; font-family: 'Courier New', monospace; }
+  .container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #1a1a1a;
+    overflow: hidden;
+  }
+  .slot {
+    position: absolute;
+    border: 2px solid rgba(220,150,50,0.8);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(220,150,50,0.06);
+  }
+  .slot:hover {
+    background: rgba(220,150,50,0.15);
+    border-color: rgba(220,150,50,1);
+    z-index: 100;
+  }
+  .slot-num {
+    font-size: 28px;
+    font-weight: bold;
+    color: rgba(220,150,50,0.9);
+    text-shadow: 0 0 8px rgba(220,150,50,0.4);
+  }
+  .slot-label {
+    font-size: 9px;
+    color: rgba(220,150,50,0.6);
+    text-align: center;
+    margin-top: 4px;
+    max-width: 90%;
+    line-height: 1.2;
+  }
+  .slot-size {
+    font-size: 8px;
+    color: rgba(150,150,150,0.5);
+    margin-top: 2px;
+  }
+  .slot.hero { border-color: #ff6600; border-width: 3px; background: rgba(255,100,0,0.08); }
+  .slot.hero .slot-num { color: #ff6600; font-size: 36px; }
+  .slot.small { border-style: dashed; }
+  .slot.niche { border-color: rgba(100,180,220,0.6); background: rgba(100,180,220,0.04); }
+  .slot.niche .slot-num { color: rgba(100,180,220,0.8); }
+
+  .legend {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.85);
+    border: 1px solid rgba(220,150,50,0.3);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 11px;
+    z-index: 200;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    line-height: 1.6;
+  }
+  .legend-item { color: rgba(220,150,50,0.7); }
+  .legend-item b { color: rgba(220,150,50,1); }
+
+  .master-wire {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: rgba(220,150,50,0.5);
+    text-align: center;
+  }
+  .master-dot {
+    width: 12px; height: 12px;
+    background: rgba(220,150,50,0.5);
+    border-radius: 50%;
+    margin: 0 auto 6px;
+  }
+
+  h1 {
+    position: fixed;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: rgba(220,150,50,0.6);
+    text-transform: uppercase;
+    z-index: 200;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Gallery Wall Layout — Position Map</h1>
+
+  <!--
+    Positions derived from reference screenshot.
+    Each slot numbered for easy reference.
+    Sizes shown as approximate % of viewport.
+  -->
+
+  <!-- ═══ LEFT NICHE AREA ═══ -->
+  <!-- Slot 1: Small landscape in left alcove (upper) -->
+  <div class="slot niche small" style="left:3%; top:28%; width:10%; height:10%;">
+    <div class="slot-num">1</div>
+    <div class="slot-label">niche upper</div>
+    <div class="slot-size">small landscape</div>
+  </div>
+
+  <!-- Slot 2: Wide piece below left niche -->
+  <div class="slot niche" style="left:1%; top:70%; width:17%; height:16%;">
+    <div class="slot-num">2</div>
+    <div class="slot-label">niche bottom wide</div>
+    <div class="slot-size">wide landscape</div>
+  </div>
+
+  <!-- ═══ UPPER ROW ═══ -->
+  <!-- Slot 3: Upper-left portrait (user says = ACKPFP) -->
+  <div class="slot" style="left:25%; top:12%; width:8%; height:16%;">
+    <div class="slot-num">3</div>
+    <div class="slot-label">ACKPFP ✓</div>
+    <div class="slot-size">portrait</div>
+  </div>
+
+  <!-- Slot 4: HERO — large tall center (= 1 of 1s) -->
+  <div class="slot hero" style="left:40%; top:8%; width:15%; height:40%;">
+    <div class="slot-num">4</div>
+    <div class="slot-label">1 of 1s ✓</div>
+    <div class="slot-size">HERO tall portrait</div>
+  </div>
+
+  <!-- Slot 5: Upper-right portrait (user says = Warothys) -->
+  <div class="slot" style="left:62%; top:12%; width:9%; height:16%;">
+    <div class="slot-num">5</div>
+    <div class="slot-label">Warothys ✓</div>
+    <div class="slot-size">portrait/square</div>
+  </div>
+
+  <!-- ═══ CENTER LEFT — LARGE PIECE ═══ -->
+  <!-- Slot 6: Large square-ish piece left of center -->
+  <div class="slot" style="left:24%; top:32%; width:13%; height:28%;">
+    <div class="slot-num">6</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">large portrait</div>
+  </div>
+
+  <!-- ═══ RIGHT CLUSTER — grouped small works ═══ -->
+  <!-- Slot 7: Small piece (right cluster, top-left) -->
+  <div class="slot small" style="left:62%; top:32%; width:5%; height:8%;">
+    <div class="slot-num">7</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">small</div>
+  </div>
+
+  <!-- Slot 8: Small piece (right cluster, top-right) -->
+  <div class="slot small" style="left:68%; top:32%; width:5%; height:8%;">
+    <div class="slot-num">8</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">small</div>
+  </div>
+
+  <!-- Slot 9: Landscape (right cluster, middle) -->
+  <div class="slot" style="left:61%; top:43%; width:13%; height:12%;">
+    <div class="slot-num">9</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">landscape</div>
+  </div>
+
+  <!-- Slot 10: Small square (right cluster, bottom-left) -->
+  <div class="slot small" style="left:62%; top:57%; width:4%; height:6%;">
+    <div class="slot-num">10</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">tiny</div>
+  </div>
+
+  <!-- Slot 11: Small square (right cluster, bottom-center) -->
+  <div class="slot small" style="left:67%; top:57%; width:4%; height:6%;">
+    <div class="slot-num">11</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">tiny</div>
+  </div>
+
+  <!-- Slot 12: Small square (right cluster, bottom-right) -->
+  <div class="slot small" style="left:72%; top:57%; width:4%; height:6%;">
+    <div class="slot-num">12</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">tiny</div>
+  </div>
+
+  <!-- ═══ CENTER-BOTTOM — wide landscape ═══ -->
+  <!-- Slot 13: Piano/landscape wide (center-bottom) -->
+  <div class="slot" style="left:38%; top:58%; width:20%; height:20%;">
+    <div class="slot-num">13</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">wide landscape</div>
+  </div>
+
+  <!-- ═══ LOWER LEFT ═══ -->
+  <!-- Slot 14: Lower-left piece A -->
+  <div class="slot small" style="left:26%; top:66%; width:7%; height:12%;">
+    <div class="slot-num">14</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">small</div>
+  </div>
+
+  <!-- Slot 15: Lower-left piece B -->
+  <div class="slot small" style="left:34%; top:68%; width:7%; height:11%;">
+    <div class="slot-num">15</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">small</div>
+  </div>
+
+  <!-- ═══ LOWER RIGHT ═══ -->
+  <!-- Slot 16: Lower-right piece -->
+  <div class="slot" style="left:64%; top:66%; width:8%; height:14%;">
+    <div class="slot-num">16</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">medium</div>
+  </div>
+
+  <!-- ═══ RIGHT NICHE ═══ -->
+  <!-- Slot 17: Tall figure in right niche -->
+  <div class="slot niche" style="left:85%; top:14%; width:8%; height:48%;">
+    <div class="slot-num">17</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">very tall</div>
+  </div>
+
+  <!-- Slot 18: Small piece bottom-right niche -->
+  <div class="slot niche small" style="left:87%; top:72%; width:8%; height:10%;">
+    <div class="slot-num">18</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">small landscape</div>
+  </div>
+
+  <!-- ═══ LEFT MIDDLE ACCENT ═══ -->
+  <!-- Slot 19: Left side middle piece (Color Study area?) -->
+  <div class="slot small" style="left:3%; top:50%; width:8%; height:12%;">
+    <div class="slot-num">19</div>
+    <div class="slot-label">?</div>
+    <div class="slot-size">small</div>
+  </div>
+
+  <!-- Master wire origin at bottom -->
+  <div class="master-wire">
+    <div class="master-dot"></div>
+    MASTER NODE — wires go UP
+  </div>
+</div>
+
+<div class="legend">
+  <div style="width:100%; margin-bottom:4px; color:rgba(220,150,50,0.9); font-weight:bold;">CONFIRMED: 3=ACKPFP &nbsp; 4=1 of 1s &nbsp; 5=Warothys</div>
+  <div style="width:100%; margin-bottom:4px; color:#888;">REMAINING TO ASSIGN (tell me the slot # for each):</div>
+  <div class="legend-item">Broken Keys</div>
+  <div class="legend-item">Piano Blossoms</div>
+  <div class="legend-item">Clown Party</div>
+  <div class="legend-item">Tempted in the Garden</div>
+  <div class="legend-item">ACK Editions</div>
+  <div class="legend-item">servants</div>
+  <div class="legend-item">ROI</div>
+  <div class="legend-item">The Great Color Study</div>
+  <div class="legend-item">Right Click Print</div>
+  <div class="legend-item">ACKFTW</div>
+  <div class="legend-item">Last Orders</div>
+  <div class="legend-item">Made these for your girl</div>
+  <div class="legend-item">Her Favorite Flowers</div>
+  <div class="legend-item">Heart You</div>
+  <div class="legend-item">Ackstract</div>
+  <div class="legend-item">6529</div>
+  <div class="legend-item">Noble Gallery</div>
+  <div class="legend-item">ACKek</div>
+</div>
+</body>
+</html>

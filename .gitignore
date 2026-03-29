@@ -1,0 +1,91 @@
+# === OS junk ===
+.DS_Store
+Icon*
+Thumbs.db
+
+# === Backups ===
+index_backup_*.html
+
+# === Large non-web files ===
+*.MOV
+*.mov
+*.tif
+*.tiff
+*.psd
+
+# === Full-res originals (>5MB) ===
+# Master digital files — serve from CDN/Arweave, not GitHub.
+# Gallery preview images (*_web.*, thumbs/) are kept.
+
+# Root-level large files
+1.Wicked.gif
+aerialscrew_sprite.png
+backgroundtest.png
+but_wait.gif
+but_wait_resized.gif
+curation_of_saints.jpg
+foryourgirl.gif
+selfreflect.gif
+servant_muse.mp4
+starsfell.png
+tinman.jpg
+voidengine.gif
+
+# ACK Editions full-res
+ackeditions_gallery/aerial_screw.gif
+ackeditions_gallery/burntoredeem.png
+ackeditions_gallery/circus_elephant.gif
+ackeditions_gallery/exodus.gif
+ackeditions_gallery/lisan.gif
+ackeditions_gallery/majestic_white_elephant.gif
+ackeditions_gallery/ngmi_bottle.gif
+ackeditions_gallery/pink_elephant_on_parade.gif
+ackeditions_gallery/skelekart.gif
+ackeditions_gallery/Specchio_Vortice.gif
+ackeditions_gallery/void_engine.gif
+ackeditions_gallery/wagmi_bottle.gif
+
+# Broken Keys full-res
+broken-keys/*.png
+broken-keys/*.jpg
+broken-keys/*.gif
+broken-keys/*.mp4
+
+# Clown Party full-res
+clownparty/*.jpg
+clownparty/*.jpeg
+clownparty/*.png
+
+# Last Orders full-res
+lastorders/lastorders2023.mp4
+
+# Opepen full-res
+opepen/*.png
+
+# Piano Blossoms full-res + raw photos
+piano_blossoms/flower_demons/Flower_Demons.jpg
+piano_blossoms/golden_afternoon/Golden_Afternoon.jpg
+piano_blossoms/interblossom/interblossom.png
+piano_blossoms/muse_blossoms/Muse_blossoms.jpg
+piano_blossoms/self_portrait_in_the_garden_of_the_Muse/self_portrait_in_the_garden_of_the_Muse.jpg
+piano_blossoms/self_portrait_in_the_garden_of_the_Muse/self_portrait_physical.png
+piano_blossoms/self_portrait_in_the_garden_of_the_Muse/self_portrait_physical_new.png
+piano_blossoms/wonderland/Wonderland.jpg
+piano_blossoms/wonderland/wonderland.png
+piano_blossoms/tempted/tempted.jpg
+piano_blossoms/tempted/temptedredddd.png
+piano_blossoms/tempted/ack_avant_tempted.mp4
+piano_blossoms/pianoblossoms_carnegie.png
+piano_blossoms/IMG_*.jpeg
+piano_blossoms/IMG_*.MOV
+
+# Warothy full-res
+warothy/*.gif
+# Keep web/ subfolder (re-include)
+!warothy/web/
+
+# Color Study full-res
+colorstudys/pbd.gif
+
+# ACKPFP full-res (these are small but let's be consistent)
+# Actually these are <3MB each, keep them
