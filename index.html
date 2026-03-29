@@ -4301,6 +4301,14 @@
       touch-action: pan-x !important; /* allow horizontal swipe, block vertical */
     }
 
+    /* ── Mobile: disable double-tap zoom (keeps pinch zoom) ── */
+    body.is-real-mobile {
+      touch-action: manipulation !important;
+    }
+    body.is-real-mobile * {
+      touch-action: manipulation;
+    }
+
     /* ── Mobile Object Manager — scaled up for readability ── */
     body.is-real-mobile .c4d-object-manager {
       width: 520px !important;
@@ -6480,13 +6488,13 @@
       document.getElementById('candleLeft').innerHTML = buildSconceSVG(false);
       document.getElementById('candleRight').innerHTML = buildSconceSVG(true);
 
-      // Add click + drag handlers for candles
-      setupCandleDrag('candleLeft', 'left');
-      setupCandleDrag('candleRight', 'right');
-
-      // Add glow sphere click — clicking the glow circles cycles brightness
-      setupCandleGlow('candleLeft', 'left');
-      setupCandleGlow('candleRight', 'right');
+      // Add click + drag handlers for candles (desktop only — mobile stays stock)
+      if (!_isRealMobile) {
+        setupCandleDrag('candleLeft', 'left');
+        setupCandleDrag('candleRight', 'right');
+        setupCandleGlow('candleLeft', 'left');
+        setupCandleGlow('candleRight', 'right');
+      }
     }
 
     function setupCandleGlow(id, side) {
