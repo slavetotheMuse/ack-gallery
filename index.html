@@ -9910,8 +9910,9 @@
 
       const vpW = window.innerWidth;
       const vpH = window.innerHeight;
-      const isMobile = _isRealMobile;
-      const navHeight = isMobile ? 52 : 60;
+      // Always use desktop salon layout — viewport is forced to 1400px on mobile
+      const isMobile = false;
+      const navHeight = 60;
 
       // Build a name→origIndex lookup
       const nameToIdx = {};
@@ -11720,8 +11721,9 @@
         const count = artworks.length;
         const vpW = window.innerWidth;
         const vpH = window.innerHeight - 60;
-        const isMobile = _isRealMobile;
-        canvas.style.overflow = isMobile ? 'auto' : 'hidden';
+        // Always use desktop layout — viewport is forced to 1400px on mobile
+        const isMobile = false;
+        canvas.style.overflow = 'hidden';
 
         let nodeW, nodePositions = [], outputX, outputY, totalW, totalH;
         const isWallLayout = !!collection.wallLayout;
