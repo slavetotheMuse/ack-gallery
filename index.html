@@ -784,7 +784,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 0 40px;
-      z-index: 1000;
+      z-index: 3000;
       opacity: 0;
       transform: translateY(-20px);
     }
@@ -812,13 +812,39 @@
       transform: translateY(0);
     }
 
+    /* Nav esc hint — appears below logo when in collection/focus view */
+    .nav-esc-hint {
+      position: absolute;
+      bottom: -18px;
+      left: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.38rem;
+      letter-spacing: 0.1em;
+      color: rgba(200,180,150,0.0);
+      white-space: nowrap;
+      pointer-events: none;
+      transition: color 0.5s ease;
+    }
+    .nav-esc-hint.visible {
+      color: rgba(200,180,150,0.35);
+    }
+    .nav-esc-hint kbd {
+      display: inline-block;
+      padding: 0px 4px;
+      border: 1px solid rgba(200,180,150,0.2);
+      border-radius: 2px;
+      font-size: 0.36rem;
+      margin-right: 3px;
+      background: rgba(200,180,150,0.04);
+    }
+
     /* Flying logo spinner */
     #navFlyingLogo {
       position: fixed;
       top: 13px;
       width: 34px;
       height: 34px;
-      z-index: 1001;
+      z-index: 3001;
       pointer-events: none;
       opacity: 0;
       will-change: transform, left;
@@ -4814,9 +4840,10 @@
   <div id="main-content">
     <!-- Top Navigation -->
     <nav class="top-nav">
-      <div class="nav-left" onclick="toggleCatalogOM()">
+      <div class="nav-left" onclick="toggleCatalogOM()" style="position:relative;">
         <div class="nav-coin"><img src="ACK_gold_logo.png" alt="ACK" style="width:100%;height:100%;object-fit:contain;border-radius:0;"></div>
         <div class="nav-title">AlphaCentauriKid</div>
+        <div class="nav-esc-hint" id="navEscHint"><kbd>esc</kbd> to go back</div>
       </div>
       <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()">
         <span></span><span></span><span></span>
@@ -23245,6 +23272,12 @@
       const inner = document.querySelector('.node-graph-inner.focus-mode');
       if (!inner || !focusedNode) return;
       hideEscHint();
+      // Re-show "esc to go back" for collection view (we're exiting focus, not closing the collection)
+      var _navHintRestore = document.getElementById('navEscHint');
+      if (_navHintRestore) {
+        _navHintRestore.innerHTML = '<kbd>esc</kbd> to go back';
+        _navHintRestore.classList.add('visible');
+      }
       // Mobile: switch back button to detail context
       _showMobileBack('detail');
 
@@ -24285,9 +24318,18 @@
       _escHintTimer = setTimeout(() => {
         if (_escHintEl) _escHintEl.classList.remove('visible');
       }, 3500);
+      // Also show the persistent nav esc hint below logo
+      var _navHint = document.getElementById('navEscHint');
+      if (_navHint) {
+        _navHint.innerHTML = '<kbd>esc</kbd> ' + (text || 'to go back');
+        _navHint.classList.add('visible');
+      }
     }
     function hideEscHint() {
       if (_escHintEl) _escHintEl.classList.remove('visible');
+      // Also hide the nav esc hint
+      var _navHint = document.getElementById('navEscHint');
+      if (_navHint) _navHint.classList.remove('visible');
       clearTimeout(_escHintTimer);
     }
 
