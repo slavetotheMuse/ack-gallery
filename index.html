@@ -15074,32 +15074,26 @@
             const thumbSrc = nodeImg.src;
             nodeImg.dataset.thumbSrc = thumbSrc;
 
-            // Piano Blossoms: load higher-res physical image for focus (not the fullRes master digital)
-            // Master digital is accessible via COA "View Master Digital" link
-            const _isPBFocusSwap = _focusColNameEarly === 'Piano Blossoms';
-            if (_isPBFocusSwap) {
-              // Derive focus-res path from the thumbnail: _physical_web.jpg → _physical_focus.jpg
-              const focusSrc = thumbSrc.replace('_physical_web.jpg', '_physical_focus.jpg').replace('_catalog.jpg', '_physical_focus.jpg');
-              if (focusSrc !== thumbSrc) {
-                if (_isRealMobile) {
-                  // MOBILE: direct src swap, no preloader
-                  nodeImg.decoding = 'sync';
-                  nodeImg.loading = 'eager';
-                  nodeImg.removeAttribute('width');
-                  nodeImg.removeAttribute('height');
-                  nodeImg.src = focusSrc;
-                  nodeImg.onerror = function() { nodeImg.src = thumbSrc; nodeImg.onerror = null; };
-                } else {
-                  nodeImg.style.transition = 'opacity 0.3s ease';
-                  nodeImg.style.opacity = '0.7';
-                  const pbPreloader = new Image();
-                  pbPreloader.onload = () => { nodeImg.src = focusSrc; nodeImg.style.opacity = '1'; };
-                  pbPreloader.onerror = () => { nodeImg.style.opacity = '1'; };
-                  pbPreloader.src = focusSrc;
-                  setTimeout(() => { nodeImg.style.opacity = '1'; }, 4000);
-                }
+            // Piano Blossoms: load physical image for focus (not the fullRes master digital)
+            // Uses focusImage property from artwork data for exact file paths
+            const _isPBFocusSwap = _focusColNameEarly === 'Piano Blossoms' || (_focusColNameEarly === 'Tempted in the Garden');
+            if (_isPBFocusSwap && artData && artData.focusImage) {
+              const focusSrc = artData.focusImage;
+              if (_isRealMobile) {
+                nodeImg.decoding = 'sync';
+                nodeImg.loading = 'eager';
+                nodeImg.removeAttribute('width');
+                nodeImg.removeAttribute('height');
+                nodeImg.src = focusSrc;
+                nodeImg.onerror = function() { nodeImg.src = thumbSrc; nodeImg.onerror = null; };
               } else {
-                nodeImg.style.opacity = '1';
+                nodeImg.style.transition = 'opacity 0.3s ease';
+                nodeImg.style.opacity = '0.7';
+                const pbPreloader = new Image();
+                pbPreloader.onload = () => { nodeImg.src = focusSrc; nodeImg.style.opacity = '1'; };
+                pbPreloader.onerror = () => { nodeImg.style.opacity = '1'; };
+                pbPreloader.src = focusSrc;
+                setTimeout(() => { nodeImg.style.opacity = '1'; }, 4000);
               }
             } else if (nodeImg.dataset.fullGifSrc && !_isMobileFocus) {
               // Color Study: swap static JPG thumb → animated GIF on focus (desktop only — GIFs too heavy for mobile)
@@ -17088,8 +17082,8 @@
             ]).then(function(results) {
               var aw = results[0];
               var sections = [];
-              // ── Owner section ──
-              if (aw.liveOwner) {
+              // ── Owner section (skip for ERC-1155 editions — use COLLECTORS popup instead) ──
+              if (aw.liveOwner && !_isEdition) {
                 var ownerDisplay = ACK_CHAIN.shortAddr(aw.liveOwner);
                 var ownerLink = aw.liveOwner.endsWith('.eth')
                   ? 'https://etherscan.io/name-lookup-search?id=' + aw.liveOwner
@@ -17151,7 +17145,7 @@
           ev.stopPropagation();
           // Check if this is an ERC-1155 edition — use multi-collector popup
           if (_collectorLink.dataset.edition === 'true') {
-            _buildCollectorsPopup();
+            _buildCollectorsPopupGlobal(collection.contract, artwork.tokenId, infoPanel);
             return;
           }
           // Toggle — if already showing, remove it
