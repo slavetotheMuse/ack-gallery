@@ -21867,11 +21867,8 @@
         }
 
       } else if (tl.indexOf('god ') !== -1 || tl.indexOf('fear not') !== -1 || tl.indexOf('in the beginning') !== -1) {
-        // Halo arc at top center
+        // Faint ray lines at top — no halo arc
         const hx = L + W * 0.5, hy = T - 5;
-        els += `<path d="M${hx - 12},${hy + 2} Q${hx},${hy - 6} ${hx + 12},${hy + 2}" fill="none" stroke="${ac_(0.2)}" stroke-width="0.5" stroke-linecap="round"/>`;
-        els += `<path d="M${hx - 9},${hy + 1} Q${hx},${hy - 4} ${hx + 9},${hy + 1}" fill="none" stroke="${ac_(0.12)}" stroke-width="0.3"/>`;
-        // Ray lines emanating downward from halo
         for (let i = 0; i < 5; i++) {
           const rx = hx - 8 + i * 4;
           const rl = 4 + rand() * 6;
@@ -21938,22 +21935,11 @@
 
       // ── SKULL / DEATH / KING ──
       } else if (tl.indexOf('skull') !== -1 || tl.indexOf('here lies') !== -1) {
-        // X-marks at corners
-        [[L - 5, T - 4],[R + 5, T - 4],[L - 5, B + 4],[R + 5, B + 4]].forEach(([cx, cy]) => {
-          const s = 2.5;
-          els += `<line x1="${cx - s}" y1="${cy - s}" x2="${cx + s}" y2="${cy + s}" stroke="${ac_(0.25)}" stroke-width="0.6"/>`;
-          els += `<line x1="${cx + s}" y1="${cy - s}" x2="${cx - s}" y2="${cy + s}" stroke="${ac_(0.25)}" stroke-width="0.6"/>`;
+        // Minimal: just faint tick marks at corners — no ornaments
+        [[L - 3, T - 3, 1, 1],[R + 3, T - 3, -1, 1],[L - 3, B + 3, 1, -1],[R + 3, B + 3, -1, -1]].forEach(([cx, cy, dx, dy]) => {
+          els += `<line x1="${cx}" y1="${cy}" x2="${cx + dx * 4}" y2="${cy}" stroke="${ac_(0.12)}" stroke-width="0.35"/>`;
+          els += `<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy + dy * 4}" stroke="${ac_(0.12)}" stroke-width="0.35"/>`;
         });
-        // Crown points at top center (for "here lies the king")
-        if (tl.indexOf('king') !== -1) {
-          const cx = L + W * 0.5;
-          for (let i = 0; i < 3; i++) {
-            const px = cx - 5 + i * 5;
-            els += `<line x1="${px}" y1="${T - 9}" x2="${px}" y2="${T - 13}" stroke="${ac_(0.22)}" stroke-width="0.5"/>`;
-            els += `<circle cx="${px}" cy="${T - 13.5}" r="0.6" fill="${ac_(0.22)}"/>`;
-          }
-          els += `<line x1="${cx - 7}" y1="${T - 9}" x2="${cx + 7}" y2="${T - 9}" stroke="${ac_(0.18)}" stroke-width="0.4"/>`;
-        }
 
       // ── PORTRAIT / SELF / FIGURE ──
       } else if (tl.indexOf('self portrait') !== -1 || tl.indexOf('vogue') !== -1 || tl.indexOf('collector') !== -1 || tl === 'untitled') {
