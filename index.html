@@ -4311,56 +4311,66 @@
     /* ── Mobile: disable double-tap zoom (keeps pinch zoom) ── */
     body.is-real-mobile {
       touch-action: manipulation !important;
+      overscroll-behavior: none !important;
+      -webkit-overflow-scrolling: auto !important;
     }
     body.is-real-mobile * {
       touch-action: manipulation;
     }
+    /* Reduce GPU memory: don't promote every image to its own layer in collection view */
+    body.is-real-mobile .node-preview {
+      transform-style: flat !important;
+    }
+    body.is-real-mobile .node-preview img {
+      image-rendering: auto;
+      content-visibility: auto;
+    }
 
     /* ── Mobile Object Manager — scaled up for readability ── */
     body.is-real-mobile .c4d-object-manager {
-      width: 520px !important;
-      font-size: 22px !important;
-      max-height: 80vh !important;
+      width: 900px !important;
+      font-size: 32px !important;
+      max-height: none !important;
       left: 30px !important;
       top: 80px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-header {
-      padding: 14px 18px !important;
+      padding: 18px 22px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-header-title {
-      font-size: 24px !important;
+      font-size: 34px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-header-btn {
-      font-size: 28px !important;
-      width: 32px !important;
-      height: 32px !important;
+      font-size: 36px !important;
+      width: 40px !important;
+      height: 40px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-list {
-      max-height: 70vh !important;
+      max-height: none !important;
       overflow-y: auto !important;
       -webkit-overflow-scrolling: touch;
     }
     body.is-real-mobile .c4d-object-manager .obj-row {
-      padding: 10px 14px !important;
-      min-height: 36px !important;
+      padding: 14px 18px !important;
+      min-height: 48px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-indent {
-      width: 28px !important;
+      width: 36px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-icon {
-      font-size: 22px !important;
-      margin-right: 10px !important;
+      font-size: 30px !important;
+      margin-right: 14px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-label {
-      font-size: 22px !important;
+      font-size: 30px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-eye,
     body.is-real-mobile .c4d-object-manager .obj-check,
     body.is-real-mobile .c4d-object-manager .obj-add {
-      font-size: 22px !important;
+      font-size: 30px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-row .collection-icon {
-      font-size: 20px !important;
+      font-size: 28px !important;
     }
 
     /* ── Mobile candles: hide in detail view to reclaim artwork space ── */
@@ -9128,14 +9138,17 @@
         wormholeStart = performance.now();
         wormholeProgress = 0;
 
-        setTimeout(() => { beginReveal(); }, 2200);
+        // Mobile: faster transition to reduce lag
+        var _wormRevealDelay = _isRealMobile ? 800 : 2200;
+        var _wormEndDelay = _isRealMobile ? 2500 : 7000;
+        setTimeout(() => { beginReveal(); }, _wormRevealDelay);
         setTimeout(() => {
           wormholeActive = false;
           wormholeProgress = 1;
           vortexActive = false;
           document.removeEventListener('mousemove', onIntroMouseMove);
           stopIntroAnimation();
-        }, 7000);
+        }, _wormEndDelay);
       });
 
       // Attach double-click handlers to all collection rows (single tap on mobile)
@@ -9173,7 +9186,7 @@
 
             setTimeout(() => {
               beginReveal(idx);
-            }, 2200);
+            }, _isRealMobile ? 800 : 2200);
 
             setTimeout(() => {
               wormholeActive = false;
@@ -14489,20 +14502,21 @@
       const vpW = window.innerWidth;
       const vpH = window.innerHeight;
       const isMasterwork = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex].masterwork;
-      const _isMobileFocus = vpW < 768; // false on mobile with 1400px viewport — desktop layout applies
+      // Use UA-based mobile detection — viewport is 1400px but phone needs mobile layout
+      const _isMobileFocus = _isRealMobile;
 
-      // ── MOBILE: artwork centered horizontally, upper 45% of screen ──
+      // ── MOBILE: artwork centered, nearly full width, room for motherboard below ──
       // ── DESKTOP: artwork offset left, room for COA chain to the right ──
-      const candleReserve = _isMobileFocus ? 16 : 90;
-      const navReserve = _isMobileFocus ? 52 : 60;
-      const edgePad = _isMobileFocus ? 12 : 16;
+      const candleReserve = _isMobileFocus ? 30 : 90;
+      const navReserve = _isMobileFocus ? 30 : 60;
+      const edgePad = _isMobileFocus ? 30 : 16;
 
       let targetCenterX, targetCenterY, maxW, maxH;
       if (_isMobileFocus) {
         targetCenterX = vpW * 0.5; // dead center horizontally
-        targetCenterY = vpH * 0.38; // slightly higher — hero the artwork
-        maxW = vpW * 0.92; // near full-width, small margins
-        maxH = vpH * 0.58; // generous height — artwork is the star
+        targetCenterY = vpH * 0.40; // slightly above center — room for motherboard
+        maxW = vpW * 0.88; // nearly full width with small margins
+        maxH = vpH * 0.60; // generous height — artwork is the star
       } else {
         targetCenterX = vpW * (isMasterwork ? 0.42 : 0.40);
         targetCenterY = vpH * 0.5;
@@ -14511,23 +14525,22 @@
       }
       let scaleFactor = Math.min(maxW / nodeW, maxH / nodeH);
 
-      // Piano Blossoms — reduce by 20% (artwork + frame feel oversized)
+      // Piano Blossoms — reduce by 20% on desktop (artwork + frame feel oversized)
       const _isPianoBlossomsFocus = _focusColNameEarly === 'Piano Blossoms';
       if (_isPianoBlossomsFocus && !_isMobileFocus) {
         scaleFactor *= 0.80;
       }
-      // Square artworks (aspect ratio near 1:1) get too large — cap them tighter
+      // Square artworks (aspect ratio near 1:1) get too large — cap them tighter (desktop only)
       if (!_isMobileFocus && !isMasterwork) {
         const nodeAR = nodeW / nodeH;
         if (nodeAR > 0.75 && nodeAR < 1.35) {
-          // Square-ish: cap so the artwork doesn't exceed ~63% of viewport height
           const squareMaxH = vpH * 0.63;
           const squareMaxW = vpW * 0.414;
           scaleFactor = Math.min(scaleFactor, squareMaxW / nodeW, squareMaxH / nodeH);
         }
       }
 
-      // ACK Editions / Color Study / Heart You — reduce by 15% AFTER square cap (glitch frames feel large)
+      // ACK Editions / Color Study / Heart You — reduce by 15% AFTER square cap (desktop only)
       const _isEditionsFocus = _focusColNameEarly === 'ACK Editions';
       const _isColorStudyFocus = _focusColNameEarly === 'The Great Color Study';
       const _isHeartYouFocus = _focusColNameEarly === 'Heart You';
@@ -14547,8 +14560,8 @@
       const scaledW = nodeW * scaleFactor;
       const scaledH = nodeH * scaleFactor;
       const rightChainReserve = _isMobileFocus ? edgePad : Math.min(320, vpW * 0.22);
-      const availW = vpW - candleReserve - rightChainReserve;
-      const availH = _isMobileFocus ? (vpH * 0.75 - navReserve) : (vpH - navReserve - edgePad * 2);
+      const availW = vpW - (_isMobileFocus ? edgePad * 2 : candleReserve + rightChainReserve);
+      const availH = _isMobileFocus ? (vpH * 0.65 - navReserve) : (vpH - navReserve - edgePad * 2);
       if (scaledW > availW || scaledH > availH) {
         scaleFactor = Math.min(availW / nodeW, availH / nodeH, scaleFactor);
       }
@@ -14559,11 +14572,21 @@
 
       // Clamp centerX so artwork stays fully within viewport
       let clampedCenterX = targetCenterX;
-      if (clampedCenterX - finalW / 2 < candleReserve) {
-        clampedCenterX = candleReserve + finalW / 2;
-      }
-      if (clampedCenterX + finalW / 2 > vpW - (_isMobileFocus ? edgePad : rightChainReserve)) {
-        clampedCenterX = vpW - (_isMobileFocus ? edgePad : rightChainReserve) - finalW / 2;
+      if (_isMobileFocus) {
+        // Mobile: ensure centered with equal margins
+        if (clampedCenterX - finalW / 2 < edgePad) {
+          clampedCenterX = edgePad + finalW / 2;
+        }
+        if (clampedCenterX + finalW / 2 > vpW - edgePad) {
+          clampedCenterX = vpW - edgePad - finalW / 2;
+        }
+      } else {
+        if (clampedCenterX - finalW / 2 < candleReserve) {
+          clampedCenterX = candleReserve + finalW / 2;
+        }
+        if (clampedCenterX + finalW / 2 > vpW - rightChainReserve) {
+          clampedCenterX = vpW - rightChainReserve - finalW / 2;
+        }
       }
 
       // Clamp centerY so artwork stays fully within viewport
@@ -14571,7 +14594,7 @@
       if (clampedCenterY - finalH / 2 < navReserve + edgePad) {
         clampedCenterY = navReserve + edgePad + finalH / 2;
       }
-      const bottomLimit = _isMobileFocus ? vpH * 0.82 : vpH - edgePad;
+      const bottomLimit = _isMobileFocus ? vpH * 0.78 : vpH - edgePad;
       if (clampedCenterY + finalH / 2 > bottomLimit) {
         clampedCenterY = bottomLimit - finalH / 2;
       }
@@ -14661,6 +14684,12 @@
         node.classList.add('focused');
         _showMobileBack('focus');
         showEscHint('to exit focus');
+        // On mobile: pause all non-essential rendering to free memory
+        if (_isRealMobile) {
+          bgGridPaused = true;
+          // Pause any leftover CSS animations on non-focused cards
+          inner.classList.add('editor-paused');
+        }
         // Dim salesbot during focus
         var _sb = document.getElementById('salesbotNode');
         if (_sb) _sb.classList.add('dimmed');
@@ -14793,36 +14822,43 @@
               const _isRemoteFullRes = _fr.startsWith('http://') || _fr.startsWith('https://');
               const _isLocalFullRes = !_isRemoteFullRes;
 
-              // Strategy: remote URLs (arweave, IPFS) → load directly
-              // Local relative paths → likely not deployed (too large); try loading
-              //   but also try a higher-res CDN version of the thumbnail as fallback
-              if (_isRealMobile && _isLocalFullRes) {
-                // Real mobile + local fullRes (probably 404) → try ?w=800 of thumb instead
-                if (thumbSrc.includes('?w=')) {
-                  const mobileHiRes = thumbSrc.replace(/\?w=\d+/, '?w=800');
-                  const mp = new Image();
-                  mp.onload = () => { nodeImg.src = mobileHiRes; _clearLoading(); };
-                  mp.onerror = _clearLoading;
-                  mp.src = mobileHiRes;
-                  setTimeout(_clearLoading, 5000);
+              // Derive focus-res path: "broken-keys/rage.png" → "broken-keys-focus/rage.jpg"
+              function _deriveFocusPath(localPath) {
+                const parts = localPath.split('/');
+                if (parts.length >= 2) {
+                  const dir = parts[0] + '-focus';
+                  const file = parts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
+                  return dir + '/' + file;
+                }
+                return null;
+              }
+
+              if (_isLocalFullRes) {
+                // Local fullRes — fullRes PNGs not deployed, try focus-res JPGs first
+                const focusPath = _deriveFocusPath(_fr);
+                if (focusPath) {
+                  const focusPre = new Image();
+                  focusPre.onload = () => { nodeImg.src = focusPath; _clearLoading(); };
+                  focusPre.onerror = () => {
+                    // Focus-res not available — try fullRes as last resort
+                    const frPre = new Image();
+                    frPre.onload = () => { nodeImg.src = _fr; _clearLoading(); };
+                    frPre.onerror = _clearLoading;
+                    frPre.src = _fr;
+                    setTimeout(_clearLoading, 4000);
+                  };
+                  focusPre.src = focusPath;
+                  setTimeout(_clearLoading, 6000);
                 } else {
                   _clearLoading();
                 }
-              } else if (_isLocalFullRes && !thumbSrc.includes('?w=')) {
-                // Local fullRes + local thumbnail (no CDN) — fullRes probably not deployed
-                // Show thumbnail immediately, attempt fullRes in background without dimming
-                _clearLoading();
-                const bgPre = new Image();
-                bgPre.onload = () => { nodeImg.src = _fr; };
-                bgPre.src = _fr;
               } else {
-                // Remote fullRes (arweave/IPFS) or CDN thumbnail — try loading
+                // Remote fullRes (arweave/IPFS) — load directly
                 const preloader = new Image();
                 preloader.onload = () => { nodeImg.src = _fr; _clearLoading(); };
                 preloader.onerror = () => {
-                  // fullRes failed (404 or CORS) — try higher-res CDN thumb as fallback
                   if (thumbSrc.includes('?w=')) {
-                    const fallbackSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
+                    const fallbackSrc = thumbSrc.replace(/\?w=\d+/, _isRealMobile ? '?w=1200' : '?w=1400');
                     const fb = new Image();
                     fb.onload = () => { nodeImg.src = fallbackSrc; _clearLoading(); };
                     fb.onerror = _clearLoading;
@@ -14928,62 +14964,8 @@
         setTimeout(() => {
           const _mfArt = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
           const _mfColl = COLLECTIONS[collectionIndex];
-          var _mfTitle = _mfArt ? (_mfArt.title || '') : artworkTitle;
-          var _mfDesc = _mfArt ? (_mfArt.description || '') : '';
-          var _mfType = _mfArt ? (_mfArt.edition || '1/1') : '';
-          var _mfColName = '';
-          if (_mfArt && _mfArt._sourceCollection) _mfColName = _mfArt._sourceCollection;
-          else if (_mfColl) _mfColName = _mfColl.name;
-
-          // Update billboard chip label with artwork title
-          const chipLabel = document.querySelector('.pcb-chip-label');
-          if (chipLabel) {
-            chipLabel.textContent = _mfTitle;
-            chipLabel.classList.add('marquee');
-            chipLabel.style.setProperty('--marquee-dur', Math.max(3, _mfTitle.length * 0.25) + 's');
-          }
-
-          // Left ticker: artwork info
-          const leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
-          if (leftTicker) {
-            leftTicker._origHTML = leftTicker.innerHTML;
-            leftTicker.style.animation = 'none'; // stop auto-scroll, show static info
-            var leftHTML = '';
-            leftHTML += '<span class="pcb-ticker-line bright">' + _mfTitle + '</span>';
-            if (_mfColName) leftHTML += '<span class="pcb-ticker-line">' + _mfColName + '</span>';
-            if (_mfType) leftHTML += '<span class="pcb-ticker-line dim">' + _mfType + '</span>';
-            if (_mfArt && _mfArt.isListed && _mfArt.listingPriceEth) {
-              leftHTML += '<span class="pcb-ticker-line" style="color:rgba(100,220,100,0.7);">listed: ' + parseFloat(_mfArt.listingPriceEth).toFixed(2) + ' ETH</span>';
-            }
-            if (_mfArt && _mfArt.hasOffer && _mfArt.bestOfferEth && parseFloat(_mfArt.bestOfferEth) >= 1.0) {
-              leftHTML += '<span class="pcb-ticker-line" style="color:rgba(120,180,255,0.7);">offer: ' + parseFloat(_mfArt.bestOfferEth).toFixed(2) + ' ETH</span>';
-            }
-            leftTicker.innerHTML = leftHTML;
-          }
-
-          // Right ticker: description
-          const rightTicker = document.querySelector('.pcb-ticker.right .pcb-ticker-inner');
-          if (rightTicker) {
-            rightTicker._origHTML = rightTicker.innerHTML;
-            rightTicker.style.animation = 'none';
-            var rightHTML = '';
-            if (_mfDesc) {
-              // Split description into short lines for ticker display
-              var words = _mfDesc.split(' ');
-              var line = '';
-              words.forEach(function(w) {
-                if ((line + ' ' + w).length > 18) {
-                  rightHTML += '<span class="pcb-ticker-line">' + line.trim() + '</span>';
-                  line = w;
-                } else {
-                  line += ' ' + w;
-                }
-              });
-              if (line.trim()) rightHTML += '<span class="pcb-ticker-line">' + line.trim() + '</span>';
-            } else {
-              rightHTML += '<span class="pcb-ticker-line dim">—</span>';
-            }
-            rightTicker.innerHTML = rightHTML;
+          if (_mfColl && _mfArt) {
+            _updateMobileMotherboard(_mfColl, _mfArt);
           }
         }, _scatterWait + 200);
       } else {
@@ -15508,62 +15490,86 @@
             const nextIdx = focusedArtworkIndex + dir;
             if (nextIdx >= 0 && nextIdx < col.artworks.length) {
               if (_isMobileSwipe) {
-                // ── MOBILE: in-place swap with scatter/materialize ──
+                // ── MOBILE: lightweight fade swap (no pixel scatter — too heavy on mobile) ──
                 _swipeTransitioning = true;
                 const nextArt = col.artworks[nextIdx];
                 const curNode = focusedNode;
                 const curImg = curNode ? curNode.querySelector('.node-preview img') : null;
+                const curPreview = curNode ? curNode.querySelector('.node-preview') : null;
 
-                // 1. Remove existing wires
+                // Safety: unlock after 3s no matter what
+                const _swipeSafety = setTimeout(function() { _swipeTransitioning = false; }, 3000);
+
+                // 1. Remove existing wires + panels
                 removeFocusModeWires();
-
-                // 2. Remove info panel + COA
                 var oldInfo = document.getElementById('nodeInfoPanel');
                 if (oldInfo) oldInfo.remove();
                 var oldDock = document.querySelector('.coa-dock');
                 if (oldDock) oldDock.remove();
+                var oldCollector = document.getElementById('collectorNode');
+                if (oldCollector) oldCollector.remove();
+                var oldCollectorWire = document.getElementById('collectorWireSvg');
+                if (oldCollectorWire) oldCollectorWire.remove();
 
-                // 3. Scatter current artwork out
-                if (curNode) {
-                  pixelScatterNode(curNode, {
-                    mode: 'out', density: 0.6, spread: 180, duration: 500,
-                    onComplete: function() {
-                      // 4. Swap image source to next artwork
-                      if (curImg) {
-                        curImg.loading = 'eager';
-                        curImg.src = nextArt.image || '';
-                        // Wait for load then materialize in
-                        var _onLoad = function() {
-                          curImg.removeEventListener('load', _onLoad);
-                          curImg.removeEventListener('error', _onLoad);
-                          // Update tracked index
-                          focusedArtworkIndex = nextIdx;
-                          // 5. Materialize in
-                          pixelScatterNode(curNode, {
-                            mode: 'in', density: 0.6, spread: 180, duration: 500,
-                            onComplete: function() {
-                              _swipeTransitioning = false;
-                              // 6. Update motherboard info
-                              _updateMobileMotherboard(col, nextArt);
-                              // 7. Redraw wires
-                              setTimeout(function() {
-                                drawFocusModeWires(curNode, null);
-                              }, 100);
-                            }
-                          });
-                        };
-                        curImg.addEventListener('load', _onLoad);
-                        curImg.addEventListener('error', _onLoad);
-                        // Force src reload if same image (shouldn't happen but safety)
-                        if (curImg.complete && curImg.src.indexOf(nextArt.image) > -1) _onLoad();
-                      } else {
-                        _swipeTransitioning = false;
+                // 2. Fade out current
+                if (curPreview) {
+                  curPreview.style.transition = 'opacity 0.25s ease';
+                  curPreview.style.opacity = '0';
+                }
+
+                setTimeout(function() {
+                  // 3. Swap image source
+                  if (curImg) {
+                    curImg.loading = 'eager';
+                    // Try focus-res version first
+                    var _nextImgSrc = nextArt.image || '';
+                    if (nextArt.fullRes) {
+                      var _nfr = nextArt.fullRes;
+                      if (!_nfr.startsWith('http')) {
+                        var _fParts = _nfr.split('/');
+                        if (_fParts.length >= 2) {
+                          _nextImgSrc = _fParts[0] + '-focus/' + _fParts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
+                        }
                       }
                     }
-                  });
-                } else {
-                  _swipeTransitioning = false;
-                }
+                    var _swapImg = new Image();
+                    _swapImg.onload = function() {
+                      curImg.src = _swapImg.src;
+                      _finishSwipe();
+                    };
+                    _swapImg.onerror = function() {
+                      // Focus-res failed, use thumbnail
+                      curImg.src = nextArt.image || '';
+                      _finishSwipe();
+                    };
+                    _swapImg.src = _nextImgSrc;
+                    // Fallback if load takes too long
+                    setTimeout(function() {
+                      if (_swipeTransitioning) {
+                        curImg.src = nextArt.image || '';
+                        _finishSwipe();
+                      }
+                    }, 2000);
+                  } else {
+                    _finishSwipe();
+                  }
+
+                  function _finishSwipe() {
+                    clearTimeout(_swipeSafety);
+                    focusedArtworkIndex = nextIdx;
+                    // 4. Fade in new
+                    if (curPreview) {
+                      curPreview.style.opacity = '1';
+                    }
+                    // 5. Update motherboard
+                    _updateMobileMotherboard(col, nextArt);
+                    // 6. Redraw wires
+                    setTimeout(function() {
+                      drawFocusModeWires(curNode, null);
+                      _swipeTransitioning = false;
+                    }, 200);
+                  }
+                }, 300);
               } else {
                 // ── DESKTOP: exit and re-enter focus ──
                 exitFocusMode();
@@ -15595,6 +15601,8 @@
       var title = art.title || '';
       var desc = art.description || '';
       var colName = (art._sourceCollection) ? art._sourceCollection : col.name;
+      var edition = art.edition || '1 of 1';
+      var collector = art.collector || '';
 
       // Billboard chip label
       var chipLabel = document.querySelector('.pcb-chip-label');
@@ -15604,7 +15612,7 @@
         chipLabel.style.setProperty('--marquee-dur', Math.max(3, title.length * 0.25) + 's');
       }
 
-      // Left ticker: title, collection, sale status, offers
+      // Left ticker: title, collection, edition, description, collector
       var leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
       if (leftTicker) {
         if (!leftTicker._origHTML) leftTicker._origHTML = leftTicker.innerHTML;
@@ -15612,35 +15620,30 @@
         var leftHTML = '';
         leftHTML += '<span class="pcb-ticker-line bright">' + title + '</span>';
         leftHTML += '<span class="pcb-ticker-line">' + colName + '</span>';
-        if (art.isListed && art.listingPriceEth) {
-          var ethPrice = parseFloat(art.listingPriceEth);
-          leftHTML += '<span class="pcb-ticker-line" style="color:rgba(100,220,100,0.7);">listed: ' + ethPrice.toFixed(2) + ' ETH</span>';
-        }
-        if (art.hasOffer && art.bestOfferEth && parseFloat(art.bestOfferEth) >= 1.0) {
-          leftHTML += '<span class="pcb-ticker-line" style="color:rgba(120,180,255,0.7);">offer: ' + parseFloat(art.bestOfferEth).toFixed(2) + ' ETH</span>';
-        }
+        leftHTML += '<span class="pcb-ticker-line dim">' + edition + '</span>';
+        if (desc) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(180,170,150,0.55);font-style:italic;">' + desc + '</span>';
+        if (collector) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(160,190,255,0.6);">collector: ' + collector + '</span>';
+        if (art.winningBid) leftHTML += '<span class="pcb-ticker-line dim">won: ' + art.winningBid + '</span>';
         leftTicker.innerHTML = leftHTML;
       }
 
-      // Right ticker: description
+      // Right ticker: price info, token, links
       var rightTicker = document.querySelector('.pcb-ticker.right .pcb-ticker-inner');
       if (rightTicker) {
         if (!rightTicker._origHTML) rightTicker._origHTML = rightTicker.innerHTML;
         rightTicker.style.animation = 'none';
         var rightHTML = '';
-        if (desc) {
-          var words = desc.split(' ');
-          var line = '';
-          words.forEach(function(w) {
-            if ((line + ' ' + w).length > 18) {
-              rightHTML += '<span class="pcb-ticker-line">' + line.trim() + '</span>';
-              line = w;
-            } else {
-              line += ' ' + w;
-            }
-          });
-          if (line.trim()) rightHTML += '<span class="pcb-ticker-line">' + line.trim() + '</span>';
-        } else {
+        if (art.isListed && art.listingPriceEth) {
+          var ethPrice = parseFloat(art.listingPriceEth);
+          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(100,220,100,0.7);">listed: ' + ethPrice.toFixed(2) + ' ETH</span>';
+        }
+        if (art.hasOffer && art.bestOfferEth && parseFloat(art.bestOfferEth) >= 1.0) {
+          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(120,180,255,0.7);">offer: ' + parseFloat(art.bestOfferEth).toFixed(2) + ' ETH</span>';
+        }
+        if (art.tokenId !== undefined && col.contract) {
+          rightHTML += '<span class="pcb-ticker-line dim">token #' + art.tokenId + '</span>';
+        }
+        if (!rightHTML) {
           rightHTML += '<span class="pcb-ticker-line dim">\u2014</span>';
         }
         rightTicker.innerHTML = rightHTML;
