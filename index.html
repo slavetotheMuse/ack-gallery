@@ -4625,14 +4625,14 @@
     .mobile-back-btn {
       display: none;
       position: fixed;
-      top: 20px;
-      left: 20px;
+      top: 18px;
+      left: 18px;
       z-index: 30;
-      width: 100px;
-      height: 100px;
+      width: 130px;
+      height: 130px;
       border-radius: 50%;
-      background: rgba(30,30,34,0.85);
-      border: 1.5px solid rgba(220,180,120,0.25);
+      background: rgba(30,30,34,0.88);
+      border: 1.5px solid rgba(220,180,120,0.3);
       align-items: center;
       justify-content: center;
       cursor: pointer;
@@ -4650,9 +4650,9 @@
       transform: scale(0.9);
     }
     .mobile-back-btn svg {
-      width: 44px;
-      height: 44px;
-      stroke: rgba(220,180,120,0.6);
+      width: 54px;
+      height: 54px;
+      stroke: rgba(220,180,120,0.65);
       stroke-width: 2.5;
       fill: none;
     }
@@ -4889,7 +4889,7 @@
       <div class="nav-left" onclick="toggleCatalogOM()" style="position:relative;">
         <div class="nav-coin"><img src="ACK_gold_logo.png" alt="ACK" style="width:100%;height:100%;object-fit:contain;border-radius:0;"></div>
         <div class="nav-title">AlphaCentauriKid</div>
-        <div class="nav-esc-hint" id="navEscHint"><kbd>esc</kbd> to go back</div>
+        <div class="nav-esc-hint" id="navEscHint"><span style="margin-right:4px;">←</span> <kbd>esc</kbd> to go back</div>
       </div>
       <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()">
         <span></span><span></span><span></span>
@@ -5217,6 +5217,269 @@
       const mn = document.getElementById('masterNode');
       if (mn) document.body.appendChild(mn);
       // (wallet node removed — connect wallet is now in nav bar)
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    // ── ACK Sound System — Web Audio API synthesized clicks
+    // ═══════════════════════════════════════════════════════════════
+    const ACK_SFX = (function() {
+      let _ctx = null;
+      let _enabled = false;
+      let _ambientRunning = false;
+      let _ambientNodes = [];
+
+      function _ensureCtx() {
+        if (_ctx) return _ctx;
+        try {
+          _ctx = new (window.AudioContext || window.webkitAudioContext)();
+          _enabled = true;
+        } catch(e) { _enabled = false; }
+        return _ctx;
+      }
+
+      // Core synth with optional delay (echo) and convolver reverb
+      function _synth(freq, duration, type, volume, attack, filterFreq, pitchDrop) {
+        const ctx = _ensureCtx();
+        if (!ctx || !_enabled) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        if (pitchDrop !== false) osc.frequency.exponentialRampToValueAtTime(freq * (pitchDrop || 0.4), now + duration);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(volume, now + (attack || 0.003));
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        if (filterFreq) {
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(filterFreq, now);
+          osc.connect(filter); filter.connect(gain);
+        } else { osc.connect(gain); }
+        gain.connect(ctx.destination);
+        osc.start(now); osc.stop(now + duration);
+      }
+
+      function _noiseBurst(duration, volume, hpFreq) {
+        const ctx = _ensureCtx();
+        if (!ctx || !_enabled) return;
+        const now = ctx.currentTime;
+        const bufSz = Math.max(1, Math.floor(ctx.sampleRate * duration));
+        const buffer = ctx.createBuffer(1, bufSz, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufSz; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(hpFreq || 2000, now);
+        noise.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        noise.start(now); noise.stop(now + duration);
+      }
+
+      // Echo effect: delayed repeats with decay
+      function _echo(freq, duration, type, volume, attack, filterFreq, delays) {
+        _synth(freq, duration, type, volume, attack, filterFreq);
+        (delays || []).forEach(function(d) {
+          setTimeout(function() {
+            _synth(freq * (d.pitch || 1), duration * 0.8, type, volume * d.vol, attack, filterFreq);
+          }, d.ms);
+        });
+      }
+
+      // Elegant harmonic chime (for collection clicks — "Steve Jobs" aesthetic)
+      function _chime(freq, duration, volume) {
+        const ctx = _ensureCtx();
+        if (!ctx || !_enabled) return;
+        const now = ctx.currentTime;
+        // Fundamental
+        var osc1 = ctx.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(freq, now);
+        var g1 = ctx.createGain();
+        g1.gain.setValueAtTime(0, now);
+        g1.gain.linearRampToValueAtTime(volume, now + 0.004);
+        g1.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc1.connect(g1); g1.connect(ctx.destination);
+        osc1.start(now); osc1.stop(now + duration);
+        // Perfect fifth harmonic (soft)
+        var osc2 = ctx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(freq * 1.5, now);
+        var g2 = ctx.createGain();
+        g2.gain.setValueAtTime(0, now);
+        g2.gain.linearRampToValueAtTime(volume * 0.3, now + 0.006);
+        g2.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.7);
+        osc2.connect(g2); g2.connect(ctx.destination);
+        osc2.start(now); osc2.stop(now + duration * 0.7);
+        // Octave shimmer (very soft)
+        var osc3 = ctx.createOscillator();
+        osc3.type = 'sine';
+        osc3.frequency.setValueAtTime(freq * 2, now);
+        var g3 = ctx.createGain();
+        g3.gain.setValueAtTime(0, now);
+        g3.gain.linearRampToValueAtTime(volume * 0.12, now + 0.008);
+        g3.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.5);
+        osc3.connect(g3); g3.connect(ctx.destination);
+        osc3.start(now); osc3.stop(now + duration * 0.5);
+      }
+
+      // ── Ambient soundscape: low drone + filtered noise + subtle mechanical hum ──
+      function _startAmbient() {
+        if (_ambientRunning) return;
+        var ctx = _ensureCtx();
+        if (!ctx || !_enabled) return;
+        _ambientRunning = true;
+        var masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(0, ctx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(1, ctx.currentTime + 4);
+        masterGain.connect(ctx.destination);
+
+        // Layer 1: Deep sub-drone (~55Hz + ~82Hz)
+        var drone1 = ctx.createOscillator();
+        drone1.type = 'sine';
+        drone1.frequency.setValueAtTime(55, ctx.currentTime);
+        var droneG1 = ctx.createGain();
+        droneG1.gain.setValueAtTime(0.025, ctx.currentTime);
+        var droneF1 = ctx.createBiquadFilter();
+        droneF1.type = 'lowpass';
+        droneF1.frequency.setValueAtTime(120, ctx.currentTime);
+        drone1.connect(droneF1); droneF1.connect(droneG1); droneG1.connect(masterGain);
+        drone1.start();
+        _ambientNodes.push(drone1, droneG1);
+
+        var drone2 = ctx.createOscillator();
+        drone2.type = 'sine';
+        drone2.frequency.setValueAtTime(82.4, ctx.currentTime);
+        var droneG2 = ctx.createGain();
+        droneG2.gain.setValueAtTime(0.015, ctx.currentTime);
+        drone2.connect(droneG2); droneG2.connect(masterGain);
+        drone2.start();
+        _ambientNodes.push(drone2, droneG2);
+
+        // Layer 2: Filtered noise — server room hiss
+        var noiseBufSz = ctx.sampleRate * 2;
+        var noiseBuf = ctx.createBuffer(1, noiseBufSz, ctx.sampleRate);
+        var nd = noiseBuf.getChannelData(0);
+        for (var i = 0; i < noiseBufSz; i++) nd[i] = Math.random() * 2 - 1;
+        var noiseNode = ctx.createBufferSource();
+        noiseNode.buffer = noiseBuf;
+        noiseNode.loop = true;
+        var noiseBP = ctx.createBiquadFilter();
+        noiseBP.type = 'bandpass';
+        noiseBP.frequency.setValueAtTime(800, ctx.currentTime);
+        noiseBP.Q.setValueAtTime(0.5, ctx.currentTime);
+        var noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.012, ctx.currentTime);
+        noiseNode.connect(noiseBP); noiseBP.connect(noiseGain); noiseGain.connect(masterGain);
+        noiseNode.start();
+        _ambientNodes.push(noiseNode, noiseGain);
+
+        // Layer 3: Mechanical hum — triangle wave with slow modulation
+        var mech = ctx.createOscillator();
+        mech.type = 'triangle';
+        mech.frequency.setValueAtTime(120, ctx.currentTime);
+        var mechLFO = ctx.createOscillator();
+        mechLFO.type = 'sine';
+        mechLFO.frequency.setValueAtTime(0.15, ctx.currentTime);
+        var lfoGain = ctx.createGain();
+        lfoGain.gain.setValueAtTime(8, ctx.currentTime);
+        mechLFO.connect(lfoGain); lfoGain.connect(mech.frequency);
+        mechLFO.start();
+        var mechGain = ctx.createGain();
+        mechGain.gain.setValueAtTime(0.01, ctx.currentTime);
+        var mechFilter = ctx.createBiquadFilter();
+        mechFilter.type = 'lowpass';
+        mechFilter.frequency.setValueAtTime(200, ctx.currentTime);
+        mech.connect(mechFilter); mechFilter.connect(mechGain); mechGain.connect(masterGain);
+        mech.start();
+        _ambientNodes.push(mech, mechLFO, mechGain);
+
+        // Layer 4: Very low random "gear grinding" texture — occasional rumbles
+        var grindBuf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
+        var gd = grindBuf.getChannelData(0);
+        for (var j = 0; j < gd.length; j++) {
+          gd[j] = (Math.random() * 2 - 1) * Math.sin(j / gd.length * Math.PI);
+        }
+        var grindNode = ctx.createBufferSource();
+        grindNode.buffer = grindBuf;
+        grindNode.loop = true;
+        var grindLP = ctx.createBiquadFilter();
+        grindLP.type = 'lowpass';
+        grindLP.frequency.setValueAtTime(150, ctx.currentTime);
+        grindLP.Q.setValueAtTime(2, ctx.currentTime);
+        var grindGain = ctx.createGain();
+        grindGain.gain.setValueAtTime(0.008, ctx.currentTime);
+        // Slow volume wobble
+        var grindLFO = ctx.createOscillator();
+        grindLFO.type = 'sine';
+        grindLFO.frequency.setValueAtTime(0.08, ctx.currentTime);
+        var grindLFOGain = ctx.createGain();
+        grindLFOGain.gain.setValueAtTime(0.006, ctx.currentTime);
+        grindLFO.connect(grindLFOGain); grindLFOGain.connect(grindGain.gain);
+        grindLFO.start();
+        grindNode.connect(grindLP); grindLP.connect(grindGain); grindGain.connect(masterGain);
+        grindNode.start();
+        _ambientNodes.push(grindNode, grindLFO, grindGain);
+
+        _ambientNodes.push(masterGain);
+      }
+
+      return {
+        unlock: function() {
+          _ensureCtx();
+          if (_ctx && _ctx.state === 'suspended') _ctx.resume();
+        },
+
+        // Echoey click snap for vortex — deep resonant click with spatial echo
+        vortex: function() {
+          _echo(90, 0.25, 'sine', 0.3, 0.003, 250, [
+            { ms: 80, vol: 0.35, pitch: 1.02 },
+            { ms: 170, vol: 0.18, pitch: 0.98 },
+            { ms: 280, vol: 0.08, pitch: 0.95 }
+          ]);
+          _synth(180, 0.12, 'triangle', 0.12, 0.002, 500);
+          _noiseBurst(0.06, 0.1, 1500);
+        },
+
+        // Artwork focus — crisp mechanical relay click
+        focus: function() {
+          _synth(800, 0.07, 'square', 0.09, 0.001, 2000);
+          _synth(400, 0.1, 'sine', 0.07, 0.002, 1200);
+          _noiseBurst(0.025, 0.05, 2500);
+        },
+
+        // Collection open — elegant harmonic chime (Apple-esque)
+        click: function() {
+          _chime(880, 0.25, 0.08);
+          setTimeout(function() { _chime(1320, 0.15, 0.04); }, 30);
+        },
+
+        // Dock snap — satisfying lock-in thud
+        dock: function() {
+          _synth(250, 0.12, 'sine', 0.12, 0.002, 600);
+          _synth(500, 0.07, 'triangle', 0.08, 0.002, 1200);
+          _noiseBurst(0.035, 0.06, 1800);
+        },
+
+        // Exit / close — soft downward tone
+        close: function() {
+          _synth(600, 0.08, 'sine', 0.06, 0.002, 900);
+          _synth(300, 0.12, 'sine', 0.04, 0.004, 600, 0.6);
+        },
+
+        // UI micro-click — for tabs, links, small interactions
+        micro: function() {
+          _synth(1100, 0.035, 'square', 0.05, 0.001, 3500);
+          _noiseBurst(0.015, 0.025, 3000);
+        },
+
+        // Start ambient soundscape
+        startAmbient: function() { _startAmbient(); }
+      };
     })();
 
     // ═══════════════════════════════════════════════════════════════
@@ -6331,6 +6594,144 @@
       return imagePath;
     }
 
+    // ── Pre-intro: "Whispers are messages from the deep" — Dune-style audio + text reveal ──
+    function _showWhispersPreIntro(onComplete) {
+      // Load Dune-style font (Josefin Sans — geometric, Futura-inspired)
+      if (!document.getElementById('duneFont')) {
+        var fl = document.createElement('link');
+        fl.id = 'duneFont';
+        fl.rel = 'stylesheet';
+        fl.href = 'https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;300;400&display=swap';
+        document.head.appendChild(fl);
+      }
+
+      const _duneFontStack = "'Josefin Sans', 'Futura', 'Century Gothic', sans-serif";
+
+      const preIntro = document.createElement('div');
+      preIntro.id = 'whispersPreIntro';
+      preIntro.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10001;' +
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'background:#000;user-select:none;';
+
+      preIntro.innerHTML =
+        '<div id="whispersTapPrompt" style="font-family:' + _duneFontStack + ';font-weight:100;font-size:13px;' +
+        'letter-spacing:0.35em;color:rgba(245,240,230,0.5);text-transform:lowercase;' +
+        'animation:whisperPulse 2.5s ease-in-out infinite;">touch</div>' +
+        '<div id="whispersTextWrap" style="position:absolute;top:0;left:0;width:100%;height:100%;' +
+        'display:flex;align-items:center;justify-content:center;padding:40px;text-align:center;opacity:0;">' +
+          '<div id="whispersText" style="font-family:' + _duneFontStack + ';font-weight:300;' +
+          'font-size:clamp(18px,3.5vw,40px);' +
+          'color:rgba(245,240,230,0);line-height:2;letter-spacing:0.18em;text-transform:lowercase;' +
+          'max-width:800px;">' +
+          'visions are whispers from the <span id="whisperMorphWord">deep</span>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(preIntro);
+
+      // Styles: pulse, cursor, breathing glow on text
+      if (!document.getElementById('whispersStyles')) {
+        var style = document.createElement('style');
+        style.id = 'whispersStyles';
+        style.textContent =
+          '@keyframes whisperPulse{0%,100%{opacity:0.35}50%{opacity:0.9}}' +
+          '@keyframes whisperBreathe{0%,100%{text-shadow:0 0 20px rgba(245,240,230,0.03),0 0 60px rgba(220,180,120,0.02);letter-spacing:0.18em}50%{text-shadow:0 0 30px rgba(245,240,230,0.08),0 0 80px rgba(220,180,120,0.04);letter-spacing:0.2em}}' +
+          '@keyframes morphGlitch{0%{opacity:1;transform:translateX(0)}15%{opacity:0.3;transform:translateX(2px)}30%{opacity:0.8;transform:translateX(-1px)}45%{opacity:0.2;transform:translateX(3px)}60%{opacity:0.7;transform:translateX(-2px)}75%{opacity:0.4;transform:translateX(1px)}100%{opacity:1;transform:translateX(0)}}' +
+          '#whispersPreIntro, #whispersPreIntro * { cursor: crosshair !important; }' +
+          '#whispersText.breathing { animation: whisperBreathe 4s ease-in-out infinite; }' +
+          '#whisperMorphWord.glitching { animation: morphGlitch 0.15s ease-in-out; }';
+        document.head.appendChild(style);
+      }
+
+      var _whisperStarted = false;
+
+      preIntro.addEventListener('click', function _onWhisperTap() {
+        if (_whisperStarted) return;
+        _whisperStarted = true;
+
+        ACK_SFX.unlock();
+
+        var tapPrompt = document.getElementById('whispersTapPrompt');
+        if (tapPrompt) tapPrompt.style.display = 'none';
+
+        var audio = new Audio('dreamsarewhispers.wav');
+        audio.volume = 0.6;
+        audio.play().catch(function() {});
+
+        var textWrap = document.getElementById('whispersTextWrap');
+        var textEl = document.getElementById('whispersText');
+        var morphWord = document.getElementById('whisperMorphWord');
+        if (textWrap) { textWrap.style.opacity = '1'; textWrap.style.transition = 'opacity 0.5s ease'; }
+
+        // Fade text in over 3s + start breathing animation
+        setTimeout(function() {
+          if (textEl) {
+            textEl.style.transition = 'color 3s ease';
+            textEl.style.color = 'rgba(245,240,230,0.8)';
+            textEl.classList.add('breathing');
+          }
+        }, 400);
+
+        // At ~4s, scramble "Deep" → "Muse"
+        // The scramble: cycle through random characters before landing on "Muse"
+        if (morphWord) {
+          var scrambleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+          var targetWord = 'muse';
+          var currentWord = 'deep';
+          var scrambleStart = 4000;
+          var scrambleDuration = 800; // total scramble time
+          var scrambleSteps = 12;
+          var stepTime = scrambleDuration / scrambleSteps;
+
+          setTimeout(function() {
+            var step = 0;
+            var scrambleInterval = setInterval(function() {
+              step++;
+              morphWord.classList.add('glitching');
+              setTimeout(function() { morphWord.classList.remove('glitching'); }, 100);
+
+              if (step >= scrambleSteps) {
+                // Final: land on "muse"
+                clearInterval(scrambleInterval);
+                morphWord.textContent = targetWord;
+                morphWord.style.color = 'rgba(220,180,120,0.85)';
+                morphWord.style.transition = 'color 0.5s ease';
+              } else {
+                // Random characters, progressively locking in target letters
+                var lockedCount = Math.floor((step / scrambleSteps) * targetWord.length);
+                var display = '';
+                for (var i = 0; i < 4; i++) {
+                  if (i < lockedCount) {
+                    display += targetWord[i];
+                  } else {
+                    display += scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+                  }
+                }
+                morphWord.textContent = display;
+              }
+            }, stepTime);
+          }, scrambleStart);
+        }
+
+        // Fade out at ~6.5s
+        setTimeout(function() {
+          if (textEl) {
+            textEl.style.transition = 'color 2s ease';
+            textEl.style.color = 'rgba(245,240,230,0)';
+            textEl.classList.remove('breathing');
+          }
+          preIntro.style.transition = 'opacity 1.5s ease';
+          preIntro.style.opacity = '0';
+        }, 6500);
+
+        // Remove and proceed
+        setTimeout(function() {
+          audio.pause();
+          preIntro.remove();
+          if (onComplete) onComplete();
+        }, 8500);
+      });
+    }
+
     function _showMobileWarningThenIntro() {
       const mobileMsg = document.createElement('div');
       mobileMsg.id = 'mobileIntroMsg';
@@ -6367,12 +6768,14 @@
     }
 
     function init() {
-      // ── MOBILE: show brief warning, then run full desktop intro ──
-      if (_isRealMobile) {
-        _showMobileWarningThenIntro();
-      } else {
-        runIntroSequence();
-      }
+      // ── Pre-intro whispers page → mobile warning (if mobile) → vortex intro ──
+      _showWhispersPreIntro(function() {
+        if (_isRealMobile) {
+          _showMobileWarningThenIntro();
+        } else {
+          runIntroSequence();
+        }
+      });
       renderCollections();
       initScrollScaling();
       buildPersistentGrid();
@@ -9069,6 +9472,7 @@
         vortexTarget.classList.remove('active');
         if (guideSpawned) return; // guide already selected, ignore
         guideSpawned = true; // prevent guide selection after this
+        ACK_SFX.vortex();
         // Stop onboarding pulse
         if (window._onboardPulseTimer) { clearInterval(window._onboardPulseTimer); window._onboardPulseTimer = null; }
         document.querySelectorAll('.onboard-pulse').forEach(el => el.classList.remove('onboard-pulse'));
@@ -9916,6 +10320,9 @@
 
       overlay.style.pointerEvents = 'none';
       requestAnimationFrame(revealTick);
+
+      // Start ambient soundscape once gallery is revealed
+      setTimeout(function() { ACK_SFX.startAmbient(); }, 2000);
 
       if (goingDirect) {
         // ── DIRECT TO COLLECTION: skip catalog animations, go straight to detail ──
@@ -11896,6 +12303,7 @@
     var _openDetailBusy = false; // re-entrancy guard — prevents resize handler from rebuilding mid-build
     function openDetail(index, skipTransition) {
       closeMobileNav(); // close hamburger if open
+      if (!skipTransition) ACK_SFX.click();
       console.log('[openDetail] called index=', index, 'skipTransition=', skipTransition, '_openDetailBusy=', _openDetailBusy, new Error().stack.split('\n').slice(1,3).join(' <- '));
       // If we're already building a detail view (e.g. resize fired during construction),
       // skip this call to prevent the entire overlay from being torn down and rebuilt
@@ -14295,6 +14703,7 @@
             if (outputDrag.didDrag) return;
             if (coaOpen) return;
             e.stopPropagation();
+            ACK_SFX.click();
             coaOpen = true;
 
             const sd = collection.salesData || {};
@@ -14354,6 +14763,7 @@
             coaPanel.querySelectorAll('.coa-tab').forEach(tab => {
               tab.onclick = (ev) => {
                 ev.stopPropagation();
+                ACK_SFX.micro();
                 coaPanel.querySelectorAll('.coa-tab').forEach(t => t.classList.remove('active'));
                 coaPanel.querySelectorAll('.coa-panel').forEach(p => p.classList.remove('active'));
                 tab.classList.add('active');
@@ -14410,6 +14820,7 @@
 
             // Close COA function
             function closeCOA() {
+              ACK_SFX.close();
               coaOpen = false;
               coaBackdrop.classList.remove('active');
               coaPanel.classList.remove('active');
@@ -14792,6 +15203,9 @@
         }
         return;
       }
+
+      // Play focus sound
+      ACK_SFX.focus();
 
       // Save original state
       focusedNodeOrigStyle = {
@@ -17007,6 +17421,7 @@
         infoPanel.querySelectorAll('.coa-info-tab').forEach(tab => {
           tab.addEventListener('click', (ev) => {
             ev.stopPropagation();
+            ACK_SFX.micro();
             infoPanel.querySelectorAll('.coa-info-tab').forEach(t => t.classList.remove('active'));
             infoPanel.querySelectorAll('.coa-info-tabpanel').forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
@@ -17022,6 +17437,7 @@
         _physPrintLink.addEventListener('click', (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
+          ACK_SFX.micro();
           // Find Exhibition tab and click it
           const _exhibTab = infoPanel.querySelector('.coa-info-tab[data-coa-tab="exhibition"]');
           if (_exhibTab) {
@@ -17160,6 +17576,7 @@
         _collectorLink.addEventListener('click', (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
+          ACK_SFX.micro();
           // Check if this is an ERC-1155 edition — use multi-collector popup
           if (_collectorLink.dataset.edition === 'true') {
             _buildCollectorsPopupGlobal(collection.contract, artwork.tokenId, infoPanel);
@@ -17737,6 +18154,7 @@
 
             if (dist < 120) {
               // Snap COA to dock
+              ACK_SFX.dock();
               dock.classList.remove('hover-active');
               infoDockState.docked = true;
               panel.classList.add('docked');
@@ -20812,53 +21230,10 @@
       els += `<rect x="${L}" y="${T}" width="${W}" height="${H}" fill="none" stroke="${ac_(0.38)}" stroke-width="0.8"/>`;
       els += `<rect x="${L - 2.5}" y="${T - 2.5}" width="${W + 5}" height="${H + 5}" fill="none" stroke="${ac_(0.14)}" stroke-width="0.35"/>`;
 
-      // ══ SHARED: Piano key frame helper — draws keys along any edge ══
-      const blackPattern = [1,1,0,1,1,1,0];
-      const wCol = (op) => `rgba(240,235,225,${op})`;
-      const wStr = (op) => `rgba(200,195,185,${op * 0.7})`;
-      const bCol = (op) => `rgba(${Math.max(0,ar-80)},${Math.max(0,ag-40)},${Math.max(0,ab-30)},${op})`;
-      const bStr = (op) => `rgba(30,25,20,${op * 0.5})`;
-      // drawKeys(startX, startY, direction, length) — direction: 'right','left','down','up'
-      function drawKeys(sx, sy, dir, len) {
-        const kW = 3.2, kH = 6, bH = 3.8, gap = 0.4;
-        let pos = 0, idx = 0, out = '';
-        while (pos < len) {
-          const w = Math.min(kW, len - pos); if (w < 1) break;
-          const op = 0.06 + rand() * 0.05;
-          if (dir === 'right') {
-            out += `<rect x="${sx + pos}" y="${sy}" width="${w}" height="${kH}" rx="0.2" fill="${wCol(op)}" stroke="${wStr(op)}" stroke-width="0.2"/>`;
-          } else if (dir === 'left') {
-            out += `<rect x="${sx - pos - w}" y="${sy}" width="${w}" height="${kH}" rx="0.2" fill="${wCol(op)}" stroke="${wStr(op)}" stroke-width="0.2"/>`;
-          } else if (dir === 'down') {
-            out += `<rect x="${sx}" y="${sy + pos}" width="${kH}" height="${w}" rx="0.2" fill="${wCol(op)}" stroke="${wStr(op)}" stroke-width="0.2"/>`;
-          } else if (dir === 'up') {
-            out += `<rect x="${sx}" y="${sy - pos - w}" width="${kH}" height="${w}" rx="0.2" fill="${wCol(op)}" stroke="${wStr(op)}" stroke-width="0.2"/>`;
-          }
-          // Black key
-          if (blackPattern[idx % 7]) {
-            const bop = 0.08 + rand() * 0.06;
-            if (dir === 'right') {
-              out += `<rect x="${sx + pos + kW * 0.7}" y="${sy}" width="${kW * 0.55}" height="${bH}" rx="0.15" fill="${bCol(bop)}" stroke="${bStr(bop)}" stroke-width="0.2"/>`;
-            } else if (dir === 'left') {
-              out += `<rect x="${sx - pos - kW * 0.7 - kW * 0.55}" y="${sy}" width="${kW * 0.55}" height="${bH}" rx="0.15" fill="${bCol(bop)}" stroke="${bStr(bop)}" stroke-width="0.2"/>`;
-            } else if (dir === 'down') {
-              out += `<rect x="${sx}" y="${sy + pos + kW * 0.7}" width="${bH}" height="${kW * 0.55}" rx="0.15" fill="${bCol(bop)}" stroke="${bStr(bop)}" stroke-width="0.2"/>`;
-            } else if (dir === 'up') {
-              out += `<rect x="${sx}" y="${sy - pos - kW * 0.7 - kW * 0.55}" width="${bH}" height="${kW * 0.55}" rx="0.15" fill="${bCol(bop)}" stroke="${bStr(bop)}" stroke-width="0.2"/>`;
-            }
-          }
-          pos += kW + gap;
-          idx++;
-        }
-        return out;
-      }
-
-      // ══ FOCUS MODE: Piano keys wrapping all 4 edges as the frame ══
+      // ══ FOCUS MODE: Thematic frame elements ══
       if (focusMode) {
-        els += drawKeys(L, B + 1.5, 'right', W);
-        els += drawKeys(L, T - 7.5, 'right', W);
-        els += drawKeys(L - 7.5, T, 'down', H);
-        els += drawKeys(R + 1.5, T, 'down', H);
+        // Subtle outer border glow
+        els += `<rect x="${L - 5}" y="${T - 5}" width="${W + 10}" height="${H + 10}" fill="none" stroke="${ac_(0.08)}" stroke-width="0.3" rx="1"/>`;
 
         // ── FOCUS MODE ENHANCEMENT 1: Sound wave lines ──
         // 3-4 faint sine-wave lines emanating from edges, representing sound escaping the piano
@@ -23500,11 +23875,12 @@
     function exitFocusMode() {
       const inner = document.querySelector('.node-graph-inner.focus-mode');
       if (!inner || !focusedNode) return;
+      ACK_SFX.close();
       hideEscHint();
       // Re-show "esc to go back" for collection view (we're exiting focus, not closing the collection)
       var _navHintRestore = document.getElementById('navEscHint');
       if (_navHintRestore) {
-        _navHintRestore.innerHTML = '<kbd>esc</kbd> to go back';
+        _navHintRestore.innerHTML = '<span style="margin-right:4px;">←</span> <kbd>esc</kbd> to go back';
         _navHintRestore.classList.add('visible');
       }
       // Mobile: switch back button to detail context
@@ -23927,6 +24303,7 @@
 
     function closeDetail() {
       _openDetailBusy = false; // clear re-entrancy guard
+      ACK_SFX.close();
       hideEscHint();
       _stopServantMusic(); // stop servant music on any collection close
       exitFocusMode();
@@ -24545,7 +24922,7 @@
         _escHintEl.className = 'esc-hint';
         document.body.appendChild(_escHintEl);
       }
-      _escHintEl.innerHTML = '<kbd>esc</kbd> ' + (text || 'to go back');
+      _escHintEl.innerHTML = '<span style="margin-right:4px;">←</span> <kbd>esc</kbd> ' + (text || 'to go back');
       _escHintEl.classList.remove('visible');
       requestAnimationFrame(() => { _escHintEl.classList.add('visible'); });
       clearTimeout(_escHintTimer);
@@ -24555,7 +24932,7 @@
       // Also show the persistent nav esc hint below logo
       var _navHint = document.getElementById('navEscHint');
       if (_navHint) {
-        _navHint.innerHTML = '<kbd>esc</kbd> ' + (text || 'to go back');
+        _navHint.innerHTML = '<span style="margin-right:4px;">←</span> <kbd>esc</kbd> ' + (text || 'to go back');
         _navHint.classList.add('visible');
       }
     }
@@ -24602,11 +24979,13 @@
       var panelOpen = false;
       sbDot.addEventListener('click', function(e) {
         e.stopPropagation();
+        ACK_SFX.micro();
         panelOpen = !panelOpen;
         sbPanel.classList.toggle('open', panelOpen);
       });
       if (sbClose) sbClose.addEventListener('click', function(e) {
         e.stopPropagation();
+        ACK_SFX.close();
         panelOpen = false;
         sbPanel.classList.remove('open');
       });
