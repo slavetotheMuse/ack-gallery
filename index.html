@@ -17860,17 +17860,32 @@
       if (w) { w.style.opacity = '0'; setTimeout(() => { if (w.parentNode) w.remove(); }, 500); }
     }
 
-    // ── Global ERC-1155 multi-collector popup (Object Manager style) ──
+    // ── Global ERC-1155 multi-collector popup (C4D node style with wire) ──
     // Extracted to global scope so both COA info panel AND Provenance overlay can call it
     function _buildCollectorsPopupGlobal(contractAddr, tokenId, anchorEl) {
-      // Remove any existing popup (toggle behavior)
+      // Remove any existing popup + wire (toggle behavior)
       const existingPopup = document.getElementById('collectorsPopup');
-      if (existingPopup) { existingPopup.remove(); return; }
+      const existingWire = document.getElementById('collectorsWireSvg');
+      if (existingPopup) {
+        existingPopup.style.opacity = '0';
+        existingPopup.style.transform = 'translateY(10px) scale(0.95)';
+        if (existingWire) existingWire.style.opacity = '0';
+        setTimeout(() => {
+          if (existingPopup.parentNode) existingPopup.remove();
+          if (existingWire && existingWire.parentNode) existingWire.remove();
+        }, 350);
+        return;
+      }
+
+      const _pal = currentArtworkPalette;
+      const borderCol = _pal ? _pal.accentDim : 'rgba(220,150,50,0.35)';
 
       const popup = document.createElement('div');
       popup.id = 'collectorsPopup';
       popup.className = 'collectors-popup';
+      popup.style.borderColor = borderCol;
       popup.innerHTML = `
+        <div class="cp-port-in" style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;border:1.5px solid ${borderCol};background:#2a2a2a;z-index:2;"></div>
         <div class="cp-header">
           <span class="cp-header-title">COLLECTORS</span>
           <div class="cp-close" id="collectorsPopupClose">&times;</div>
@@ -17880,25 +17895,67 @@
       document.body.appendChild(popup);
 
       // Position centered above the anchor element
+      const popW = 260;
       if (anchorEl) {
         const panelRect = anchorEl.getBoundingClientRect();
-        const popW = 320;
         popup.style.left = Math.max(10, panelRect.left + (panelRect.width - popW) / 2) + 'px';
-        popup.style.top = Math.max(10, panelRect.top - 400) + 'px';
+        popup.style.top = Math.max(10, panelRect.top - 320) + 'px';
       } else {
-        // Fallback: center on screen
-        popup.style.left = (window.innerWidth / 2 - 160) + 'px';
+        popup.style.left = (window.innerWidth / 2 - popW / 2) + 'px';
         popup.style.top = Math.max(10, window.innerHeight / 2 - 200) + 'px';
       }
 
       requestAnimationFrame(() => popup.classList.add('visible'));
 
-      // Close handler
+      // ── Draw wire from popup bottom port to anchor top ──
+      function _drawCollectorsWire() {
+        let wireSvg = document.getElementById('collectorsWireSvg');
+        if (!wireSvg) {
+          wireSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          wireSvg.id = 'collectorsWireSvg';
+          wireSvg.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2650;transition:opacity 0.4s ease;';
+          document.body.appendChild(wireSvg);
+        }
+        wireSvg.setAttribute('width', window.innerWidth);
+        wireSvg.setAttribute('height', window.innerHeight);
+        wireSvg.style.opacity = '1';
+
+        const cRect = popup.getBoundingClientRect();
+        const aRect = anchorEl ? anchorEl.getBoundingClientRect() : null;
+        if (!aRect) return;
+
+        const x1 = cRect.left + cRect.width / 2;
+        const y1 = cRect.bottom - 2;
+        const x2 = aRect.left + aRect.width / 2;
+        const y2 = aRect.top + 2;
+        const pull = Math.min(Math.abs(y2 - y1) * 0.5, 50);
+        const d = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + pull) + ' ' + x2 + ' ' + (y2 - pull) + ' ' + x2 + ' ' + y2;
+
+        const wireCol = _pal ? _pal.accentDim.replace('0.6', '0.3') : 'rgba(220,150,50,0.3)';
+        const wireDash = _pal ? _pal.accentDim.replace('0.6', '0.2') : 'rgba(220,150,50,0.2)';
+        wireSvg.innerHTML =
+          '<path d="' + d + '" stroke="' + wireCol + '" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
+          '<path d="' + d + '" stroke="' + wireDash + '" stroke-width="2" fill="none" stroke-dasharray="4 20" stroke-linecap="round" style="animation: wireFlow 2.5s linear infinite"/>';
+      }
+
+      setTimeout(_drawCollectorsWire, 100);
+
+      // Close handler — remove popup + wire
+      function _closeCollectorsPopup() {
+        popup.classList.remove('visible');
+        popup.style.transform = 'translateY(10px) scale(0.95)';
+        const wire = document.getElementById('collectorsWireSvg');
+        if (wire) wire.style.opacity = '0';
+        setTimeout(() => {
+          if (popup.parentNode) popup.remove();
+          if (wire && wire.parentNode) wire.remove();
+        }, 350);
+      }
+
       popup.querySelector('#collectorsPopupClose').addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        popup.classList.remove('visible');
-        setTimeout(() => popup.remove(), 350);
+        _closeCollectorsPopup();
       });
 
       // Fetch owners with balances
@@ -17912,7 +17969,7 @@
           const totalOwners = ownerBalances.length;
           const totalSupply = ownerBalances.reduce(function(sum, o) { return sum + o.balance; }, 0);
 
-          let listHTML = `<div class="cp-summary">${totalOwners} unique owner${totalOwners !== 1 ? 's' : ''} \u00B7 ${totalSupply} total</div><div class="cp-list">`;
+          let listHTML = '<div class="cp-summary">' + totalOwners + ' unique owner' + (totalOwners !== 1 ? 's' : '') + ' \u00B7 ' + totalSupply + ' total</div><div class="cp-list">';
           ownerBalances.forEach(function(owner) {
             const addr = owner.address;
             const isEns = addr.endsWith('.eth');
@@ -17942,11 +17999,12 @@
           if (loadingEl) loadingEl.remove();
           popup.querySelector('.cp-header').insertAdjacentHTML('afterend', listHTML);
 
-          // Reposition if needed
+          // Reposition if needed + redraw wire
           const pRect = popup.getBoundingClientRect();
           if (pRect.bottom > window.innerHeight - 20) {
             popup.style.top = Math.max(10, window.innerHeight - pRect.height - 20) + 'px';
           }
+          _drawCollectorsWire();
         });
       } else {
         popup.querySelector('.cp-loading').innerHTML = 'No on-chain data available';
@@ -23579,6 +23637,11 @@
       }
       const _collWire = document.getElementById('collectorWireSvg');
       if (_collWire) { _collWire.style.opacity = '0'; setTimeout(() => { if (_collWire.parentNode) _collWire.remove(); }, 400); }
+      // Clean up collectors popup (ERC-1155 multi-owner) + wire
+      const _collPopup = document.getElementById('collectorsPopup');
+      if (_collPopup) { _collPopup.style.opacity = '0'; _collPopup.style.transform = 'translateY(10px) scale(0.95)'; setTimeout(() => { if (_collPopup.parentNode) _collPopup.remove(); }, 400); }
+      const _collPopupWire = document.getElementById('collectorsWireSvg');
+      if (_collPopupWire) { _collPopupWire.style.opacity = '0'; setTimeout(() => { if (_collPopupWire.parentNode) _collPopupWire.remove(); }, 400); }
 
       // Clean up dock, overlay, and dock wire
       setTimeout(() => {
