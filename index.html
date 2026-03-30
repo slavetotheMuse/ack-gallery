@@ -4302,11 +4302,14 @@
     #masterNode.mobile-expanded .pcb-ticker {
       width: 420px !important;
       height: 180px !important;
-      overflow-y: auto !important;
+      overflow: hidden !important;
     }
     #masterNode.mobile-expanded .pcb-ticker-line {
       font-size: 0.65rem !important;
       line-height: 1.7 !important;
+      max-width: 100% !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
     }
     #masterNode.mobile-expanded .pcb-ticker-line.bright {
       font-size: 0.75rem !important;
@@ -4356,7 +4359,9 @@
     body.is-real-mobile .c4d-object-manager {
       width: 900px !important;
       font-size: 32px !important;
-      max-height: none !important;
+      max-height: calc(100vh - 100px) !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
       left: 30px !important;
       top: 80px !important;
     }
@@ -4372,9 +4377,9 @@
       height: 40px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-list {
-      max-height: none !important;
+      max-height: calc(100vh - 200px) !important;
       overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch;
+      -webkit-overflow-scrolling: touch !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-row {
       padding: 14px 18px !important;
@@ -14952,39 +14957,60 @@
         node._focusRightEdge = clampedCenterX + finalW / 2;
         node._focusBottomEdge = clampedCenterY + finalH / 2;
         node._focusWidth = finalW;
-        node._focusScale = scaleFactor;
+        node._focusScale = _isRealMobile ? 1 : scaleFactor;
 
         // Set the transform inline for smooth animation
         requestAnimationFrame(() => {
-          node.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleFactor})`;
-          const invScale = 1 / scaleFactor;
-          const portOut = node.querySelector('.node-port.port-out');
-          if (portOut) {
-            portOut.style.transform = `translateY(-50%) scale(${invScale})`;
-            portOut.style.bottom = 'auto';
-            portOut.style.left = 'auto';
-            portOut.style.right = '-5px';
-            portOut.style.top = '50%';
-          }
-          const titleTag = node.querySelector('.node-title-tag');
-          if (titleTag) {
-            titleTag.style.transform = `scale(${invScale})`;
-            titleTag.style.transformOrigin = 'left bottom';
-          }
-          const ticks = node.querySelector('.node-frame-ticks');
-          if (ticks) {
-            ticks.querySelectorAll('i').forEach(el => {
-              el.style.transform = `scale(${invScale.toFixed(4)})`;
-              if (el.classList.contains('tl')) el.style.transformOrigin = 'top left';
-              else if (el.classList.contains('tr')) el.style.transformOrigin = 'top right';
-              else if (el.classList.contains('bl')) el.style.transformOrigin = 'bottom left';
-              else if (el.classList.contains('br')) el.style.transformOrigin = 'bottom right';
-            });
-          }
-          const preview = node.querySelector('.node-preview');
-          if (preview) {
-            const borderW = 0.5 / scaleFactor;
-            preview.style.boxShadow = `inset 0 0 0 ${borderW}px rgba(220,150,50,0.35), 0 4px 12px rgba(0,0,0,0.5), 0 12px 28px rgba(0,0,0,0.25)`;
+          if (_isRealMobile) {
+            // ── MOBILE: Resize node to actual final size — NO CSS scale ──
+            // CSS transform: scale() makes the GPU stretch a low-res raster.
+            // By setting the node's real width to finalW, the browser renders
+            // the image at full resolution. Only translate is used for positioning.
+            node.style.width = finalW + 'px';
+            // Recompute translate: the node's left/top didn't change, but its center shifted
+            // because we widened it. We want the visual center at clampedCenterX/Y.
+            const newCenterX = nodeRect.left + finalW / 2;
+            const newCenterY = nodeRect.top + finalH / 2;
+            const mobileTransX = clampedCenterX - newCenterX;
+            const mobileTransY = clampedCenterY - newCenterY;
+            node.style.transform = `translate(${mobileTransX}px, ${mobileTransY}px)`;
+            // No inverse-scaling needed for sub-elements on mobile
+            const preview = node.querySelector('.node-preview');
+            if (preview) {
+              preview.style.boxShadow = `inset 0 0 0 0.5px rgba(220,150,50,0.35), 0 4px 12px rgba(0,0,0,0.5), 0 12px 28px rgba(0,0,0,0.25)`;
+            }
+          } else {
+            // ── DESKTOP: CSS scale (works fine, higher-DPI screens handle it) ──
+            node.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleFactor})`;
+            const invScale = 1 / scaleFactor;
+            const portOut = node.querySelector('.node-port.port-out');
+            if (portOut) {
+              portOut.style.transform = `translateY(-50%) scale(${invScale})`;
+              portOut.style.bottom = 'auto';
+              portOut.style.left = 'auto';
+              portOut.style.right = '-5px';
+              portOut.style.top = '50%';
+            }
+            const titleTag = node.querySelector('.node-title-tag');
+            if (titleTag) {
+              titleTag.style.transform = `scale(${invScale})`;
+              titleTag.style.transformOrigin = 'left bottom';
+            }
+            const ticks = node.querySelector('.node-frame-ticks');
+            if (ticks) {
+              ticks.querySelectorAll('i').forEach(el => {
+                el.style.transform = `scale(${invScale.toFixed(4)})`;
+                if (el.classList.contains('tl')) el.style.transformOrigin = 'top left';
+                else if (el.classList.contains('tr')) el.style.transformOrigin = 'top right';
+                else if (el.classList.contains('bl')) el.style.transformOrigin = 'bottom left';
+                else if (el.classList.contains('br')) el.style.transformOrigin = 'bottom right';
+              });
+            }
+            const preview = node.querySelector('.node-preview');
+            if (preview) {
+              const borderW = 0.5 / scaleFactor;
+              preview.style.boxShadow = `inset 0 0 0 ${borderW}px rgba(220,150,50,0.35), 0 4px 12px rgba(0,0,0,0.5), 0 12px 28px rgba(0,0,0,0.25)`;
+            }
           }
         });
 
@@ -15030,6 +15056,8 @@
           if (_mfColl && _mfArt) {
             _updateMobileMotherboard(_mfColl, _mfArt);
           }
+          // ── MOBILE: Pantone swatch below artwork for Color Study ──
+          _addMobilePantoneSwatch(node, _mfColl, _mfArt);
         }, _scatterWait + 200);
       } else {
       // ── DESKTOP: Floating title underneath artwork, left-aligned ──
@@ -15626,8 +15654,9 @@
                     if (curPreview) {
                       curPreview.style.opacity = '1';
                     }
-                    // 5. Update motherboard + title
+                    // 5. Update motherboard + title + pantone swatch
                     _updateMobileMotherboard(col, nextArt);
+                    _addMobilePantoneSwatch(curNode, col, nextArt);
                     // Update floating title if present
                     var _swipeTitleEl = document.getElementById('focusModeTitle');
                     if (_swipeTitleEl && nextArt.title) {
@@ -15783,6 +15812,34 @@
         src = src.replace(/\?w=\d+/, '?w=1400');
       }
       return src;
+    }
+
+    // ── Helper: Pantone swatch below artwork on mobile focus ──
+    function _addMobilePantoneSwatch(node, col, art) {
+      // Remove any existing swatch
+      var old = document.getElementById('mobilePantoneSwatch');
+      if (old) old.remove();
+      if (!_isRealMobile || !col || !art) return;
+      var colName = (art._sourceCollection) ? art._sourceCollection : (col ? col.name : '');
+      if (colName !== 'The Great Color Study') return;
+      var desc = art.description || '';
+      var pantoneMatch = desc.match(/Pantone\s+([\w\s]+?)(?:\.|,|$)/i);
+      if (!pantoneMatch) return;
+      var pantoneCode = pantoneMatch[1].trim();
+      var pal = ARTWORK_PALETTES[art.image] || {};
+      var swatchColor = pal.accent || 'rgb(220,150,50)';
+      var swatch = document.createElement('div');
+      swatch.id = 'mobilePantoneSwatch';
+      swatch.style.cssText = 'position:fixed;z-index:2500;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;transition:opacity 0.4s ease 0.2s;';
+      swatch.innerHTML = '<span style="display:inline-block;width:24px;height:24px;background:' + swatchColor + ';border:1px solid rgba(255,255,255,0.15);border-radius:1px;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></span>' +
+        '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.65rem;color:rgba(200,200,200,0.5);letter-spacing:0.08em;">' + pantoneCode + '</span>';
+      // Position below the artwork
+      var bottomEdge = node._focusBottomEdge || (window.innerHeight * 0.6);
+      var leftEdge = node._focusLeftEdge || (window.innerWidth * 0.1);
+      swatch.style.left = leftEdge + 'px';
+      swatch.style.top = (bottomEdge + 20) + 'px';
+      document.body.appendChild(swatch);
+      requestAnimationFrame(function() { swatch.style.opacity = '1'; });
     }
 
     // ── Helper: update motherboard tickers during mobile swipe transitions ──
@@ -22859,9 +22916,11 @@
         delete focusedNode._swipeCleanup;
       }
 
-      // Remove fixed-position focus title
+      // Remove fixed-position focus title + mobile Pantone swatch
       const focTitle = document.getElementById('focusModeTitle');
       if (focTitle) focTitle.remove();
+      const mobPantone = document.getElementById('mobilePantoneSwatch');
+      if (mobPantone) mobPantone.remove();
 
       // Unlock scroll on mobile (motherboard stays expanded)
       document.body.classList.remove('mobile-focus-locked');
