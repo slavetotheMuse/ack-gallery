@@ -5585,44 +5585,92 @@
           if (_ctx && _ctx.state === 'suspended') _ctx.resume();
         },
 
-        // Vortex entry — warm resonant stone-chamber echo, no thump
+        // Vortex entry — deep ceremonial activation, like opening a vault in Arrakeen
         vortex: function() {
           var ctx = _ensureCtx();
           if (!ctx || !_enabled) return;
           var now = ctx.currentTime;
-          // Hollow reed click — triangle wave, mid-frequency, tight envelope
-          var reed = ctx.createOscillator();
-          reed.type = 'triangle';
-          reed.frequency.setValueAtTime(520, now);
-          reed.frequency.exponentialRampToValueAtTime(380, now + 0.08);
-          var reedG = ctx.createGain();
-          reedG.gain.setValueAtTime(0.15, now);
-          reedG.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-          var reedF = ctx.createBiquadFilter();
-          reedF.type = 'bandpass';
-          reedF.frequency.setValueAtTime(500, now);
-          reedF.Q.setValueAtTime(3, now);
-          reed.connect(reedF); reedF.connect(reedG); reedG.connect(ctx.destination);
-          reed.start(now); reed.stop(now + 0.12);
-          // Chamber echo — 3 delayed reflections getting warmer
-          [{ ms: 60, vol: 0.08, f: 480 }, { ms: 140, vol: 0.04, f: 440 }, { ms: 230, vol: 0.02, f: 400 }].forEach(function(r) {
+
+          // Layer 1: Initial strike — deep resonant impact, felt in the chest
+          var strike = ctx.createOscillator();
+          strike.type = 'triangle';
+          strike.frequency.setValueAtTime(180, now);
+          strike.frequency.exponentialRampToValueAtTime(90, now + 0.3);
+          var strikeG = ctx.createGain();
+          strikeG.gain.setValueAtTime(0.2, now);
+          strikeG.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          var strikeLP = ctx.createBiquadFilter();
+          strikeLP.type = 'lowpass';
+          strikeLP.frequency.setValueAtTime(300, now);
+          strike.connect(strikeLP); strikeLP.connect(strikeG); strikeG.connect(ctx.destination);
+          strike.start(now); strike.stop(now + 0.4);
+
+          // Layer 2: Harmonic ring — a fifth above, sine for purity
+          var ring = ctx.createOscillator();
+          ring.type = 'sine';
+          ring.frequency.setValueAtTime(270, now + 0.02);
+          ring.frequency.exponentialRampToValueAtTime(220, now + 0.6);
+          var ringG = ctx.createGain();
+          ringG.gain.setValueAtTime(0, now);
+          ringG.gain.linearRampToValueAtTime(0.1, now + 0.05);
+          ringG.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+          ring.connect(ringG); ringG.connect(ctx.destination);
+          ring.start(now + 0.02); ring.stop(now + 0.75);
+
+          // Layer 3: Sub-bass pressure wave — you feel it more than hear it
+          var sub = ctx.createOscillator();
+          sub.type = 'sine';
+          sub.frequency.setValueAtTime(45, now);
+          sub.frequency.linearRampToValueAtTime(35, now + 0.5);
+          var subG = ctx.createGain();
+          subG.gain.setValueAtTime(0.15, now);
+          subG.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          sub.connect(subG); subG.connect(ctx.destination);
+          sub.start(now); sub.stop(now + 0.55);
+
+          // Layer 4: Metallic resonance cascade — like a massive door mechanism engaging
+          var cascadeNotes = [
+            { delay: 80, freq: 440, vol: 0.06, dur: 0.4 },
+            { delay: 160, freq: 380, vol: 0.045, dur: 0.35 },
+            { delay: 260, freq: 330, vol: 0.035, dur: 0.3 },
+            { delay: 380, freq: 280, vol: 0.025, dur: 0.4 },
+            { delay: 520, freq: 220, vol: 0.02, dur: 0.5 }
+          ];
+          cascadeNotes.forEach(function(n) {
             setTimeout(function() {
-              var ctx2 = _ensureCtx(); if (!ctx2) return;
-              var n2 = ctx2.currentTime;
-              var o = ctx2.createOscillator();
+              var c = _ensureCtx(); if (!c) return;
+              var t = c.currentTime;
+              var o = c.createOscillator();
               o.type = 'triangle';
-              o.frequency.setValueAtTime(r.f, n2);
-              o.frequency.exponentialRampToValueAtTime(r.f * 0.85, n2 + 0.07);
-              var g = ctx2.createGain();
-              g.gain.setValueAtTime(r.vol, n2);
-              g.gain.exponentialRampToValueAtTime(0.001, n2 + 0.08);
-              var f = ctx2.createBiquadFilter();
-              f.type = 'lowpass';
-              f.frequency.setValueAtTime(600, n2);
-              o.connect(f); f.connect(g); g.connect(ctx2.destination);
-              o.start(n2); o.stop(n2 + 0.09);
-            }, r.ms);
+              o.frequency.setValueAtTime(n.freq, t);
+              o.frequency.exponentialRampToValueAtTime(n.freq * 0.7, t + n.dur);
+              var g = c.createGain();
+              g.gain.setValueAtTime(n.vol, t);
+              g.gain.exponentialRampToValueAtTime(0.001, t + n.dur);
+              var bp = c.createBiquadFilter();
+              bp.type = 'bandpass';
+              bp.frequency.setValueAtTime(n.freq * 1.2, t);
+              bp.Q.setValueAtTime(4, t);
+              o.connect(bp); bp.connect(g); g.connect(c.destination);
+              o.start(t); o.stop(t + n.dur + 0.05);
+            }, n.delay);
           });
+
+          // Layer 5: Long sustain tail — warm drone that lingers like chamber reverb
+          var tail = ctx.createOscillator();
+          tail.type = 'sine';
+          tail.frequency.setValueAtTime(110, now + 0.1);
+          tail.frequency.linearRampToValueAtTime(95, now + 1.5);
+          var tailG = ctx.createGain();
+          tailG.gain.setValueAtTime(0, now);
+          tailG.gain.linearRampToValueAtTime(0.04, now + 0.2);
+          tailG.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+          var tailLP = ctx.createBiquadFilter();
+          tailLP.type = 'lowpass';
+          tailLP.frequency.setValueAtTime(200, now);
+          tailLP.frequency.linearRampToValueAtTime(120, now + 1.5);
+          tail.connect(tailLP); tailLP.connect(tailG); tailG.connect(ctx.destination);
+          tail.start(now + 0.1); tail.stop(now + 1.6);
         },
 
         // Artwork focus — membrane switch press (firm, tactile, analog)
