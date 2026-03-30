@@ -5560,16 +5560,16 @@
           description: "The Great Color Study — a legendary performance art series by AlphaCentauriKid. Ten animated color studies exploring Pantone swatches through ACK's signature glitch aesthetic, culminating in pale blue death — the piece that ignited a community firestorm and ended in a ritual burn.",
           token: "ERC-1155", chain: "Ethereum", contract: "0x9f803635a5af311d9a3b73132482a95eb540f71a",
           artworks: [
-            {title:"Pollen",image:"colorstudys/pollen.gif",edition:"Edition of 269",description:"Pantone 104 C"},
-            {title:"Algae",image:"colorstudys/algae.gif",edition:"Edition of 244",description:"Pantone 3302 C"},
-            {title:"Asphalt",image:"colorstudys/asphalt.gif",edition:"Edition of 405",description:"Pantone 431 C"},
-            {title:"Blue",image:"colorstudys/blue.gif",edition:"Edition of 242",description:"Pantone 2728 C"},
-            {title:"Brick",image:"colorstudys/brick.gif",edition:"Edition of 203",description:"Pantone 7623 C"},
-            {title:"Coral",image:"colorstudys/coral.gif",edition:"Edition of 229",description:"Pantone 1595 C"},
-            {title:"Dark Red Death",image:"colorstudys/darkreddeath.gif",edition:"Edition of 318",description:"Pantone 7621 C"},
-            {title:"Electric Gray",image:"colorstudys/electricgray.gif",edition:"Edition of 238",description:"Pantone Cool Gray 8 C"},
-            {title:"Royalty",image:"colorstudys/royalty.gif",edition:"Edition of 255",description:"Pantone Violet C"},
-            {title:"Stardust",image:"colorstudys/stardust.gif",edition:"Edition of 398",description:"Pantone Black 6 C"},
+            {title:"Pollen",image:"colorstudys/pollen.gif",tokenId:10,edition:"Edition of 269",description:"Pantone 104 C"},
+            {title:"Algae",image:"colorstudys/algae.gif",tokenId:5,edition:"Edition of 244",description:"Pantone 3302 C"},
+            {title:"Asphalt",image:"colorstudys/asphalt.gif",tokenId:6,edition:"Edition of 405",description:"Pantone 431 C"},
+            {title:"Blue",image:"colorstudys/blue.gif",tokenId:9,edition:"Edition of 242",description:"Pantone 2728 C"},
+            {title:"Brick",image:"colorstudys/brick.gif",tokenId:7,edition:"Edition of 203",description:"Pantone 7623 C"},
+            {title:"Coral",image:"colorstudys/coral.gif",tokenId:2,edition:"Edition of 229",description:"Pantone 1595 C"},
+            {title:"Dark Red Death",image:"colorstudys/darkreddeath.gif",tokenId:3,edition:"Edition of 318",description:"Pantone 7621 C"},
+            {title:"Electric Gray",image:"colorstudys/electricgray.gif",tokenId:1,edition:"Edition of 238",description:"Pantone Cool Gray 8 C"},
+            {title:"Royalty",image:"colorstudys/royalty.gif",tokenId:4,edition:"Edition of 255",description:"Pantone Violet C"},
+            {title:"Stardust",image:"colorstudys/stardust.gif",tokenId:8,edition:"Edition of 398",description:"Pantone Black 6 C"},
             {title:"pale blue death (a color study)",image:"colorstudys/pbd.gif",tokenId:13,edition:"Edition of 55",description:"Pantone 297 C. Released free to ACK badge holders on Sep 6, 2022. Edition of 55, limited until the release of ACK's piano collection.",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"},
             {title:"max pain v2",image:"colorstudys/maxpainv2.gif",tokenId:14,edition:"Edition of 613",description:"oh the agony",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"}
         ]},
@@ -14866,6 +14866,10 @@
                 _focusSrc = _fr;
               }
             }
+            // No fullRes? Try deriving focus path from image field (e.g. colorstudys/pollen.gif → colorstudys-focus/pollen.jpg)
+            if (!_focusSrc && artData && artData.image && !artData.image.startsWith('http')) {
+              _focusSrc = _deriveFocusPath(artData.image);
+            }
             if (!_focusSrc && thumbSrc.includes('?w=')) {
               _focusSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
             }
@@ -15761,13 +15765,17 @@
     function _getFocusImageSrc(art) {
       var src = art.image || '';
       // For local fullRes, derive focus path (works for PNGs, JPGs, and GIFs → static JPG)
-      if (art.fullRes) {
-        var fr = art.fullRes;
-        if (!fr.startsWith('http')) {
-          var parts = fr.split('/');
-          if (parts.length >= 2) {
-            return parts[0] + '-focus/' + parts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
-          }
+      var _localPath = null;
+      if (art.fullRes && !art.fullRes.startsWith('http')) {
+        _localPath = art.fullRes;
+      } else if (!art.fullRes && src && !src.startsWith('http')) {
+        // No fullRes? Derive from image field (e.g. colorstudys/pollen.gif)
+        _localPath = src;
+      }
+      if (_localPath) {
+        var parts = _localPath.split('/');
+        if (parts.length >= 2) {
+          return parts[0] + '-focus/' + parts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
         }
       }
       // For CDN URLs with ?w= parameter, request higher resolution
@@ -16500,6 +16508,21 @@
           ${hasExhibition ? '<button class="coa-info-tab" data-coa-tab="exhibition">Exhibition</button>' : ''}
         </div>` : '';
 
+      // ── Pantone swatch for Color Study collection ──
+      let _pantoneSwatch = '';
+      if (_displayColName === 'The Great Color Study' && artwork.description) {
+        const _pantoneMatch = artwork.description.match(/Pantone\s+([\w\s]+?)(?:\.|$)/i);
+        if (_pantoneMatch) {
+          const _pantoneCode = _pantoneMatch[1].trim();
+          const _pal = ARTWORK_PALETTES[artwork.image] || {};
+          const _swatchColor = _pal.accent || 'rgb(220,150,50)';
+          _pantoneSwatch = `<span class="pantone-swatch-inline" style="display:inline-flex;align-items:center;gap:5px;margin-left:8px;vertical-align:middle;">` +
+            `<span style="display:inline-block;width:14px;height:14px;background:${_swatchColor};border:1px solid rgba(255,255,255,0.15);border-radius:1px;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>` +
+            `<span style="font-family:'JetBrains Mono',monospace;font-size:0.4rem;color:rgba(200,200,200,0.5);letter-spacing:0.08em;">${_pantoneCode}</span>` +
+          `</span>`;
+        }
+      }
+
       infoPanel.innerHTML = `
         <div class="info-port-in"></div>
         <div class="info-port-out"></div>
@@ -16509,7 +16532,7 @@
         ${tabBar}
         <div class="coa-info-tabpanel active" data-coa-panel="info">
           <div class="node-info-panel-body">
-            <div class="node-info-panel-title">${artwork.title}</div>
+            <div class="node-info-panel-title">${artwork.title}${_pantoneSwatch}</div>
             ${editionLine}
             ${physicalPrintLine}
             <div class="node-info-line">
