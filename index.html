@@ -5445,11 +5445,34 @@
           _noiseBurst(0.06, 0.1, 1500);
         },
 
-        // Artwork focus — crisp mechanical relay click
+        // Artwork focus — firm standard click (sharp transient + body)
         focus: function() {
-          _synth(800, 0.07, 'square', 0.09, 0.001, 2000);
-          _synth(400, 0.1, 'sine', 0.07, 0.002, 1200);
-          _noiseBurst(0.025, 0.05, 2500);
+          var ctx = _ensureCtx();
+          if (!ctx || !_enabled) return;
+          var now = ctx.currentTime;
+          // Sharp attack transient — very short square pulse
+          var click = ctx.createOscillator();
+          click.type = 'square';
+          click.frequency.setValueAtTime(3500, now);
+          click.frequency.exponentialRampToValueAtTime(800, now + 0.008);
+          var clickG = ctx.createGain();
+          clickG.gain.setValueAtTime(0.18, now);
+          clickG.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+          var clickF = ctx.createBiquadFilter();
+          clickF.type = 'lowpass';
+          clickF.frequency.setValueAtTime(4000, now);
+          click.connect(clickF); clickF.connect(clickG); clickG.connect(ctx.destination);
+          click.start(now); click.stop(now + 0.03);
+          // Body — warm sine thud underneath
+          var body = ctx.createOscillator();
+          body.type = 'sine';
+          body.frequency.setValueAtTime(400, now);
+          body.frequency.exponentialRampToValueAtTime(200, now + 0.06);
+          var bodyG = ctx.createGain();
+          bodyG.gain.setValueAtTime(0.12, now);
+          bodyG.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          body.connect(bodyG); bodyG.connect(ctx.destination);
+          body.start(now); body.stop(now + 0.07);
         },
 
         // Collection open — elegant harmonic chime (Apple-esque)
@@ -5465,10 +5488,58 @@
           _noiseBurst(0.035, 0.06, 1800);
         },
 
-        // Exit / close — soft downward tone
+        // Exit / close — click that disintegrates into granular scatter
         close: function() {
-          _synth(600, 0.08, 'sine', 0.06, 0.002, 900);
-          _synth(300, 0.12, 'sine', 0.04, 0.004, 600, 0.6);
+          var ctx = _ensureCtx();
+          if (!ctx || !_enabled) return;
+          var now = ctx.currentTime;
+          // Initial click snap (pitched down)
+          var snap = ctx.createOscillator();
+          snap.type = 'square';
+          snap.frequency.setValueAtTime(1800, now);
+          snap.frequency.exponentialRampToValueAtTime(120, now + 0.04);
+          var snapG = ctx.createGain();
+          snapG.gain.setValueAtTime(0.14, now);
+          snapG.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          var snapF = ctx.createBiquadFilter();
+          snapF.type = 'lowpass';
+          snapF.frequency.setValueAtTime(3000, now);
+          snapF.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+          snap.connect(snapF); snapF.connect(snapG); snapG.connect(ctx.destination);
+          snap.start(now); snap.stop(now + 0.06);
+          // Disintegration: 4 staggered noise grains that scatter outward
+          for (var g = 0; g < 4; g++) {
+            (function(idx) {
+              var delay = 0.02 + idx * 0.035;
+              var dur = 0.04 + idx * 0.02;
+              var vol = 0.08 - idx * 0.015;
+              var bufSz = Math.max(1, Math.floor(ctx.sampleRate * dur));
+              var buf = ctx.createBuffer(1, bufSz, ctx.sampleRate);
+              var d = buf.getChannelData(0);
+              for (var i = 0; i < bufSz; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / bufSz);
+              var src = ctx.createBufferSource();
+              src.buffer = buf;
+              var gn = ctx.createGain();
+              gn.gain.setValueAtTime(vol, now + delay);
+              gn.gain.exponentialRampToValueAtTime(0.001, now + delay + dur);
+              var bp = ctx.createBiquadFilter();
+              bp.type = 'bandpass';
+              bp.frequency.setValueAtTime(1200 + idx * 800, now + delay);
+              bp.Q.setValueAtTime(1.5, now + delay);
+              src.connect(bp); bp.connect(gn); gn.connect(ctx.destination);
+              src.start(now + delay); src.stop(now + delay + dur);
+            })(g);
+          }
+          // Tail: fading sine whisper
+          var tail = ctx.createOscillator();
+          tail.type = 'sine';
+          tail.frequency.setValueAtTime(300, now + 0.05);
+          tail.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+          var tailG = ctx.createGain();
+          tailG.gain.setValueAtTime(0.04, now + 0.05);
+          tailG.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          tail.connect(tailG); tailG.connect(ctx.destination);
+          tail.start(now + 0.05); tail.stop(now + 0.26);
         },
 
         // UI micro-click — for tabs, links, small interactions
