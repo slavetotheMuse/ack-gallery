@@ -17662,6 +17662,8 @@
       panel.addEventListener('mousedown', function onDragStart(e) {
         if (infoDockState.docked) return;
         if (e.target.closest('.info-port-in') || e.target.closest('.info-port-out')) return;
+        // Don't intercept clicks on interactive elements (links, buttons, tabs)
+        if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.coa-info-tab') || e.target.closest('.coa-media-grid img')) return;
         e.preventDefault();
         infoDockState.dragging = true;
         infoDockState.startX = e.clientX;
