@@ -4341,6 +4341,11 @@
       image-rendering: auto;
       content-visibility: auto;
     }
+    /* Force focused image to re-rasterize at full resolution (not cached thumbnail texture) */
+    body.is-real-mobile .node-card.focused .node-preview img {
+      content-visibility: visible !important;
+      will-change: auto !important;
+    }
 
     /* ── Mobile Object Manager — scaled up for readability ── */
     body.is-real-mobile .c4d-object-manager {
@@ -14812,7 +14817,10 @@
                 nodeImg.style.transition = 'opacity 0.3s ease';
                 nodeImg.style.opacity = '0.7';
                 const pbPreloader = new Image();
-                pbPreloader.onload = () => { nodeImg.src = focusSrc; nodeImg.style.opacity = '1'; };
+                pbPreloader.onload = () => {
+                  nodeImg.src = focusSrc; nodeImg.style.opacity = '1';
+                  if (_isRealMobile) { nodeImg.style.transform = 'translateZ(0)'; requestAnimationFrame(() => { nodeImg.style.transform = ''; }); }
+                };
                 pbPreloader.onerror = () => { nodeImg.style.opacity = '1'; };
                 pbPreloader.src = focusSrc;
                 setTimeout(() => { nodeImg.style.opacity = '1'; }, 4000);
@@ -14842,15 +14850,25 @@
               nodeImg.style.opacity = '1';
               if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
             };
+            // Force GPU re-rasterization after hi-res image loads (mobile compositing fix)
+            const _forceRepaint = () => {
+              if (_isRealMobile) {
+                nodeImg.style.transform = 'translateZ(0)';
+                requestAnimationFrame(() => {
+                  nodeImg.style.transform = '';
+                  // Double-RAF to ensure the compositor creates a new texture
+                  requestAnimationFrame(() => { nodeImg.offsetHeight; });
+                });
+              }
+            };
             if (artData && artData.fullRes) {
               const _fr = artData.fullRes;
               const _isRemoteFullRes = _fr.startsWith('http://') || _fr.startsWith('https://');
               const _isLocalFullRes = !_isRemoteFullRes;
 
               // Derive focus-res path: "broken-keys/rage.png" → "broken-keys-focus/rage.jpg"
-              // Skip GIFs — they don't have focus JPG equivalents
+              // Also handles GIFs: "warothy/1.Wicked.gif" → "warothy-focus/1.Wicked.jpg"
               function _deriveFocusPath(localPath) {
-                if (localPath.toLowerCase().endsWith('.gif')) return null;
                 const parts = localPath.split('/');
                 if (parts.length >= 2) {
                   const dir = parts[0] + '-focus';
@@ -14865,10 +14883,10 @@
                 if (focusPath) {
                   // Non-GIF: try focus-res JPG first, then fullRes as fallback
                   const focusPre = new Image();
-                  focusPre.onload = () => { nodeImg.src = focusPath; _clearLoading(); };
+                  focusPre.onload = () => { nodeImg.src = focusPath; _clearLoading(); _forceRepaint(); };
                   focusPre.onerror = () => {
                     const frPre = new Image();
-                    frPre.onload = () => { nodeImg.src = _fr; _clearLoading(); };
+                    frPre.onload = () => { nodeImg.src = _fr; _clearLoading(); _forceRepaint(); };
                     frPre.onerror = _clearLoading;
                     frPre.src = _fr;
                     setTimeout(_clearLoading, 4000);
@@ -14878,20 +14896,20 @@
                 } else {
                   // GIF or no derivable path: try fullRes directly
                   const frPre = new Image();
-                  frPre.onload = () => { nodeImg.src = _fr; _clearLoading(); };
+                  frPre.onload = () => { nodeImg.src = _fr; _clearLoading(); _forceRepaint(); };
                   frPre.onerror = _clearLoading;
                   frPre.src = _fr;
-                  setTimeout(_clearLoading, 6000);
+                  setTimeout(_clearLoading, 12000); // longer timeout for large GIFs
                 }
               } else {
                 // Remote fullRes (arweave/IPFS) — load directly
                 const preloader = new Image();
-                preloader.onload = () => { nodeImg.src = _fr; _clearLoading(); };
+                preloader.onload = () => { nodeImg.src = _fr; _clearLoading(); _forceRepaint(); };
                 preloader.onerror = () => {
                   if (thumbSrc.includes('?w=')) {
                     const fallbackSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
                     const fb = new Image();
-                    fb.onload = () => { nodeImg.src = fallbackSrc; _clearLoading(); };
+                    fb.onload = () => { nodeImg.src = fallbackSrc; _clearLoading(); _forceRepaint(); };
                     fb.onerror = _clearLoading;
                     fb.src = fallbackSrc;
                   } else {
@@ -14902,9 +14920,9 @@
                 setTimeout(_clearLoading, 8000);
               }
             } else if (thumbSrc.includes('?w=')) {
-              let fullResSrc = thumbSrc.replace(/\?w=\d+/, _isRealMobile ? '?w=1400' : '?w=1400');
+              let fullResSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
               const preloader = new Image();
-              preloader.onload = () => { nodeImg.src = fullResSrc; _clearLoading(); };
+              preloader.onload = () => { nodeImg.src = fullResSrc; _clearLoading(); _forceRepaint(); };
               preloader.onerror = _clearLoading;
               preloader.src = fullResSrc;
               setTimeout(_clearLoading, 8000);
@@ -15587,9 +15605,13 @@
                   function _finishSwipe() {
                     clearTimeout(_swipeSafety);
                     focusedArtworkIndex = nextIdx;
-                    // 4. Fade in new
+                    // 4. Fade in new + force GPU re-rasterization
                     if (curPreview) {
                       curPreview.style.opacity = '1';
+                    }
+                    if (curImg) {
+                      curImg.style.transform = 'translateZ(0)';
+                      requestAnimationFrame(function() { curImg.style.transform = ''; });
                     }
                     // 5. Update motherboard + title
                     _updateMobileMotherboard(col, nextArt);
@@ -15729,19 +15751,13 @@
     // ── Helper: get higher-res image URL for focus view ──
     function _getFocusImageSrc(art) {
       var src = art.image || '';
-      // For local fullRes, derive focus path (skip GIFs — they don't have focus JPGs)
+      // For local fullRes, derive focus path (works for PNGs, JPGs, and GIFs → static JPG)
       if (art.fullRes) {
         var fr = art.fullRes;
         if (!fr.startsWith('http')) {
-          var isGif = fr.toLowerCase().endsWith('.gif');
-          if (!isGif) {
-            var parts = fr.split('/');
-            if (parts.length >= 2) {
-              return parts[0] + '-focus/' + parts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
-            }
-          } else {
-            // GIF: try the fullRes GIF directly (some are deployed)
-            return fr;
+          var parts = fr.split('/');
+          if (parts.length >= 2) {
+            return parts[0] + '-focus/' + parts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
           }
         }
       }
