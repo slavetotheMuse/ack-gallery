@@ -5434,89 +5434,156 @@
           if (_ctx && _ctx.state === 'suspended') _ctx.resume();
         },
 
-        // Echoey click snap for vortex — deep resonant click with spatial echo
+        // Vortex entry — warm resonant stone-chamber echo, no thump
         vortex: function() {
-          _echo(90, 0.25, 'sine', 0.3, 0.003, 250, [
-            { ms: 80, vol: 0.35, pitch: 1.02 },
-            { ms: 170, vol: 0.18, pitch: 0.98 },
-            { ms: 280, vol: 0.08, pitch: 0.95 }
-          ]);
-          _synth(180, 0.12, 'triangle', 0.12, 0.002, 500);
-          _noiseBurst(0.06, 0.1, 1500);
+          var ctx = _ensureCtx();
+          if (!ctx || !_enabled) return;
+          var now = ctx.currentTime;
+          // Hollow reed click — triangle wave, mid-frequency, tight envelope
+          var reed = ctx.createOscillator();
+          reed.type = 'triangle';
+          reed.frequency.setValueAtTime(520, now);
+          reed.frequency.exponentialRampToValueAtTime(380, now + 0.08);
+          var reedG = ctx.createGain();
+          reedG.gain.setValueAtTime(0.15, now);
+          reedG.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          var reedF = ctx.createBiquadFilter();
+          reedF.type = 'bandpass';
+          reedF.frequency.setValueAtTime(500, now);
+          reedF.Q.setValueAtTime(3, now);
+          reed.connect(reedF); reedF.connect(reedG); reedG.connect(ctx.destination);
+          reed.start(now); reed.stop(now + 0.12);
+          // Chamber echo — 3 delayed reflections getting warmer
+          [{ ms: 60, vol: 0.08, f: 480 }, { ms: 140, vol: 0.04, f: 440 }, { ms: 230, vol: 0.02, f: 400 }].forEach(function(r) {
+            setTimeout(function() {
+              var ctx2 = _ensureCtx(); if (!ctx2) return;
+              var n2 = ctx2.currentTime;
+              var o = ctx2.createOscillator();
+              o.type = 'triangle';
+              o.frequency.setValueAtTime(r.f, n2);
+              o.frequency.exponentialRampToValueAtTime(r.f * 0.85, n2 + 0.07);
+              var g = ctx2.createGain();
+              g.gain.setValueAtTime(r.vol, n2);
+              g.gain.exponentialRampToValueAtTime(0.001, n2 + 0.08);
+              var f = ctx2.createBiquadFilter();
+              f.type = 'lowpass';
+              f.frequency.setValueAtTime(600, n2);
+              o.connect(f); f.connect(g); g.connect(ctx2.destination);
+              o.start(n2); o.stop(n2 + 0.09);
+            }, r.ms);
+          });
         },
 
-        // Artwork focus — firm standard click (sharp transient + body)
+        // Artwork focus — membrane switch press (firm, tactile, analog)
         focus: function() {
           var ctx = _ensureCtx();
           if (!ctx || !_enabled) return;
           var now = ctx.currentTime;
-          // Sharp attack transient — very short square pulse
-          var click = ctx.createOscillator();
-          click.type = 'square';
-          click.frequency.setValueAtTime(3500, now);
-          click.frequency.exponentialRampToValueAtTime(800, now + 0.008);
-          var clickG = ctx.createGain();
-          clickG.gain.setValueAtTime(0.18, now);
-          clickG.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
-          var clickF = ctx.createBiquadFilter();
-          clickF.type = 'lowpass';
-          clickF.frequency.setValueAtTime(4000, now);
-          click.connect(clickF); clickF.connect(clickG); clickG.connect(ctx.destination);
-          click.start(now); click.stop(now + 0.03);
-          // Body — warm sine thud underneath
-          var body = ctx.createOscillator();
-          body.type = 'sine';
-          body.frequency.setValueAtTime(400, now);
-          body.frequency.exponentialRampToValueAtTime(200, now + 0.06);
-          var bodyG = ctx.createGain();
-          bodyG.gain.setValueAtTime(0.12, now);
-          bodyG.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-          body.connect(bodyG); bodyG.connect(ctx.destination);
-          body.start(now); body.stop(now + 0.07);
+          // Contact click — short triangle burst (like a physical toggle)
+          var tog = ctx.createOscillator();
+          tog.type = 'triangle';
+          tog.frequency.setValueAtTime(1400, now);
+          tog.frequency.exponentialRampToValueAtTime(600, now + 0.012);
+          var togG = ctx.createGain();
+          togG.gain.setValueAtTime(0.16, now);
+          togG.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+          var togF = ctx.createBiquadFilter();
+          togF.type = 'lowpass';
+          togF.frequency.setValueAtTime(2200, now);
+          tog.connect(togF); togF.connect(togG); togG.connect(ctx.destination);
+          tog.start(now); tog.stop(now + 0.04);
+          // Warm resonance — sine settling underneath
+          var res = ctx.createOscillator();
+          res.type = 'sine';
+          res.frequency.setValueAtTime(340, now + 0.005);
+          res.frequency.exponentialRampToValueAtTime(280, now + 0.08);
+          var resG = ctx.createGain();
+          resG.gain.setValueAtTime(0.08, now + 0.005);
+          resG.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          res.connect(resG); resG.connect(ctx.destination);
+          res.start(now + 0.005); res.stop(now + 0.09);
         },
 
-        // Collection open — elegant harmonic chime (Apple-esque)
+        // Collection open — stone tablet activation (warm harmonic ring)
         click: function() {
-          _chime(880, 0.25, 0.08);
-          setTimeout(function() { _chime(1320, 0.15, 0.04); }, 30);
+          var ctx = _ensureCtx();
+          if (!ctx || !_enabled) return;
+          var now = ctx.currentTime;
+          // Fundamental tone — warm sine
+          var t1 = ctx.createOscillator();
+          t1.type = 'sine';
+          t1.frequency.setValueAtTime(440, now);
+          var t1G = ctx.createGain();
+          t1G.gain.setValueAtTime(0.1, now);
+          t1G.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          t1.connect(t1G); t1G.connect(ctx.destination);
+          t1.start(now); t1.stop(now + 0.22);
+          // Fifth above — triangle, softer
+          var t2 = ctx.createOscillator();
+          t2.type = 'triangle';
+          t2.frequency.setValueAtTime(660, now);
+          var t2G = ctx.createGain();
+          t2G.gain.setValueAtTime(0.04, now);
+          t2G.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          t2.connect(t2G); t2G.connect(ctx.destination);
+          t2.start(now); t2.stop(now + 0.16);
         },
 
-        // Dock snap — satisfying lock-in thud
+        // Dock snap — mechanical latch engaging
         dock: function() {
-          _synth(250, 0.12, 'sine', 0.12, 0.002, 600);
-          _synth(500, 0.07, 'triangle', 0.08, 0.002, 1200);
-          _noiseBurst(0.035, 0.06, 1800);
+          var ctx = _ensureCtx();
+          if (!ctx || !_enabled) return;
+          var now = ctx.currentTime;
+          // Hard contact
+          var c = ctx.createOscillator();
+          c.type = 'triangle';
+          c.frequency.setValueAtTime(800, now);
+          c.frequency.exponentialRampToValueAtTime(250, now + 0.02);
+          var cG = ctx.createGain();
+          cG.gain.setValueAtTime(0.14, now);
+          cG.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          c.connect(cG); cG.connect(ctx.destination);
+          c.start(now); c.stop(now + 0.05);
+          // Settling resonance
+          var s = ctx.createOscillator();
+          s.type = 'sine';
+          s.frequency.setValueAtTime(220, now + 0.015);
+          var sG = ctx.createGain();
+          sG.gain.setValueAtTime(0.07, now + 0.015);
+          sG.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          s.connect(sG); sG.connect(ctx.destination);
+          s.start(now + 0.015); s.stop(now + 0.11);
         },
 
-        // Exit / close — click that disintegrates into granular scatter
+        // Exit / close — sand disintegrating through fingers
         close: function() {
           var ctx = _ensureCtx();
           if (!ctx || !_enabled) return;
           var now = ctx.currentTime;
-          // Initial click snap (pitched down)
+          // Initial contact — soft downward click
           var snap = ctx.createOscillator();
-          snap.type = 'square';
-          snap.frequency.setValueAtTime(1800, now);
-          snap.frequency.exponentialRampToValueAtTime(120, now + 0.04);
+          snap.type = 'triangle';
+          snap.frequency.setValueAtTime(900, now);
+          snap.frequency.exponentialRampToValueAtTime(180, now + 0.04);
           var snapG = ctx.createGain();
-          snapG.gain.setValueAtTime(0.14, now);
+          snapG.gain.setValueAtTime(0.1, now);
           snapG.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
           var snapF = ctx.createBiquadFilter();
           snapF.type = 'lowpass';
-          snapF.frequency.setValueAtTime(3000, now);
-          snapF.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+          snapF.frequency.setValueAtTime(1800, now);
+          snapF.frequency.exponentialRampToValueAtTime(300, now + 0.05);
           snap.connect(snapF); snapF.connect(snapG); snapG.connect(ctx.destination);
           snap.start(now); snap.stop(now + 0.06);
-          // Disintegration: 4 staggered noise grains that scatter outward
-          for (var g = 0; g < 4; g++) {
+          // Sand grains scattering — filtered noise particles, each softer and lower
+          for (var g = 0; g < 5; g++) {
             (function(idx) {
-              var delay = 0.02 + idx * 0.035;
-              var dur = 0.04 + idx * 0.02;
-              var vol = 0.08 - idx * 0.015;
+              var delay = 0.015 + idx * 0.03;
+              var dur = 0.03 + idx * 0.015;
+              var vol = 0.06 - idx * 0.01;
               var bufSz = Math.max(1, Math.floor(ctx.sampleRate * dur));
               var buf = ctx.createBuffer(1, bufSz, ctx.sampleRate);
               var d = buf.getChannelData(0);
-              for (var i = 0; i < bufSz; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / bufSz);
+              for (var i = 0; i < bufSz; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSz, 1.5);
               var src = ctx.createBufferSource();
               src.buffer = buf;
               var gn = ctx.createGain();
@@ -5524,28 +5591,44 @@
               gn.gain.exponentialRampToValueAtTime(0.001, now + delay + dur);
               var bp = ctx.createBiquadFilter();
               bp.type = 'bandpass';
-              bp.frequency.setValueAtTime(1200 + idx * 800, now + delay);
-              bp.Q.setValueAtTime(1.5, now + delay);
+              bp.frequency.setValueAtTime(800 - idx * 100, now + delay);
+              bp.Q.setValueAtTime(0.8, now + delay);
               src.connect(bp); bp.connect(gn); gn.connect(ctx.destination);
               src.start(now + delay); src.stop(now + delay + dur);
             })(g);
           }
-          // Tail: fading sine whisper
+          // Fading warmth — the last vibration of something dissolving
           var tail = ctx.createOscillator();
           tail.type = 'sine';
-          tail.frequency.setValueAtTime(300, now + 0.05);
-          tail.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+          tail.frequency.setValueAtTime(240, now + 0.06);
+          tail.frequency.exponentialRampToValueAtTime(100, now + 0.22);
           var tailG = ctx.createGain();
-          tailG.gain.setValueAtTime(0.04, now + 0.05);
-          tailG.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-          tail.connect(tailG); tailG.connect(ctx.destination);
-          tail.start(now + 0.05); tail.stop(now + 0.26);
+          tailG.gain.setValueAtTime(0.03, now + 0.06);
+          tailG.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          var tailF = ctx.createBiquadFilter();
+          tailF.type = 'lowpass';
+          tailF.frequency.setValueAtTime(400, now + 0.06);
+          tail.connect(tailF); tailF.connect(tailG); tailG.connect(ctx.destination);
+          tail.start(now + 0.06); tail.stop(now + 0.23);
         },
 
-        // UI micro-click — for tabs, links, small interactions
+        // UI micro-click — small reed switch (analog toggle)
         micro: function() {
-          _synth(1100, 0.035, 'square', 0.05, 0.001, 3500);
-          _noiseBurst(0.015, 0.025, 3000);
+          var ctx = _ensureCtx();
+          if (!ctx || !_enabled) return;
+          var now = ctx.currentTime;
+          var o = ctx.createOscillator();
+          o.type = 'triangle';
+          o.frequency.setValueAtTime(1000, now);
+          o.frequency.exponentialRampToValueAtTime(500, now + 0.01);
+          var g = ctx.createGain();
+          g.gain.setValueAtTime(0.08, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+          var f = ctx.createBiquadFilter();
+          f.type = 'lowpass';
+          f.frequency.setValueAtTime(1800, now);
+          o.connect(f); f.connect(g); g.connect(ctx.destination);
+          o.start(now); o.stop(now + 0.035);
         },
 
         // Start ambient soundscape
@@ -6746,7 +6829,7 @@
         // The scramble: cycle through random characters before landing on "Muse"
         if (morphWord) {
           var scrambleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-          var targetWord = 'muse';
+          var targetWord = 'Muse';
           var currentWord = 'deep';
           var scrambleStart = 4000;
           var scrambleDuration = 800; // total scramble time
@@ -15622,9 +15705,13 @@
 
             // ── Determine the best focus-res URL ──
             let _focusSrc = null;
+            const _isGifArtwork = artData && artData.fullRes && artData.fullRes.endsWith('.gif');
             // Priority 1: explicit focusImage (e.g. Piano Blossoms physical focus photos)
             if (artData && artData.focusImage) {
               _focusSrc = artData.focusImage;
+            } else if (_isGifArtwork) {
+              // GIF artworks (Warothys, Editions, etc.) — use fullRes GIF directly, no JPG intermediary
+              _focusSrc = artData.fullRes;
             } else if (artData && artData.fullRes) {
               const _fr = artData.fullRes;
               const _isRemote = _fr.startsWith('http://') || _fr.startsWith('https://');
@@ -15692,10 +15779,10 @@
                 nodeImg.src = _focusSrc;
                 _clearLoading();
                 // ── After crisp JPG is displayed, load animated GIF over it ──
-                // Check if the artwork has an animated GIF as source
+                // Skip if _focusSrc is already the GIF (no need to re-assign same src)
                 const _desktopGifSrc = (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
                   : (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image : null;
-                if (_desktopGifSrc) {
+                if (_desktopGifSrc && _desktopGifSrc !== _focusSrc) {
                   const _desktopGifLoader = new Image();
                   _desktopGifLoader.onload = function() {
                     // Only swap if still in focus mode
