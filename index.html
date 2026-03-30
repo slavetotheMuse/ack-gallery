@@ -241,116 +241,121 @@
     }
 
     /* ── Collectors popup (Object Manager style) ── */
+    /* ── Collectors popup — matches COA info panel / C4D node theme ── */
     .collectors-popup {
       position: fixed;
       z-index: 2700;
-      width: 320px;
+      width: 260px;
       background: #2a2a2a;
       border: 1px solid rgba(60,60,60,0.8);
-      border-radius: 2px;
+      border-radius: 0 0 4px 4px;
       font-family: 'JetBrains Mono', monospace;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       opacity: 0;
       transform: translateY(10px) scale(0.97);
       transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1);
       overflow: hidden;
+      animation: infoPanelBreathe 7s ease-in-out infinite;
     }
     .collectors-popup.visible {
       opacity: 1;
       transform: translateY(0) scale(1);
     }
     .collectors-popup .cp-header {
-      background: #1e1e1e;
-      border-bottom: 1px solid rgba(60,60,60,0.8);
-      padding: 10px 14px;
+      background: rgba(155, 155, 150, 0.92);
+      padding: 5px 10px;
+      border-radius: 4px 4px 0 0;
+      border-bottom: 1px solid rgba(120, 120, 115, 0.5);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .collectors-popup .cp-header-title {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       font-weight: 600;
-      color: #e0e0dc;
+      color: #1a1a1a;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
     }
     .collectors-popup .cp-close {
-      width: 20px; height: 20px;
+      width: 16px; height: 16px;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(100,100,100,0.3);
-      border: 1px solid rgba(60,60,60,0.8);
+      background: rgba(180,60,60,0.75);
+      border: none;
       border-radius: 2px;
       cursor: pointer;
-      font-size: 11px;
-      color: #888884;
-      transition: background 0.15s, color 0.15s;
+      font-size: 10px;
+      color: #fff;
+      transition: background 0.15s;
     }
     .collectors-popup .cp-close:hover {
-      background: rgba(120,120,120,0.5);
-      color: #c0c0bc;
+      background: rgba(220,60,60,0.95);
     }
     .collectors-popup .cp-list {
-      max-height: 340px;
+      max-height: 280px;
       overflow-y: auto;
+      padding: 6px 0;
       scrollbar-width: thin;
       scrollbar-color: rgba(220,150,50,0.15) transparent;
     }
     .collectors-popup .cp-list::-webkit-scrollbar { width: 3px; }
     .collectors-popup .cp-list::-webkit-scrollbar-thumb { background: rgba(220,150,50,0.15); border-radius: 2px; }
     .collectors-popup .cp-row {
-      padding: 8px 14px;
+      padding: 6px 14px;
       display: flex;
       align-items: center;
       gap: 10px;
-      border-bottom: 1px solid rgba(50,50,50,0.4);
+      border-bottom: 1px solid rgba(220,150,50,0.06);
       transition: background 0.15s ease;
     }
     .collectors-popup .cp-row:hover {
-      background: rgba(100,100,100,0.15);
+      background: rgba(220,150,50,0.05);
     }
     .collectors-popup .cp-pfp {
-      width: 28px; height: 28px;
+      width: 24px; height: 24px;
       border-radius: 50%;
-      border: 1px solid rgba(60,60,60,0.6);
-      background: #1a1a1a;
+      border: 1px solid rgba(220,150,50,0.15);
+      background: rgba(30,30,28,0.8);
       flex-shrink: 0;
       object-fit: cover;
     }
     .collectors-popup .cp-name {
       flex: 1;
       min-width: 0;
-      font-size: 0.58rem;
-      color: #c0c0bc;
+      font-size: 0.55rem;
+      color: #d0d0cc;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       text-decoration: none;
       transition: color 0.2s;
+      letter-spacing: 0.04em;
     }
     .collectors-popup .cp-name:hover {
       color: rgba(220,150,50,0.9);
     }
     .collectors-popup .cp-count {
-      font-size: 0.5rem;
-      color: rgba(160,158,150,0.5);
+      font-size: 0.45rem;
+      color: rgba(220,150,50,0.4);
       letter-spacing: 0.08em;
       white-space: nowrap;
       flex-shrink: 0;
     }
     .collectors-popup .cp-loading {
-      padding: 20px 14px;
+      padding: 18px 14px;
       text-align: center;
       font-size: 0.5rem;
-      color: rgba(220,150,50,0.4);
+      color: rgba(220,150,50,0.35);
       letter-spacing: 0.1em;
     }
     .collectors-popup .cp-summary {
       padding: 6px 14px;
-      background: rgba(30,30,30,0.5);
-      border-bottom: 1px solid rgba(50,50,50,0.3);
+      background: rgba(40,40,40,0.5);
+      border-bottom: 1px solid rgba(220,150,50,0.08);
       font-size: 0.45rem;
-      color: rgba(160,158,150,0.5);
+      color: #8a8a86;
       letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
     .obj-header {
@@ -17624,7 +17629,7 @@
         dock = document.createElement('div');
         dock.id = 'infoDock';
         dock.className = 'info-dock';
-        dock.innerHTML = '<div class="dock-port-in"></div><span class="info-dock-label">dock info</span>';
+        dock.innerHTML = '<div class="dock-port-in"></div><span class="info-dock-label">info dock</span>';
         document.body.appendChild(dock);
       }
       dock.classList.remove('docked', 'hover-active');
@@ -17867,7 +17872,7 @@
       popup.className = 'collectors-popup';
       popup.innerHTML = `
         <div class="cp-header">
-          <span class="cp-header-title">Owned by</span>
+          <span class="cp-header-title">COLLECTORS</span>
           <div class="cp-close" id="collectorsPopupClose">&times;</div>
         </div>
         <div class="cp-loading">FETCHING OWNERS...</div>
