@@ -4305,15 +4305,16 @@
       overflow: hidden !important;
     }
     #masterNode.mobile-expanded .pcb-ticker-line {
-      font-size: 0.65rem !important;
-      line-height: 1.7 !important;
+      font-size: 0.72rem !important;
+      line-height: 1.65 !important;
       max-width: 100% !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
+      color: rgba(150,165,200,0.55) !important;
     }
     #masterNode.mobile-expanded .pcb-ticker-line.bright {
-      font-size: 0.75rem !important;
-      color: rgba(220,200,170,0.85) !important;
+      font-size: 0.8rem !important;
+      color: rgba(220,200,170,0.9) !important;
     }
     #masterNode.mobile-expanded .pcb-label {
       font-size: 0.5rem !important;
@@ -4354,6 +4355,16 @@
       width: 100% !important;
       height: auto !important;
     }
+
+    /* ── Mobile: bigger node port connectors ── */
+    body.is-real-mobile .node-port {
+      width: 22px !important;
+      height: 22px !important;
+      border-width: 3px !important;
+    }
+    body.is-real-mobile .node-port.port-in { left: -11px !important; }
+    body.is-real-mobile .node-port.port-out { right: -11px !important; }
+    body.is-real-mobile .node-port.port-out.port-bottom { bottom: -11px !important; right: auto !important; }
 
     /* ── Mobile Object Manager — scaled up for readability ── */
     body.is-real-mobile .c4d-object-manager {
@@ -14979,6 +14990,29 @@
             if (preview) {
               preview.style.boxShadow = `inset 0 0 0 0.5px rgba(220,150,50,0.35), 0 4px 12px rgba(0,0,0,0.5), 0 12px 28px rgba(0,0,0,0.25)`;
             }
+            // ── Regenerate SVG frames at the new larger size ──
+            // Collection frames were generated at thumbnail size; now the node is finalW wide
+            setTimeout(() => {
+              _removeAllFocusFrames(node);
+              _generateFocusFrameForNode(node, _focusColNameEarly, artData);
+            }, 100);
+            // ── Load animated GIF over the static JPG for GIF artworks ──
+            const _mobileImg = node.querySelector('.node-preview img');
+            if (_mobileImg) {
+              const _gifSrc = (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
+                : (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image : null;
+              if (_gifSrc) {
+                const _gifLoader = new Image();
+                _gifLoader.onload = function() {
+                  // Only swap if still in focus mode
+                  if (node.classList.contains('focused')) {
+                    _mobileImg.src = _gifSrc;
+                  }
+                };
+                _gifLoader.src = _gifSrc;
+                // Don't wait forever — 8s timeout, keep the JPG if GIF is too large
+              }
+            }
           } else {
             // ── DESKTOP: CSS scale (works fine, higher-DPI screens handle it) ──
             node.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleFactor})`;
@@ -15042,14 +15076,18 @@
       // Update motherboard tickers with artwork-specific data
       const _focusCollection = COLLECTIONS[collectionIndex];
       const _focusArtwork = _focusCollection ? _focusCollection.artworks[artworkIndex] : null;
-      updateMotherboardTickers(_focusCollection, _focusArtwork);
 
       // Fixed-position title — appears after scale-up
       if (_isRealMobile) {
         // ── MOBILE: Lock scroll in focus mode (motherboard already expanded) ──
         document.body.classList.add('mobile-focus-locked');
 
-        // ── MOBILE: Populate motherboard tickers with artwork info ──
+        // ── MOBILE: Populate motherboard tickers with artwork info (static, no scroll) ──
+        // Use _updateMobileMotherboard which stops the scroll animation and shows static data.
+        // Call it immediately to start, then again after scatter for final state.
+        if (_focusCollection && _focusArtwork) {
+          _updateMobileMotherboard(_focusCollection, _focusArtwork);
+        }
         setTimeout(() => {
           const _mfArt = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
           const _mfColl = COLLECTIONS[collectionIndex];
@@ -15060,6 +15098,8 @@
           _addMobilePantoneSwatch(node, _mfColl, _mfArt);
         }, _scatterWait + 200);
       } else {
+      // ── DESKTOP: scrolling tickers with artwork data ──
+      updateMotherboardTickers(_focusCollection, _focusArtwork);
       // ── DESKTOP: Floating title underneath artwork, left-aligned ──
       setTimeout(() => {
         const focusTitleEl = document.createElement('div');
@@ -15669,6 +15709,16 @@
                       // 7. Redraw wires
                       drawFocusModeWires(curNode, null);
                       _swipeTransitioning = false;
+                      // 8. Load animated GIF over static JPG
+                      var _swipeGifSrc = (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
+                        : (nextArt.image && nextArt.image.endsWith('.gif')) ? nextArt.image : null;
+                      if (_swipeGifSrc && curImg) {
+                        var _swipeGif = new Image();
+                        _swipeGif.onload = function() {
+                          if (curNode.classList.contains('focused')) curImg.src = _swipeGifSrc;
+                        };
+                        _swipeGif.src = _swipeGifSrc;
+                      }
                     }, 200);
                   }
                 }, 300);
@@ -15842,57 +15892,77 @@
       requestAnimationFrame(function() { swatch.style.opacity = '1'; });
     }
 
-    // ── Helper: update motherboard tickers during mobile swipe transitions ──
+    // ── Helper: update motherboard tickers during mobile focus/swipe ──
     function _updateMobileMotherboard(col, art) {
       var title = art.title || '';
       var desc = art.description || '';
       var colName = (art._sourceCollection) ? art._sourceCollection : col.name;
       var edition = art.edition || '1 of 1';
-      var collector = art.collector || '';
+      var collector = art.collector || art.buyer || '';
 
       // Billboard chip label
-      var chipLabel = document.querySelector('.pcb-chip-label');
+      var chipLabel = document.querySelector('#masterNode .pcb-chip-label');
       if (chipLabel) {
         chipLabel.textContent = title;
         chipLabel.classList.add('marquee');
         chipLabel.style.setProperty('--marquee-dur', Math.max(3, title.length * 0.25) + 's');
       }
 
-      // Left ticker: title, collection, edition, description, collector
-      var leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
+      // Left ticker: artwork info — title, collection, edition, description, collector
+      var leftTicker = document.querySelector('#masterNode .pcb-ticker.left .pcb-ticker-inner');
       if (leftTicker) {
         if (!leftTicker._origHTML) leftTicker._origHTML = leftTicker.innerHTML;
+        // Kill animation AND reset transform so content is visible at top
         leftTicker.style.animation = 'none';
+        leftTicker.style.transform = 'translateY(0)';
+        leftTicker.style.webkitTransform = 'translateY(0)';
         var leftHTML = '';
-        leftHTML += '<span class="pcb-ticker-line bright">' + title + '</span>';
-        leftHTML += '<span class="pcb-ticker-line">' + colName + '</span>';
-        leftHTML += '<span class="pcb-ticker-line dim">' + edition + '</span>';
+        leftHTML += '<span class="pcb-ticker-line" style="color:rgba(220,200,170,0.9);font-weight:600;">' + title + '</span>';
+        leftHTML += '<span class="pcb-ticker-line" style="color:rgba(180,170,150,0.7);">' + colName + '</span>';
+        leftHTML += '<span class="pcb-ticker-line" style="color:rgba(150,160,180,0.6);">' + edition + '</span>';
         if (desc) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(180,170,150,0.55);font-style:italic;">' + desc + '</span>';
-        if (collector) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(160,190,255,0.6);">collector: ' + collector + '</span>';
-        if (art.winningBid) leftHTML += '<span class="pcb-ticker-line dim">won: ' + art.winningBid + '</span>';
+        if (collector) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(160,190,255,0.65);">collector: ' + collector + '</span>';
+        if (art.winningBid) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(220,200,170,0.6);">won: ' + art.winningBid + '</span>';
+        if (art.sale) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(220,200,170,0.6);">' + art.sale + '</span>';
+        if (art.tokenId !== undefined) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(130,150,190,0.5);">token #' + art.tokenId + '</span>';
+        if (col.token) leftHTML += '<span class="pcb-ticker-line" style="color:rgba(130,150,190,0.4);">' + col.token + ' · ' + (col.chain || '') + '</span>';
         leftTicker.innerHTML = leftHTML;
+        // Force reflow to ensure browser paints updated content
+        void leftTicker.offsetHeight;
       }
 
-      // Right ticker: price info, token, links
-      var rightTicker = document.querySelector('.pcb-ticker.right .pcb-ticker-inner');
+      // Right ticker: price / offer data, contract info
+      var rightTicker = document.querySelector('#masterNode .pcb-ticker.right .pcb-ticker-inner');
       if (rightTicker) {
         if (!rightTicker._origHTML) rightTicker._origHTML = rightTicker.innerHTML;
         rightTicker.style.animation = 'none';
+        rightTicker.style.transform = 'translateY(0)';
+        rightTicker.style.webkitTransform = 'translateY(0)';
         var rightHTML = '';
+        // Price if listed for sale
         if (art.isListed && art.listingPriceEth) {
           var ethPrice = parseFloat(art.listingPriceEth);
-          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(100,220,100,0.7);">listed: ' + ethPrice.toFixed(2) + ' ETH</span>';
+          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(100,220,100,0.8);font-weight:600;">listed: ' + ethPrice.toFixed(2) + ' ETH</span>';
         }
+        // Highest offer if above 1 ETH
         if (art.hasOffer && art.bestOfferEth && parseFloat(art.bestOfferEth) >= 1.0) {
-          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(120,180,255,0.7);">offer: ' + parseFloat(art.bestOfferEth).toFixed(2) + ' ETH</span>';
+          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(120,180,255,0.75);">best offer: ' + parseFloat(art.bestOfferEth).toFixed(2) + ' ETH</span>';
         }
-        if (art.tokenId !== undefined && col.contract) {
-          rightHTML += '<span class="pcb-ticker-line dim">token #' + art.tokenId + '</span>';
+        // Collection / contract info
+        rightHTML += '<span class="pcb-ticker-line" style="color:rgba(180,170,150,0.7);">' + colName + '</span>';
+        if (col.contract) {
+          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(130,150,190,0.5);">' + col.contract.slice(0, 8) + '...' + col.contract.slice(-4) + '</span>';
         }
+        if (col.artworks) {
+          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(130,150,190,0.4);">' + col.artworks.length + ' artworks</span>';
+        }
+        if (col.mintDate) rightHTML += '<span class="pcb-ticker-line" style="color:rgba(130,150,190,0.4);">minted ' + col.mintDate + '</span>';
+        if (col.auctionDate) rightHTML += '<span class="pcb-ticker-line" style="color:rgba(130,150,190,0.4);">auctioned ' + col.auctionDate + '</span>';
         if (!rightHTML) {
-          rightHTML += '<span class="pcb-ticker-line dim">\u2014</span>';
+          rightHTML += '<span class="pcb-ticker-line" style="color:rgba(130,150,190,0.4);">\u2014</span>';
         }
         rightTicker.innerHTML = rightHTML;
+        void rightTicker.offsetHeight;
       }
     }
 
@@ -17101,6 +17171,7 @@
         ? currentArtworkPalette.accentDim.replace(/[\d.]+\)$/, '0.18)')
         : 'rgba(220,150,50,0.15)';
 
+      var _wireScale = _isMobileWire ? 3 : 1;
       function drawWire(fromX, fromY, toX, toY, flowDur) {
         var dy = Math.abs(toY - fromY);
         var pull = Math.min(dy * 0.4, 150);
@@ -17110,7 +17181,7 @@
         path.setAttribute('d', d);
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', baseColor);
-        path.setAttribute('stroke-width', '1.2');
+        path.setAttribute('stroke-width', String(1.2 * _wireScale));
         path.setAttribute('stroke-linecap', 'round');
         wireSvg.appendChild(path);
 
@@ -17118,8 +17189,8 @@
         flow.setAttribute('d', d);
         flow.setAttribute('fill', 'none');
         flow.setAttribute('stroke', flowColor);
-        flow.setAttribute('stroke-width', '2');
-        flow.setAttribute('stroke-dasharray', '5 18');
+        flow.setAttribute('stroke-width', String(2 * _wireScale));
+        flow.setAttribute('stroke-dasharray', (5 * _wireScale) + ' ' + (18 * _wireScale));
         flow.setAttribute('stroke-linecap', 'round');
         flow.style.animation = 'wireFlow ' + flowDur + 's linear infinite';
         wireSvg.appendChild(flow);
@@ -22926,16 +22997,20 @@
       document.body.classList.remove('mobile-focus-locked');
 
       // Restore motherboard tickers (mobile focus populates them with artwork info)
-      const leftTicker = document.querySelector('.pcb-ticker.left .pcb-ticker-inner');
+      const leftTicker = document.querySelector('#masterNode .pcb-ticker.left .pcb-ticker-inner');
       if (leftTicker && leftTicker._origHTML) {
         leftTicker.innerHTML = leftTicker._origHTML;
         leftTicker.style.animation = '';
+        leftTicker.style.transform = '';
+        leftTicker.style.webkitTransform = '';
         delete leftTicker._origHTML;
       }
-      const rightTicker = document.querySelector('.pcb-ticker.right .pcb-ticker-inner');
+      const rightTicker = document.querySelector('#masterNode .pcb-ticker.right .pcb-ticker-inner');
       if (rightTicker && rightTicker._origHTML) {
         rightTicker.innerHTML = rightTicker._origHTML;
         rightTicker.style.animation = '';
+        rightTicker.style.transform = '';
+        rightTicker.style.webkitTransform = '';
         delete rightTicker._origHTML;
       }
 
