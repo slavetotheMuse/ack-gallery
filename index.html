@@ -5376,39 +5376,34 @@
         drone2.start();
         _ambientNodes.push(drone2, drone2G, drone2LFO);
 
-        // ═══ DESERT WIND — filtered noise that breathes ═══
-        var windBufSz = ctx.sampleRate * 3;
-        var windBuf = ctx.createBuffer(1, windBufSz, ctx.sampleRate);
-        var wd = windBuf.getChannelData(0);
-        for (var i = 0; i < windBufSz; i++) wd[i] = Math.random() * 2 - 1;
-        var windNode = ctx.createBufferSource();
-        windNode.buffer = windBuf;
-        windNode.loop = true;
-        var windBP = ctx.createBiquadFilter();
-        windBP.type = 'bandpass';
-        windBP.frequency.setValueAtTime(400, ctx.currentTime);
-        windBP.Q.setValueAtTime(0.3, ctx.currentTime);
-        // Wind filter frequency sweeps slowly — sounds like gusts
-        var windSweep = ctx.createOscillator();
-        windSweep.type = 'sine';
-        windSweep.frequency.setValueAtTime(0.05, ctx.currentTime);
-        var windSweepG = ctx.createGain();
-        windSweepG.gain.setValueAtTime(200, ctx.currentTime);
-        windSweep.connect(windSweepG); windSweepG.connect(windBP.frequency);
-        windSweep.start();
+        // ═══ DESERT WIND — pure oscillator-based (no white noise), very low breathy sweep ═══
+        var wind = ctx.createOscillator();
+        wind.type = 'sine';
+        wind.frequency.setValueAtTime(65, ctx.currentTime);
         var windG = ctx.createGain();
-        windG.gain.setValueAtTime(0.008, ctx.currentTime);
-        // Volume breathes
+        windG.gain.setValueAtTime(0.006, ctx.currentTime);
+        // Slow breathing LFO on wind volume
         var windVolLFO = ctx.createOscillator();
         windVolLFO.type = 'sine';
-        windVolLFO.frequency.setValueAtTime(0.06, ctx.currentTime);
+        windVolLFO.frequency.setValueAtTime(0.025, ctx.currentTime); // ~40s cycle
         var windVolLFOG = ctx.createGain();
-        windVolLFOG.gain.setValueAtTime(0.006, ctx.currentTime);
+        windVolLFOG.gain.setValueAtTime(0.005, ctx.currentTime);
         windVolLFO.connect(windVolLFOG); windVolLFOG.connect(windG.gain);
         windVolLFO.start();
-        windNode.connect(windBP); windBP.connect(windG); windG.connect(masterGain);
-        windNode.start();
-        _ambientNodes.push(windNode, windG, windSweep, windVolLFO);
+        // Slow pitch wobble to simulate wind gusts
+        var windPitchLFO = ctx.createOscillator();
+        windPitchLFO.type = 'sine';
+        windPitchLFO.frequency.setValueAtTime(0.04, ctx.currentTime);
+        var windPitchLFOG = ctx.createGain();
+        windPitchLFOG.gain.setValueAtTime(8, ctx.currentTime);
+        windPitchLFO.connect(windPitchLFOG); windPitchLFOG.connect(wind.frequency);
+        windPitchLFO.start();
+        var windF = ctx.createBiquadFilter();
+        windF.type = 'lowpass';
+        windF.frequency.setValueAtTime(120, ctx.currentTime);
+        wind.connect(windF); windF.connect(windG); windG.connect(masterGain);
+        wind.start();
+        _ambientNodes.push(wind, windG, windVolLFO, windPitchLFO);
 
         // ═══ MECHANICAL HUM — Atreides machinery, fades in/out ═══
         var mech = ctx.createOscillator();
@@ -5447,105 +5442,97 @@
           var now = ctx2.currentTime;
           var roll = Math.random();
 
-          if (roll < 0.25) {
-            // ── GHOST PIANO KEYS — faint distant key presses, 2-4 notes ──
+          if (roll < 0.28) {
+            // ── DISTANT PIANO SHUTTERS — far-off hammer hits with long reverb tails ──
+            // Like hearing a piano through stone walls in another wing of a palace
             var noteCount = 2 + Math.floor(Math.random() * 3);
-            var pianoNotes = [262, 294, 330, 349, 392, 440, 494, 523, 587, 659];
+            var pianoNotes = [220, 262, 294, 330, 349, 392, 440];
             for (var n = 0; n < noteCount; n++) {
               (function(idx) {
-                var delay = idx * (0.15 + Math.random() * 0.25);
+                var delay = idx * (0.3 + Math.random() * 0.5); // wider spacing, more distant
                 setTimeout(function() {
                   var c = _ensureCtx(); if (!c) return;
                   var t = c.currentTime;
                   var freq = pianoNotes[Math.floor(Math.random() * pianoNotes.length)];
-                  // Sine tone with fast decay — like a distant felt-hammer piano
+                  // Very soft sine — the fundamental, heavily filtered as if through walls
                   var o = c.createOscillator();
                   o.type = 'sine';
                   o.frequency.setValueAtTime(freq, t);
                   var g = c.createGain();
-                  g.gain.setValueAtTime(0.015 + Math.random() * 0.01, t);
-                  g.gain.exponentialRampToValueAtTime(0.001, t + 0.6 + Math.random() * 0.4);
+                  g.gain.setValueAtTime(0.008 + Math.random() * 0.005, t);
+                  g.gain.exponentialRampToValueAtTime(0.001, t + 1.5 + Math.random() * 1.0);
+                  // Heavy lowpass — as if heard from far away
                   var f = c.createBiquadFilter();
                   f.type = 'lowpass';
-                  f.frequency.setValueAtTime(1200, t);
+                  f.frequency.setValueAtTime(500, t);
+                  f.Q.setValueAtTime(1, t);
                   o.connect(f); f.connect(g); g.connect(masterGain);
-                  o.start(t); o.stop(t + 1.2);
-                  // Faint harmonic
-                  var o2 = c.createOscillator();
-                  o2.type = 'sine';
-                  o2.frequency.setValueAtTime(freq * 2, t);
-                  var g2 = c.createGain();
-                  g2.gain.setValueAtTime(0.004, t);
-                  g2.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-                  o2.connect(f); f.connect(g2); g2.connect(masterGain);
-                  o2.start(t); o2.stop(t + 0.5);
+                  o.start(t); o.stop(t + 2.5);
                 }, delay * 1000);
               })(n);
             }
 
-          } else if (roll < 0.42) {
-            // ── SANDWORM RUMBLE — very low distant growl ──
-            var rumDur = 1.5 + Math.random() * 2;
-            var rumBufSz = Math.floor(ctx2.sampleRate * rumDur);
-            var rumBuf = ctx2.createBuffer(1, rumBufSz, ctx2.sampleRate);
-            var rd = rumBuf.getChannelData(0);
-            for (var r = 0; r < rumBufSz; r++) {
-              rd[r] = (Math.random() * 2 - 1) * Math.sin(r / rumBufSz * Math.PI);
-            }
-            var rumSrc = ctx2.createBufferSource();
-            rumSrc.buffer = rumBuf;
-            var rumLP = ctx2.createBiquadFilter();
-            rumLP.type = 'lowpass';
-            rumLP.frequency.setValueAtTime(80, now);
-            rumLP.Q.setValueAtTime(3, now);
+          } else if (roll < 0.44) {
+            // ── SANDWORM RUMBLE — very low oscillator swell, no noise ──
+            var rumDur = 2.0 + Math.random() * 2;
+            var rum = ctx2.createOscillator();
+            rum.type = 'sine';
+            rum.frequency.setValueAtTime(30 + Math.random() * 15, now);
+            rum.frequency.linearRampToValueAtTime(25, now + rumDur);
             var rumG = ctx2.createGain();
             rumG.gain.setValueAtTime(0, now);
-            rumG.gain.linearRampToValueAtTime(0.025, now + rumDur * 0.3);
+            rumG.gain.linearRampToValueAtTime(0.018, now + rumDur * 0.3);
             rumG.gain.linearRampToValueAtTime(0, now + rumDur);
-            rumSrc.connect(rumLP); rumLP.connect(rumG); rumG.connect(masterGain);
-            rumSrc.start(now); rumSrc.stop(now + rumDur);
+            var rumLP = ctx2.createBiquadFilter();
+            rumLP.type = 'lowpass';
+            rumLP.frequency.setValueAtTime(60, now);
+            rumLP.Q.setValueAtTime(2, now);
+            rum.connect(rumLP); rumLP.connect(rumG); rumG.connect(masterGain);
+            rum.start(now); rum.stop(now + rumDur + 0.1);
 
           } else if (roll < 0.58) {
-            // ── MECHANICAL BEAST — grinding servo chirp ──
-            var chirpF = 60 + Math.random() * 40;
-            var o = ctx2.createOscillator();
-            o.type = 'sawtooth';
-            o.frequency.setValueAtTime(chirpF, now);
-            o.frequency.linearRampToValueAtTime(chirpF * 1.8, now + 0.3);
-            o.frequency.linearRampToValueAtTime(chirpF * 0.6, now + 0.8);
-            var g = ctx2.createGain();
-            g.gain.setValueAtTime(0, now);
-            g.gain.linearRampToValueAtTime(0.008, now + 0.1);
-            g.gain.linearRampToValueAtTime(0, now + 1.0);
-            var f = ctx2.createBiquadFilter();
-            f.type = 'lowpass';
-            f.frequency.setValueAtTime(200, now);
-            o.connect(f); f.connect(g); g.connect(masterGain);
-            o.start(now); o.stop(now + 1.1);
+            // ── DISTANT MECHANICAL CRANKING — triangle wave grinding, far away ──
+            // Like Atreides machinery heard through corridors
+            var crankDur = 1.2 + Math.random() * 1.0;
+            var crankF = 70 + Math.random() * 30;
+            var crank = ctx2.createOscillator();
+            crank.type = 'triangle';
+            crank.frequency.setValueAtTime(crankF, now);
+            // Slow irregular pitch wobble like a turning mechanism
+            crank.frequency.linearRampToValueAtTime(crankF * 1.3, now + crankDur * 0.4);
+            crank.frequency.linearRampToValueAtTime(crankF * 0.8, now + crankDur * 0.7);
+            crank.frequency.linearRampToValueAtTime(crankF, now + crankDur);
+            var crankG = ctx2.createGain();
+            crankG.gain.setValueAtTime(0, now);
+            crankG.gain.linearRampToValueAtTime(0.005, now + 0.15);
+            crankG.gain.linearRampToValueAtTime(0.004, now + crankDur * 0.6);
+            crankG.gain.linearRampToValueAtTime(0, now + crankDur);
+            var crankLP = ctx2.createBiquadFilter();
+            crankLP.type = 'lowpass';
+            crankLP.frequency.setValueAtTime(160, now);
+            crank.connect(crankLP); crankLP.connect(crankG); crankG.connect(masterGain);
+            crank.start(now); crank.stop(now + crankDur + 0.1);
 
           } else if (roll < 0.72) {
-            // ── GARDEN BREEZE — brief filtered whoosh, higher freq than desert wind ──
-            var bDur = 0.8 + Math.random() * 1.2;
-            var bBufSz = Math.floor(ctx2.sampleRate * bDur);
-            var bBuf = ctx2.createBuffer(1, bBufSz, ctx2.sampleRate);
-            var bd = bBuf.getChannelData(0);
-            for (var b = 0; b < bBufSz; b++) {
-              bd[b] = (Math.random() * 2 - 1) * Math.sin(b / bBufSz * Math.PI);
-            }
-            var bSrc = ctx2.createBufferSource();
-            bSrc.buffer = bBuf;
-            var bBP = ctx2.createBiquadFilter();
-            bBP.type = 'bandpass';
-            bBP.frequency.setValueAtTime(1200 + Math.random() * 600, now);
-            bBP.Q.setValueAtTime(0.6, now);
+            // ── GARDEN BREEZE — pure oscillator shimmer, no noise ──
+            var bDur = 1.5 + Math.random() * 1.5;
+            var breeze = ctx2.createOscillator();
+            breeze.type = 'sine';
+            breeze.frequency.setValueAtTime(180 + Math.random() * 60, now);
+            // Gentle pitch rise and fall like wind through leaves
+            breeze.frequency.linearRampToValueAtTime(220 + Math.random() * 80, now + bDur * 0.4);
+            breeze.frequency.linearRampToValueAtTime(160 + Math.random() * 40, now + bDur);
             var bG = ctx2.createGain();
             bG.gain.setValueAtTime(0, now);
-            bG.gain.linearRampToValueAtTime(0.012, now + bDur * 0.3);
+            bG.gain.linearRampToValueAtTime(0.006, now + bDur * 0.3);
             bG.gain.linearRampToValueAtTime(0, now + bDur);
-            bSrc.connect(bBP); bBP.connect(bG); bG.connect(masterGain);
-            bSrc.start(now); bSrc.stop(now + bDur);
+            var bLP = ctx2.createBiquadFilter();
+            bLP.type = 'lowpass';
+            bLP.frequency.setValueAtTime(250, now);
+            breeze.connect(bLP); bLP.connect(bG); bG.connect(masterGain);
+            breeze.start(now); breeze.stop(now + bDur + 0.1);
 
-          } else if (roll < 0.84) {
+          } else if (roll < 0.86) {
             // ── DUNE HORN — distant low brass tone, like a thumper signal ──
             var hornF = 110 + Math.random() * 30;
             var hornDur = 1.0 + Math.random() * 1.5;
@@ -5555,12 +5542,12 @@
             h.frequency.linearRampToValueAtTime(hornF * 0.92, now + hornDur);
             var hG = ctx2.createGain();
             hG.gain.setValueAtTime(0, now);
-            hG.gain.linearRampToValueAtTime(0.012, now + hornDur * 0.15);
-            hG.gain.linearRampToValueAtTime(0.008, now + hornDur * 0.6);
+            hG.gain.linearRampToValueAtTime(0.01, now + hornDur * 0.15);
+            hG.gain.linearRampToValueAtTime(0.006, now + hornDur * 0.6);
             hG.gain.linearRampToValueAtTime(0, now + hornDur);
             var hF = ctx2.createBiquadFilter();
             hF.type = 'lowpass';
-            hF.frequency.setValueAtTime(300, now);
+            hF.frequency.setValueAtTime(250, now);
             h.connect(hF); hF.connect(hG); hG.connect(masterGain);
             h.start(now); h.stop(now + hornDur + 0.1);
 
@@ -5571,10 +5558,13 @@
             ch.type = 'sine';
             ch.frequency.setValueAtTime(chimeF, now);
             var chG = ctx2.createGain();
-            chG.gain.setValueAtTime(0.006, now);
-            chG.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-            ch.connect(chG); chG.connect(masterGain);
-            ch.start(now); ch.stop(now + 1.6);
+            chG.gain.setValueAtTime(0.004, now);
+            chG.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+            var chLP = ctx2.createBiquadFilter();
+            chLP.type = 'lowpass';
+            chLP.frequency.setValueAtTime(2000, now);
+            ch.connect(chLP); chLP.connect(chG); chG.connect(masterGain);
+            ch.start(now); ch.stop(now + 2.0);
           }
 
           // Schedule next event — random interval 8-25 seconds
@@ -5735,27 +5725,25 @@
           snapF.frequency.exponentialRampToValueAtTime(300, now + 0.05);
           snap.connect(snapF); snapF.connect(snapG); snapG.connect(ctx.destination);
           snap.start(now); snap.stop(now + 0.06);
-          // Sand grains scattering — filtered noise particles, each softer and lower
+          // Sand grains scattering — tiny triangle pips cascading down, no noise
           for (var g = 0; g < 5; g++) {
             (function(idx) {
               var delay = 0.015 + idx * 0.03;
-              var dur = 0.03 + idx * 0.015;
-              var vol = 0.06 - idx * 0.01;
-              var bufSz = Math.max(1, Math.floor(ctx.sampleRate * dur));
-              var buf = ctx.createBuffer(1, bufSz, ctx.sampleRate);
-              var d = buf.getChannelData(0);
-              for (var i = 0; i < bufSz; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSz, 1.5);
-              var src = ctx.createBufferSource();
-              src.buffer = buf;
+              var dur = 0.025 + idx * 0.012;
+              var vol = 0.05 - idx * 0.008;
+              var freq = 600 - idx * 80;
+              var pip = ctx.createOscillator();
+              pip.type = 'triangle';
+              pip.frequency.setValueAtTime(freq, now + delay);
+              pip.frequency.exponentialRampToValueAtTime(freq * 0.5, now + delay + dur);
               var gn = ctx.createGain();
               gn.gain.setValueAtTime(vol, now + delay);
               gn.gain.exponentialRampToValueAtTime(0.001, now + delay + dur);
-              var bp = ctx.createBiquadFilter();
-              bp.type = 'bandpass';
-              bp.frequency.setValueAtTime(800 - idx * 100, now + delay);
-              bp.Q.setValueAtTime(0.8, now + delay);
-              src.connect(bp); bp.connect(gn); gn.connect(ctx.destination);
-              src.start(now + delay); src.stop(now + delay + dur);
+              var lp = ctx.createBiquadFilter();
+              lp.type = 'lowpass';
+              lp.frequency.setValueAtTime(800 - idx * 80, now + delay);
+              pip.connect(lp); lp.connect(gn); gn.connect(ctx.destination);
+              pip.start(now + delay); pip.stop(now + delay + dur + 0.01);
             })(g);
           }
           // Fading warmth — the last vibration of something dissolving
@@ -7027,61 +7015,158 @@
           }, scrambleStart);
         }
 
-        // Fade out at ~6.5s
+        // Fade out text at ~6.5s
         setTimeout(function() {
           if (textEl) {
-            textEl.style.transition = 'color 2s ease';
+            textEl.style.transition = 'color 1.5s ease';
             textEl.style.color = 'rgba(245,240,230,0)';
             textEl.classList.remove('breathing');
           }
-          preIntro.style.transition = 'opacity 1.5s ease';
-          preIntro.style.opacity = '0';
+          if (textWrap) {
+            textWrap.style.transition = 'opacity 1.5s ease';
+            textWrap.style.opacity = '0';
+          }
         }, 6500);
 
-        // Remove and proceed
+        // ═══ LISAN AL-GAIB FLASH SEQUENCE ═══
+        // After text fades, flash the artwork full-screen before transitioning to vortex
         setTimeout(function() {
-          audio.pause();
-          preIntro.remove();
-          if (onComplete) onComplete();
-        }, 8500);
+          var lisanImg = document.createElement('img');
+          lisanImg.src = 'ackeditions_gallery/web/lisan_web.gif';
+          lisanImg.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;' +
+            'object-fit:cover;z-index:10002;opacity:0;pointer-events:none;' +
+            'filter:contrast(1.2) brightness(0.9);';
+          preIntro.appendChild(lisanImg);
+
+          // Flash pattern: 3 rapid strobes with varying durations and gaps
+          var flashes = [
+            { onAt: 0, offAt: 120 },
+            { onAt: 300, offAt: 480 },
+            { onAt: 650, offAt: 900 }
+          ];
+          flashes.forEach(function(fl) {
+            setTimeout(function() {
+              lisanImg.style.transition = 'opacity 0.04s ease-in';
+              lisanImg.style.opacity = '0.85';
+            }, fl.onAt);
+            setTimeout(function() {
+              lisanImg.style.transition = 'opacity 0.06s ease-out';
+              lisanImg.style.opacity = '0';
+            }, fl.offAt);
+          });
+
+          // After last flash, fade out the whole preIntro
+          setTimeout(function() {
+            preIntro.style.transition = 'opacity 1.2s ease';
+            preIntro.style.opacity = '0';
+          }, 1100);
+
+          // Remove and proceed
+          setTimeout(function() {
+            audio.pause();
+            preIntro.remove();
+            if (onComplete) onComplete();
+          }, 2500);
+        }, 8200);
       });
     }
 
     function _showMobileWarningOverlay() {
       // Popup overlay shown ON TOP of the vortex intro — not a separate screen
+      // Larger size with glitch/short-circuit effect
+
+      // Add glitch keyframes
+      if (!document.getElementById('mobileWarningGlitchStyles')) {
+        var gs = document.createElement('style');
+        gs.id = 'mobileWarningGlitchStyles';
+        gs.textContent =
+          '@keyframes mwGlitch{' +
+            '0%{transform:translate(-50%,-50%);opacity:1;filter:none}' +
+            '5%{transform:translate(-50%,-50%) translateX(4px) skewX(2deg);opacity:0.7;filter:hue-rotate(40deg)}' +
+            '10%{transform:translate(-50%,-50%) translateX(-3px);opacity:1;filter:none}' +
+            '15%{transform:translate(-50%,-50%) translateY(-2px) skewX(-1deg);opacity:0.5;filter:saturate(2) brightness(1.3)}' +
+            '20%{transform:translate(-50%,-50%);opacity:1;filter:none}' +
+            '35%{transform:translate(-50%,-50%) translateX(2px);opacity:0.8;filter:hue-rotate(-20deg)}' +
+            '37%{transform:translate(-50%,-50%) translateX(-5px) skewX(3deg);opacity:0.3;filter:brightness(1.5)}' +
+            '40%{transform:translate(-50%,-50%);opacity:1;filter:none}' +
+            '60%{transform:translate(-50%,-50%);opacity:1;filter:none}' +
+            '62%{transform:translate(-50%,-50%) translateY(3px);opacity:0.6;filter:hue-rotate(60deg) brightness(0.8)}' +
+            '64%{transform:translate(-50%,-50%) translateX(3px) skewX(-2deg);opacity:0.9}' +
+            '66%{transform:translate(-50%,-50%);opacity:1;filter:none}' +
+            '80%{transform:translate(-50%,-50%);opacity:1;filter:none}' +
+            '82%{transform:translate(-50%,-50%) translateX(-2px);opacity:0.4;filter:brightness(1.4) saturate(0.5)}' +
+            '84%{transform:translate(-50%,-50%);opacity:1;filter:none}' +
+            '100%{transform:translate(-50%,-50%);opacity:1;filter:none}' +
+          '}' +
+          '@keyframes mwScanline{' +
+            '0%{top:-10%}100%{top:110%}' +
+          '}' +
+          '@keyframes mwTextFlicker{' +
+            '0%,100%{opacity:1}8%{opacity:0.4}10%{opacity:1}42%{opacity:1}44%{opacity:0.2}46%{opacity:0.8}48%{opacity:1}' +
+          '}';
+        document.head.appendChild(gs);
+      }
+
       var popup = document.createElement('div');
       popup.id = 'mobileWarningPopup';
       popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;' +
-        'background:rgba(12,12,16,0.92);border:1px solid rgba(220,180,120,0.15);border-radius:6px;' +
-        'padding:30px 28px;text-align:center;max-width:340px;width:85%;' +
-        'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);' +
-        'opacity:0;transition:opacity 0.6s ease;pointer-events:auto;';
+        'background:rgba(12,12,16,0.94);border:1px solid rgba(220,180,120,0.2);border-radius:8px;' +
+        'padding:40px 36px;text-align:center;max-width:420px;width:92%;' +
+        'backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);' +
+        'opacity:0;pointer-events:auto;' +
+        'box-shadow:0 0 40px rgba(220,150,50,0.06),inset 0 0 30px rgba(0,0,0,0.3);overflow:hidden;';
+
+      // Scanline overlay for CRT effect
       popup.innerHTML =
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:0.15em;' +
-        'color:rgba(220,180,120,0.6);text-transform:uppercase;margin-bottom:16px;">ack.art</div>' +
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;letter-spacing:0.04em;' +
-        'color:rgba(200,180,150,0.5);line-height:1.9;">' +
+        '<div style="position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(transparent,rgba(220,180,120,0.06),transparent);' +
+        'animation:mwScanline 3s linear infinite;pointer-events:none;z-index:1;"></div>' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;letter-spacing:0.2em;' +
+        'color:rgba(220,180,120,0.7);text-transform:uppercase;margin-bottom:22px;' +
+        'animation:mwTextFlicker 2s ease-in-out infinite;">ack.art</div>' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:16px;letter-spacing:0.05em;' +
+        'color:rgba(200,180,150,0.6);line-height:2;">' +
         'you are visiting an advanced<br>digital art gallery<br>' +
-        '<span style="color:rgba(200,180,150,0.28);">...on your mobile device.</span></div>' +
-        '<div style="margin-top:14px;font-family:\'JetBrains Mono\',monospace;font-size:10px;' +
-        'color:rgba(200,180,150,0.22);line-height:1.9;letter-spacing:0.03em;">' +
+        '<span style="color:rgba(200,180,150,0.35);font-size:15px;">...on your mobile device.</span></div>' +
+        '<div style="margin-top:20px;font-family:\'JetBrains Mono\',monospace;font-size:12px;' +
+        'color:rgba(200,180,150,0.28);line-height:2.1;letter-spacing:0.03em;">' +
         'engineered for desktop monitors.<br>' +
         'may cause unexpected heat,<br>' +
         'minor hallucinations,<br>or spontaneous combustion.<br>' +
-        '<span style="color:rgba(220,150,50,0.3);">proceed at your own risk.</span></div>' +
-        '<div style="margin-top:18px;width:30px;height:1px;background:rgba(220,180,120,0.15);margin:18px auto 0;"></div>';
+        '<span style="color:rgba(220,150,50,0.4);">proceed at your own risk.</span></div>' +
+        '<div style="margin-top:22px;width:40px;height:1px;background:rgba(220,180,120,0.18);margin:22px auto 0;"></div>';
       document.body.appendChild(popup);
 
-      // Fade in after a beat
-      setTimeout(function() { popup.style.opacity = '1'; }, 300);
+      // Fade in after a beat, then start glitching
+      setTimeout(function() {
+        popup.style.transition = 'opacity 0.5s ease';
+        popup.style.opacity = '1';
+        // Start glitch animation after popup is visible
+        setTimeout(function() {
+          popup.style.animation = 'mwGlitch 2.5s ease-in-out infinite';
+        }, 600);
+      }, 300);
 
-      // Auto-dismiss after 4s, or tap to dismiss
+      // Auto-dismiss after 5s with glitch-out effect
       function dismiss() {
-        popup.style.opacity = '0';
-        setTimeout(function() { if (popup.parentNode) popup.remove(); }, 700);
+        popup.style.animation = 'none';
+        // Rapid glitch-out sequence
+        var glitchOut = 0;
+        var glitchInterval = setInterval(function() {
+          glitchOut++;
+          popup.style.transform = 'translate(-50%,-50%) translateX(' + (Math.random() * 12 - 6) + 'px) skewX(' + (Math.random() * 8 - 4) + 'deg)';
+          popup.style.opacity = String(Math.random() * 0.6);
+          popup.style.filter = 'hue-rotate(' + Math.floor(Math.random() * 120) + 'deg) brightness(' + (0.5 + Math.random()) + ')';
+          if (glitchOut > 8) {
+            clearInterval(glitchInterval);
+            popup.style.opacity = '0';
+            popup.style.transform = 'translate(-50%,-50%) scaleY(0.01)';
+            popup.style.transition = 'opacity 0.15s, transform 0.15s';
+            setTimeout(function() { if (popup.parentNode) popup.remove(); }, 200);
+          }
+        }, 50);
       }
       popup.addEventListener('click', dismiss);
-      setTimeout(dismiss, 4000);
+      setTimeout(dismiss, 5000);
     }
 
     function init() {
@@ -16654,6 +16739,7 @@
               if (_isMobileSwipe) {
                 // ── MOBILE: lightweight fade swap (no pixel scatter — too heavy on mobile) ──
                 _swipeTransitioning = true;
+                ACK_SFX.micro();
                 const nextArt = col.artworks[nextIdx];
                 const curNode = focusedNode;
                 const curImg = curNode ? curNode.querySelector('.node-preview img') : null;
@@ -16684,10 +16770,23 @@
 
                 setTimeout(function() {
                   // 3. Swap image source — use focus-res or higher-res CDN
+                  //    For GIF artworks, load GIF directly (skip static JPG intermediary)
                   if (curImg) {
-                    var _nextImgSrc = _getFocusImageSrc(nextArt);
+                    var _isNextGif = (nextArt.fullRes && nextArt.fullRes.endsWith('.gif'))
+                      || (nextArt.image && nextArt.image.endsWith('.gif'))
+                      || nextArt.webGif;
+                    var _nextImgSrc;
+                    if (_isNextGif) {
+                      // GIF artwork — load animated GIF directly, never use static JPG
+                      _nextImgSrc = nextArt.webGif ? nextArt.webGif
+                        : (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
+                        : nextArt.image;
+                      curImg.decoding = 'auto'; // MUST be auto for GIF animation
+                    } else {
+                      _nextImgSrc = _getFocusImageSrc(nextArt);
+                      curImg.decoding = 'sync';
+                    }
                     curImg.loading = 'eager';
-                    curImg.decoding = 'sync';
                     curImg.removeAttribute('width');
                     curImg.removeAttribute('height');
                     // DIRECT src swap — no preloader on mobile.
@@ -16739,19 +16838,22 @@
                       drawFocusModeWires(curNode, null);
                       _swipeTransitioning = false;
                       // 8. Load animated GIF over static JPG (webGif > fullRes GIF > image GIF)
-                      var _swipeGifSrc = nextArt.webGif ? nextArt.webGif
-                        : (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
-                        : (nextArt.image && nextArt.image.endsWith('.gif')) ? nextArt.image : null;
-                      if (_swipeGifSrc && curImg) {
-                        var _swipeGif = new Image();
-                        _swipeGif.onload = function() {
-                          if (curNode.classList.contains('focused')) {
-                            curImg.decoding = 'auto';
-                            curImg.onerror = null;
-                            curImg.src = _swipeGifSrc;
-                          }
-                        };
-                        _swipeGif.src = _swipeGifSrc;
+                      //    Skip if GIF was already loaded directly (no intermediary JPG)
+                      if (!_isNextGif) {
+                        var _swipeGifSrc = nextArt.webGif ? nextArt.webGif
+                          : (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
+                          : (nextArt.image && nextArt.image.endsWith('.gif')) ? nextArt.image : null;
+                        if (_swipeGifSrc && curImg) {
+                          var _swipeGif = new Image();
+                          _swipeGif.onload = function() {
+                            if (curNode.classList.contains('focused')) {
+                              curImg.decoding = 'auto';
+                              curImg.onerror = null;
+                              curImg.src = _swipeGifSrc;
+                            }
+                          };
+                          _swipeGif.src = _swipeGifSrc;
+                        }
                       }
                     }, 200);
                   }
