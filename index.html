@@ -214,6 +214,119 @@
       opacity: 1;
     }
 
+    /* ── Collectors popup (Object Manager style) ── */
+    .collectors-popup {
+      position: fixed;
+      z-index: 2700;
+      width: 320px;
+      background: #2a2a2a;
+      border: 1px solid rgba(60,60,60,0.8);
+      border-radius: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      opacity: 0;
+      transform: translateY(10px) scale(0.97);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1);
+      overflow: hidden;
+    }
+    .collectors-popup.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .collectors-popup .cp-header {
+      background: #1e1e1e;
+      border-bottom: 1px solid rgba(60,60,60,0.8);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .collectors-popup .cp-header-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #e0e0dc;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .collectors-popup .cp-close {
+      width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(100,100,100,0.3);
+      border: 1px solid rgba(60,60,60,0.8);
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 11px;
+      color: #888884;
+      transition: background 0.15s, color 0.15s;
+    }
+    .collectors-popup .cp-close:hover {
+      background: rgba(120,120,120,0.5);
+      color: #c0c0bc;
+    }
+    .collectors-popup .cp-list {
+      max-height: 340px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(220,150,50,0.15) transparent;
+    }
+    .collectors-popup .cp-list::-webkit-scrollbar { width: 3px; }
+    .collectors-popup .cp-list::-webkit-scrollbar-thumb { background: rgba(220,150,50,0.15); border-radius: 2px; }
+    .collectors-popup .cp-row {
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(50,50,50,0.4);
+      transition: background 0.15s ease;
+    }
+    .collectors-popup .cp-row:hover {
+      background: rgba(100,100,100,0.15);
+    }
+    .collectors-popup .cp-pfp {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(60,60,60,0.6);
+      background: #1a1a1a;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+    .collectors-popup .cp-name {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.58rem;
+      color: #c0c0bc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .collectors-popup .cp-name:hover {
+      color: rgba(220,150,50,0.9);
+    }
+    .collectors-popup .cp-count {
+      font-size: 0.5rem;
+      color: rgba(160,158,150,0.5);
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .collectors-popup .cp-loading {
+      padding: 20px 14px;
+      text-align: center;
+      font-size: 0.5rem;
+      color: rgba(220,150,50,0.4);
+      letter-spacing: 0.1em;
+    }
+    .collectors-popup .cp-summary {
+      padding: 6px 14px;
+      background: rgba(30,30,30,0.5);
+      border-bottom: 1px solid rgba(50,50,50,0.3);
+      font-size: 0.45rem;
+      color: rgba(160,158,150,0.5);
+      letter-spacing: 0.06em;
+    }
+
     .obj-header {
       background: #1e1e1e;
       border-bottom: 1px solid rgba(60, 60, 60, 0.8);
@@ -5344,12 +5457,53 @@
         });
       }
 
+      // ── Get owners with ERC-1155 balances for a specific token ──
+      function getOwnersWithBalances(contract, tokenId) {
+        var key = _cacheKey(contract, tokenId) + ':ownersBalances';
+        if (_cache[key]) return Promise.resolve(_cache[key]);
+        return getOwners(contract, tokenId).then(function(data) {
+          if (!data || !data.owners || data.owners.length === 0) return [];
+          var owners = data.owners;
+          // Batch eth_call for ERC-1155 balanceOf(address,uint256)
+          var rpcUrl = 'https://eth-mainnet.g.alchemy.com/v2/' + ALCHEMY_API_KEY;
+          var calls = owners.map(function(addr, i) {
+            var selector = '0x00fdd58e'; // balanceOf(address,uint256)
+            var paddedAddr = addr.slice(2).toLowerCase().padStart(64, '0');
+            var paddedTokenId = Number(tokenId).toString(16).padStart(64, '0');
+            return {
+              jsonrpc: '2.0', id: i + 1, method: 'eth_call',
+              params: [{ to: contract, data: selector + paddedAddr + paddedTokenId }, 'latest']
+            };
+          });
+          return fetch(rpcUrl, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(calls)
+          }).then(function(r) { return r.json(); }).then(function(results) {
+            var ownerBalances = owners.map(function(addr, i) {
+              var res = Array.isArray(results) ? results.find(function(r) { return r.id === i + 1; }) : null;
+              var balance = 1;
+              if (res && res.result && res.result !== '0x') {
+                balance = parseInt(res.result, 16) || 1;
+              }
+              return { address: addr, balance: balance };
+            }).filter(function(o) { return o.balance > 0; })
+              .sort(function(a, b) { return b.balance - a.balance; });
+            _cache[key] = ownerBalances;
+            return ownerBalances;
+          }).catch(function() {
+            return owners.map(function(addr) { return { address: addr, balance: 1 }; });
+          });
+        });
+      }
+
       // ── Public API ──
       return {
         ALCHEMY_API_KEY: ALCHEMY_API_KEY,
         OPENSEA_API_KEY: OPENSEA_API_KEY,
         getNFTMetadata: getNFTMetadata,
         getOwners: getOwners,
+        getOwnersWithBalances: getOwnersWithBalances,
         getFloorPrice: getFloorPrice,
         getNFTSales: getNFTSales,
         getCollection: getCollection,
@@ -14936,9 +15090,27 @@
                 if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
               };
               const preloader = new Image();
-              preloader.onload = () => { nodeImg.src = _focusSrc; _clearLoading(); };
+              preloader.onload = () => {
+                nodeImg.src = _focusSrc;
+                _clearLoading();
+                // ── After crisp JPG is displayed, load animated GIF over it ──
+                // Check if the artwork has an animated GIF as source
+                const _desktopGifSrc = (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
+                  : (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image : null;
+                if (_desktopGifSrc) {
+                  const _desktopGifLoader = new Image();
+                  _desktopGifLoader.onload = function() {
+                    // Only swap if still in focus mode
+                    if (node.classList.contains('focused')) {
+                      nodeImg.style.transition = 'none';
+                      nodeImg.src = _desktopGifSrc;
+                    }
+                  };
+                  _desktopGifLoader.src = _desktopGifSrc;
+                }
+              };
               preloader.onerror = () => {
-                // Fallback chain: try fullRes, then ?w=1400
+                // Fallback chain: try fullRes (might be GIF), then ?w=1400
                 if (artData && artData.fullRes && _focusSrc !== artData.fullRes) {
                   const fb = new Image();
                   fb.onload = () => { nodeImg.src = artData.fullRes; _clearLoading(); };
@@ -14999,14 +15171,16 @@
             // ── Load animated GIF over the static JPG for GIF artworks ──
             const _mobileImg = node.querySelector('.node-preview img');
             if (_mobileImg) {
-              const _gifSrc = (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
-                : (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image : null;
-              if (_gifSrc) {
+              // Prefer the web/smaller GIF for mobile (fullRes can be 100MB+)
+              // Fall back to image field if it's a GIF
+              const _mobileGifSrc = (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image
+                : (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes : null;
+              if (_mobileGifSrc) {
                 const _gifLoader = new Image();
                 _gifLoader.onload = function() {
                   // Only swap if still in focus mode
                   if (node.classList.contains('focused')) {
-                    _mobileImg.src = _gifSrc;
+                    _mobileImg.src = _mobileGifSrc;
                   }
                 };
                 _gifLoader.src = _gifSrc;
@@ -15709,9 +15883,9 @@
                       // 7. Redraw wires
                       drawFocusModeWires(curNode, null);
                       _swipeTransitioning = false;
-                      // 8. Load animated GIF over static JPG
-                      var _swipeGifSrc = (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
-                        : (nextArt.image && nextArt.image.endsWith('.gif')) ? nextArt.image : null;
+                      // 8. Load animated GIF over static JPG (prefer smaller web GIF on mobile)
+                      var _swipeGifSrc = (nextArt.image && nextArt.image.endsWith('.gif')) ? nextArt.image
+                        : (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes : null;
                       if (_swipeGifSrc && curImg) {
                         var _swipeGif = new Image();
                         _swipeGif.onload = function() {
@@ -16605,9 +16779,11 @@
         ? `<div class="node-info-line" style="margin-top:8px;border-top:1px solid rgba(220,150,50,0.12);padding-top:8px;"><a href="${artwork.fullRes}" target="_blank" class="master-digital-link" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(220,150,50,0.65);text-decoration:none;letter-spacing:0.08em;cursor:pointer;transition:color 0.3s;" onmouseover="this.style.color='rgba(220,150,50,0.95)'" onmouseout="this.style.color='rgba(220,150,50,0.65)'">&gt; VIEW MASTER DIGITAL</a></div>`
         : '';
       const _collectorName = artwork.collector || artwork.buyer || '';
-      // Always show collector link (live data will update it if API key is present)
+      const _isEdition = artwork.edition && artwork.edition.toLowerCase().indexOf('edition of') !== -1;
+      // For editions (ERC-1155): show "COLLECTORS" (plural) with popup trigger
+      // For 1-of-1: show "COLLECTOR" (singular) with existing single-collector popup
       const collectorLine = (collection.contract && artwork.tokenId !== undefined) || _collectorName
-        ? `<div class="node-info-line" style="margin-top:4px;"><a href="#" class="collector-link" id="collectorToggleLink" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(220,150,50,0.65);text-decoration:none;letter-spacing:0.08em;cursor:pointer;transition:color 0.3s;" onmouseover="this.style.color='rgba(220,150,50,0.95)'" onmouseout="this.style.color='rgba(220,150,50,0.65)'">&gt; COLLECTOR</a></div>`
+        ? `<div class="node-info-line" style="margin-top:4px;"><a href="#" class="collector-link" id="collectorToggleLink" data-edition="${_isEdition ? 'true' : 'false'}" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(220,150,50,0.65);text-decoration:none;letter-spacing:0.08em;cursor:pointer;transition:color 0.3s;" onmouseover="this.style.color='rgba(220,150,50,0.95)'" onmouseout="this.style.color='rgba(220,150,50,0.65)'">&gt; ${_isEdition ? 'COLLECTORS' : 'COLLECTOR'}</a></div>`
         : '';
       // Build tab content
       const hasMedia = artwork.additionalMedia && artwork.additionalMedia.length > 0;
@@ -16831,6 +17007,11 @@
         _collectorLink.addEventListener('click', (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
+          // Check if this is an ERC-1155 edition — use multi-collector popup
+          if (_collectorLink.dataset.edition === 'true') {
+            _buildCollectorsPopup();
+            return;
+          }
           // Toggle — if already showing, remove it
           const existing = document.getElementById('collectorNode');
           if (existing) {
@@ -17077,6 +17258,92 @@
                   ownedSection.innerHTML = '<div style="font-size:0.42rem;color:rgba(160,158,150,0.4);">Only this piece</div>';
                 }
               }
+            }
+          };
+
+          // ── ERC-1155: Multi-collector popup (Object Manager style) ──
+          const _buildCollectorsPopup = () => {
+            // Remove any existing popup
+            const existingPopup = document.getElementById('collectorsPopup');
+            if (existingPopup) { existingPopup.remove(); return; }
+
+            const popup = document.createElement('div');
+            popup.id = 'collectorsPopup';
+            popup.className = 'collectors-popup';
+            popup.innerHTML = `
+              <div class="cp-header">
+                <span class="cp-header-title">Owned by</span>
+                <div class="cp-close" id="collectorsPopupClose">&times;</div>
+              </div>
+              <div class="cp-loading">FETCHING OWNERS...</div>
+            `;
+            document.body.appendChild(popup);
+
+            // Position centered above the info panel
+            const panelRect = infoPanel.getBoundingClientRect();
+            const popW = 320;
+            popup.style.left = Math.max(10, panelRect.left + (panelRect.width - popW) / 2) + 'px';
+            popup.style.top = Math.max(10, panelRect.top - 400) + 'px';
+
+            requestAnimationFrame(() => popup.classList.add('visible'));
+
+            // Close handler
+            popup.querySelector('#collectorsPopupClose').addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              popup.classList.remove('visible');
+              setTimeout(() => popup.remove(), 350);
+            });
+
+            // Fetch owners with balances
+            if (ACK_CHAIN.hasKey() && collection.contract && artwork.tokenId !== undefined) {
+              ACK_CHAIN.getOwnersWithBalances(collection.contract, artwork.tokenId).then(function(ownerBalances) {
+                if (!document.getElementById('collectorsPopup')) return;
+                if (!ownerBalances || ownerBalances.length === 0) {
+                  popup.querySelector('.cp-loading').innerHTML = 'No owners found';
+                  return;
+                }
+                const totalOwners = ownerBalances.length;
+                const totalSupply = ownerBalances.reduce(function(sum, o) { return sum + o.balance; }, 0);
+
+                let listHTML = `<div class="cp-summary">${totalOwners} unique owner${totalOwners !== 1 ? 's' : ''} \u00B7 ${totalSupply} total</div><div class="cp-list">`;
+                ownerBalances.forEach(function(owner) {
+                  const addr = owner.address;
+                  const isEns = addr.endsWith('.eth');
+                  const is0x = addr.startsWith('0x');
+                  let displayName = addr;
+                  let linkHref = '';
+                  let pfpUrl = '';
+                  if (isEns) {
+                    linkHref = 'https://etherscan.io/name-lookup-search?id=' + addr;
+                    pfpUrl = 'https://metadata.ens.domains/mainnet/avatar/' + addr;
+                  } else if (is0x) {
+                    displayName = addr.slice(0, 6) + '\u2026' + addr.slice(-4);
+                    linkHref = 'https://etherscan.io/address/' + addr;
+                  }
+                  const pfpHtml = pfpUrl
+                    ? '<img class="cp-pfp" src="' + pfpUrl + '" onerror="this.style.display=\'none\'">'
+                    : '<div class="cp-pfp" style="display:flex;align-items:center;justify-content:center;"><span style="font-size:0.5rem;color:rgba(160,158,150,0.4);">\u229E</span></div>';
+                  const countText = owner.balance + ' ITEM' + (owner.balance !== 1 ? 'S' : '');
+                  listHTML += '<div class="cp-row">' + pfpHtml +
+                    '<a href="' + linkHref + '" target="_blank" class="cp-name">' + displayName + '</a>' +
+                    '<span class="cp-count">' + countText + '</span></div>';
+                });
+                listHTML += '</div>';
+
+                // Replace loading with actual content
+                const loadingEl = popup.querySelector('.cp-loading');
+                if (loadingEl) loadingEl.remove();
+                popup.querySelector('.cp-header').insertAdjacentHTML('afterend', listHTML);
+
+                // Reposition if needed
+                const pRect = popup.getBoundingClientRect();
+                if (pRect.bottom > window.innerHeight - 20) {
+                  popup.style.top = Math.max(10, window.innerHeight - pRect.height - 20) + 'px';
+                }
+              });
+            } else {
+              popup.querySelector('.cp-loading').innerHTML = 'No on-chain data available';
             }
           };
 
