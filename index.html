@@ -14823,7 +14823,9 @@
               const _isLocalFullRes = !_isRemoteFullRes;
 
               // Derive focus-res path: "broken-keys/rage.png" → "broken-keys-focus/rage.jpg"
+              // Skip GIFs — they don't have focus JPG equivalents
               function _deriveFocusPath(localPath) {
+                if (localPath.toLowerCase().endsWith('.gif')) return null;
                 const parts = localPath.split('/');
                 if (parts.length >= 2) {
                   const dir = parts[0] + '-focus';
@@ -14834,13 +14836,12 @@
               }
 
               if (_isLocalFullRes) {
-                // Local fullRes — fullRes PNGs not deployed, try focus-res JPGs first
                 const focusPath = _deriveFocusPath(_fr);
                 if (focusPath) {
+                  // Non-GIF: try focus-res JPG first, then fullRes as fallback
                   const focusPre = new Image();
                   focusPre.onload = () => { nodeImg.src = focusPath; _clearLoading(); };
                   focusPre.onerror = () => {
-                    // Focus-res not available — try fullRes as last resort
                     const frPre = new Image();
                     frPre.onload = () => { nodeImg.src = _fr; _clearLoading(); };
                     frPre.onerror = _clearLoading;
@@ -14850,7 +14851,12 @@
                   focusPre.src = focusPath;
                   setTimeout(_clearLoading, 6000);
                 } else {
-                  _clearLoading();
+                  // GIF or no derivable path: try fullRes directly
+                  const frPre = new Image();
+                  frPre.onload = () => { nodeImg.src = _fr; _clearLoading(); };
+                  frPre.onerror = _clearLoading;
+                  frPre.src = _fr;
+                  setTimeout(_clearLoading, 6000);
                 }
               } else {
                 // Remote fullRes (arweave/IPFS) — load directly
@@ -14858,7 +14864,7 @@
                 preloader.onload = () => { nodeImg.src = _fr; _clearLoading(); };
                 preloader.onerror = () => {
                   if (thumbSrc.includes('?w=')) {
-                    const fallbackSrc = thumbSrc.replace(/\?w=\d+/, _isRealMobile ? '?w=1200' : '?w=1400');
+                    const fallbackSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
                     const fb = new Image();
                     fb.onload = () => { nodeImg.src = fallbackSrc; _clearLoading(); };
                     fb.onerror = _clearLoading;
@@ -14871,7 +14877,7 @@
                 setTimeout(_clearLoading, 8000);
               }
             } else if (thumbSrc.includes('?w=')) {
-              let fullResSrc = thumbSrc.replace(/\?w=\d+/, _isRealMobile ? '?w=800' : '?w=1400');
+              let fullResSrc = thumbSrc.replace(/\?w=\d+/, _isRealMobile ? '?w=1400' : '?w=1400');
               const preloader = new Image();
               preloader.onload = () => { nodeImg.src = fullResSrc; _clearLoading(); };
               preloader.onerror = _clearLoading;
@@ -15511,6 +15517,9 @@
                 var oldCollectorWire = document.getElementById('collectorWireSvg');
                 if (oldCollectorWire) oldCollectorWire.remove();
 
+                // 1b. Remove old artwork frame SVGs
+                _removeAllFocusFrames(curNode);
+
                 // 2. Fade out current
                 if (curPreview) {
                   curPreview.style.transition = 'opacity 0.25s ease';
@@ -15518,28 +15527,22 @@
                 }
 
                 setTimeout(function() {
-                  // 3. Swap image source
+                  // 3. Swap image source — use focus-res or higher-res CDN
                   if (curImg) {
                     curImg.loading = 'eager';
-                    // Try focus-res version first
-                    var _nextImgSrc = nextArt.image || '';
-                    if (nextArt.fullRes) {
-                      var _nfr = nextArt.fullRes;
-                      if (!_nfr.startsWith('http')) {
-                        var _fParts = _nfr.split('/');
-                        if (_fParts.length >= 2) {
-                          _nextImgSrc = _fParts[0] + '-focus/' + _fParts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
-                        }
-                      }
-                    }
+                    var _nextImgSrc = _getFocusImageSrc(nextArt);
                     var _swapImg = new Image();
                     _swapImg.onload = function() {
                       curImg.src = _swapImg.src;
                       _finishSwipe();
                     };
                     _swapImg.onerror = function() {
-                      // Focus-res failed, use thumbnail
-                      curImg.src = nextArt.image || '';
+                      // Focus-res failed, use thumbnail (also try higher-res CDN)
+                      var fallback = nextArt.image || '';
+                      if (fallback.indexOf('?w=') !== -1) {
+                        fallback = fallback.replace(/\?w=\d+/, '?w=1400');
+                      }
+                      curImg.src = fallback;
                       _finishSwipe();
                     };
                     _swapImg.src = _nextImgSrc;
@@ -15563,8 +15566,11 @@
                     }
                     // 5. Update motherboard
                     _updateMobileMotherboard(col, nextArt);
-                    // 6. Redraw wires
+                    // 6. Generate new frame for the next artwork
+                    var _nextColName = (nextArt._sourceCollection) ? nextArt._sourceCollection : col.name;
                     setTimeout(function() {
+                      _generateFocusFrameForNode(curNode, _nextColName, nextArt);
+                      // 7. Redraw wires
                       drawFocusModeWires(curNode, null);
                       _swipeTransitioning = false;
                     }, 200);
@@ -15594,6 +15600,124 @@
         document.addEventListener('touchmove', onTouchMove, { passive: false });
         document.addEventListener('touchend', onTouchEnd, { passive: true });
       }
+    }
+
+    // ── Helper: remove ALL focus-mode frame SVGs from a node ──
+    function _removeAllFocusFrames(node) {
+      var frameSelectors = [
+        '.ornate-frame-svg', '.blossom-frame-svg', '.clown-frame-svg',
+        '.editions-frame-svg', '.void-engine-frame', '.lisan-frame-svg',
+        '.colorstudy-frame-svg', '.opepen-frame-svg', '.heartyou-frame-svg',
+        '.starry-frame-svg', '.pfp-frame-svg', '.brokenkeys-frame-svg',
+        '.warothy-frame-svg', '.botanical-frame-svg', '.servant-frame-svg',
+        '.tempted-frame-svg', '.bar-frame-svg'
+      ];
+      frameSelectors.forEach(function(sel) {
+        var frames = node.querySelectorAll(sel);
+        frames.forEach(function(f) {
+          // Don't remove collection-view frames (data-collection-frame) — just hide them
+          if (f.getAttribute('data-collection-frame')) {
+            f.style.display = 'none';
+          } else {
+            f.remove();
+          }
+        });
+      });
+      // Also remove maxpain chip/meter and zoom hint
+      var chip = node.querySelector('.maxpain-v2-chip');
+      if (chip) chip.remove();
+      if (node._painMeter) { node._painMeter.remove(); node._painMeter = null; }
+      var hint = node.querySelector('.masterwork-zoom-hint');
+      if (hint) hint.remove();
+    }
+
+    // ── Helper: generate the correct focus frame for an artwork ──
+    function _generateFocusFrameForNode(node, colName, artworkData) {
+      var preview = node.querySelector('.node-preview');
+      var img = preview ? preview.querySelector('img') : null;
+      if (!preview || !img) return;
+      var localW = parseFloat(node.style.width) || preview.offsetWidth;
+      var localH = img.offsetHeight || preview.offsetHeight || localW;
+      var pal, frameSvg;
+
+      if (colName === 'Piano Blossoms') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Piano Blossoms'];
+        frameSvg = generateBlossomFrame(localW, localH, pal, artworkData.title, true);
+      } else if (colName === 'Clown Party') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Clown Party'];
+        frameSvg = generateClownFrame(localW, localH, pal);
+      } else if (colName === 'ACK Editions') {
+        var imgSrc = artworkData.image || '';
+        if (imgSrc.indexOf('lanuit') !== -1) {
+          frameSvg = generateStarryFrame(localW, localH);
+        } else if (imgSrc.indexOf('lisan') !== -1) {
+          frameSvg = generateLisanFrame(localW, localH);
+        } else if (imgSrc.indexOf('void_engine') !== -1) {
+          pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['ACK Editions'];
+          frameSvg = generateVoidEngineFrame(localW, localH, pal);
+        } else {
+          pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['ACK Editions'];
+          frameSvg = generateEditionsFrame(localW, localH, pal);
+        }
+      } else if (colName === 'The Great Color Study') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['The Great Color Study'];
+        frameSvg = generateColorStudyFrame(localW, localH, pal, artworkData.title, true);
+      } else if (colName === 'ACKPFP') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['ACKPFP'];
+        frameSvg = generatePfpFrame(localW, localH, pal, artworkData.title);
+      } else if (colName === 'Warothys') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Warothys'];
+        frameSvg = generateWarothyFrame(localW, localH, pal, artworkData.title);
+      } else if (colName === 'Broken Keys') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Broken Keys'];
+        frameSvg = generateBrokenKeysFrame(localW, localH, pal, artworkData.title, true);
+      } else if (colName === 'Opepen Set 030: a.c.k.') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Opepen'];
+        frameSvg = generateOpepenFrame(localW, localH, pal, artworkData.title, true);
+      } else if (colName === 'Heart You') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Heart You'];
+        frameSvg = generateHeartYouFrame(localW, localH, pal, artworkData.title, true);
+      } else if (colName === 'Made these for your girl') {
+        frameSvg = generateBotanicalFrame(localW, localH);
+      } else if (colName === 'Last Orders') {
+        frameSvg = generateBarFrame(localW, localH, true);
+      } else if (colName === 'Tempted in the Garden') {
+        frameSvg = generateTemptedFrame(localW, localH, true);
+      } else if (colName === 'Servant Coin Spin') {
+        frameSvg = generateServantFrame(localW, localH);
+      } else if (artworkData.masterwork) {
+        frameSvg = generateOrnateFrame(localW, localH);
+      }
+
+      if (frameSvg) {
+        node.appendChild(frameSvg);
+      }
+    }
+
+    // ── Helper: get higher-res image URL for focus view ──
+    function _getFocusImageSrc(art) {
+      var src = art.image || '';
+      // For local fullRes, derive focus path (skip GIFs — they don't have focus JPGs)
+      if (art.fullRes) {
+        var fr = art.fullRes;
+        if (!fr.startsWith('http')) {
+          var isGif = fr.toLowerCase().endsWith('.gif');
+          if (!isGif) {
+            var parts = fr.split('/');
+            if (parts.length >= 2) {
+              return parts[0] + '-focus/' + parts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
+            }
+          } else {
+            // GIF: try the fullRes GIF directly (some are deployed)
+            return fr;
+          }
+        }
+      }
+      // For CDN URLs with ?w= parameter, request higher resolution
+      if (src.indexOf('?w=') !== -1) {
+        src = src.replace(/\?w=\d+/, '?w=1400');
+      }
+      return src;
     }
 
     // ── Helper: update motherboard tickers during mobile swipe transitions ──
