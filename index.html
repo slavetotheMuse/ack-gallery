@@ -15000,12 +15000,14 @@
           }
         }, _scatterWait + 200);
       } else {
-      // ── DESKTOP: Floating title at bottom-left ──
+      // ── DESKTOP: Floating title underneath artwork, left-aligned ──
       setTimeout(() => {
         const focusTitleEl = document.createElement('div');
         focusTitleEl.id = 'focusModeTitle';
         focusTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + artworkTitle;
-        focusTitleEl.style.cssText = 'position:fixed;bottom:28px;left:24px;z-index:2500;font-family:"JetBrains Mono",monospace;font-size:0.85rem;color:rgba(200,195,185,0.7);letter-spacing:0.06em;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.4s ease;';
+        const _titleLeft = node._focusLeftEdge || 24;
+        const _titleTop = (node._focusBottomEdge || (window.innerHeight * 0.85)) + 50;
+        focusTitleEl.style.cssText = 'position:fixed;z-index:2500;font-family:"JetBrains Mono",monospace;font-size:0.85rem;color:rgba(200,195,185,0.7);letter-spacing:0.06em;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.4s ease;left:' + _titleLeft + 'px;top:' + _titleTop + 'px;';
         document.body.appendChild(focusTitleEl);
         requestAnimationFrame(() => { focusTitleEl.style.opacity = '1'; });
       }, _scatterWait + 300);
@@ -15589,8 +15591,13 @@
                     if (curPreview) {
                       curPreview.style.opacity = '1';
                     }
-                    // 5. Update motherboard
+                    // 5. Update motherboard + title
                     _updateMobileMotherboard(col, nextArt);
+                    // Update floating title if present
+                    var _swipeTitleEl = document.getElementById('focusModeTitle');
+                    if (_swipeTitleEl && nextArt.title) {
+                      _swipeTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + nextArt.title;
+                    }
                     // 6. Generate new frame for the next artwork
                     var _nextColName = (nextArt._sourceCollection) ? nextArt._sourceCollection : col.name;
                     setTimeout(function() {
