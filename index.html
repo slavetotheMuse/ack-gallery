@@ -8261,10 +8261,26 @@
         var tapPrompt = document.getElementById('whispersTapPrompt');
         if (tapPrompt) tapPrompt.style.display = 'none';
 
-        // Intro audio — use Web Audio API for reverb/ambience, with robust fallback
+        // Intro audio — Web Audio reverb on https, plain Audio on file://
+        // createMediaElementSource detaches the element's default output permanently.
+        // On file:// Chrome CORS-mutes the media stream, so Web Audio graph gets silence.
         var audio; // declared in outer scope so audio.pause() works later
         function _playWhisperAudio() {
           audio = new Audio('dreamsarewhispers.wav');
+          var _isLocal = window.location.protocol === 'file:';
+
+          if (_isLocal) {
+            // file:// — skip Web Audio entirely, just play plain Audio
+            audio.volume = 0.15;
+            audio.play().then(function() {
+              console.log('[ACK] Whisper audio playing (plain, file://)');
+            }).catch(function(err) {
+              console.warn('[ACK] Whisper audio failed on file://:', err);
+            });
+            return;
+          }
+
+          // https:// — use Web Audio API for reverb/ambience
           audio.volume = 1.0;
           var _wCtx, _wSrc;
           try {
@@ -8305,7 +8321,6 @@
             console.log('[ACK] Whisper audio playing via Web Audio');
           }).catch(function(err) {
             console.warn('[ACK] Web Audio play failed:', err, '— trying plain fallback');
-            // Web Audio path failed — create a completely fresh Audio element
             var fallbackAudio = new Audio('dreamsarewhispers.wav');
             fallbackAudio.volume = 0.15;
             fallbackAudio.play().catch(function(err2) {
