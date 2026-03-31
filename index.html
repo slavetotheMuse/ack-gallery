@@ -8271,7 +8271,7 @@
 
           if (_isLocal) {
             // file:// — skip Web Audio entirely, just play plain Audio
-            audio.volume = 0.15;
+            audio.volume = 0.11;
             audio.play().then(function() {
               console.log('[ACK] Whisper audio playing (plain, file://)');
             }).catch(function(err) {
@@ -8289,7 +8289,7 @@
             _wSrc = _wCtx.createMediaElementSource(audio);
             // Master gain
             var _masterGain = _wCtx.createGain();
-            _masterGain.gain.value = 0.2;
+            _masterGain.gain.value = 0.15;
             // Low-pass
             var _wLP = _wCtx.createBiquadFilter();
             _wLP.type = 'lowpass'; _wLP.frequency.value = 1800; _wLP.Q.value = 0.4;
@@ -8312,9 +8312,9 @@
           } catch(e) {
             // If createMediaElementSource was called, source is detached — connect direct
             if (_wSrc && _wCtx) {
-              try { var _fg = _wCtx.createGain(); _fg.gain.value = 0.15; _wSrc.connect(_fg); _fg.connect(_wCtx.destination); } catch(e3){}
+              try { var _fg = _wCtx.createGain(); _fg.gain.value = 0.11; _wSrc.connect(_fg); _fg.connect(_wCtx.destination); } catch(e3){}
             } else {
-              audio.volume = 0.15;
+              audio.volume = 0.11;
             }
           }
           audio.play().then(function() {
@@ -8322,7 +8322,7 @@
           }).catch(function(err) {
             console.warn('[ACK] Web Audio play failed:', err, '— trying plain fallback');
             var fallbackAudio = new Audio('dreamsarewhispers.wav');
-            fallbackAudio.volume = 0.15;
+            fallbackAudio.volume = 0.11;
             fallbackAudio.play().catch(function(err2) {
               console.warn('[ACK] Fallback audio also failed:', err2);
             });
@@ -12698,8 +12698,8 @@
         { name: "1 of 1s",                 x: 49.7, y: 39.9, w: 14.6, ar: 0.8 },
         { name: "Opepen Set 030: a.c.k.",  x: 76.2, y: 48.5, w: 3.8,  ar: 1 },
         { name: "Clown Party",             x: 76,   y: 34.8, w: 5.4,  ar: 1 },
-        { name: "Right Click Print",       x: 14.2, y: 50.8, w: 7.8,  ar: 1.779 },
-        { name: "Last Orders",             x: 15.8, y: 49.3, w: 7.8,  ar: 1.779 },
+        { name: "Right Click Print",       x: 14.2, y: 48.7, w: 6,    ar: 1.779 },
+        { name: "Last Orders",             x: 16.7, y: 53,   w: 5.8,  ar: 1.779 },
         { name: "servants",                x: 83.1, y: 30.3, w: 6.2,  ar: 1, round: true },
         { name: "Heart You",               x: 33.9, y: 40.4, w: 12,   ar: 0.82 },
         { name: "ACK Editions",            x: 65.4, y: 42.1, w: 11.7, ar: 0.8 },
@@ -12713,7 +12713,6 @@
         { name: "6529",                    x: 83.6, y: 48.1, w: 4.4,  ar: 0.926 },
         { name: "Ackstract",               x: 20.6, y: 65.4, w: 16,   ar: 2.39 },
         { name: "SuperRare",               x: 80.9, y: 63.2, w: 11.3, ar: 1.797 },
-        { name: "Starry Nights",            x: 49.5, y: 26.5, w: 8,   ar: 1.487 },
       ];
 
       // Usable area
