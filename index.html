@@ -18191,49 +18191,20 @@
               var _tBtn = preview.querySelector('.lo-touch-btn');
               if (_tBtn) _tBtn.remove();
               var _rcpSrc = 'right_click_print/rcp.mp4';
-              var _rcpFadeTime = 0.8;
-              function _makeRcpVid(id) {
-                var v = document.createElement('video');
-                v.id = id;
-                v.src = _rcpSrc;
-                v.loop = false;
-                v.muted = true;
-                v.playsInline = true;
-                v.preload = 'auto';
-                v.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;transition:opacity ' + _rcpFadeTime + 's ease;';
-                v.setAttribute('playsinline', '');
-                return v;
-              }
-              var vidA = _makeRcpVid('rcpFocusVideo');
-              var vidB = _makeRcpVid('rcpFocusVideoB');
-              vidB.style.opacity = '0';
-              vidB.style.zIndex = '3';
+              var vid = document.createElement('video');
+              vid.id = 'rcpFocusVideo';
+              vid.src = _rcpSrc;
+              vid.loop = true;
+              vid.muted = true;
+              vid.playsInline = true;
+              vid.preload = 'auto';
+              vid.setAttribute('playsinline', '');
+              vid.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;';
               preview.style.position = 'relative';
-              preview.appendChild(vidA);
-              preview.appendChild(vidB);
-              var _rcpActive = vidA, _rcpStandby = vidB;
+              preview.appendChild(vid);
+              vid.autoplay = true;
+              vid.play().catch(function(){});
               var _rcpMuted = true;
-              function _rcpSwap() {
-                _rcpStandby.currentTime = 0;
-                _rcpStandby.muted = _rcpMuted;
-                _rcpStandby.play().catch(function(){});
-                _rcpStandby.style.opacity = '1';
-                _rcpActive.style.opacity = '0';
-                var oldActive = _rcpActive;
-                _rcpActive = _rcpStandby;
-                _rcpStandby = oldActive;
-                setTimeout(function() { oldActive.pause(); }, _rcpFadeTime * 1000 + 200);
-              }
-              function _rcpMonitor() {
-                if (!document.getElementById('rcpFocusVideo')) return;
-                if (_rcpActive.duration && _rcpActive.currentTime > 0) {
-                  if (_rcpActive.duration - _rcpActive.currentTime <= _rcpFadeTime + 0.1) _rcpSwap();
-                }
-                requestAnimationFrame(_rcpMonitor);
-              }
-              vidA.addEventListener('loadedmetadata', function() { requestAnimationFrame(_rcpMonitor); });
-              vidA.autoplay = true;
-              vidA.play().catch(function(){});
               var soundBtn = document.createElement('div');
               soundBtn.className = 'video-sound-btn';
               soundBtn.id = 'rcpSoundBtn';
@@ -18243,10 +18214,9 @@
               soundBtn.onclick = function(ev) {
                 ev.stopPropagation();
                 _rcpMuted = !_rcpMuted;
-                vidA.muted = _rcpMuted;
-                vidB.muted = _rcpMuted;
+                vid.muted = _rcpMuted;
                 soundBtn.innerHTML = _rcpMuted ? '🔇' : '🔊';
-                if (!_rcpMuted) { _rcpActive.currentTime = 0; _rcpActive.play(); }
+                if (!_rcpMuted) { vid.currentTime = 0; vid.play(); }
               };
               preview.appendChild(soundBtn);
             }
@@ -26757,12 +26727,10 @@
       const _loSoundBtn = focusedNode.querySelector('#lastOrdersSoundBtn');
       if (_loSoundBtn) _loSoundBtn.remove();
 
-      // Clean up Right Click Print focus videos (dual crossfade)
-      const _rcpVidA = focusedNode.querySelector('#rcpFocusVideo');
-      const _rcpVidB = focusedNode.querySelector('#rcpFocusVideoB');
-      if (_rcpVidA) { _rcpVidA.pause(); _rcpVidA.src = ''; _rcpVidA.remove(); }
-      if (_rcpVidB) { _rcpVidB.pause(); _rcpVidB.src = ''; _rcpVidB.remove(); }
-      if (_rcpVidA || _rcpVidB) {
+      // Clean up Right Click Print focus video
+      const _rcpVid = focusedNode.querySelector('#rcpFocusVideo');
+      if (_rcpVid) { _rcpVid.pause(); _rcpVid.src = ''; _rcpVid.remove(); }
+      if (_rcpVid) {
         const _rcpImg = focusedNode.querySelector('.node-preview img');
         if (_rcpImg) { _rcpImg.style.display = ''; _rcpImg.style.visibility = ''; }
       }
