@@ -23563,6 +23563,32 @@
           // Rage/fire: small flame-like flicker shape
           const flx = L - 6, fly = B + 4;
           els += `<path d="M${flx},${fly} Q${flx - 1.5},${fly - 3} ${flx + 0.5},${fly - 5} Q${flx + 1},${fly - 2} ${flx},${fly}" fill="none" stroke="${ac_(0.12)}" stroke-width="0.4" stroke-linecap="round" class="bk-flame"/>`;
+        } else if (tl.indexOf('love') !== -1 || tl.indexOf('dreamt') !== -1 || tl.indexOf('serendipity') !== -1 || tl.indexOf('wonder') !== -1) {
+          // Love/dream: tiny heart outline near corner
+          const hx = R + 5, hy = T + H * 0.35;
+          const hs = 2.2;
+          els += `<path d="M${hx},${hy + hs * 0.3} C${hx - hs},${hy - hs * 0.5} ${hx - hs},${hy + hs * 0.2} ${hx},${hy + hs} C${hx + hs},${hy + hs * 0.2} ${hx + hs},${hy - hs * 0.5} ${hx},${hy + hs * 0.3}" fill="none" stroke="${ac_(0.1)}" stroke-width="0.35" class="bk-note"/>`;
+        } else if (tl.indexOf('skull') !== -1 || tl.indexOf('here lies') !== -1 || tl.indexOf('ancient') !== -1) {
+          // Death/rest: faint cross mark
+          const cx = L - 6, cy = T + H * 0.5;
+          els += `<line x1="${cx - 2}" y1="${cy}" x2="${cx + 2}" y2="${cy}" stroke="${ac_(0.08)}" stroke-width="0.3" class="bk-note"/>`;
+          els += `<line x1="${cx}" y1="${cy - 3}" x2="${cx}" y2="${cy + 3}" stroke="${ac_(0.08)}" stroke-width="0.3" class="bk-note"/>`;
+        } else if (tl.indexOf('odyssey') !== -1 || tl.indexOf('center') !== -1 || tl.indexOf('looming') !== -1 || tl.indexOf('paradox') !== -1 || tl.indexOf('primordial') !== -1) {
+          // Cosmic/space: tiny orbital ellipse
+          const ox = R + 6, oy = T + H * 0.5;
+          els += `<ellipse cx="${ox}" cy="${oy}" rx="4" ry="1.5" fill="none" stroke="${ac_(0.08)}" stroke-width="0.25" transform="rotate(-20,${ox},${oy})" class="bk-note"/>`;
+          els += `<circle cx="${ox + 3}" cy="${oy - 0.8}" r="0.4" fill="${ac_(0.12)}" class="bk-note"/>`;
+        } else if (tl.indexOf('portrait') !== -1 || tl.indexOf('vogue') !== -1 || tl.indexOf('collector') !== -1 || tl === 'untitled') {
+          // Portrait/figure: tiny eye symbol
+          const ex = L - 6, ey = T + H * 0.4;
+          els += `<path d="M${ex - 2.5},${ey} Q${ex},${ey - 1.8} ${ex + 2.5},${ey} Q${ex},${ey + 1.8} ${ex - 2.5},${ey}" fill="none" stroke="${ac_(0.09)}" stroke-width="0.3" class="bk-note"/>`;
+          els += `<circle cx="${ex}" cy="${ey}" r="0.6" fill="${ac_(0.1)}" class="bk-note"/>`;
+        } else if (tl.indexOf('manor') !== -1 || tl.indexOf('retro') !== -1 || tl.indexOf('pop art') !== -1) {
+          // Architecture/retro: tiny window grid
+          const wx = R + 4, wy = T + H * 0.3;
+          els += `<rect x="${wx}" y="${wy}" width="4" height="5" fill="none" stroke="${ac_(0.09)}" stroke-width="0.25" class="bk-note"/>`;
+          els += `<line x1="${wx + 2}" y1="${wy}" x2="${wx + 2}" y2="${wy + 5}" stroke="${ac_(0.07)}" stroke-width="0.2" class="bk-note"/>`;
+          els += `<line x1="${wx}" y1="${wy + 2.5}" x2="${wx + 4}" y2="${wy + 2.5}" stroke="${ac_(0.07)}" stroke-width="0.2" class="bk-note"/>`;
         } else {
           // Default: single music note symbol (♪) very faintly placed
           const noteX = R + 5, noteY = T + H * 0.5;
@@ -23801,6 +23827,29 @@
           els += `<line x1="${bx}" y1="${by}" x2="${bx}" y2="${by + dy * 10}" stroke="${ac_(0.2)}" stroke-width="0.6"/>`;
         });
 
+      // ── PRIMORDIAL BLUE — deep ocean / everlasting ──
+      } else if (tl === 'primordial blue') {
+        // Concentric ripple arcs emanating from bottom center — primordial waters
+        const ox = L + W * 0.5, oy = B + 3;
+        for (let i = 0; i < 4; i++) {
+          const r = 4 + i * 4.5;
+          const startA = -Math.PI * 0.78, endA = -Math.PI * 0.22;
+          const x1 = ox + Math.cos(startA) * r, y1 = oy + Math.sin(startA) * r * 0.4;
+          const x2 = ox + Math.cos(endA) * r, y2 = oy + Math.sin(endA) * r * 0.4;
+          els += `<path d="M${x1},${y1} A${r},${r * 0.4} 0 0 1 ${x2},${y2}" fill="none" stroke="${ac_(0.1 - i * 0.015)}" stroke-width="0.3"/>`;
+        }
+        // Infinity symbol (∞) — "Everlasting" — faint at top
+        const ix = L + W * 0.5, iy = T - 5;
+        els += `<path d="M${ix},${iy} C${ix - 5},${iy - 3} ${ix - 5},${iy + 3} ${ix},${iy} C${ix + 5},${iy - 3} ${ix + 5},${iy + 3} ${ix},${iy}" fill="none" stroke="${ac_(0.1)}" stroke-width="0.35"/>`;
+        // Deep current lines along sides
+        for (let i = 0; i < 3; i++) {
+          const side = i < 2;
+          const cx = side ? (L - 3) : (R + 3);
+          const cy = T + H * 0.3 + i * H * 0.2;
+          const dir = side ? -1 : 1;
+          els += `<path d="M${cx},${cy} Q${cx + dir * 6},${cy + 3} ${cx + dir * 2},${cy + 8}" fill="none" stroke="${ac_(0.08)}" stroke-width="0.3" stroke-linecap="round"/>`;
+        }
+
       // ── DEFAULT: subtle accent scatter ──
       } else {
         for (let i = 0; i < 6; i++) {
@@ -23810,6 +23859,164 @@
           const r = 0.4 + rand() * 0.8;
           els += `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${ac_(0.08 + rand() * 0.06)}"/>`;
         }
+      }
+
+      // ══ DESCRIPTION-BASED MICRO-ENHANCEMENTS ══
+      // Layered on TOP of existing per-artwork elements — these add thematic touches
+      // inspired by each artwork's description, without changing any base treatment.
+
+      // ── "The Rose Labyrinth" — "the heart of the Muse lies in the center" ──
+      if (tl === 'the rose labyrinth') {
+        // Tiny maze path fragment near right edge
+        const mx = R + 4, my = T + H * 0.35;
+        els += `<path d="M${mx},${my} L${mx + 5},${my} L${mx + 5},${my + 5} L${mx + 1.5},${my + 5} L${mx + 1.5},${my + 2} L${mx + 3.5},${my + 2}" fill="none" stroke="${ac_(0.1)}" stroke-width="0.3"/>`;
+        // Small heart at maze center
+        const hx = mx + 2.5, hy = my + 3.5;
+        els += `<path d="M${hx},${hy + 0.3} C${hx - 0.8},${hy - 0.5} ${hx - 0.8},${hy + 0.3} ${hx},${hy + 1} C${hx + 0.8},${hy + 0.3} ${hx + 0.8},${hy - 0.5} ${hx},${hy + 0.3}" fill="${ac_(0.12)}" stroke="none"/>`;
+      }
+
+      // ── "here lies the king" — "died for his Queen" ──
+      if (tl === 'here lies the king') {
+        // Tiny crown silhouette at top center
+        const crx = L + W * 0.5, cry = T - 5;
+        els += `<path d="M${crx - 4},${cry + 2} L${crx - 4},${cry} L${crx - 2},${cry + 1.2} L${crx},${cry - 1} L${crx + 2},${cry + 1.2} L${crx + 4},${cry} L${crx + 4},${cry + 2}Z" fill="none" stroke="${ac_(0.14)}" stroke-width="0.35"/>`;
+        // Small chess queen piece silhouette at bottom-right
+        const qx = R + 5, qy = B - 6;
+        els += `<path d="M${qx},${qy + 4} L${qx - 2},${qy + 4} L${qx - 1.5},${qy + 2} L${qx - 2},${qy} L${qx},${qy - 1.5} L${qx + 2},${qy} L${qx + 1.5},${qy + 2} L${qx + 2},${qy + 4}Z" fill="none" stroke="${ac_(0.12)}" stroke-width="0.3"/>`;
+      }
+
+      // ── "The Void" — "Sound not permitted" ──
+      if (tl === 'the void') {
+        // Muted note: music note with a cross through it
+        const nx = L - 7, ny = T + H * 0.4;
+        els += `<text x="${nx}" y="${ny}" font-family="serif" font-size="5" fill="${ac_(0.12)}" text-anchor="middle">♪</text>`;
+        els += `<line x1="${nx - 2.5}" y1="${ny - 3.5}" x2="${nx + 2.5}" y2="${ny + 1}" stroke="${ac_(0.16)}" stroke-width="0.5"/>`;
+      }
+
+      // ── "Untitled" — "forgotten" ──
+      if (tl === 'untitled') {
+        // Fading dashed lines — as if the frame itself is being erased
+        for (let i = 0; i < 4; i++) {
+          const fy = T + H * 0.15 + i * H * 0.22;
+          const op = (0.1 - i * 0.02).toFixed(2);
+          const side = i % 2 === 0;
+          const fx = side ? L - 3 : R + 3;
+          const dir = side ? -1 : 1;
+          els += `<line x1="${fx}" y1="${fy}" x2="${fx + dir * (6 - i)}" y2="${fy}" stroke="${ac_(op)}" stroke-width="0.3" stroke-dasharray="${1 + i * 0.5},${2 + i}"/>`;
+        }
+      }
+
+      // ── "self portrait" — "post mortem" ──
+      if (tl === 'self portrait') {
+        // Ghost double: a second faint offset border — spectral afterimage
+        els += `<rect x="${L + 1.5}" y="${T + 1.5}" width="${W - 3}" height="${H - 3}" fill="none" stroke="${ac_(0.05)}" stroke-width="0.3" stroke-dasharray="3,4"/>`;
+        // "PM" initials barely visible (post mortem)
+        const pmx = R + 4, pmy = B + 5;
+        els += `<text x="${pmx}" y="${pmy}" font-family="serif" font-size="3.5" fill="${ac_(0.07)}" letter-spacing="1">p.m.</text>`;
+      }
+
+      // ── "Skullpture in Red Noise" — "new york, 2023" ──
+      if (tl.indexOf('skullpture') !== -1) {
+        // Tiny NYC skyline silhouette along bottom margin
+        const sx = L + W * 0.25, sy = B + 6;
+        els += `<path d="M${sx},${sy} L${sx},${sy - 3} L${sx + 2},${sy - 3} L${sx + 2},${sy - 5} L${sx + 3.5},${sy - 5} L${sx + 3.5},${sy - 7} L${sx + 5},${sy - 7} L${sx + 5},${sy - 4} L${sx + 6.5},${sy - 4} L${sx + 6.5},${sy - 6} L${sx + 8},${sy - 6} L${sx + 8},${sy - 3} L${sx + 10},${sy - 3} L${sx + 10},${sy}" fill="none" stroke="${ac_(0.1)}" stroke-width="0.35"/>`;
+      }
+
+      // ── "An Ancient Place" — "It is said that Death himself lived here" ──
+      if (tl === 'an ancient place') {
+        // Hourglass silhouette near bottom-left
+        const hx = L - 6, hy = B - 8;
+        els += `<path d="M${hx - 2},${hy} L${hx + 2},${hy} L${hx + 0.3},${hy + 4} L${hx + 2},${hy + 8} L${hx - 2},${hy + 8} L${hx - 0.3},${hy + 4}Z" fill="none" stroke="${ac_(0.1)}" stroke-width="0.3"/>`;
+        // Faint sand trickle in center of hourglass
+        els += `<line x1="${hx}" y1="${hy + 3}" x2="${hx}" y2="${hy + 5}" stroke="${ac_(0.08)}" stroke-width="0.2" stroke-dasharray="0.5,1"/>`;
+      }
+
+      // ── "A Space Odyssey, 2023" — "Journey to Alpha Centauri" ──
+      if (tl.indexOf('space odyssey') !== -1) {
+        // Alpha Centauri triple-star system: three tiny stars in a cluster
+        const sx = R + 5, sy = T + 6;
+        els += `<circle cx="${sx}" cy="${sy}" r="0.8" fill="${ac_(0.2)}"/>`;
+        els += `<circle cx="${sx + 2.5}" cy="${sy - 1.5}" r="0.6" fill="${ac_(0.15)}"/>`;
+        els += `<circle cx="${sx + 1}" cy="${sy + 2}" r="0.4" fill="${ac_(0.1)}"/>`;
+        // Faint trajectory arc from bottom-left to stars
+        els += `<path d="M${L - 4},${B + 2} Q${L + W * 0.3},${T - 10} ${sx},${sy}" fill="none" stroke="${ac_(0.05)}" stroke-width="0.25" stroke-dasharray="2,3"/>`;
+      }
+
+      // ── "The Chosen One" — "Dark forces seek to destroy the last piano in existence" ──
+      if (tl === 'the chosen one') {
+        // Small shield outline at top-right
+        const shx = R + 4, shy = T - 2;
+        els += `<path d="M${shx},${shy - 3} L${shx + 3},${shy - 1} L${shx + 3},${shy + 2} Q${shx + 1.5},${shy + 4.5} ${shx},${shy + 5} Q${shx - 1.5},${shy + 4.5} ${shx - 3},${shy + 2} L${shx - 3},${shy - 1}Z" fill="none" stroke="${ac_(0.12)}" stroke-width="0.35"/>`;
+        // Tiny crossed swords beneath
+        els += `<line x1="${shx - 2}" y1="${shy + 6}" x2="${shx + 2}" y2="${shy + 9}" stroke="${ac_(0.09)}" stroke-width="0.3"/>`;
+        els += `<line x1="${shx + 2}" y1="${shy + 6}" x2="${shx - 2}" y2="${shy + 9}" stroke="${ac_(0.09)}" stroke-width="0.3"/>`;
+      }
+
+      // ── "Piano in a garden next to the Insane Asylum" — Van Gogh reference ──
+      if (tl.indexOf('insane asylum') !== -1) {
+        // Starry night swirl — Van Gogh's iconic spiral
+        const vx = L - 6, vy = T + 5;
+        els += `<path d="M${vx},${vy} Q${vx - 3},${vy - 3} ${vx - 1},${vy - 5} Q${vx + 2},${vy - 3} ${vx},${vy}" fill="none" stroke="${ac_(0.1)}" stroke-width="0.35"/>`;
+        els += `<path d="M${vx - 0.5},${vy - 2.5} Q${vx - 2},${vy - 4} ${vx},${vy - 4}" fill="none" stroke="${ac_(0.07)}" stroke-width="0.25"/>`;
+        // Tiny star dots scattered above
+        for (let i = 0; i < 4; i++) {
+          const stx = L - 3 + rand() * 6 - 6;
+          const sty = T - 3 - rand() * 5;
+          els += `<circle cx="${stx}" cy="${sty}" r="${0.3 + rand() * 0.3}" fill="${ac_(0.12)}"/>`;
+        }
+      }
+
+      // ── "Center Of The Universe" — "The longer you stare, the more it consumes you" ──
+      if (tl.indexOf('center of the universe') !== -1) {
+        // Hypnotic concentric rings converging to center
+        const cx = L + W * 0.5, cy = T + H * 0.5;
+        for (let i = 0; i < 3; i++) {
+          const r = W * 0.55 + i * 4;
+          els += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ac_(0.03 + i * 0.01)}" stroke-width="0.2" stroke-dasharray="${3 + i * 2},${5 + i * 3}"/>`;
+        }
+      }
+
+      // ── "Serendipity" — "Her favorite color" ──
+      if (tl === 'serendipity') {
+        // A single tiny paint swatch / color chip at bottom-right
+        const cx = R + 4, cy = B - 4;
+        els += `<rect x="${cx}" y="${cy}" width="4" height="5" rx="0.3" fill="none" stroke="${ac_(0.14)}" stroke-width="0.35"/>`;
+        els += `<rect x="${cx + 0.5}" y="${cy + 0.5}" width="3" height="2.5" rx="0.2" fill="${ac_(0.08)}"/>`;
+      }
+
+      // ── "You Mustn't Pick the Purple Flowers" — dark fairy-tale poetry ──
+      if (tl.indexOf('purple flower') !== -1) {
+        // Tiny poison/warning symbol (skull-and-crossbones hint) among the vines
+        const px = R + 6, py = B + 4;
+        els += `<circle cx="${px}" cy="${py}" r="1.5" fill="none" stroke="${ac_(0.1)}" stroke-width="0.3"/>`;
+        els += `<line x1="${px - 2}" y1="${py + 2.5}" x2="${px + 2}" y2="${py + 2.5}" stroke="${ac_(0.08)}" stroke-width="0.25"/>`;
+        els += `<line x1="${px}" y1="${py + 1.5}" x2="${px}" y2="${py + 3.5}" stroke="${ac_(0.08)}" stroke-width="0.25"/>`;
+      }
+
+      // ── "ACKstract Concerto" — "The God Theory" ──
+      if (tl === 'ackstract concerto') {
+        // Faint phi (φ) symbol — divine proportion / God Theory
+        const px = L - 7, py = T + H * 0.5;
+        els += `<text x="${px}" y="${py}" font-family="serif" font-size="5" fill="${ac_(0.09)}" text-anchor="middle">φ</text>`;
+      }
+
+      // ── "Rage" — "...against the dying of the light" (Dylan Thomas) ──
+      if (tl === 'rage') {
+        // Fading light: diminishing dots from bright to dim trailing off right edge
+        for (let i = 0; i < 5; i++) {
+          const dx = R + 4 + i * 2.5;
+          const dy = T + H * 0.5;
+          const op = (0.16 - i * 0.028).toFixed(3);
+          const r = 0.7 - i * 0.1;
+          els += `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${ac_(op)}"/>`;
+        }
+      }
+
+      // ── "Fear Not, Behold I Bring Good Tidings" — "You knew better" ──
+      if (tl.indexOf('fear not') !== -1) {
+        // Faint serpent/temptation curve at bottom — "you knew better"
+        const sx = L + W * 0.3, sy = B + 5;
+        els += `<path d="M${sx},${sy} S${sx + 4},${sy - 2} ${sx + 8},${sy} S${sx + 12},${sy + 2} ${sx + 16},${sy}" fill="none" stroke="${ac_(0.07)}" stroke-width="0.3" stroke-linecap="round"/>`;
       }
 
       // Add CSS keyframes for focus mode animations
