@@ -7131,73 +7131,77 @@
           }, scrambleStart);
         }
 
-        // Fade out text at ~6.5s
+        // Smooth text fade out starting at ~6s — gentle dissolve, no abrupt cut
         setTimeout(function() {
           if (textEl) {
-            textEl.style.transition = 'color 1.5s ease';
+            textEl.style.transition = 'color 2.5s ease-in-out';
             textEl.style.color = 'rgba(245,240,230,0)';
             textEl.classList.remove('breathing');
           }
           if (textWrap) {
-            textWrap.style.transition = 'opacity 1.5s ease';
+            textWrap.style.transition = 'opacity 2.5s ease-in-out';
             textWrap.style.opacity = '0';
           }
-        }, 6500);
+        }, 6000);
 
-        // ═══ MARVEL-STYLE ARTWORK FLASH SEQUENCE ═══
-        // Quick cuts: lisan al-gaib → void engine → skelekart, no black gaps between
+        // ═══ MARVEL-STYLE ARTWORK FLASH MONTAGE ═══
+        // Fast hard cuts through multiple artworks, accelerating, seamless into vortex
         setTimeout(function() {
           var flashStyle = 'position:fixed;top:0;left:0;width:100%;height:100%;' +
-            'object-fit:cover;z-index:10002;pointer-events:none;';
+            'object-fit:cover;z-index:10002;pointer-events:none;opacity:0;';
 
-          // Preload all 3 images
-          var imgLisan = document.createElement('img');
-          imgLisan.src = 'ackeditions_gallery/web/lisan_web.gif';
-          imgLisan.style.cssText = flashStyle + 'opacity:0;filter:contrast(1.15) brightness(0.9);';
-          preIntro.appendChild(imgLisan);
+          // Artwork sources — diverse selection across collections
+          var artSrcs = [
+            'ackeditions_gallery/web/lisan_web.gif',
+            'broken-keys-web/god_of_shadows.jpg',
+            'ackeditions_gallery/web/void_engine_web.gif',
+            'broken-keys-web/here_lies_the_king.jpg',
+            'ackeditions_gallery/web/skelekart_web.gif',
+            'ackeditions_gallery/web/exodus_web.gif',
+            'broken-keys-web/the_void.jpg',
+            'ackeditions_gallery/web/lisan_web.gif'
+          ];
 
-          var imgVoid = document.createElement('img');
-          imgVoid.src = 'ackeditions_gallery/web/void_engine_web.gif';
-          imgVoid.style.cssText = flashStyle + 'opacity:0;filter:contrast(1.1) brightness(0.85) saturate(1.1);';
-          preIntro.appendChild(imgVoid);
+          // Create all img elements and preload
+          var imgs = artSrcs.map(function(src) {
+            var img = document.createElement('img');
+            img.src = src;
+            img.style.cssText = flashStyle + 'filter:contrast(1.12) brightness(0.88);';
+            preIntro.appendChild(img);
+            return img;
+          });
 
-          var imgSkele = document.createElement('img');
-          imgSkele.src = 'ackeditions_gallery/web/skelekart_web.gif';
-          imgSkele.style.cssText = flashStyle + 'opacity:0;filter:contrast(1.1) brightness(0.9);';
-          preIntro.appendChild(imgSkele);
+          // Marvel timing: starts moderate, accelerates — each flash shorter than the last
+          // Total montage ~2s, then smooth dissolve
+          var schedule = [
+            { idx: 0, showAt: 0, hideAt: 350, peak: 0.7 },
+            { idx: 1, showAt: 350, hideAt: 620, peak: 0.65 },
+            { idx: 2, showAt: 620, hideAt: 840, peak: 0.7 },
+            { idx: 3, showAt: 840, hideAt: 1010, peak: 0.6 },
+            { idx: 4, showAt: 1010, hideAt: 1150, peak: 0.7 },
+            { idx: 5, showAt: 1150, hideAt: 1270, peak: 0.65 },
+            { idx: 6, showAt: 1270, hideAt: 1370, peak: 0.55 },
+            { idx: 7, showAt: 1370, hideAt: 1550, peak: 0.6 }
+          ];
 
-          // Marvel-style: hard cuts, each artwork visible then instantly replaced by next
-          // Flash 1: Lisan al-Gaib
+          schedule.forEach(function(s) {
+            setTimeout(function() {
+              // Hide all others instantly, show this one
+              imgs.forEach(function(im, i) {
+                if (i !== s.idx) { im.style.transition = 'none'; im.style.opacity = '0'; }
+              });
+              imgs[s.idx].style.transition = 'opacity 0.03s linear';
+              imgs[s.idx].style.opacity = String(s.peak);
+            }, s.showAt);
+            setTimeout(function() {
+              imgs[s.idx].style.transition = 'none';
+              imgs[s.idx].style.opacity = '0';
+            }, s.hideAt);
+          });
+
+          // After last flash, smooth dissolve to vortex
           setTimeout(function() {
-            imgLisan.style.transition = 'opacity 0.08s ease-in';
-            imgLisan.style.opacity = '0.7';
-          }, 0);
-
-          // Flash 2: Void Engine — hard cut from Lisan
-          setTimeout(function() {
-            imgLisan.style.transition = 'none';
-            imgLisan.style.opacity = '0';
-            imgVoid.style.transition = 'opacity 0.06s ease-in';
-            imgVoid.style.opacity = '0.75';
-          }, 500);
-
-          // Flash 3: Skelekart — hard cut from Void Engine
-          setTimeout(function() {
-            imgVoid.style.transition = 'none';
-            imgVoid.style.opacity = '0';
-            imgSkele.style.transition = 'opacity 0.06s ease-in';
-            imgSkele.style.opacity = '0.65';
-          }, 1000);
-
-          // Fade last image out smoothly into vortex transition
-          setTimeout(function() {
-            imgSkele.style.transition = 'opacity 0.8s ease-out';
-            imgSkele.style.opacity = '0';
-          }, 1400);
-
-          // Smooth dissolve to vortex
-          setTimeout(function() {
-            preIntro.style.transition = 'opacity 1.8s ease-in-out';
+            preIntro.style.transition = 'opacity 1.6s ease-in-out';
             preIntro.style.opacity = '0';
           }, 1600);
 
@@ -7206,8 +7210,8 @@
             audio.pause();
             preIntro.remove();
             if (onComplete) onComplete();
-          }, 3500);
-        }, 8200);
+          }, 3300);
+        }, 8000);
       });
     }
 
