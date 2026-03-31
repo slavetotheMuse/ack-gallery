@@ -1925,7 +1925,7 @@
       text-transform: uppercase;
       font-family: 'JetBrains Mono', monospace;
       transition: color 0.4s ease, opacity 0.35s ease;
-      margin-top: 10px;
+      margin-top: 8px;
       opacity: 0;
       pointer-events: none;
     }
@@ -8222,8 +8222,8 @@
         'background:#000;user-select:none;';
 
       preIntro.innerHTML =
-        '<div id="whispersTapPrompt" style="font-family:' + _duneFontStack + ';font-weight:100;font-size:13px;' +
-        'letter-spacing:0.35em;color:rgba(245,240,230,0.5);text-transform:lowercase;' +
+        '<div id="whispersTapPrompt" style="font-family:' + _duneFontStack + ';font-weight:100;font-size:clamp(22px, 4vw, 32px);' +
+        'letter-spacing:0.45em;color:rgba(245,240,230,0.55);text-transform:lowercase;' +
         'animation:whisperPulse 2.5s ease-in-out infinite;">touch</div>' +
         '<div id="whispersTextWrap" style="position:absolute;top:0;left:0;width:100%;height:100%;' +
         'display:flex;align-items:center;justify-content:center;padding:40px;text-align:center;opacity:0;">' +
@@ -12518,8 +12518,6 @@
 
           const port = document.createElement('div');
           port.className = 'node-port';
-          port.style.top = 'auto';
-          port.style.bottom = '-4px';
           node.appendChild(port);
 
           const thumbnail = document.createElement('div');
@@ -12584,7 +12582,7 @@
 
           nodeInfos.push({
             portX: x + w / 2,
-            portY: y + h + 10,
+            portY: y,
             node, size: w, origIndex,
           });
 
@@ -12709,8 +12707,6 @@
 
         const port = document.createElement('div');
         port.className = 'node-port';
-        port.style.top = 'auto';
-        port.style.bottom = '-4px';
         node.appendChild(port);
 
         const thumbnail = document.createElement('div');
@@ -12843,7 +12839,7 @@
 
         nodeInfos.push({
           portX: x + w / 2,
-          portY: y + h + 10,
+          portY: y,
           node, size: w, origIndex,
         });
       });
@@ -12883,7 +12879,7 @@
         nodeInfos.forEach((info) => {
           const toX = info.portX;
           const toY = info.portY;
-          // Wires go UP from master (bottom) to each node port (bottom of thumbnail)
+          // Wires go UP from master (bottom) to each node port (top of thumbnail)
           const dy = masterPortY - toY;
           const pull = Math.min(dy * 0.35, 120);
           const cx1 = masterPortX;
