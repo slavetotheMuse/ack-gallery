@@ -2523,6 +2523,30 @@
       transition: opacity 0.4s ease;
     }
 
+    /* ── Right Click Print decoration nodes ── */
+    .rcp-deco-node {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transform: scale(0.3) rotate(5deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .rcp-deco-node.visible {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+      animation: rcpDecoFloat var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite;
+    }
+    @keyframes rcpDecoFloat {
+      0%, 100% { transform: scale(1) rotate(0deg) translateY(0); }
+      33% { transform: scale(1) rotate(1deg) translateY(-2px); }
+      66% { transform: scale(1) rotate(-0.5deg) translateY(1px); }
+    }
+    .node-graph-inner.focus-mode .rcp-deco-node {
+      opacity: 0 !important;
+      transition: opacity 0.4s ease;
+    }
+
     /* ── Servant frame (focus only) ── */
     .servant-frame-svg {
       position: absolute;
@@ -5541,6 +5565,13 @@
         artworks: {}
       },
 
+      // ── RIGHT CLICK PRINT ─────────────────────────────
+      'Right Click Print': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
       // ── LAST ORDERS ──────────────────────────────────
       'Last Orders': {
         narration: "",
@@ -6400,6 +6431,7 @@
           'The Great Color Study': _soundkit_colorStudy,
           'ACKek': _soundkit_ackek,
           'Last Orders': _soundkit_lastOrders,
+          'Right Click Print': _soundkit_lastOrders,
           'Ackstract': _soundkit_ackstract,
           '1 of 1s': _soundkit_brokenKeys,
           'Made these for your girl': _soundkit_pianoBlossoms,
@@ -7346,6 +7378,14 @@
           artworks: [
             {title:"Last Orders",image:"lastorders/lastorders.png",fullRes:"lastorders/lastorders2023.mp4",edition:"Edition of 25",tokenId:2,description:"ACK × XCOPY collaboration. A 3D bar scene at the end of the world. ERC-721 on Ethereum.",collabTag:"ACK & XCOPY collaboration — 2021"}
         ]},
+        { name: "Right Click Print", image: "right_click_print/rcp.png",
+          wallLayout: true,
+          description: "Right Click Print — A commentary on digital ownership and art piracy. A hooded figure stands in a flooded studio surrounded by right-clicked masterpieces. The water rises but the art endures.",
+          token: "ERC-721", chain: "Ethereum",
+          mintDate: "2021",
+          artworks: [
+            {title:"Right Click Print",image:"right_click_print/rcp.png",fullRes:"right_click_print/rcp.mp4",edition:"1 of 1",description:"A flooded studio of stolen masterpieces. The water rises but the art endures."}
+        ]},
         { name: "Made these for your girl", image: "foryourgirl/web/foryourgirl_web.gif",
           wallLayout: true,
           description: "Made these for your girl — Presented by PROOF as part of Grails Season II. Top artists. Unique pieces of art. Artist names revealed only after the mint.",
@@ -7593,6 +7633,12 @@
         refW: 2560, refH: 1294,
         nodes: [
           { x: 688, y: 244, w: 1178, ar: 0.5625 },   // 0  Last Orders (16:9)
+        ]
+      },
+      "Right Click Print": {
+        refW: 2560, refH: 1294,
+        nodes: [
+          { x: 688, y: 244, w: 1178, ar: 0.5625 },   // 0  Right Click Print (16:9)
         ]
       },
       "Made these for your girl": {
@@ -12131,6 +12177,7 @@
         { name: "1 of 1s",                 x: 49.7, y: 39.9, w: 14.6, ar: 0.8 },
         { name: "Opepen Set 030: a.c.k.",  x: 76.2, y: 48.5, w: 3.8,  ar: 1 },
         { name: "Clown Party",             x: 76,   y: 34.8, w: 5.4,  ar: 1 },
+        { name: "Right Click Print",       x: 14.2, y: 50.8, w: 7.8,  ar: 1.779 },
         { name: "Last Orders",             x: 15.8, y: 49.3, w: 7.8,  ar: 1.779 },
         { name: "servants",                x: 83.1, y: 30.3, w: 6.2,  ar: 1, round: true },
         { name: "Heart You",               x: 33.9, y: 40.4, w: 12,   ar: 0.82 },
@@ -15297,6 +15344,99 @@
           }
         }
 
+        // ── RIGHT CLICK PRINT decoration system ──
+        var _rcpDecoNodes = [];
+        if (collection.name === 'Right Click Print') {
+          const rcpDecoCount = 18;
+          const rcpPositions = [];
+          const heroX = nodePositions[0] ? nodePositions[0].x : vpW * 0.3;
+          const heroY = nodePositions[0] ? nodePositions[0].y : vpH * 0.15;
+          const heroW = nodePositions[0] ? (nodePositions[0].w || 400) : 400;
+          const heroH = nodePositions[0] ? (nodePositions[0].h || 300) : 300;
+          const heroCX = heroX + heroW / 2;
+          const heroCY = heroY + heroH / 2;
+          const exclusionR = Math.max(heroW, heroH) * 0.65;
+
+          // Deco types: stolen frames, water droplets, pixel glitch clusters
+          const rcpTypes = [];
+          for (let dt = 0; dt < rcpDecoCount; dt++) {
+            const mod = dt % 6;
+            if (mod < 2) rcpTypes.push('frame');
+            else if (mod < 4) rcpTypes.push('droplet');
+            else rcpTypes.push('glitch');
+          }
+
+          const margin = 40;
+          const mbY = outputY;
+          for (let di = 0; di < rcpDecoCount; di++) {
+            let dx2, dy2, att2 = 0;
+            do {
+              dx2 = margin + Math.random() * (vpW - margin * 2);
+              dy2 = margin + Math.random() * (mbY - margin * 2 - 30);
+              const ddx = dx2 - heroCX;
+              const ddy = dy2 - heroCY;
+              const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+              let tooClose = false;
+              for (let pd = 0; pd < rcpPositions.length; pd++) {
+                const pdx = dx2 - rcpPositions[pd].x;
+                const pdy = dy2 - rcpPositions[pd].y;
+                if (Math.sqrt(pdx * pdx + pdy * pdy) < 55) { tooClose = true; break; }
+              }
+              if (dist > exclusionR && !tooClose) break;
+              att2++;
+            } while (att2 < 80);
+            const dSize = rcpTypes[di] === 'frame' ? (35 + Math.random() * 25) :
+                          rcpTypes[di] === 'glitch' ? (20 + Math.random() * 18) :
+                          (22 + Math.random() * 16);
+            rcpPositions.push({ x: dx2, y: dy2, size: dSize });
+          }
+
+          rcpPositions.forEach((dp, di) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'rcp-deco-node';
+            wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+            wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+            wrapper.style.width = dp.size + 'px';
+            wrapper.style.height = dp.size + 'px';
+            wrapper.style.setProperty('--float-dur', (7 + Math.random() * 6).toFixed(1) + 's');
+            wrapper.style.setProperty('--float-delay', (-Math.random() * 8).toFixed(1) + 's');
+            // Random slight tilt
+            wrapper.style.transform = 'rotate(' + ((Math.random() - 0.5) * 12).toFixed(1) + 'deg)';
+            const dType = rcpTypes[di];
+            if (dType === 'frame') {
+              wrapper.appendChild(generateStolenFrameSVG(dp.size));
+            } else if (dType === 'droplet') {
+              wrapper.appendChild(generateWaterDropletSVG(dp.size));
+            } else {
+              wrapper.appendChild(generatePixelGlitchSVG(dp.size));
+            }
+            inner.appendChild(wrapper);
+            _rcpDecoNodes.push({ el: wrapper, x: dp.x, y: dp.y, size: dp.size });
+            setTimeout(() => wrapper.classList.add('visible'), 400 + di * 80);
+          });
+
+          // ── RCP frame on hero node ──
+          const heroNodeRCP = inner.querySelector('.node-card');
+          if (heroNodeRCP) {
+            const _applyRCPFrame = () => {
+              const preview = heroNodeRCP.querySelector('.node-preview');
+              const img = preview ? preview.querySelector('img') : null;
+              if (preview && img && img.naturalWidth > 0) {
+                const localW = parseFloat(heroNodeRCP.style.width) || preview.offsetWidth;
+                const localH = img.naturalHeight > 0 ? (localW * img.naturalHeight / img.naturalWidth) : preview.offsetHeight || localW * 0.56;
+                const frameSvg = generateRCPFrame(localW, localH, false);
+                frameSvg.style.opacity = '1';
+                frameSvg.style.transition = 'none';
+                frameSvg.dataset.collectionFrame = 'true';
+                heroNodeRCP.appendChild(frameSvg);
+              } else {
+                setTimeout(_applyRCPFrame, 500);
+              }
+            };
+            setTimeout(_applyRCPFrame, 1200);
+          }
+        }
+
         // ── TEMPTED IN THE GARDEN frame on hero node ──
         if (collection.name === 'Tempted in the Garden') {
           const heroNodeTG = inner.querySelector('.node-card');
@@ -15796,6 +15936,9 @@
                 } else if (srcCol === 'Last Orders') {
                   frameSvg = generateBarFrame(localW, localH, false);
                   frameClass = 'has-bar-frame';
+                } else if (srcCol === 'Right Click Print') {
+                  frameSvg = generateRCPFrame(localW, localH, false);
+                  frameClass = 'has-rcp-frame';
                 } else if (srcCol === 'Tempted in the Garden') {
                   frameSvg = generateTemptedFrame(localW, localH, false);
                   frameClass = 'has-tempted-frame';
@@ -16089,6 +16232,32 @@
               flow.setAttribute('d', d);
               flow.setAttribute('fill', 'none');
               flow.setAttribute('stroke', amberFlow);
+              flow.setAttribute('stroke-width', '1');
+              flow.setAttribute('stroke-dasharray', '3 18');
+              const dur = (3 + Math.random() * 3).toFixed(1);
+              flow.style.animation = `wireFlow ${dur}s linear infinite`;
+              wiresSvg.appendChild(flow);
+            });
+          }
+
+          // ── Right Click Print deco wires — cyan/purple, digital static style ──
+          if (_rcpDecoNodes && _rcpDecoNodes.length > 0) {
+            const cyanBase = 'rgba(60,180,220,0.14)';
+            const cyanFlow = 'rgba(100,60,180,0.1)';
+            _rcpDecoNodes.forEach((rn, ri) => {
+              const stemY = rn.y + rn.size * 0.5;
+              const fromPt = { x: rn.x, y: stemY };
+              const d = _makeWirePath(fromPt, op);
+              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              path.setAttribute('d', d);
+              path.setAttribute('fill', 'none');
+              path.setAttribute('stroke', cyanBase);
+              path.setAttribute('stroke-width', '0.8');
+              wiresSvg.appendChild(path);
+              const flow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              flow.setAttribute('d', d);
+              flow.setAttribute('fill', 'none');
+              flow.setAttribute('stroke', cyanFlow);
               flow.setAttribute('stroke-width', '1');
               flow.setAttribute('stroke-dasharray', '3 18');
               const dur = (3 + Math.random() * 3).toFixed(1);
@@ -16784,11 +16953,12 @@
           const col = COLLECTIONS[collectionIndex];
           const aw = col && col.artworks[artworkIndex];
           if (aw) {
-            // For Last Orders (video), toggle sound instead of opening in new tab
+            // For video collections (Last Orders, RCP), toggle sound instead of opening in new tab
             if (aw.fullRes && aw.fullRes.endsWith('.mp4')) {
-              const focVidA = node.querySelector('#lastOrdersFocusVideo');
-              const focVidB = node.querySelector('#lastOrdersFocusVideoB');
-              const sBtn = node.querySelector('#lastOrdersSoundBtn');
+              // Find whichever video pair is present
+              var focVidA = node.querySelector('#lastOrdersFocusVideo') || node.querySelector('#rcpFocusVideo');
+              var focVidB = node.querySelector('#lastOrdersFocusVideoB') || node.querySelector('#rcpFocusVideoB');
+              var sBtn = node.querySelector('#lastOrdersSoundBtn') || node.querySelector('#rcpSoundBtn');
               if (focVidA) {
                 var nowMuted = !focVidA.muted;
                 focVidA.muted = nowMuted;
@@ -16878,8 +17048,8 @@
         }
       }
 
-      // Last Orders on mobile — constrain to 16:9 landscape aspect
-      if (_isMobileFocus && _focusColNameEarly === 'Last Orders') {
+      // Last Orders / RCP on mobile — constrain to 16:9 landscape aspect
+      if (_isMobileFocus && (_focusColNameEarly === 'Last Orders' || _focusColNameEarly === 'Right Click Print')) {
         const loMaxH = maxW * 0.5625; // 16:9
         if (nodeH * scaleFactor > loMaxH) {
           scaleFactor = loMaxH / nodeH;
@@ -17838,6 +18008,22 @@
         }, 900);
       }
 
+      // ── RCP frame on focus ──
+      if (_focusColName === 'Right Click Print') {
+        setTimeout(() => {
+          const oldRcpFrame = node.querySelector('.rcp-frame-svg[data-collection-frame]');
+          if (oldRcpFrame) oldRcpFrame.style.display = 'none';
+          const preview = node.querySelector('.node-preview');
+          const img = preview ? preview.querySelector('img') : null;
+          if (preview && img) {
+            const localW = parseFloat(node.style.width) || preview.offsetWidth;
+            const localH = img.naturalHeight > 0 ? (localW * img.naturalHeight / img.naturalWidth) : preview.offsetHeight || localW * 0.56;
+            const frameSvg = generateRCPFrame(localW, localH, true);
+            node.appendChild(frameSvg);
+          }
+        }, 900);
+      }
+
       // ── Tempted in the Garden frame on focus ──
       if (_focusColName === 'Tempted in the Garden') {
         setTimeout(() => {
@@ -17973,6 +18159,99 @@
               // Desktop: keep image in layout (visibility hidden) so preview has dimensions, video sits on top
               img.style.visibility = 'hidden';
               _launchLastOrdersVideo();
+            }
+          }
+        }, 600);
+      }
+
+      // ── Right Click Print: swap still image to video on focus ──
+      if (_focusColName === 'Right Click Print') {
+        setTimeout(() => {
+          const preview = node.querySelector('.node-preview');
+          const img = preview ? preview.querySelector('img') : null;
+          if (preview && img) {
+            img.dataset.thumbSrc = img.src;
+            img.style.display = 'block';
+            img.style.objectFit = 'contain';
+
+            function _launchRCPVideo() {
+              var _tBtn = preview.querySelector('.lo-touch-btn');
+              if (_tBtn) _tBtn.remove();
+              var _rcpSrc = 'right_click_print/rcp.mp4';
+              var _rcpFadeTime = 0.8;
+              function _makeRcpVid(id) {
+                var v = document.createElement('video');
+                v.id = id;
+                v.src = _rcpSrc;
+                v.loop = false;
+                v.muted = true;
+                v.playsInline = true;
+                v.preload = 'auto';
+                v.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;transition:opacity ' + _rcpFadeTime + 's ease;';
+                v.setAttribute('playsinline', '');
+                return v;
+              }
+              var vidA = _makeRcpVid('rcpFocusVideo');
+              var vidB = _makeRcpVid('rcpFocusVideoB');
+              vidB.style.opacity = '0';
+              vidB.style.zIndex = '3';
+              preview.style.position = 'relative';
+              preview.appendChild(vidA);
+              preview.appendChild(vidB);
+              var _rcpActive = vidA, _rcpStandby = vidB;
+              var _rcpMuted = true;
+              function _rcpSwap() {
+                _rcpStandby.currentTime = 0;
+                _rcpStandby.muted = _rcpMuted;
+                _rcpStandby.play().catch(function(){});
+                _rcpStandby.style.opacity = '1';
+                _rcpActive.style.opacity = '0';
+                var oldActive = _rcpActive;
+                _rcpActive = _rcpStandby;
+                _rcpStandby = oldActive;
+                setTimeout(function() { oldActive.pause(); }, _rcpFadeTime * 1000 + 200);
+              }
+              function _rcpMonitor() {
+                if (!document.getElementById('rcpFocusVideo')) return;
+                if (_rcpActive.duration && _rcpActive.currentTime > 0) {
+                  if (_rcpActive.duration - _rcpActive.currentTime <= _rcpFadeTime + 0.1) _rcpSwap();
+                }
+                requestAnimationFrame(_rcpMonitor);
+              }
+              vidA.addEventListener('loadedmetadata', function() { requestAnimationFrame(_rcpMonitor); });
+              vidA.autoplay = true;
+              vidA.play().catch(function(){});
+              var soundBtn = document.createElement('div');
+              soundBtn.className = 'video-sound-btn';
+              soundBtn.id = 'rcpSoundBtn';
+              soundBtn.innerHTML = '🔇';
+              soundBtn.title = 'Click for sound';
+              soundBtn.style.zIndex = '10';
+              soundBtn.onclick = function(ev) {
+                ev.stopPropagation();
+                _rcpMuted = !_rcpMuted;
+                vidA.muted = _rcpMuted;
+                vidB.muted = _rcpMuted;
+                soundBtn.innerHTML = _rcpMuted ? '🔇' : '🔊';
+                if (!_rcpMuted) { _rcpActive.currentTime = 0; _rcpActive.play(); }
+              };
+              preview.appendChild(soundBtn);
+            }
+
+            if (_isRealMobile) {
+              var touchBtn = document.createElement('div');
+              touchBtn.className = 'lo-touch-btn';
+              touchBtn.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;' +
+                'font-family:"EB Garamond",Georgia,serif;font-size:14px;letter-spacing:0.35em;color:rgba(245,240,230,0.5);' +
+                'text-transform:lowercase;animation:whisperPulse 2.5s ease-in-out infinite;cursor:pointer;padding:20px;' +
+                'text-shadow:0 0 10px rgba(60,180,220,0.3);';
+              touchBtn.textContent = 'touch';
+              touchBtn.onclick = function(ev) { ev.stopPropagation(); _launchRCPVideo(); };
+              preview.style.position = 'relative';
+              preview.appendChild(touchBtn);
+            } else {
+              img.style.visibility = 'hidden';
+              _launchRCPVideo();
             }
           }
         }, 600);
@@ -18270,6 +18549,8 @@
         frameSvg = generateBotanicalFrame(localW, localH);
       } else if (colName === 'Last Orders') {
         frameSvg = generateBarFrame(localW, localH, true);
+      } else if (colName === 'Right Click Print') {
+        frameSvg = generateRCPFrame(localW, localH, true);
       } else if (colName === 'Tempted in the Garden') {
         frameSvg = generateTemptedFrame(localW, localH, true);
       } else if (colName === 'Servant Coin Spin') {
@@ -18542,6 +18823,9 @@
       'lastorders/lastorders2023.mp4': {body:'rgb(22,18,28)',border:'rgba(40,34,52,0.85)',header:'rgba(78,68,95,0.92)',accent:'rgb(210,50,70)',accentDim:'rgba(240,80,100,0.75)',accentGlow:'rgba(210,50,70,0.06)',headerText:'#e0e0de'},
       'lastorders/web/lastorders_web.mp4': {body:'rgb(22,18,28)',border:'rgba(40,34,52,0.85)',header:'rgba(78,68,95,0.92)',accent:'rgb(210,50,70)',accentDim:'rgba(240,80,100,0.75)',accentGlow:'rgba(210,50,70,0.06)',headerText:'#e0e0de'},
       'lastorders/web/lastorders_catalog.jpg': {body:'rgb(22,18,28)',border:'rgba(40,34,52,0.85)',header:'rgba(78,68,95,0.92)',accent:'rgb(210,50,70)',accentDim:'rgba(240,80,100,0.75)',accentGlow:'rgba(210,50,70,0.06)',headerText:'#e0e0de'},
+      // Right Click Print
+      'right_click_print/rcp.png': {body:'rgb(18,16,32)',border:'rgba(36,30,60,0.85)',header:'rgba(68,58,100,0.92)',accent:'rgb(80,160,240)',accentDim:'rgba(110,190,255,0.75)',accentGlow:'rgba(80,160,240,0.06)',headerText:'#e0e0de'},
+      'right_click_print/rcp.mp4': {body:'rgb(18,16,32)',border:'rgba(36,30,60,0.85)',header:'rgba(68,58,100,0.92)',accent:'rgb(80,160,240)',accentDim:'rgba(110,190,255,0.75)',accentGlow:'rgba(80,160,240,0.06)',headerText:'#e0e0de'},
       // Warothys
       'warothy/web/wicked_web.gif': {body:'rgb(36,16,18)',border:'rgba(58,34,40,0.85)',header:'rgba(91,66,73,0.92)',accent:'rgb(210,0,2)',accentDim:'rgba(210,0,2,0.75)',accentGlow:'rgba(210,0,2,0.06)',headerText:'#e0e0de'},
       'warothy/web/capulet_web.gif': {body:'rgb(42,16,18)',border:'rgba(64,34,40,0.85)',header:'rgba(97,66,73,0.92)',accent:'rgb(216,29,17)',accentDim:'rgba(216,29,17,0.75)',accentGlow:'rgba(216,29,17,0.06)',headerText:'#e0e0de'},
@@ -19367,7 +19651,7 @@
             </div>
             <div class="node-info-line">
               <div class="node-info-label">Artist</div>
-              <div class="node-info-value">AlphaCentauriKid</div>
+              <div class="node-info-value">${artwork.collabTag ? 'AlphaCentauriKid & XCOPY' : 'AlphaCentauriKid'}</div>
             </div>
             <div class="node-info-line">
               <div class="node-info-label">Provenance</div>
@@ -25613,6 +25897,352 @@
     }
 
     // ══════════════════════════════════════════════════════════════════
+    // ── SVG GENERATOR for "Right Click Print" — flooded gallery frame ──
+    // ══════════════════════════════════════════════════════════════════
+
+    function generateRCPFrame(imgW, imgH, focusMode) {
+      // Flooded studio frame — water ripples, stolen art fragments, digital corruption
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 22;
+      const svgW = imgW + pad * 2;
+      const svgH = imgH + pad * 2;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+      svg.setAttribute('width', svgW);
+      svg.setAttribute('height', svgH);
+      svg.style.position = 'absolute';
+      svg.style.left = (-pad) + 'px';
+      svg.style.top = (-pad) + 'px';
+      svg.style.pointerEvents = 'none';
+      svg.style.overflow = 'visible';
+      svg.classList.add('rcp-frame-svg');
+
+      const L = pad, T = pad, R = pad + imgW, B = pad + imgH;
+
+      // Seeded random
+      let _rSeed = 4219;
+      const rng = () => { _rSeed = (_rSeed * 16807 + 11) % 2147483647; return (_rSeed & 0x7fffffff) / 0x7fffffff; };
+
+      // Palette — deep indigo/purple with cyan water and warm amber stolen-art glow
+      const waterCyan = (a) => `rgba(60,180,220,${a})`;
+      const deepIndigo = (a) => `rgba(40,30,90,${a})`;
+      const stormPurple = (a) => `rgba(100,60,180,${a})`;
+      const warmAmber = (a) => `rgba(200,150,60,${a})`;
+      const bone = (a) => `rgba(200,190,170,${a})`;
+
+      // ═══ SHARED BASE (both views) ═══
+
+      // ── Outer border — cool indigo with subtle water shimmer ──
+      const outerBorder = document.createElementNS(ns, 'rect');
+      outerBorder.setAttribute('x', L - 3);
+      outerBorder.setAttribute('y', T - 3);
+      outerBorder.setAttribute('width', imgW + 6);
+      outerBorder.setAttribute('height', imgH + 6);
+      outerBorder.setAttribute('rx', 1);
+      outerBorder.setAttribute('fill', 'none');
+      outerBorder.setAttribute('stroke', waterCyan(focusMode ? 0.3 : 0.18));
+      outerBorder.setAttribute('stroke-width', focusMode ? '1.2' : '0.8');
+      svg.appendChild(outerBorder);
+
+      // ── Water glow halo ──
+      const glowId = 'rcpGlow' + Math.floor(rng() * 99999);
+      const defs = document.createElementNS(ns, 'defs');
+      const glowFilter = document.createElementNS(ns, 'filter');
+      glowFilter.setAttribute('id', glowId);
+      glowFilter.setAttribute('x', '-20%');
+      glowFilter.setAttribute('y', '-20%');
+      glowFilter.setAttribute('width', '140%');
+      glowFilter.setAttribute('height', '140%');
+      const blur = document.createElementNS(ns, 'feGaussianBlur');
+      blur.setAttribute('stdDeviation', focusMode ? '4' : '2.5');
+      blur.setAttribute('result', 'glow');
+      glowFilter.appendChild(blur);
+      defs.appendChild(glowFilter);
+      svg.appendChild(defs);
+
+      const glowRect = document.createElementNS(ns, 'rect');
+      glowRect.setAttribute('x', L - 3);
+      glowRect.setAttribute('y', T - 3);
+      glowRect.setAttribute('width', imgW + 6);
+      glowRect.setAttribute('height', imgH + 6);
+      glowRect.setAttribute('rx', 1);
+      glowRect.setAttribute('fill', 'none');
+      glowRect.setAttribute('stroke', waterCyan(focusMode ? 0.15 : 0.08));
+      glowRect.setAttribute('stroke-width', focusMode ? '4' : '2.5');
+      glowRect.setAttribute('filter', 'url(#' + glowId + ')');
+      svg.appendChild(glowRect);
+
+      // ── Corner bracket shapes — like gallery hanging hardware ──
+      const bLen = focusMode ? 22 : 16;
+      [[L, T, 1, 1], [R, T, -1, 1], [L, B, 1, -1], [R, B, -1, -1]].forEach(function(c) {
+        var cx = c[0], cy = c[1], dx = c[2], dy = c[3];
+        var corner = document.createElementNS(ns, 'path');
+        corner.setAttribute('d', 'M' + (cx + dx * bLen) + ',' + (cy + dy * 2) + ' L' + (cx + dx * 2) + ',' + (cy + dy * 2) + ' L' + (cx + dx * 2) + ',' + (cy + dy * bLen));
+        corner.setAttribute('stroke', stormPurple(focusMode ? 0.45 : 0.28));
+        corner.setAttribute('stroke-width', focusMode ? '1.5' : '1');
+        corner.setAttribute('fill', 'none');
+        corner.setAttribute('stroke-linecap', 'round');
+        corner.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(corner);
+        // Water droplet at corner
+        var drop = document.createElementNS(ns, 'circle');
+        drop.setAttribute('cx', cx + dx * 2);
+        drop.setAttribute('cy', cy + dy * 2);
+        drop.setAttribute('r', focusMode ? 2 : 1.3);
+        drop.setAttribute('fill', waterCyan(focusMode ? 0.45 : 0.3));
+        svg.appendChild(drop);
+      });
+
+      // ── Water ripple lines along bottom edge (the flood) ──
+      var rippleCount = focusMode ? 5 : 3;
+      for (var ri = 0; ri < rippleCount; ri++) {
+        var ry = B + 4 + ri * (focusMode ? 3 : 2.5);
+        var ripple = document.createElementNS(ns, 'path');
+        var pts = 'M' + (L - 2) + ',' + ry;
+        var segs = 12 + Math.floor(rng() * 6);
+        var segW = (imgW + 4) / segs;
+        for (var si = 1; si <= segs; si++) {
+          var sx = L - 2 + si * segW;
+          var samp = (1 + rng() * 2) * (focusMode ? 1.2 : 0.8);
+          var dir = (si % 2 === 0) ? -1 : 1;
+          pts += ' Q' + (sx - segW / 2) + ',' + (ry + dir * samp) + ' ' + sx + ',' + ry;
+        }
+        ripple.setAttribute('d', pts);
+        ripple.setAttribute('fill', 'none');
+        ripple.setAttribute('stroke', waterCyan(0.08 + rng() * 0.08));
+        ripple.setAttribute('stroke-width', (0.4 + rng() * 0.4).toFixed(1));
+        svg.appendChild(ripple);
+      }
+
+      // ── Scattered "pixel corruption" fragments around the border ──
+      var pxCount = focusMode ? 50 : 20;
+      for (var pi = 0; pi < pxCount; pi++) {
+        var edge = Math.floor(rng() * 4);
+        var px2, py2;
+        if (edge === 0) { px2 = L + rng() * imgW; py2 = T - 4 - rng() * 12; }
+        else if (edge === 1) { px2 = L + rng() * imgW; py2 = B + 4 + rng() * 12; }
+        else if (edge === 2) { px2 = L - 4 - rng() * 12; py2 = T + rng() * imgH; }
+        else { px2 = R + 4 + rng() * 12; py2 = T + rng() * imgH; }
+        var pxEl = document.createElementNS(ns, 'rect');
+        var pxSize = 0.5 + rng() * 2;
+        pxEl.setAttribute('x', px2);
+        pxEl.setAttribute('y', py2);
+        pxEl.setAttribute('width', pxSize);
+        pxEl.setAttribute('height', pxSize * (0.3 + rng() * 1.4));
+        var pxColors = [waterCyan, stormPurple, warmAmber, deepIndigo];
+        pxEl.setAttribute('fill', pxColors[Math.floor(rng() * pxColors.length)](0.12 + rng() * 0.18));
+        svg.appendChild(pxEl);
+      }
+
+      // ── "ACK" text bottom-right ──
+      var ackTxt = document.createElementNS(ns, 'text');
+      ackTxt.setAttribute('x', R - 6);
+      ackTxt.setAttribute('y', B + 18);
+      ackTxt.setAttribute('text-anchor', 'end');
+      ackTxt.setAttribute('font-family', 'JetBrains Mono, monospace');
+      ackTxt.setAttribute('font-size', '9');
+      ackTxt.setAttribute('fill', waterCyan(focusMode ? 0.35 : 0.2));
+      ackTxt.setAttribute('letter-spacing', '2');
+      ackTxt.textContent = 'ACK';
+      svg.appendChild(ackTxt);
+
+      // ── "RIGHT CLICK PRINT" text bottom-left (focus only) ──
+      if (focusMode) {
+        var rcpTxt = document.createElementNS(ns, 'text');
+        rcpTxt.setAttribute('x', L + 6);
+        rcpTxt.setAttribute('y', B + 18);
+        rcpTxt.setAttribute('font-family', 'JetBrains Mono, monospace');
+        rcpTxt.setAttribute('font-size', '6');
+        rcpTxt.setAttribute('fill', stormPurple(0.35));
+        rcpTxt.setAttribute('letter-spacing', '2.5');
+        rcpTxt.textContent = 'RIGHT CLICK PRINT';
+        svg.appendChild(rcpTxt);
+      }
+
+      // ═══ COLLECTION VIEW ONLY ═══
+      if (!focusMode) {
+        // Subtle inner border
+        var innerBorder = document.createElementNS(ns, 'rect');
+        innerBorder.setAttribute('x', L);
+        innerBorder.setAttribute('y', T);
+        innerBorder.setAttribute('width', imgW);
+        innerBorder.setAttribute('height', imgH);
+        innerBorder.setAttribute('fill', 'none');
+        innerBorder.setAttribute('stroke', deepIndigo(0.15));
+        innerBorder.setAttribute('stroke-width', '0.5');
+        svg.appendChild(innerBorder);
+        return svg;
+      }
+
+      // ═══ FOCUS VIEW EXTRAS ═══
+
+      // ── Miniature stolen art frames scattered around border (focus only) ──
+      var frameCount = 8;
+      for (var fi = 0; fi < frameCount; fi++) {
+        var fw = 8 + rng() * 12;
+        var fh = fw * (0.7 + rng() * 0.6);
+        // Position along edges
+        var fx, fy;
+        var fEdge = fi % 4;
+        if (fEdge === 0) { fx = L - 6 - rng() * 10; fy = T + rng() * (imgH - fh); }
+        else if (fEdge === 1) { fx = R + 2 + rng() * 10; fy = T + rng() * (imgH - fh); }
+        else if (fEdge === 2) { fx = L + rng() * (imgW - fw); fy = T - 6 - rng() * 8; }
+        else { fx = L + rng() * (imgW - fw); fy = B + 3 + rng() * 8; }
+
+        // Mini picture frame
+        var miniFrame = document.createElementNS(ns, 'rect');
+        miniFrame.setAttribute('x', fx);
+        miniFrame.setAttribute('y', fy);
+        miniFrame.setAttribute('width', fw);
+        miniFrame.setAttribute('height', fh);
+        miniFrame.setAttribute('fill', deepIndigo(0.08 + rng() * 0.06));
+        miniFrame.setAttribute('stroke', warmAmber(0.15 + rng() * 0.1));
+        miniFrame.setAttribute('stroke-width', '0.6');
+        svg.appendChild(miniFrame);
+        // Inner "canvas" area
+        var ic = document.createElementNS(ns, 'rect');
+        ic.setAttribute('x', fx + 1.5);
+        ic.setAttribute('y', fy + 1.5);
+        ic.setAttribute('width', fw - 3);
+        ic.setAttribute('height', fh - 3);
+        ic.setAttribute('fill', 'rgba(0,0,0,0.2)');
+        ic.setAttribute('stroke', bone(0.06));
+        ic.setAttribute('stroke-width', '0.3');
+        svg.appendChild(ic);
+      }
+
+      // ── Water level line across the frame (horizontal, subtle) ──
+      var waterY = T + imgH * 0.65;
+      var waterLine = document.createElementNS(ns, 'line');
+      waterLine.setAttribute('x1', L - pad);
+      waterLine.setAttribute('y1', waterY);
+      waterLine.setAttribute('x2', R + pad);
+      waterLine.setAttribute('y2', waterY);
+      waterLine.setAttribute('stroke', waterCyan(0.06));
+      waterLine.setAttribute('stroke-width', '0.5');
+      waterLine.setAttribute('stroke-dasharray', '4 8');
+      svg.appendChild(waterLine);
+
+      // ── Edition text top-right ──
+      var edTxt = document.createElementNS(ns, 'text');
+      edTxt.setAttribute('x', R - 4);
+      edTxt.setAttribute('y', T - 6);
+      edTxt.setAttribute('text-anchor', 'end');
+      edTxt.setAttribute('font-family', 'JetBrains Mono, monospace');
+      edTxt.setAttribute('font-size', '4.5');
+      edTxt.setAttribute('fill', bone(0.2));
+      edTxt.setAttribute('letter-spacing', '1');
+      edTxt.textContent = '1/1';
+      svg.appendChild(edTxt);
+
+      return svg;
+    }
+
+    // ── SVG decoration generators for Right Click Print ──
+
+    function generateStolenFrameSVG(size) {
+      // Floating tilted picture frame with "stolen art" inside
+      var ns = 'http://www.w3.org/2000/svg';
+      var w = size;
+      var h = size * (0.7 + Math.random() * 0.6);
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.setAttribute('width', w);
+      svg.setAttribute('height', h);
+      svg.style.overflow = 'visible';
+      // Ornate outer frame
+      var frame = document.createElementNS(ns, 'rect');
+      frame.setAttribute('x', 1);
+      frame.setAttribute('y', 1);
+      frame.setAttribute('width', w - 2);
+      frame.setAttribute('height', h - 2);
+      frame.setAttribute('fill', 'rgba(20,15,35,0.4)');
+      frame.setAttribute('stroke', 'rgba(200,150,60,' + (0.15 + Math.random() * 0.15) + ')');
+      frame.setAttribute('stroke-width', '1');
+      frame.setAttribute('rx', 1);
+      svg.appendChild(frame);
+      // Inner canvas
+      var canvas = document.createElementNS(ns, 'rect');
+      canvas.setAttribute('x', 3);
+      canvas.setAttribute('y', 3);
+      canvas.setAttribute('width', w - 6);
+      canvas.setAttribute('height', h - 6);
+      canvas.setAttribute('fill', 'rgba(40,30,60,' + (0.2 + Math.random() * 0.2) + ')');
+      svg.appendChild(canvas);
+      // Glitch lines across the "art"
+      var glitchCount = 2 + Math.floor(Math.random() * 3);
+      for (var gi = 0; gi < glitchCount; gi++) {
+        var gy = 4 + Math.random() * (h - 8);
+        var gLine = document.createElementNS(ns, 'line');
+        gLine.setAttribute('x1', 3);
+        gLine.setAttribute('y1', gy);
+        gLine.setAttribute('x2', w - 3);
+        gLine.setAttribute('y2', gy + (Math.random() - 0.5) * 2);
+        var gColors = ['rgba(60,180,220,0.3)', 'rgba(100,60,180,0.25)', 'rgba(200,150,60,0.2)'];
+        gLine.setAttribute('stroke', gColors[Math.floor(Math.random() * gColors.length)]);
+        gLine.setAttribute('stroke-width', (0.3 + Math.random() * 0.5).toFixed(1));
+        svg.appendChild(gLine);
+      }
+      return svg;
+    }
+
+    function generateWaterDropletSVG(size) {
+      // Simple water droplet / ripple
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+      svg.setAttribute('width', size);
+      svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var cx = size / 2, cy = size / 2;
+      // Concentric ripple rings
+      for (var ri = 0; ri < 3; ri++) {
+        var ring = document.createElementNS(ns, 'circle');
+        ring.setAttribute('cx', cx);
+        ring.setAttribute('cy', cy);
+        ring.setAttribute('r', size * (0.15 + ri * 0.12));
+        ring.setAttribute('fill', 'none');
+        ring.setAttribute('stroke', 'rgba(60,180,220,' + (0.2 - ri * 0.05) + ')');
+        ring.setAttribute('stroke-width', '0.5');
+        svg.appendChild(ring);
+      }
+      // Center drop
+      var drop = document.createElementNS(ns, 'circle');
+      drop.setAttribute('cx', cx);
+      drop.setAttribute('cy', cy);
+      drop.setAttribute('r', size * 0.06);
+      drop.setAttribute('fill', 'rgba(60,180,220,0.35)');
+      svg.appendChild(drop);
+      return svg;
+    }
+
+    function generatePixelGlitchSVG(size) {
+      // Cluster of corrupted pixels
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+      svg.setAttribute('width', size);
+      svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = ['rgba(60,180,220,0.4)', 'rgba(100,60,180,0.35)', 'rgba(200,150,60,0.3)', 'rgba(80,160,240,0.35)'];
+      var count = 6 + Math.floor(Math.random() * 8);
+      for (var pi = 0; pi < count; pi++) {
+        var pw = 1 + Math.random() * 4;
+        var ph = 1 + Math.random() * 3;
+        var px = Math.random() * (size - pw);
+        var py = Math.random() * (size - ph);
+        var pxR = document.createElementNS(ns, 'rect');
+        pxR.setAttribute('x', px);
+        pxR.setAttribute('y', py);
+        pxR.setAttribute('width', pw);
+        pxR.setAttribute('height', ph);
+        pxR.setAttribute('fill', colors[Math.floor(Math.random() * colors.length)]);
+        svg.appendChild(pxR);
+      }
+      return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     // ── PAN/ZOOM for masterwork focus mode ──
     // ══════════════════════════════════════════════════════════════════
     let masterworkPanZoom = null;
@@ -25906,6 +26536,20 @@
       if (_loTouchBtn) _loTouchBtn.remove();
       const _loSoundBtn = focusedNode.querySelector('#lastOrdersSoundBtn');
       if (_loSoundBtn) _loSoundBtn.remove();
+
+      // Clean up Right Click Print focus videos (dual crossfade)
+      const _rcpVidA = focusedNode.querySelector('#rcpFocusVideo');
+      const _rcpVidB = focusedNode.querySelector('#rcpFocusVideoB');
+      if (_rcpVidA) { _rcpVidA.pause(); _rcpVidA.src = ''; _rcpVidA.remove(); }
+      if (_rcpVidB) { _rcpVidB.pause(); _rcpVidB.src = ''; _rcpVidB.remove(); }
+      if (_rcpVidA || _rcpVidB) {
+        const _rcpImg = focusedNode.querySelector('.node-preview img');
+        if (_rcpImg) { _rcpImg.style.display = ''; _rcpImg.style.visibility = ''; }
+      }
+      const _rcpTouchBtn2 = focusedNode.querySelector('.lo-touch-btn');
+      if (_rcpTouchBtn2) _rcpTouchBtn2.remove();
+      const _rcpSoundBtn = focusedNode.querySelector('#rcpSoundBtn');
+      if (_rcpSoundBtn) _rcpSoundBtn.remove();
 
       // Restore servant coin: swap back to low-res images & resume spin, remove click handler
       const _coinWrapExit = focusedNode.querySelector('.servant-coin-wrap');
