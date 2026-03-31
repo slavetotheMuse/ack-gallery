@@ -8271,7 +8271,7 @@
 
           if (_isLocal) {
             // file:// — skip Web Audio entirely, just play plain Audio
-            audio.volume = 0.11;
+            audio.volume = 0.06;
             audio.play().then(function() {
               console.log('[ACK] Whisper audio playing (plain, file://)');
             }).catch(function(err) {
@@ -8289,7 +8289,7 @@
             _wSrc = _wCtx.createMediaElementSource(audio);
             // Master gain
             var _masterGain = _wCtx.createGain();
-            _masterGain.gain.value = 0.15;
+            _masterGain.gain.value = 0.08;
             // Low-pass
             var _wLP = _wCtx.createBiquadFilter();
             _wLP.type = 'lowpass'; _wLP.frequency.value = 1800; _wLP.Q.value = 0.4;
@@ -8312,9 +8312,9 @@
           } catch(e) {
             // If createMediaElementSource was called, source is detached — connect direct
             if (_wSrc && _wCtx) {
-              try { var _fg = _wCtx.createGain(); _fg.gain.value = 0.11; _wSrc.connect(_fg); _fg.connect(_wCtx.destination); } catch(e3){}
+              try { var _fg = _wCtx.createGain(); _fg.gain.value = 0.06; _wSrc.connect(_fg); _fg.connect(_wCtx.destination); } catch(e3){}
             } else {
-              audio.volume = 0.11;
+              audio.volume = 0.06;
             }
           }
           audio.play().then(function() {
@@ -8322,7 +8322,7 @@
           }).catch(function(err) {
             console.warn('[ACK] Web Audio play failed:', err, '— trying plain fallback');
             var fallbackAudio = new Audio('dreamsarewhispers.wav');
-            fallbackAudio.volume = 0.11;
+            fallbackAudio.volume = 0.06;
             fallbackAudio.play().catch(function(err2) {
               console.warn('[ACK] Fallback audio also failed:', err2);
             });
