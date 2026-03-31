@@ -5789,12 +5789,15 @@
     function _getLore(collectionName, artworkTitle) {
       var cl = ACK_LORE[collectionName];
       if (!cl) return null;
-      // Artwork-level lore takes priority
-      if (artworkTitle && cl.artworks && cl.artworks[artworkTitle]) {
-        var al = cl.artworks[artworkTitle];
-        if (al.narration || al.audio) return al;
+      // Artwork-level: only return artwork-specific lore, no collection fallback
+      if (artworkTitle) {
+        if (cl.artworks && cl.artworks[artworkTitle]) {
+          var al = cl.artworks[artworkTitle];
+          if (al.narration || al.audio) return al;
+        }
+        return null;
       }
-      // Fall back to collection lore
+      // Collection-level: only when no artwork specified
       if (cl.narration || cl.audio) return { narration: cl.narration, audio: cl.audio };
       return null;
     }
