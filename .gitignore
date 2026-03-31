@@ -95,6 +95,10 @@ colorstudys/pbd.gif
 1of1s/riddikulus/riddikulus.mp4
 1of1s/relativity/relativity.jpeg
 
+# Right Click Print full-res edition videos (108MB+ each)
+right_click_print/rcp.mp4
+right_click_print/final assets/**/*.mp4
+
 # Starry Nights large originals
 starrynights/elephants.jpg
 starrynights/elephantssmall.png

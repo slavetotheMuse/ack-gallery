@@ -18738,10 +18738,8 @@
             }
 
             if (_isRealMobile) {
-              // Mobile: single lightweight video (no dual crossfade — too heavy for phones)
-              var _tBtn = preview.querySelector('.lo-touch-btn');
-              if (_tBtn) _tBtn.remove();
-              preview.style.position = 'relative';
+              // Mobile: replace image with single lightweight video (inline, not absolute)
+              img.style.display = 'none';
               var mVid = document.createElement('video');
               mVid.id = 'lastOrdersFocusVideo';
               mVid.src = 'lastorders/web/lastorders_web.mp4';
@@ -18750,11 +18748,10 @@
               mVid.playsInline = true;
               mVid.preload = 'auto';
               mVid.setAttribute('playsinline', '');
-              mVid.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;';
+              mVid.setAttribute('autoplay', '');
+              mVid.style.cssText = 'width:100%;height:auto;object-fit:contain;display:block;';
               preview.appendChild(mVid);
-              mVid.autoplay = true;
-              mVid.play().catch(function(){});
-              img.style.visibility = 'hidden';
+              mVid.play().catch(function(e){ console.warn('[ACK] LO mobile play failed:', e); });
               // Sound toggle
               var _loMobileMuted = true;
               var mSoundBtn = document.createElement('div');
@@ -18762,7 +18759,7 @@
               mSoundBtn.id = 'lastOrdersSoundBtn';
               mSoundBtn.innerHTML = '🔇';
               mSoundBtn.title = 'Tap for sound';
-              mSoundBtn.style.zIndex = '10';
+              mSoundBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:10;';
               mSoundBtn.onclick = function(ev) {
                 ev.stopPropagation();
                 _loMobileMuted = !_loMobileMuted;
@@ -18770,6 +18767,7 @@
                 mSoundBtn.innerHTML = _loMobileMuted ? '🔇' : '🔊';
                 if (!_loMobileMuted) { mVid.currentTime = 0; mVid.play(); }
               };
+              preview.style.position = 'relative';
               preview.appendChild(mSoundBtn);
             } else {
               // Desktop: keep image in layout (visibility hidden) so preview has dimensions, video sits on top
@@ -18834,9 +18832,37 @@
             }
 
             if (_isRealMobile) {
-              // Mobile: auto-play video directly (no touch barrier)
-              img.style.visibility = 'hidden';
-              _launchRCPVideo();
+              // Mobile: replace image with compressed web video (inline, not absolute)
+              img.style.display = 'none';
+              var mVid = document.createElement('video');
+              mVid.id = 'rcpFocusVideo';
+              mVid.src = 'right_click_print/rcp_web.mp4';
+              mVid.loop = true;
+              mVid.muted = true;
+              mVid.playsInline = true;
+              mVid.preload = 'auto';
+              mVid.setAttribute('playsinline', '');
+              mVid.setAttribute('autoplay', '');
+              mVid.style.cssText = 'width:100%;height:auto;object-fit:contain;display:block;';
+              preview.appendChild(mVid);
+              mVid.play().catch(function(e){ console.warn('[ACK] RCP mobile play failed:', e); });
+              // Sound toggle
+              var _rcpMobileMuted = true;
+              var mSoundBtn = document.createElement('div');
+              mSoundBtn.className = 'video-sound-btn';
+              mSoundBtn.id = 'rcpSoundBtn';
+              mSoundBtn.innerHTML = '🔇';
+              mSoundBtn.title = 'Tap for sound';
+              mSoundBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:10;';
+              mSoundBtn.onclick = function(ev) {
+                ev.stopPropagation();
+                _rcpMobileMuted = !_rcpMobileMuted;
+                mVid.muted = _rcpMobileMuted;
+                mSoundBtn.innerHTML = _rcpMobileMuted ? '🔇' : '🔊';
+                if (!_rcpMobileMuted) { mVid.currentTime = 0; mVid.play(); }
+              };
+              preview.style.position = 'relative';
+              preview.appendChild(mSoundBtn);
             } else {
               // Desktop: keep image in layout (visibility hidden) so preview has dimensions, video sits on top
               img.style.visibility = 'hidden';
