@@ -8505,31 +8505,32 @@
 
       var popup = document.createElement('div');
       popup.id = 'mobileWarningPopup';
-      popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;' +
-        'background:rgba(10,9,8,0.96);border:1px solid rgba(200,170,90,0.12);border-radius:3px;' +
-        'padding:52px 40px 48px;text-align:center;max-width:480px;width:94%;' +
+      popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;' +
+        'background:rgba(10,9,8,0.97);' +
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'padding:48px 32px;text-align:center;' +
         'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);' +
         'opacity:0;pointer-events:auto;' +
-        'box-shadow:0 0 80px rgba(0,0,0,0.5),0 0 30px rgba(200,160,50,0.03);overflow:hidden;';
+        'overflow:hidden;';
 
       // Clean, minimal scanline — subtle CRT nod
       popup.innerHTML =
         '<div style="position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(transparent,rgba(200,170,90,0.04),transparent);' +
         'animation:mwScanline 4s linear infinite;pointer-events:none;z-index:1;"></div>' +
         // Title
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:0.3em;' +
-        'color:rgba(200,170,90,0.35);text-transform:uppercase;margin-bottom:32px;">a.c.k. art</div>' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;letter-spacing:0.35em;' +
+        'color:rgba(200,170,90,0.35);text-transform:uppercase;margin-bottom:40px;">a.c.k. art</div>' +
         // Main message
-        '<div style="font-family:\'EB Garamond\',Georgia,serif;font-size:22px;' +
-        'color:rgba(225,215,195,0.75);line-height:1.7;letter-spacing:0.01em;">' +
+        '<div style="font-family:\'EB Garamond\',Georgia,serif;font-size:clamp(26px, 6vw, 36px);' +
+        'color:rgba(225,215,195,0.8);line-height:1.7;letter-spacing:0.02em;">' +
         'this gallery was built<br>for large screens</div>' +
         // Sub text
-        '<div style="margin-top:24px;font-family:\'JetBrains Mono\',monospace;font-size:10px;' +
-        'color:rgba(200,180,150,0.25);line-height:2.2;letter-spacing:0.06em;">' +
+        '<div style="margin-top:32px;font-family:\'JetBrains Mono\',monospace;font-size:12px;' +
+        'color:rgba(200,180,150,0.3);line-height:2.4;letter-spacing:0.08em;">' +
         'full experience on desktop<br>' +
-        '<span style="color:rgba(200,170,90,0.3);">mobile supported</span></div>' +
+        '<span style="color:rgba(200,170,90,0.35);">mobile supported</span></div>' +
         // Divider
-        '<div style="margin-top:28px;width:30px;height:1px;background:rgba(200,170,90,0.1);margin:28px auto 0;"></div>';
+        '<div style="margin-top:36px;width:40px;height:1px;background:rgba(200,170,90,0.12);margin:36px auto 0;"></div>';
 
       document.body.appendChild(popup);
 
@@ -8588,6 +8589,74 @@
       setTimeout(dismiss, 4500);
     }
 
+    // ── Periodic mobile roast warnings — infrequent, full-screen, playful ──
+    var _mobileRoasts = [
+      { title: 'SYSTEM WARNING', msg: 'your device is subpar', sub: 'your operating system is mid<br>this may cause a disturbance in your experience' },
+      { title: 'DIAGNOSTIC', msg: 'insufficient screen detected', sub: 'recommended: a screen the size of a wall<br>current: a screen the size of regret' },
+      { title: 'NOTICE', msg: 'your phone called', sub: 'it said it\'s doing its best<br>we appreciate the effort' },
+      { title: 'ALERT', msg: 'pixel density inadequate', sub: 'each artwork deserves more pixels than this<br>consider upgrading to a cinema display' },
+      { title: 'WARNING', msg: 'vertical orientation detected', sub: 'art was not meant to be viewed<br>through a mail slot' },
+      { title: 'PERFORMANCE', msg: 'your GPU is nervous', sub: 'it asked us to go easy on it<br>we said no' },
+      { title: 'ADVISORY', msg: 'screen too small for vibes', sub: 'current vibe throughput: 23%<br>minimum recommended: 100%' },
+      { title: 'CRITICAL', msg: 'aspect ratio is criminal', sub: 'the artworks have filed a formal complaint<br>they demand better conditions' },
+      { title: 'MEMO', msg: 'your battery is watching', sub: 'it knows what you\'re doing<br>it does not approve' },
+      { title: 'INCIDENT REPORT', msg: 'beauty overflow error', sub: 'artwork exceeds device rendering capacity<br>some feelings may be lost in compression' },
+    ];
+    var _lastRoastIdx = -1;
+
+    function _showMobileRoast() {
+      if (!_isRealMobile) return;
+      // Don't show if detail/focus view or intro is active
+      if (document.getElementById('whispersPreIntro')) return;
+      if (document.getElementById('mobileWarningPopup')) return;
+      if (document.getElementById('mobileRoastPopup')) return;
+
+      // Pick a random roast (avoid repeats)
+      var idx = Math.floor(Math.random() * _mobileRoasts.length);
+      if (idx === _lastRoastIdx) idx = (idx + 1) % _mobileRoasts.length;
+      _lastRoastIdx = idx;
+      var roast = _mobileRoasts[idx];
+
+      var r = document.createElement('div');
+      r.id = 'mobileRoastPopup';
+      r.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;' +
+        'background:rgba(8,7,6,0.97);' +
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'padding:48px 32px;text-align:center;opacity:0;pointer-events:auto;' +
+        'backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);';
+
+      r.innerHTML =
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:0.4em;' +
+        'color:rgba(180,20,20,0.4);text-transform:uppercase;margin-bottom:36px;">' + roast.title + '</div>' +
+        '<div style="font-family:\'EB Garamond\',Georgia,serif;font-size:clamp(24px, 5.5vw, 32px);' +
+        'color:rgba(225,215,195,0.75);line-height:1.6;letter-spacing:0.02em;">' + roast.msg + '</div>' +
+        '<div style="margin-top:28px;font-family:\'JetBrains Mono\',monospace;font-size:11px;' +
+        'color:rgba(200,180,150,0.25);line-height:2.2;letter-spacing:0.06em;">' + roast.sub + '</div>' +
+        '<div style="margin-top:40px;width:30px;height:1px;background:rgba(180,20,20,0.1);"></div>' +
+        '<div style="margin-top:20px;font-family:\'JetBrains Mono\',monospace;font-size:9px;' +
+        'letter-spacing:0.2em;color:rgba(200,180,150,0.15);text-transform:uppercase;">tap to dismiss</div>';
+
+      document.body.appendChild(r);
+      setTimeout(function() { r.style.transition = 'opacity 0.5s ease'; r.style.opacity = '1'; }, 50);
+
+      function dismissRoast() {
+        r.style.transition = 'opacity 0.3s ease';
+        r.style.opacity = '0';
+        setTimeout(function() { if (r.parentNode) r.remove(); }, 350);
+      }
+      r.addEventListener('click', dismissRoast);
+      setTimeout(dismissRoast, 5000);
+
+      // Schedule next roast — random interval between 3–7 minutes
+      _scheduleNextRoast();
+    }
+
+    function _scheduleNextRoast() {
+      if (!_isRealMobile) return;
+      var delay = (180 + Math.floor(Math.random() * 240)) * 1000; // 3–7 min
+      setTimeout(_showMobileRoast, delay);
+    }
+
     function init() {
       // ── Pre-intro whispers page → vortex intro (mobile gets warning popup overlaid) ──
       _showWhispersPreIntro(function() {
@@ -8595,6 +8664,9 @@
           runIntroSequence();
           // Show warning as a popup overlay on the vortex screen
           setTimeout(function() { _showMobileWarningOverlay(); }, 800);
+          // Start periodic roast timer — first one after 2–5 min
+          var _firstRoast = (120 + Math.floor(Math.random() * 180)) * 1000;
+          setTimeout(_showMobileRoast, _firstRoast);
         } else {
           runIntroSequence();
         }
