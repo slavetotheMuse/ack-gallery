@@ -8262,8 +8262,9 @@
         if (tapPrompt) tapPrompt.style.display = 'none';
 
         // Intro audio — use Web Audio API for reverb/ambience, with robust fallback
+        var audio; // declared in outer scope so audio.pause() works later
         function _playWhisperAudio() {
-          var audio = new Audio('dreamsarewhispers.wav');
+          audio = new Audio('dreamsarewhispers.wav');
           audio.volume = 1.0;
           var _wCtx, _wSrc;
           try {
@@ -8462,7 +8463,7 @@
 
           // Remove and proceed
           setTimeout(function() {
-            audio.pause();
+            if (audio) { try { audio.pause(); } catch(e){} }
             preIntro.remove();
             if (onComplete) onComplete();
           }, 2400);
