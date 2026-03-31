@@ -18374,13 +18374,20 @@
           const img = preview ? preview.querySelector('img') : null;
           if (preview && img) {
             img.dataset.thumbSrc = img.src;
+            // Swap to edition #1 high-res still
+            var _rcpArtData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks ? COLLECTIONS[collectionIndex].artworks[artworkIndex] : null;
+            if (_rcpArtData && _rcpArtData.editions && _rcpArtData.editions[0] && _rcpArtData.editions[0].still) {
+              img.src = _rcpArtData.editions[0].still;
+            }
             img.style.display = 'block';
             img.style.objectFit = 'contain';
 
             function _launchRCPVideo() {
               var _tBtn = preview.querySelector('.lo-touch-btn');
               if (_tBtn) _tBtn.remove();
-              var _rcpSrc = 'right_click_print/rcp.mp4';
+              // Use edition #1 video from editions data (rcp.mp4 may be LFS pointer)
+              var _artData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks ? COLLECTIONS[collectionIndex].artworks[artworkIndex] : null;
+              var _rcpSrc = (_artData && _artData.editions && _artData.editions[0] && _artData.editions[0].video) ? _artData.editions[0].video : 'right_click_print/rcp.mp4';
               var vid = document.createElement('video');
               vid.id = 'rcpFocusVideo';
               vid.src = _rcpSrc;
