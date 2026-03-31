@@ -18377,9 +18377,11 @@
           const img = preview ? preview.querySelector('img') : null;
           if (preview && img) {
             img.dataset.thumbSrc = img.src;
-            // Swap to edition #1 high-res still
+            var _rcpFallbackSrc = 'right_click_print/rcp.png';
+            // Swap to edition #1 high-res still, fall back to rcp.png if broken
             var _rcpArtData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks ? COLLECTIONS[collectionIndex].artworks[artworkIndex] : null;
             if (_rcpArtData && _rcpArtData.editions && _rcpArtData.editions[0] && _rcpArtData.editions[0].still) {
+              img.onerror = function() { img.onerror = null; img.src = _rcpFallbackSrc; };
               img.src = _rcpArtData.editions[0].still;
             }
             img.style.display = 'block';
@@ -20006,9 +20008,10 @@
             if (oldVid) { oldVid.pause(); oldVid.src = ''; oldVid.remove(); }
             var oldBtn = preview.querySelector('#rcpSoundBtn');
             if (oldBtn) oldBtn.remove();
-            // Update still image
+            // Update still image with fallback to rcp.png if edition still is broken
             var img = preview.querySelector('img');
             if (img) {
+              img.onerror = function() { img.onerror = null; img.src = 'right_click_print/rcp.png'; };
               img.src = ed.still;
               img.dataset.thumbSrc = ed.still;
               img.style.visibility = 'visible';
