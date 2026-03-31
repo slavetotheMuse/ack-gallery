@@ -18334,6 +18334,7 @@
             }
 
             if (_isRealMobile) {
+              // Mobile: touch button to start video
               var touchBtn = document.createElement('div');
               touchBtn.className = 'lo-touch-btn';
               touchBtn.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;' +
@@ -18345,7 +18346,8 @@
               preview.style.position = 'relative';
               preview.appendChild(touchBtn);
             } else {
-              img.style.visibility = 'hidden';
+              // Desktop: show still until video is ready, then auto-play
+              preview.style.position = 'relative';
               _launchRCPVideo();
             }
           }
@@ -19905,8 +19907,9 @@
           function _rcpSwapMedia(ed) {
             var preview = node.querySelector('.node-preview');
             if (!preview) return;
-            // Remove existing video
+            // Check if video was already playing (user already touched)
             var oldVid = preview.querySelector('#rcpFocusVideo');
+            var _videoWasPlaying = !!oldVid;
             if (oldVid) { oldVid.pause(); oldVid.src = ''; oldVid.remove(); }
             var oldBtn = preview.querySelector('#rcpSoundBtn');
             if (oldBtn) oldBtn.remove();
@@ -19915,9 +19918,14 @@
             if (img) {
               img.src = ed.still;
               img.dataset.thumbSrc = ed.still;
+              img.style.visibility = 'visible';
+              img.style.display = 'block';
             }
-            // Launch new video (same simple loop pattern)
-            if (!_isRealMobile || preview.querySelector('.lo-touch-btn')) {
+            // If video was already playing, launch new edition video immediately
+            if (_videoWasPlaying) {
+              // Remove touch button if present
+              var _oldTouch = preview.querySelector('.lo-touch-btn');
+              if (_oldTouch) _oldTouch.remove();
               var vid = document.createElement('video');
               vid.id = 'rcpFocusVideo';
               vid.src = ed.video;
@@ -19931,7 +19939,6 @@
               preview.appendChild(vid);
               vid.autoplay = true;
               vid.play().catch(function(){});
-              if (img) img.style.visibility = 'hidden';
               var _vMuted = true;
               var soundBtn = document.createElement('div');
               soundBtn.className = 'video-sound-btn';
@@ -19948,6 +19955,7 @@
               };
               preview.appendChild(soundBtn);
             }
+            // Otherwise still image stays visible with touch button
           }
 
           _rcpBadge.addEventListener('click', function(ev) {
