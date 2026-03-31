@@ -9,18 +9,20 @@
       document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.3, user-scalable=no');
     }
   </script>
-  <title>ACK ART</title>
-  <meta name="description" content="Interactive art gallery by AlphaCentauriKid — Cinema 4D node editor-styled catalog of on-chain artworks.">
+  <title>a.c.k. art</title>
+  <meta name="description" content="chasing whispers from the deep — digital · physical · sculptural · musical">
 
   <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="ACK ART">
-  <meta property="og:description" content="Digital - Physical - Sculptural - Conceptual">
+  <meta property="og:title" content="a.c.k. art">
+  <meta property="og:description" content="chasing whispers from the deep">
   <meta property="og:image" id="ogImage" content="https://ack.art/og-preview.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:url" content="https://ack.art">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ACK ART">
-  <meta name="twitter:description" content="Digital - Physical - Sculptural - Conceptual">
+  <meta name="twitter:title" content="a.c.k. art">
+  <meta name="twitter:description" content="chasing whispers from the deep">
   <meta name="twitter:image" id="twImage" content="https://ack.art/og-preview.jpg">
   <script>
     (function(){
@@ -5327,7 +5329,7 @@
         osc3.start(now); osc3.stop(now + duration * 0.5);
       }
 
-      // ── Ambient soundscape: low drone + filtered noise + subtle mechanical hum ──
+      // ── Ambient soundscape: breathing drone + sporadic events (context-aware) ──
       function _startAmbient() {
         if (_ambientRunning) return;
         var ctx = _ensureCtx();
@@ -5338,18 +5340,17 @@
         masterGain.gain.linearRampToValueAtTime(1, ctx.currentTime + 5);
         masterGain.connect(ctx.destination);
 
-        // ═══ BASE LAYER: Sub-drone that breathes (fades in/out over long stretches) ═══
+        // ═══ BASE LAYER: Sub-drone that breathes ═══
         var drone = ctx.createOscillator();
         drone.type = 'sine';
         drone.frequency.setValueAtTime(55, ctx.currentTime);
         var droneG = ctx.createGain();
-        droneG.gain.setValueAtTime(0.02, ctx.currentTime);
-        // Slow breathing LFO on drone volume — swells over ~25s cycles
+        droneG.gain.setValueAtTime(0.018, ctx.currentTime);
         var droneLFO = ctx.createOscillator();
         droneLFO.type = 'sine';
-        droneLFO.frequency.setValueAtTime(0.04, ctx.currentTime); // ~25s cycle
+        droneLFO.frequency.setValueAtTime(0.04, ctx.currentTime);
         var droneLFOG = ctx.createGain();
-        droneLFOG.gain.setValueAtTime(0.015, ctx.currentTime);
+        droneLFOG.gain.setValueAtTime(0.014, ctx.currentTime);
         droneLFO.connect(droneLFOG); droneLFOG.connect(droneG.gain);
         droneLFO.start();
         var droneF = ctx.createBiquadFilter();
@@ -5359,181 +5360,235 @@
         drone.start();
         _ambientNodes.push(drone, droneG, droneLFO);
 
-        // Second drone — fifth above, offset phase
+        // Second drone — fifth above
         var drone2 = ctx.createOscillator();
         drone2.type = 'sine';
         drone2.frequency.setValueAtTime(82, ctx.currentTime);
         var drone2G = ctx.createGain();
-        drone2G.gain.setValueAtTime(0.012, ctx.currentTime);
+        drone2G.gain.setValueAtTime(0.01, ctx.currentTime);
         var drone2LFO = ctx.createOscillator();
         drone2LFO.type = 'sine';
-        drone2LFO.frequency.setValueAtTime(0.03, ctx.currentTime); // ~33s cycle, offset from drone1
+        drone2LFO.frequency.setValueAtTime(0.03, ctx.currentTime);
         var drone2LFOG = ctx.createGain();
-        drone2LFOG.gain.setValueAtTime(0.01, ctx.currentTime);
+        drone2LFOG.gain.setValueAtTime(0.008, ctx.currentTime);
         drone2LFO.connect(drone2LFOG); drone2LFOG.connect(drone2G.gain);
         drone2LFO.start();
         drone2.connect(drone2G); drone2G.connect(masterGain);
         drone2.start();
         _ambientNodes.push(drone2, drone2G, drone2LFO);
 
-        // ═══ DESERT WIND — pure oscillator-based (no white noise), very low breathy sweep ═══
-        var wind = ctx.createOscillator();
-        wind.type = 'sine';
-        wind.frequency.setValueAtTime(65, ctx.currentTime);
-        var windG = ctx.createGain();
-        windG.gain.setValueAtTime(0.006, ctx.currentTime);
-        // Slow breathing LFO on wind volume
-        var windVolLFO = ctx.createOscillator();
-        windVolLFO.type = 'sine';
-        windVolLFO.frequency.setValueAtTime(0.025, ctx.currentTime); // ~40s cycle
-        var windVolLFOG = ctx.createGain();
-        windVolLFOG.gain.setValueAtTime(0.005, ctx.currentTime);
-        windVolLFO.connect(windVolLFOG); windVolLFOG.connect(windG.gain);
-        windVolLFO.start();
-        // Slow pitch wobble to simulate wind gusts
-        var windPitchLFO = ctx.createOscillator();
-        windPitchLFO.type = 'sine';
-        windPitchLFO.frequency.setValueAtTime(0.04, ctx.currentTime);
-        var windPitchLFOG = ctx.createGain();
-        windPitchLFOG.gain.setValueAtTime(8, ctx.currentTime);
-        windPitchLFO.connect(windPitchLFOG); windPitchLFOG.connect(wind.frequency);
-        windPitchLFO.start();
-        var windF = ctx.createBiquadFilter();
-        windF.type = 'lowpass';
-        windF.frequency.setValueAtTime(120, ctx.currentTime);
-        wind.connect(windF); windF.connect(windG); windG.connect(masterGain);
-        wind.start();
-        _ambientNodes.push(wind, windG, windVolLFO, windPitchLFO);
-
-        // ═══ MECHANICAL HUM — Atreides machinery, fades in/out ═══
-        var mech = ctx.createOscillator();
-        mech.type = 'triangle';
-        mech.frequency.setValueAtTime(120, ctx.currentTime);
-        var mechFreqLFO = ctx.createOscillator();
-        mechFreqLFO.type = 'sine';
-        mechFreqLFO.frequency.setValueAtTime(0.12, ctx.currentTime);
-        var mechFreqLFOG = ctx.createGain();
-        mechFreqLFOG.gain.setValueAtTime(6, ctx.currentTime);
-        mechFreqLFO.connect(mechFreqLFOG); mechFreqLFOG.connect(mech.frequency);
-        mechFreqLFO.start();
-        var mechG = ctx.createGain();
-        mechG.gain.setValueAtTime(0.006, ctx.currentTime);
-        // Mech breathes on longer cycle
-        var mechVolLFO = ctx.createOscillator();
-        mechVolLFO.type = 'sine';
-        mechVolLFO.frequency.setValueAtTime(0.02, ctx.currentTime); // ~50s
-        var mechVolLFOG = ctx.createGain();
-        mechVolLFOG.gain.setValueAtTime(0.005, ctx.currentTime);
-        mechVolLFO.connect(mechVolLFOG); mechVolLFOG.connect(mechG.gain);
-        mechVolLFO.start();
-        var mechF = ctx.createBiquadFilter();
-        mechF.type = 'lowpass';
-        mechF.frequency.setValueAtTime(180, ctx.currentTime);
-        mech.connect(mechF); mechF.connect(mechG); mechG.connect(masterGain);
-        mech.start();
-        _ambientNodes.push(mech, mechG, mechFreqLFO, mechVolLFO);
-
-        // ═══ STOCHASTIC EVENTS — random distant sounds on timers ═══
+        // ═══ STOCHASTIC EVENTS — context-aware, sporadic ═══
         var _ambientEventTimer = null;
+
+        // Helper: detect current collection context
+        function _getContext() {
+          if (typeof focusedCollectionIndex === 'number' && focusedCollectionIndex !== null && typeof COLLECTIONS !== 'undefined') {
+            var col = COLLECTIONS[focusedCollectionIndex];
+            if (col) return col.name;
+          }
+          if (typeof currentCollectionIndex === 'number' && currentCollectionIndex !== null && typeof COLLECTIONS !== 'undefined') {
+            var col2 = COLLECTIONS[currentCollectionIndex];
+            if (col2) return col2.name;
+          }
+          return 'vortex';
+        }
 
         function _playAmbientEvent() {
           var ctx2 = _ensureCtx();
           if (!ctx2 || !_enabled || !_ambientRunning) return;
           var now = ctx2.currentTime;
           var roll = Math.random();
+          var context = _getContext();
+          var isPianoBlossoms = context === 'Piano Blossoms';
+          var isBrokenKeys = context === 'Broken Keys';
 
-          if (roll < 0.28) {
-            // ── DISTANT PIANO SHUTTERS — far-off hammer hits with long reverb tails ──
-            // Like hearing a piano through stone walls in another wing of a palace
-            var noteCount = 2 + Math.floor(Math.random() * 3);
-            var pianoNotes = [220, 262, 294, 330, 349, 392, 440];
+          // ── WHISPERING — breathy layered sine tones, like distant murmuring ──
+          if (roll < 0.14) {
+            var whisperCount = 2 + Math.floor(Math.random() * 2);
+            for (var w = 0; w < whisperCount; w++) {
+              (function(idx) {
+                setTimeout(function() {
+                  var c = _ensureCtx(); if (!c) return;
+                  var t = c.currentTime;
+                  var dur = 0.4 + Math.random() * 0.6;
+                  // Breathy fundamental — very high, very soft
+                  var o = c.createOscillator();
+                  o.type = 'sine';
+                  var f0 = 800 + Math.random() * 1200;
+                  o.frequency.setValueAtTime(f0, t);
+                  o.frequency.linearRampToValueAtTime(f0 * (0.85 + Math.random() * 0.3), t + dur);
+                  var g = c.createGain();
+                  g.gain.setValueAtTime(0, t);
+                  g.gain.linearRampToValueAtTime(0.003, t + dur * 0.15);
+                  g.gain.linearRampToValueAtTime(0.002, t + dur * 0.5);
+                  g.gain.linearRampToValueAtTime(0, t + dur);
+                  var bp = c.createBiquadFilter();
+                  bp.type = 'bandpass';
+                  bp.frequency.setValueAtTime(f0 * 0.9, t);
+                  bp.Q.setValueAtTime(5, t);
+                  o.connect(bp); bp.connect(g); g.connect(masterGain);
+                  o.start(t); o.stop(t + dur + 0.05);
+                }, idx * (200 + Math.random() * 300));
+              })(w);
+            }
+
+          // ── GEAR TEETH — rapid clicking sequence, like clockwork ──
+          } else if (roll < 0.26) {
+            var clickCount = 3 + Math.floor(Math.random() * 5);
+            var gearSpeed = 0.04 + Math.random() * 0.04; // time between clicks
+            for (var gc = 0; gc < clickCount; gc++) {
+              (function(idx) {
+                setTimeout(function() {
+                  var c = _ensureCtx(); if (!c) return;
+                  var t = c.currentTime;
+                  var tick = c.createOscillator();
+                  tick.type = 'triangle';
+                  tick.frequency.setValueAtTime(600 + Math.random() * 200, t);
+                  tick.frequency.exponentialRampToValueAtTime(200, t + 0.008);
+                  var tG = c.createGain();
+                  tG.gain.setValueAtTime(0.04 + Math.random() * 0.02, t);
+                  tG.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+                  var tLP = c.createBiquadFilter();
+                  tLP.type = 'lowpass';
+                  tLP.frequency.setValueAtTime(1200, t);
+                  tick.connect(tLP); tLP.connect(tG); tG.connect(masterGain);
+                  tick.start(t); tick.stop(t + 0.02);
+                }, idx * gearSpeed * 1000);
+              })(gc);
+            }
+
+          // ── SPORADIC WHIRRING — short servo burst that spins up and dies ──
+          } else if (roll < 0.38) {
+            var whirDur = 0.5 + Math.random() * 1.0;
+            var whir = ctx2.createOscillator();
+            whir.type = 'triangle';
+            var whirBase = 90 + Math.random() * 60;
+            whir.frequency.setValueAtTime(whirBase, now);
+            // Spin up then slow down
+            whir.frequency.linearRampToValueAtTime(whirBase * 2.5, now + whirDur * 0.3);
+            whir.frequency.linearRampToValueAtTime(whirBase * 1.8, now + whirDur * 0.6);
+            whir.frequency.exponentialRampToValueAtTime(whirBase * 0.5, now + whirDur);
+            var whirG = ctx2.createGain();
+            whirG.gain.setValueAtTime(0, now);
+            whirG.gain.linearRampToValueAtTime(0.006, now + whirDur * 0.15);
+            whirG.gain.linearRampToValueAtTime(0.004, now + whirDur * 0.5);
+            whirG.gain.linearRampToValueAtTime(0, now + whirDur);
+            var whirLP = ctx2.createBiquadFilter();
+            whirLP.type = 'lowpass';
+            whirLP.frequency.setValueAtTime(200, now);
+            whir.connect(whirLP); whirLP.connect(whirG); whirG.connect(masterGain);
+            whir.start(now); whir.stop(now + whirDur + 0.1);
+
+          // ── DISTANT PIANO — very quiet, through stone walls ──
+          } else if (roll < 0.48) {
+            var noteCount = 1 + Math.floor(Math.random() * 2);
+            var pianoNotes = isPianoBlossoms
+              ? [262, 330, 392, 523, 659] // brighter for Piano Blossoms
+              : [220, 262, 294, 330, 349];
+            var pianoVol = isPianoBlossoms ? 0.005 : 0.003; // quieter overall
             for (var n = 0; n < noteCount; n++) {
               (function(idx) {
-                var delay = idx * (0.3 + Math.random() * 0.5); // wider spacing, more distant
                 setTimeout(function() {
                   var c = _ensureCtx(); if (!c) return;
                   var t = c.currentTime;
                   var freq = pianoNotes[Math.floor(Math.random() * pianoNotes.length)];
-                  // Very soft sine — the fundamental, heavily filtered as if through walls
                   var o = c.createOscillator();
                   o.type = 'sine';
                   o.frequency.setValueAtTime(freq, t);
                   var g = c.createGain();
-                  g.gain.setValueAtTime(0.008 + Math.random() * 0.005, t);
-                  g.gain.exponentialRampToValueAtTime(0.001, t + 1.5 + Math.random() * 1.0);
-                  // Heavy lowpass — as if heard from far away
+                  g.gain.setValueAtTime(pianoVol + Math.random() * 0.002, t);
+                  g.gain.exponentialRampToValueAtTime(0.001, t + 2.0 + Math.random() * 1.0);
                   var f = c.createBiquadFilter();
                   f.type = 'lowpass';
-                  f.frequency.setValueAtTime(500, t);
-                  f.Q.setValueAtTime(1, t);
+                  f.frequency.setValueAtTime(isPianoBlossoms ? 700 : 400, t);
                   o.connect(f); f.connect(g); g.connect(masterGain);
-                  o.start(t); o.stop(t + 2.5);
-                }, delay * 1000);
+                  o.start(t); o.stop(t + 3.0);
+                }, idx * (400 + Math.random() * 600));
               })(n);
             }
 
-          } else if (roll < 0.44) {
-            // ── SANDWORM RUMBLE — very low oscillator swell, no noise ──
-            var rumDur = 2.0 + Math.random() * 2;
-            var rum = ctx2.createOscillator();
-            rum.type = 'sine';
-            rum.frequency.setValueAtTime(30 + Math.random() * 15, now);
-            rum.frequency.linearRampToValueAtTime(25, now + rumDur);
-            var rumG = ctx2.createGain();
-            rumG.gain.setValueAtTime(0, now);
-            rumG.gain.linearRampToValueAtTime(0.018, now + rumDur * 0.3);
-            rumG.gain.linearRampToValueAtTime(0, now + rumDur);
-            var rumLP = ctx2.createBiquadFilter();
-            rumLP.type = 'lowpass';
-            rumLP.frequency.setValueAtTime(60, now);
-            rumLP.Q.setValueAtTime(2, now);
-            rum.connect(rumLP); rumLP.connect(rumG); rumG.connect(masterGain);
-            rum.start(now); rum.stop(now + rumDur + 0.1);
+          // ── HARKONNEN INDUSTRIAL — brutal low grinding + pressure release ──
+          } else if (roll < 0.56) {
+            // Heavy grinding oscillator — sawtooth through tight lowpass
+            var grindDur = 0.8 + Math.random() * 0.8;
+            var grindF = 40 + Math.random() * 25;
+            var grind = ctx2.createOscillator();
+            grind.type = 'sawtooth';
+            grind.frequency.setValueAtTime(grindF, now);
+            grind.frequency.linearRampToValueAtTime(grindF * 0.7, now + grindDur);
+            var grindG = ctx2.createGain();
+            grindG.gain.setValueAtTime(0, now);
+            grindG.gain.linearRampToValueAtTime(0.008, now + grindDur * 0.2);
+            grindG.gain.linearRampToValueAtTime(0.005, now + grindDur * 0.7);
+            grindG.gain.linearRampToValueAtTime(0, now + grindDur);
+            var grindLP = ctx2.createBiquadFilter();
+            grindLP.type = 'lowpass';
+            grindLP.frequency.setValueAtTime(100, now);
+            grindLP.Q.setValueAtTime(4, now);
+            grind.connect(grindLP); grindLP.connect(grindG); grindG.connect(masterGain);
+            grind.start(now); grind.stop(now + grindDur + 0.1);
+            // Pressure release hiss — high triangle pip at end
+            setTimeout(function() {
+              var c = _ensureCtx(); if (!c) return;
+              var t = c.currentTime;
+              var hiss = c.createOscillator();
+              hiss.type = 'triangle';
+              hiss.frequency.setValueAtTime(2000, t);
+              hiss.frequency.exponentialRampToValueAtTime(800, t + 0.05);
+              var hG = c.createGain();
+              hG.gain.setValueAtTime(0.003, t);
+              hG.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+              hiss.connect(hG); hG.connect(masterGain);
+              hiss.start(t); hiss.stop(t + 0.1);
+            }, grindDur * 900);
 
-          } else if (roll < 0.58) {
-            // ── DISTANT MECHANICAL CRANKING — triangle wave grinding, far away ──
-            // Like Atreides machinery heard through corridors
-            var crankDur = 1.2 + Math.random() * 1.0;
-            var crankF = 70 + Math.random() * 30;
-            var crank = ctx2.createOscillator();
-            crank.type = 'triangle';
-            crank.frequency.setValueAtTime(crankF, now);
-            // Slow irregular pitch wobble like a turning mechanism
-            crank.frequency.linearRampToValueAtTime(crankF * 1.3, now + crankDur * 0.4);
-            crank.frequency.linearRampToValueAtTime(crankF * 0.8, now + crankDur * 0.7);
-            crank.frequency.linearRampToValueAtTime(crankF, now + crankDur);
-            var crankG = ctx2.createGain();
-            crankG.gain.setValueAtTime(0, now);
-            crankG.gain.linearRampToValueAtTime(0.005, now + 0.15);
-            crankG.gain.linearRampToValueAtTime(0.004, now + crankDur * 0.6);
-            crankG.gain.linearRampToValueAtTime(0, now + crankDur);
-            var crankLP = ctx2.createBiquadFilter();
-            crankLP.type = 'lowpass';
-            crankLP.frequency.setValueAtTime(160, now);
-            crank.connect(crankLP); crankLP.connect(crankG); crankG.connect(masterGain);
-            crank.start(now); crank.stop(now + crankDur + 0.1);
+          // ── FOREST / GARDEN — birdsong sine chirps + leaf rustle (Piano Blossoms context) ──
+          } else if (roll < 0.66 && isPianoBlossoms) {
+            // Bird-like chirps — rapid sine frequency sweeps
+            var chirpCount = 2 + Math.floor(Math.random() * 3);
+            for (var bc = 0; bc < chirpCount; bc++) {
+              (function(idx) {
+                setTimeout(function() {
+                  var c = _ensureCtx(); if (!c) return;
+                  var t = c.currentTime;
+                  var baseF = 1800 + Math.random() * 1200;
+                  var o = c.createOscillator();
+                  o.type = 'sine';
+                  o.frequency.setValueAtTime(baseF, t);
+                  o.frequency.linearRampToValueAtTime(baseF * 1.4, t + 0.04);
+                  o.frequency.linearRampToValueAtTime(baseF * 0.9, t + 0.1);
+                  var g = c.createGain();
+                  g.gain.setValueAtTime(0.003, t);
+                  g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+                  var lp = c.createBiquadFilter();
+                  lp.type = 'lowpass';
+                  lp.frequency.setValueAtTime(3000, t);
+                  o.connect(lp); lp.connect(g); g.connect(masterGain);
+                  o.start(t); o.stop(t + 0.15);
+                }, idx * (100 + Math.random() * 200));
+              })(bc);
+            }
 
-          } else if (roll < 0.72) {
-            // ── GARDEN BREEZE — pure oscillator shimmer, no noise ──
-            var bDur = 1.5 + Math.random() * 1.5;
-            var breeze = ctx2.createOscillator();
-            breeze.type = 'sine';
-            breeze.frequency.setValueAtTime(180 + Math.random() * 60, now);
-            // Gentle pitch rise and fall like wind through leaves
-            breeze.frequency.linearRampToValueAtTime(220 + Math.random() * 80, now + bDur * 0.4);
-            breeze.frequency.linearRampToValueAtTime(160 + Math.random() * 40, now + bDur);
-            var bG = ctx2.createGain();
-            bG.gain.setValueAtTime(0, now);
-            bG.gain.linearRampToValueAtTime(0.006, now + bDur * 0.3);
-            bG.gain.linearRampToValueAtTime(0, now + bDur);
-            var bLP = ctx2.createBiquadFilter();
-            bLP.type = 'lowpass';
-            bLP.frequency.setValueAtTime(250, now);
-            breeze.connect(bLP); bLP.connect(bG); bG.connect(masterGain);
-            breeze.start(now); breeze.stop(now + bDur + 0.1);
+          // ── FOREST / GARDEN — gentle wind through trees (also Piano Blossoms) ──
+          } else if (roll < 0.72 && isPianoBlossoms) {
+            var leafDur = 2.0 + Math.random() * 1.5;
+            var leaf = ctx2.createOscillator();
+            leaf.type = 'sine';
+            leaf.frequency.setValueAtTime(200 + Math.random() * 80, now);
+            leaf.frequency.linearRampToValueAtTime(260 + Math.random() * 60, now + leafDur * 0.4);
+            leaf.frequency.linearRampToValueAtTime(180 + Math.random() * 40, now + leafDur);
+            var leafG = ctx2.createGain();
+            leafG.gain.setValueAtTime(0, now);
+            leafG.gain.linearRampToValueAtTime(0.004, now + leafDur * 0.3);
+            leafG.gain.linearRampToValueAtTime(0, now + leafDur);
+            var leafLP = ctx2.createBiquadFilter();
+            leafLP.type = 'lowpass';
+            leafLP.frequency.setValueAtTime(300, now);
+            leaf.connect(leafLP); leafLP.connect(leafG); leafG.connect(masterGain);
+            leaf.start(now); leaf.stop(now + leafDur + 0.1);
 
-          } else if (roll < 0.86) {
-            // ── DUNE HORN — distant low brass tone, like a thumper signal ──
+          // ── DUNE HORN — distant low brass ──
+          } else if (roll < 0.80) {
             var hornF = 110 + Math.random() * 30;
             var hornDur = 1.0 + Math.random() * 1.5;
             var h = ctx2.createOscillator();
@@ -5542,40 +5597,53 @@
             h.frequency.linearRampToValueAtTime(hornF * 0.92, now + hornDur);
             var hG = ctx2.createGain();
             hG.gain.setValueAtTime(0, now);
-            hG.gain.linearRampToValueAtTime(0.01, now + hornDur * 0.15);
-            hG.gain.linearRampToValueAtTime(0.006, now + hornDur * 0.6);
+            hG.gain.linearRampToValueAtTime(0.008, now + hornDur * 0.15);
+            hG.gain.linearRampToValueAtTime(0.005, now + hornDur * 0.6);
             hG.gain.linearRampToValueAtTime(0, now + hornDur);
             var hF = ctx2.createBiquadFilter();
             hF.type = 'lowpass';
-            hF.frequency.setValueAtTime(250, now);
+            hF.frequency.setValueAtTime(220, now);
             h.connect(hF); hF.connect(hG); hG.connect(masterGain);
             h.start(now); h.stop(now + hornDur + 0.1);
 
+          // ── SANDWORM RUMBLE — sub-bass swell ──
+          } else if (roll < 0.90) {
+            var rumDur = 2.0 + Math.random() * 2;
+            var rum = ctx2.createOscillator();
+            rum.type = 'sine';
+            rum.frequency.setValueAtTime(30 + Math.random() * 15, now);
+            rum.frequency.linearRampToValueAtTime(25, now + rumDur);
+            var rumG = ctx2.createGain();
+            rumG.gain.setValueAtTime(0, now);
+            rumG.gain.linearRampToValueAtTime(0.015, now + rumDur * 0.3);
+            rumG.gain.linearRampToValueAtTime(0, now + rumDur);
+            var rumLP = ctx2.createBiquadFilter();
+            rumLP.type = 'lowpass';
+            rumLP.frequency.setValueAtTime(55, now);
+            rum.connect(rumLP); rumLP.connect(rumG); rumG.connect(masterGain);
+            rum.start(now); rum.stop(now + rumDur + 0.1);
+
+          // ── CRYSTAL CHIME — spice vision ──
           } else {
-            // ── CRYSTAL CHIME — very faint high ring, like spice vision ──
             var chimeF = 1200 + Math.random() * 800;
             var ch = ctx2.createOscillator();
             ch.type = 'sine';
             ch.frequency.setValueAtTime(chimeF, now);
             var chG = ctx2.createGain();
-            chG.gain.setValueAtTime(0.004, now);
+            chG.gain.setValueAtTime(0.003, now);
             chG.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-            var chLP = ctx2.createBiquadFilter();
-            chLP.type = 'lowpass';
-            chLP.frequency.setValueAtTime(2000, now);
-            ch.connect(chLP); chLP.connect(chG); chG.connect(masterGain);
+            ch.connect(chG); chG.connect(masterGain);
             ch.start(now); ch.stop(now + 2.0);
           }
 
-          // Schedule next event — random interval 8-25 seconds
-          var nextDelay = 8000 + Math.random() * 17000;
+          // Schedule next — sporadic, 6-20 seconds
+          var nextDelay = 6000 + Math.random() * 14000;
           _ambientEventTimer = setTimeout(_playAmbientEvent, nextDelay);
         }
 
         // Start events after initial fade-in
-        _ambientEventTimer = setTimeout(_playAmbientEvent, 6000);
+        _ambientEventTimer = setTimeout(_playAmbientEvent, 5000);
         _ambientNodes.push(masterGain);
-        // Store timer ref for cleanup
         _ambientNodes._eventTimer = _ambientEventTimer;
       }
 
@@ -7076,45 +7144,69 @@
           }
         }, 6500);
 
-        // ═══ LISAN AL-GAIB FLASH SEQUENCE ═══
-        // Subtle glimpses of the artwork, then smooth dissolve into vortex
+        // ═══ MARVEL-STYLE ARTWORK FLASH SEQUENCE ═══
+        // Quick cuts: lisan al-gaib → void engine → skelekart, no black gaps between
         setTimeout(function() {
-          var lisanImg = document.createElement('img');
-          lisanImg.src = 'ackeditions_gallery/web/lisan_web.gif';
-          lisanImg.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;' +
-            'object-fit:cover;z-index:10002;opacity:0;pointer-events:none;' +
-            'filter:contrast(1.1) brightness(0.85) saturate(0.9);';
-          preIntro.appendChild(lisanImg);
+          var flashStyle = 'position:fixed;top:0;left:0;width:100%;height:100%;' +
+            'object-fit:cover;z-index:10002;pointer-events:none;';
 
-          // Subtle flash pattern: soft fades in/out, lower opacity, gentler timing
-          var flashes = [
-            { onAt: 0, peakAt: 80, offAt: 280, peak: 0.35 },
-            { onAt: 500, peakAt: 600, offAt: 850, peak: 0.5 },
-            { onAt: 1100, peakAt: 1250, offAt: 1600, peak: 0.4 }
-          ];
-          flashes.forEach(function(fl) {
-            setTimeout(function() {
-              lisanImg.style.transition = 'opacity 0.12s ease-in';
-              lisanImg.style.opacity = String(fl.peak);
-            }, fl.onAt);
-            setTimeout(function() {
-              lisanImg.style.transition = 'opacity 0.2s ease-out';
-              lisanImg.style.opacity = '0';
-            }, fl.offAt);
-          });
+          // Preload all 3 images
+          var imgLisan = document.createElement('img');
+          imgLisan.src = 'ackeditions_gallery/web/lisan_web.gif';
+          imgLisan.style.cssText = flashStyle + 'opacity:0;filter:contrast(1.15) brightness(0.9);';
+          preIntro.appendChild(imgLisan);
 
-          // Smooth dissolve to black after last flash
+          var imgVoid = document.createElement('img');
+          imgVoid.src = 'ackeditions_gallery/web/void_engine_web.gif';
+          imgVoid.style.cssText = flashStyle + 'opacity:0;filter:contrast(1.1) brightness(0.85) saturate(1.1);';
+          preIntro.appendChild(imgVoid);
+
+          var imgSkele = document.createElement('img');
+          imgSkele.src = 'ackeditions_gallery/web/skelekart_web.gif';
+          imgSkele.style.cssText = flashStyle + 'opacity:0;filter:contrast(1.1) brightness(0.9);';
+          preIntro.appendChild(imgSkele);
+
+          // Marvel-style: hard cuts, each artwork visible then instantly replaced by next
+          // Flash 1: Lisan al-Gaib
           setTimeout(function() {
-            preIntro.style.transition = 'opacity 2s ease-in-out';
-            preIntro.style.opacity = '0';
-          }, 1800);
+            imgLisan.style.transition = 'opacity 0.08s ease-in';
+            imgLisan.style.opacity = '0.7';
+          }, 0);
 
-          // Remove and proceed — longer fade gives cleaner transition
+          // Flash 2: Void Engine — hard cut from Lisan
+          setTimeout(function() {
+            imgLisan.style.transition = 'none';
+            imgLisan.style.opacity = '0';
+            imgVoid.style.transition = 'opacity 0.06s ease-in';
+            imgVoid.style.opacity = '0.75';
+          }, 500);
+
+          // Flash 3: Skelekart — hard cut from Void Engine
+          setTimeout(function() {
+            imgVoid.style.transition = 'none';
+            imgVoid.style.opacity = '0';
+            imgSkele.style.transition = 'opacity 0.06s ease-in';
+            imgSkele.style.opacity = '0.65';
+          }, 1000);
+
+          // Fade last image out smoothly into vortex transition
+          setTimeout(function() {
+            imgSkele.style.transition = 'opacity 0.8s ease-out';
+            imgSkele.style.opacity = '0';
+          }, 1400);
+
+          // Smooth dissolve to vortex
+          setTimeout(function() {
+            preIntro.style.transition = 'opacity 1.8s ease-in-out';
+            preIntro.style.opacity = '0';
+          }, 1600);
+
+          // Remove and proceed
           setTimeout(function() {
             audio.pause();
             preIntro.remove();
             if (onComplete) onComplete();
-          }, 3900);
+          }, 3500);
         }, 8200);
       });
     }
