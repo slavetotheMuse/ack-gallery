@@ -17461,11 +17461,17 @@
               _focusSrc = artData.fullRes;
             } else if (artData && artData.fullRes) {
               const _fr = artData.fullRes;
-              const _isRemote = _fr.startsWith('http://') || _fr.startsWith('https://');
-              if (!_isRemote) {
-                _focusSrc = _deriveFocusPath(_fr) || _fr;
+              // Skip mp4 fullRes — video playback is handled separately per-collection
+              if (_fr.endsWith('.mp4')) {
+                // Keep original still image; video overlay handles playback
+                _focusSrc = null;
               } else {
-                _focusSrc = _fr;
+                const _isRemote = _fr.startsWith('http://') || _fr.startsWith('https://');
+                if (!_isRemote) {
+                  _focusSrc = _deriveFocusPath(_fr) || _fr;
+                } else {
+                  _focusSrc = _fr;
+                }
               }
             }
             // No fullRes? Try deriving focus path from image field (e.g. colorstudys/pollen.gif → colorstudys-focus/pollen.jpg)
