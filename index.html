@@ -8072,7 +8072,42 @@
         if (tapPrompt) tapPrompt.style.display = 'none';
 
         var audio = new Audio('dreamsarewhispers.wav');
-        audio.volume = 0.6;
+        audio.volume = 0.15;
+        // Web Audio for reverb/echo effect
+        try {
+          var _wCtx = new (window.AudioContext || window.webkitAudioContext)();
+          var _wSrc = _wCtx.createMediaElementSource(audio);
+          // Low-pass to soften highs
+          var _wLP = _wCtx.createBiquadFilter();
+          _wLP.type = 'lowpass';
+          _wLP.frequency.value = 1800;
+          _wLP.Q.value = 0.4;
+          // Convolver reverb — generate synthetic impulse response
+          var _irLen = _wCtx.sampleRate * 2.5; // 2.5s reverb tail
+          var _irBuf = _wCtx.createBuffer(2, _irLen, _wCtx.sampleRate);
+          for (var ch = 0; ch < 2; ch++) {
+            var _irData = _irBuf.getChannelData(ch);
+            for (var i = 0; i < _irLen; i++) {
+              _irData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / _irLen, 2.2);
+            }
+          }
+          var _conv = _wCtx.createConvolver();
+          _conv.buffer = _irBuf;
+          // Dry/wet mix
+          var _dryGain = _wCtx.createGain();
+          _dryGain.gain.value = 0.5;
+          var _wetGain = _wCtx.createGain();
+          _wetGain.gain.value = 0.5;
+          _wSrc.connect(_wLP);
+          _wLP.connect(_dryGain);
+          _wLP.connect(_conv);
+          _conv.connect(_wetGain);
+          _dryGain.connect(_wCtx.destination);
+          _wetGain.connect(_wCtx.destination);
+          if (_wCtx.state === 'suspended') _wCtx.resume();
+        } catch(e) {
+          // Fallback: just play quiet audio without effects
+        }
         audio.play().catch(function() {});
 
         var textWrap = document.getElementById('whispersTextWrap');
