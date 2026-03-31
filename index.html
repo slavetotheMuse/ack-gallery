@@ -3573,6 +3573,17 @@
       animation: lorePulse 3s ease-in-out infinite;
     }
 
+    /* ── Lore Editor — restore cursor inside editor overlay ── */
+    #loreEditorOverlay, #loreEditorOverlay *, #loreEditorOverlay *::before, #loreEditorOverlay *::after {
+      cursor: default !important;
+    }
+    #loreEditorOverlay select, #loreEditorOverlay button {
+      cursor: pointer !important;
+    }
+    #loreEditorOverlay textarea, #loreEditorOverlay input[type="text"] {
+      cursor: text !important;
+    }
+
     /* ── Lore Panel — motherboard / PCB aesthetic, non-rectangular ── */
     .lore-panel-overlay {
       position: fixed;
@@ -11360,6 +11371,7 @@
 
         row.addEventListener(_omClickEvent, function(e) {
           if (guideSpawned) return;
+          ACK_SFX.vortex();
           // Stop onboarding pulse on first interaction
           if (window._onboardPulseTimer) { clearInterval(window._onboardPulseTimer); window._onboardPulseTimer = null; }
           document.querySelectorAll('.onboard-pulse').forEach(el => el.classList.remove('onboard-pulse'));
@@ -12884,7 +12896,7 @@
 
           _loreEditorOverlay = document.createElement('div');
           _loreEditorOverlay.id = 'loreEditorOverlay';
-          _loreEditorOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:100000;background:rgba(8,10,16,0.95);display:flex;align-items:center;justify-content:center;';
+          _loreEditorOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:100000;background:rgba(8,10,16,0.95);display:flex;align-items:center;justify-content:center;cursor:default !important;';
 
           var panel = document.createElement('div');
           panel.style.cssText = 'background:linear-gradient(170deg,#1e2230,#1a1e2a 40%,#161a24);border:1px solid rgba(100,140,200,0.25);border-radius:4px;width:92%;max-width:740px;max-height:85vh;overflow-y:auto;padding:0;box-shadow:0 4px 40px rgba(0,0,0,0.6),0 0 60px rgba(80,130,220,0.05);';
