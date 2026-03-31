@@ -76,6 +76,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     :root {
       --bg: #505050;
       --bg-light: #5a5a5a;
@@ -3494,6 +3495,169 @@
       animation-play-state: paused !important;
     }
 
+    /* ── Lore Node — glowing diamond icon in focus view ── */
+    .lore-node {
+      position: fixed;
+      z-index: 2600;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: auto;
+    }
+    .lore-node.visible { opacity: 1; }
+    .lore-node:hover .lore-diamond { filter: brightness(1.4); }
+    .lore-diamond {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: filter 0.3s ease;
+    }
+    .lore-diamond svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 6px rgba(220,170,60,0.4));
+    }
+    .lore-node .lore-label {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.4rem;
+      letter-spacing: 0.14em;
+      color: rgba(210,175,100,0.4);
+      text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    @keyframes lorePulse {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(220,170,60,0.3)); }
+      50% { filter: drop-shadow(0 0 10px rgba(220,170,60,0.6)); }
+    }
+    .lore-node.has-audio .lore-diamond svg {
+      animation: lorePulse 3s ease-in-out infinite;
+    }
+
+    /* ── Lore Panel — Dune filmbook briefing overlay ── */
+    .lore-panel-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 3999;
+      background: rgba(8,6,4,0.85);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lore-panel-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .lore-panel {
+      position: relative;
+      max-width: 580px;
+      width: 90%;
+      padding: 48px 44px;
+      background: linear-gradient(165deg, rgba(35,30,22,0.95), rgba(22,18,12,0.98));
+      border: 1px solid rgba(180,140,50,0.15);
+      border-radius: 2px;
+      box-shadow:
+        0 0 60px rgba(180,140,40,0.06),
+        inset 0 1px 0 rgba(180,140,50,0.08);
+      transform: translateY(20px);
+      opacity: 0;
+      transition: transform 0.6s ease, opacity 0.5s ease;
+    }
+    .lore-panel-overlay.visible .lore-panel {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .lore-panel-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.45rem;
+      letter-spacing: 0.22em;
+      color: rgba(200,165,80,0.45);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(180,140,50,0.1);
+    }
+    .lore-panel-text {
+      font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+      font-size: 1.15rem;
+      line-height: 1.85;
+      color: rgba(225,215,195,0.82);
+      letter-spacing: 0.015em;
+    }
+    .lore-panel-text .lore-word {
+      display: inline;
+      opacity: 0.25;
+      transition: opacity 0.4s ease;
+    }
+    .lore-panel-text .lore-word.spoken {
+      opacity: 1;
+      color: rgba(235,225,200,0.95);
+    }
+    .lore-panel-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(180,140,50,0.08);
+    }
+    .lore-play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(200,165,80,0.3);
+      background: rgba(200,165,80,0.06);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .lore-play-btn:hover {
+      border-color: rgba(200,165,80,0.6);
+      background: rgba(200,165,80,0.12);
+    }
+    .lore-play-btn svg { fill: rgba(200,165,80,0.6); }
+    .lore-play-btn:hover svg { fill: rgba(200,165,80,0.9); }
+    .lore-progress {
+      flex: 1;
+      height: 2px;
+      background: rgba(200,165,80,0.1);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .lore-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: rgba(200,165,80,0.4);
+      transition: width 0.1s linear;
+    }
+    .lore-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.5rem;
+      color: rgba(200,165,80,0.3);
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      padding: 4px 8px;
+      transition: color 0.3s ease;
+      background: none;
+      border: none;
+    }
+    .lore-close-btn:hover { color: rgba(200,165,80,0.7); }
+
     /* Info panel — C4D node style, connected to focused artwork */
     .node-info-panel {
       position: fixed;
@@ -5219,6 +5383,464 @@
       const mn = document.getElementById('masterNode');
       if (mn) document.body.appendChild(mn);
       // (wallet node removed — connect wallet is now in nav bar)
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    // ── ACK LORE SYSTEM — Collection & Artwork Narrative Engine
+    // ═══════════════════════════════════════════════════════════════
+    //
+    // HOW TO ADD LORE:
+    //   1. Add a collection key matching the COLLECTIONS name
+    //   2. Add 'narration' text — this is what gets spoken / displayed
+    //   3. Add optional 'audio' path to a pre-generated MP3 narrator file
+    //   4. Add optional artwork-level lore inside 'artworks' sub-object
+    //      (keyed by artwork title)
+    //
+    // EXAMPLE:
+    //   'Broken Keys': {
+    //     narration: "Forty-eight pianos. Each one broken differently...",
+    //     audio: 'lore/broken_keys.mp3',           // drop MP3 in lore/ folder
+    //     artworks: {
+    //       'god of shadows': {
+    //         narration: "The first god born from sound...",
+    //         audio: 'lore/god_of_shadows.mp3'
+    //       }
+    //     }
+    //   }
+    //
+    const ACK_LORE = {
+
+      // ── BROKEN KEYS ──────────────────────────────────
+      'Broken Keys': {
+        narration: "Forty-eight pianos. Each one broken differently. Each one holding a secret the Muse left behind. They say the first piano appeared in a dream — a cathedral of sound collapsing into silence. What remained were the keys. Shattered. Scattered. Waiting to be found by those who could still hear.",
+        audio: '',       // ← e.g. 'lore/broken_keys.mp3'
+        artworks: {
+          // 'The First Piano': { narration: "", audio: '' },
+        }
+      },
+
+      // ── PIANO BLOSSOMS ───────────────────────────────
+      'Piano Blossoms': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── TEMPTED IN THE GARDEN ────────────────────────
+      'Tempted in the Garden': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── CLOWN PARTY ──────────────────────────────────
+      'Clown Party': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── ACK EDITIONS ─────────────────────────────────
+      'ACK Editions': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── SERVANTS ─────────────────────────────────────
+      'servants': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── OPEPEN SET 030 ───────────────────────────────
+      'Opepen Set 030: a.c.k.': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── WAROTHYS ─────────────────────────────────────
+      'Warothys': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── ACKPFP ───────────────────────────────────────
+      'ACKPFP': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── THE GREAT COLOR STUDY ────────────────────────
+      'The Great Color Study': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── ACKek ────────────────────────────────────────
+      'ACKek': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── LAST ORDERS ──────────────────────────────────
+      'Last Orders': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── ACKSTRACT ────────────────────────────────────
+      'Ackstract': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── 1 OF 1s ──────────────────────────────────────
+      '1 of 1s': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── HER FAVORITE FLOWERS ─────────────────────────
+      'Her Favorite Flowers': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── HEART YOU ────────────────────────────────────
+      'Heart You': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── NOBLE GALLERY ────────────────────────────────
+      'Noble Gallery': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── ACKFTW ───────────────────────────────────────
+      'ACKFTW': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
+      // ── MADE THESE FOR YOUR GIRL ─────────────────────
+      'Made these for your girl': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      }
+    };
+
+    // ── Lore lookup helper ──
+    function _getLore(collectionName, artworkTitle) {
+      var cl = ACK_LORE[collectionName];
+      if (!cl) return null;
+      // Artwork-level lore takes priority
+      if (artworkTitle && cl.artworks && cl.artworks[artworkTitle]) {
+        var al = cl.artworks[artworkTitle];
+        if (al.narration || al.audio) return al;
+      }
+      // Fall back to collection lore
+      if (cl.narration || cl.audio) return { narration: cl.narration, audio: cl.audio };
+      return null;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ── ACK LORE NARRATOR — Audio Playback + Voice Processing
+    // ═══════════════════════════════════════════════════════════════
+    const ACK_NARRATOR = (function() {
+      let _ctx = null;
+      let _playing = false;
+      let _currentSource = null;
+      let _currentGain = null;
+      let _vizAnimFrame = null;
+      let _analyser = null;
+      let _onEndCallback = null;
+
+      function _ensureCtx() {
+        if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (_ctx.state === 'suspended') _ctx.resume();
+        return _ctx;
+      }
+
+      // Voice processing chain: pitch feel + reverb + warmth
+      function _buildChain(ctx, source) {
+        // 1. Low-pass filter — warmth, roll off brightness
+        var warmth = ctx.createBiquadFilter();
+        warmth.type = 'lowpass';
+        warmth.frequency.value = 3200;
+        warmth.Q.value = 0.7;
+
+        // 2. Low-shelf boost — add weight / bass presence
+        var weight = ctx.createBiquadFilter();
+        weight.type = 'lowshelf';
+        weight.frequency.value = 200;
+        weight.gain.value = 6;
+
+        // 3. Compressor — even, measured delivery feel
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -24;
+        comp.knee.value = 12;
+        comp.ratio.value = 4;
+        comp.attack.value = 0.01;
+        comp.release.value = 0.25;
+
+        // 4. Convolver for reverb — stone chamber feel
+        var convolver = ctx.createConvolver();
+        var sampleRate = ctx.sampleRate;
+        var length = sampleRate * 2.5; // 2.5 second reverb tail
+        var impulse = ctx.createBuffer(2, length, sampleRate);
+        for (var ch = 0; ch < 2; ch++) {
+          var data = impulse.getChannelData(ch);
+          for (var i = 0; i < length; i++) {
+            // Exponential decay with some early reflections
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.2);
+            // Early reflections at ~20ms and ~50ms
+            if (i === Math.floor(sampleRate * 0.02) || i === Math.floor(sampleRate * 0.05)) {
+              data[i] += (Math.random() * 2 - 1) * 0.3;
+            }
+          }
+        }
+        convolver.buffer = impulse;
+
+        // Dry/wet mix for reverb (70% dry, 30% wet)
+        var dryGain = ctx.createGain();
+        dryGain.gain.value = 0.7;
+        var wetGain = ctx.createGain();
+        wetGain.gain.value = 0.3;
+
+        // 5. Analyser for visualization
+        var analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        _analyser = analyser;
+
+        // 6. Master gain
+        var master = ctx.createGain();
+        master.gain.value = 0.85;
+
+        // Wire: source → warmth → weight → comp → split (dry + wet reverb) → merge → analyser → master → out
+        source.connect(warmth);
+        warmth.connect(weight);
+        weight.connect(comp);
+
+        // Dry path
+        comp.connect(dryGain);
+        dryGain.connect(analyser);
+
+        // Wet path (reverb)
+        comp.connect(convolver);
+        convolver.connect(wetGain);
+        wetGain.connect(analyser);
+
+        analyser.connect(master);
+        master.connect(ctx.destination);
+
+        _currentGain = master;
+        return { master: master, analyser: analyser };
+      }
+
+      // Play an MP3 lore file with voice processing
+      function play(audioUrl, onEnd) {
+        if (_playing) stop();
+        var ctx = _ensureCtx();
+        _playing = true;
+        _onEndCallback = onEnd || null;
+
+        fetch(audioUrl)
+          .then(function(r) { return r.arrayBuffer(); })
+          .then(function(buf) { return ctx.decodeAudioData(buf); })
+          .then(function(decoded) {
+            if (!_playing) return; // stopped while loading
+            var source = ctx.createBufferSource();
+            source.buffer = decoded;
+            _currentSource = source;
+
+            var chain = _buildChain(ctx, source);
+
+            source.onended = function() {
+              _playing = false;
+              _currentSource = null;
+              if (_onEndCallback) _onEndCallback();
+            };
+
+            source.start(0);
+
+            // Start visualization
+            _startVisualization();
+          })
+          .catch(function(err) {
+            console.warn('ACK_NARRATOR: Could not load audio', audioUrl, err);
+            _playing = false;
+            if (_onEndCallback) _onEndCallback();
+          });
+      }
+
+      function stop() {
+        _playing = false;
+        if (_currentSource) {
+          try { _currentSource.stop(); } catch(e) {}
+          _currentSource = null;
+        }
+        if (_currentGain) {
+          try { _currentGain.gain.value = 0; } catch(e) {}
+        }
+        _stopVisualization();
+        _analyser = null;
+      }
+
+      function isPlaying() { return _playing; }
+      function getAnalyser() { return _analyser; }
+
+      // ── Visualization: holographic particle field ──
+      var _vizCanvas = null;
+
+      function _startVisualization() {
+        if (_vizCanvas) _stopVisualization();
+
+        _vizCanvas = document.createElement('canvas');
+        _vizCanvas.id = 'loreVizCanvas';
+        _vizCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3998;pointer-events:none;opacity:0;transition:opacity 0.8s ease;';
+        document.body.appendChild(_vizCanvas);
+        requestAnimationFrame(function() { _vizCanvas.style.opacity = '1'; });
+
+        var w = _vizCanvas.width = window.innerWidth;
+        var h = _vizCanvas.height = window.innerHeight;
+        var ctx2d = _vizCanvas.getContext('2d');
+
+        // Particles — holographic dots
+        var particles = [];
+        var particleCount = 60;
+        for (var i = 0; i < particleCount; i++) {
+          particles.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.3 - 0.15,
+            size: 1 + Math.random() * 2.5,
+            alpha: 0.1 + Math.random() * 0.3,
+            hue: 30 + Math.random() * 20 // warm gold range
+          });
+        }
+
+        // Geometric lines — Dune holographic projection feel
+        var lineAngle = 0;
+
+        function vizFrame() {
+          if (!_playing || !_vizCanvas) return;
+          ctx2d.clearRect(0, 0, w, h);
+
+          // Get frequency data if analyser exists
+          var freqData = null;
+          var avgEnergy = 0;
+          if (_analyser) {
+            freqData = new Uint8Array(_analyser.frequencyBinCount);
+            _analyser.getByteFrequencyData(freqData);
+            for (var f = 0; f < freqData.length; f++) avgEnergy += freqData[f];
+            avgEnergy = avgEnergy / freqData.length / 255;
+          }
+
+          // Holographic scan lines
+          var scanY = (Date.now() * 0.03) % h;
+          ctx2d.strokeStyle = 'rgba(220,180,80,' + (0.03 + avgEnergy * 0.06) + ')';
+          ctx2d.lineWidth = 0.5;
+          for (var s = 0; s < 5; s++) {
+            var sy = (scanY + s * h / 5) % h;
+            ctx2d.beginPath();
+            ctx2d.moveTo(0, sy);
+            ctx2d.lineTo(w, sy);
+            ctx2d.stroke();
+          }
+
+          // Geometric rotating lines from center — topographic / holographic map feel
+          lineAngle += 0.003 + avgEnergy * 0.008;
+          var cx = w / 2, cy = h / 2;
+          ctx2d.strokeStyle = 'rgba(200,170,100,' + (0.04 + avgEnergy * 0.08) + ')';
+          ctx2d.lineWidth = 0.3;
+          for (var r = 0; r < 6; r++) {
+            var a = lineAngle + (r * Math.PI / 3);
+            var len = 80 + avgEnergy * 200;
+            ctx2d.beginPath();
+            ctx2d.moveTo(cx + Math.cos(a) * 30, cy + Math.sin(a) * 30);
+            ctx2d.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len);
+            ctx2d.stroke();
+          }
+
+          // Concentric rings pulsing with audio
+          for (var ring = 0; ring < 3; ring++) {
+            var radius = 50 + ring * 60 + avgEnergy * 80;
+            ctx2d.strokeStyle = 'rgba(210,175,90,' + (0.03 + avgEnergy * 0.05) + ')';
+            ctx2d.lineWidth = 0.4;
+            ctx2d.beginPath();
+            ctx2d.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx2d.stroke();
+          }
+
+          // Particles
+          for (var p = 0; p < particles.length; p++) {
+            var pt = particles[p];
+            pt.x += pt.vx + avgEnergy * (Math.random() - 0.5) * 2;
+            pt.y += pt.vy;
+            if (pt.y < -10) { pt.y = h + 10; pt.x = Math.random() * w; }
+            if (pt.x < -10) pt.x = w + 10;
+            if (pt.x > w + 10) pt.x = -10;
+
+            var pa = pt.alpha * (0.5 + avgEnergy * 1.5);
+            ctx2d.fillStyle = 'rgba(220,185,100,' + Math.min(pa, 0.7) + ')';
+            ctx2d.beginPath();
+            ctx2d.arc(pt.x, pt.y, pt.size * (0.8 + avgEnergy * 0.6), 0, Math.PI * 2);
+            ctx2d.fill();
+          }
+
+          // Frequency bars — subtle, at bottom edge
+          if (freqData) {
+            var barCount = 32;
+            var barW = w / barCount;
+            for (var b = 0; b < barCount; b++) {
+              var bIdx = Math.floor(b * freqData.length / barCount);
+              var bH = (freqData[bIdx] / 255) * 40;
+              ctx2d.fillStyle = 'rgba(200,165,80,' + (freqData[bIdx] / 255 * 0.15) + ')';
+              ctx2d.fillRect(b * barW, h - bH, barW - 1, bH);
+            }
+          }
+
+          _vizAnimFrame = requestAnimationFrame(vizFrame);
+        }
+
+        _vizAnimFrame = requestAnimationFrame(vizFrame);
+      }
+
+      function _stopVisualization() {
+        if (_vizAnimFrame) cancelAnimationFrame(_vizAnimFrame);
+        _vizAnimFrame = null;
+        if (_vizCanvas) {
+          _vizCanvas.style.opacity = '0';
+          var c = _vizCanvas;
+          setTimeout(function() { if (c.parentNode) c.parentNode.removeChild(c); }, 800);
+          _vizCanvas = null;
+        }
+      }
+
+      return {
+        play: play,
+        stop: stop,
+        isPlaying: isPlaying,
+        getAnalyser: getAnalyser
+      };
     })();
 
     // ═══════════════════════════════════════════════════════════════
@@ -16501,6 +17123,16 @@
         }
       }, _scatterWait + 800);
 
+      // ── LORE NODE — appears if lore exists for this artwork/collection ──
+      setTimeout(() => {
+        var _loreColName = _focusColNameEarly || (_focusCollection ? _focusCollection.name : '');
+        var _loreArtTitle = artworkTitle || '';
+        var _lore = _getLore(_loreColName, _loreArtTitle);
+        if (_lore) {
+          _createLoreNode(node, _loreColName, _loreArtTitle, _lore);
+        }
+      }, _scatterWait + 1100);
+
       // ── Masterwork enhancement: ornate frame + pan/zoom ──
       const artworkData = COLLECTIONS[collectionIndex].artworks[artworkIndex];
       // Resolve effective collection name — for My Bags, use the source collection
@@ -17076,6 +17708,13 @@
                     var _swipeTitleEl = document.getElementById('focusModeTitle');
                     if (_swipeTitleEl && nextArt.title) {
                       _swipeTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + nextArt.title;
+                    }
+                    // Update lore node for new artwork
+                    _removeLoreNode();
+                    var _swipeColName = (nextArt._sourceCollection) ? nextArt._sourceCollection : col.name;
+                    var _swipeLore = _getLore(_swipeColName, nextArt.title);
+                    if (_swipeLore) {
+                      setTimeout(function() { _createLoreNode(curNode, _swipeColName, nextArt.title, _swipeLore); }, 400);
                     }
                     // 6. Generate new frame for the next artwork
                     var _nextColName = (nextArt._sourceCollection) ? nextArt._sourceCollection : col.name;
@@ -17955,6 +18594,232 @@
       document.body.appendChild(lb);
       requestAnimationFrame(() => { lb.classList.add('active'); });
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ── LORE NODE + PANEL — Narrative system UI
+    // ═══════════════════════════════════════════════════════════════
+
+    function _createLoreNode(artworkNode, collectionName, artworkTitle, loreData) {
+      // Remove any existing lore node
+      var existing = document.getElementById('loreNode');
+      if (existing) existing.parentNode.removeChild(existing);
+
+      var loreNode = document.createElement('div');
+      loreNode.id = 'loreNode';
+      loreNode.className = 'lore-node' + (loreData.audio ? ' has-audio' : '');
+
+      // Diamond SVG icon — Dune-style rhombus
+      loreNode.innerHTML = '<div class="lore-diamond">' +
+        '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M18 2 L34 18 L18 34 L2 18 Z" fill="none" stroke="rgba(210,170,70,0.5)" stroke-width="1.2"/>' +
+          '<path d="M18 6 L30 18 L18 30 L6 18 Z" fill="rgba(210,170,70,0.06)" stroke="rgba(210,170,70,0.25)" stroke-width="0.6"/>' +
+          '<circle cx="18" cy="18" r="2.5" fill="rgba(210,170,70,0.4)"/>' +
+          '<line x1="18" y1="8" x2="18" y2="14" stroke="rgba(210,170,70,0.2)" stroke-width="0.4"/>' +
+          '<line x1="18" y1="22" x2="18" y2="28" stroke="rgba(210,170,70,0.2)" stroke-width="0.4"/>' +
+          '<line x1="8" y1="18" x2="14" y2="18" stroke="rgba(210,170,70,0.2)" stroke-width="0.4"/>' +
+          '<line x1="22" y1="18" x2="28" y2="18" stroke="rgba(210,170,70,0.2)" stroke-width="0.4"/>' +
+        '</svg>' +
+      '</div>' +
+      '<span class="lore-label">lore</span>';
+
+      // Position: below the title on desktop, below artwork on mobile
+      if (_isRealMobile) {
+        var artRect = artworkNode.getBoundingClientRect();
+        loreNode.style.left = (artRect.left + artRect.width / 2 - 18) + 'px';
+        loreNode.style.top = (artRect.bottom + 60) + 'px';
+      } else {
+        var titleEl = document.getElementById('focusModeTitle');
+        if (titleEl) {
+          var titleRect = titleEl.getBoundingClientRect();
+          loreNode.style.left = (titleRect.left - 2) + 'px';
+          loreNode.style.top = (titleRect.bottom + 16) + 'px';
+        } else {
+          loreNode.style.left = ((artworkNode._focusLeftEdge || 24)) + 'px';
+          loreNode.style.top = ((artworkNode._focusBottomEdge || window.innerHeight * 0.8) + 80) + 'px';
+        }
+      }
+
+      document.body.appendChild(loreNode);
+      requestAnimationFrame(function() { loreNode.classList.add('visible'); });
+
+      // Click → open lore panel
+      loreNode.addEventListener('click', function(e) {
+        e.stopPropagation();
+        ACK_SFX.click();
+        _openLorePanel(collectionName, artworkTitle, loreData);
+      });
+    }
+
+    function _removeLoreNode() {
+      var ln = document.getElementById('loreNode');
+      if (ln) {
+        ln.classList.remove('visible');
+        setTimeout(function() { if (ln.parentNode) ln.parentNode.removeChild(ln); }, 600);
+      }
+      // Also close lore panel if open
+      _closeLorePanel();
+    }
+
+    function _openLorePanel(collectionName, artworkTitle, loreData) {
+      // Remove existing
+      _closeLorePanel(true);
+
+      var overlay = document.createElement('div');
+      overlay.id = 'lorePanelOverlay';
+      overlay.className = 'lore-panel-overlay';
+
+      // Split narration into words for highlight sync
+      var narrationText = loreData.narration || '';
+      var words = narrationText.split(/\s+/).filter(function(w) { return w.length > 0; });
+      var wordSpans = words.map(function(w, i) {
+        return '<span class="lore-word" data-lore-idx="' + i + '">' + w + ' </span>';
+      }).join('');
+
+      // If no narration text but has audio, show minimal panel
+      if (!narrationText && loreData.audio) {
+        wordSpans = '<span class="lore-word spoken" style="opacity:0.5;font-style:italic;">Narration playing...</span>';
+      }
+
+      var hasAudio = loreData.audio && loreData.audio.length > 0;
+
+      var headerText = artworkTitle
+        ? collectionName.toUpperCase() + ' // ' + artworkTitle.toUpperCase()
+        : collectionName.toUpperCase();
+
+      overlay.innerHTML = '<div class="lore-panel">' +
+        '<button class="lore-close-btn" id="loreCloseBtn">[ESC]</button>' +
+        '<div class="lore-panel-header">' + headerText + '</div>' +
+        '<div class="lore-panel-text" id="lorePanelText">' + wordSpans + '</div>' +
+        (hasAudio ? '<div class="lore-panel-controls">' +
+          '<button class="lore-play-btn" id="lorePlayBtn">' +
+            '<svg width="14" height="14" viewBox="0 0 14 14"><polygon points="4,2 12,7 4,12"/></svg>' +
+          '</button>' +
+          '<div class="lore-progress"><div class="lore-progress-bar" id="loreProgressBar"></div></div>' +
+        '</div>' : '') +
+      '</div>';
+
+      document.body.appendChild(overlay);
+      requestAnimationFrame(function() { overlay.classList.add('visible'); });
+
+      // If has narration text but no audio, reveal words with typewriter timing
+      if (narrationText && !hasAudio) {
+        _typewriterReveal(words.length);
+      }
+
+      // Close button
+      var closeBtn = document.getElementById('loreCloseBtn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          _closeLorePanel();
+        });
+      }
+
+      // Play button
+      if (hasAudio) {
+        var playBtn = document.getElementById('lorePlayBtn');
+        if (playBtn) {
+          playBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (ACK_NARRATOR.isPlaying()) {
+              ACK_NARRATOR.stop();
+              playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14"><polygon points="4,2 12,7 4,12"/></svg>';
+            } else {
+              playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14"><rect x="3" y="2" width="3" height="10"/><rect x="8" y="2" width="3" height="10"/></svg>';
+              // Start word highlighting in sync with audio
+              _startWordSync(words.length, loreData.audio);
+              ACK_NARRATOR.play(loreData.audio, function() {
+                // Playback ended
+                playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14"><polygon points="4,2 12,7 4,12"/></svg>';
+                // Reveal all remaining words
+                var allWords = document.querySelectorAll('#lorePanelText .lore-word');
+                allWords.forEach(function(w) { w.classList.add('spoken'); });
+              });
+            }
+          });
+        }
+      }
+
+      // Click overlay background to close
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) _closeLorePanel();
+      });
+
+      // ESC key to close
+      overlay._escHandler = function(e) {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          _closeLorePanel();
+        }
+      };
+      document.addEventListener('keydown', overlay._escHandler, true);
+    }
+
+    function _closeLorePanel(instant) {
+      ACK_NARRATOR.stop();
+      var overlay = document.getElementById('lorePanelOverlay');
+      if (!overlay) return;
+      if (overlay._escHandler) {
+        document.removeEventListener('keydown', overlay._escHandler, true);
+      }
+      if (instant) {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        return;
+      }
+      overlay.classList.remove('visible');
+      setTimeout(function() {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      }, 600);
+    }
+
+    // Typewriter reveal — words fade in one by one (no audio)
+    function _typewriterReveal(wordCount) {
+      var baseDelay = 120; // ms per word
+      for (var i = 0; i < wordCount; i++) {
+        (function(idx) {
+          setTimeout(function() {
+            var w = document.querySelector('#lorePanelText .lore-word[data-lore-idx="' + idx + '"]');
+            if (w) w.classList.add('spoken');
+          }, idx * baseDelay + 400); // 400ms initial delay
+        })(i);
+      }
+    }
+
+    // Word sync with audio — estimate timing based on word count + audio duration
+    var _wordSyncTimer = null;
+    function _startWordSync(wordCount, audioUrl) {
+      // Clear previous
+      if (_wordSyncTimer) clearInterval(_wordSyncTimer);
+      // Estimate: reveal words evenly across ~80% of audio duration
+      // We don't know exact duration until decoded, so use a reasonable estimate
+      // and adjust after first play
+      var estimatedDuration = Math.max(wordCount * 0.35, 5); // ~350ms per word min
+      var interval = (estimatedDuration * 800) / wordCount; // 80% of duration
+      var currentWord = 0;
+
+      // Reset all words
+      var allWords = document.querySelectorAll('#lorePanelText .lore-word');
+      allWords.forEach(function(w) { w.classList.remove('spoken'); });
+
+      setTimeout(function() {
+        _wordSyncTimer = setInterval(function() {
+          if (currentWord >= wordCount) {
+            clearInterval(_wordSyncTimer);
+            _wordSyncTimer = null;
+            return;
+          }
+          var w = document.querySelector('#lorePanelText .lore-word[data-lore-idx="' + currentWord + '"]');
+          if (w) w.classList.add('spoken');
+          currentWord++;
+
+          // Update progress bar
+          var bar = document.getElementById('loreProgressBar');
+          if (bar) bar.style.width = ((currentWord / wordCount) * 100) + '%';
+        }, interval);
+      }, 300);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
 
     function createInfoPanel(node, inner, collectionIndex, artworkIndex) {
       // On mobile, motherboard is the info machine — skip the COA info panel
@@ -24550,11 +25415,12 @@
         delete focusedNode._swipeCleanup;
       }
 
-      // Remove fixed-position focus title + mobile Pantone swatch
+      // Remove fixed-position focus title + mobile Pantone swatch + lore node
       const focTitle = document.getElementById('focusModeTitle');
       if (focTitle) focTitle.remove();
       const mobPantone = document.getElementById('mobilePantoneSwatch');
       if (mobPantone) mobPantone.remove();
+      _removeLoreNode();
 
       // Unlock scroll on mobile (motherboard stays expanded)
       document.body.classList.remove('mobile-focus-locked');
