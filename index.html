@@ -3517,7 +3517,7 @@
     .lore-diamond svg {
       width: 100%;
       height: 100%;
-      filter: drop-shadow(0 0 6px rgba(220,170,60,0.4));
+      filter: drop-shadow(0 0 6px rgba(80,130,220,0.35));
     }
     .lore-node .lore-label {
       position: absolute;
@@ -3528,25 +3528,25 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.4rem;
       letter-spacing: 0.14em;
-      color: rgba(210,175,100,0.4);
+      color: rgba(140,175,230,0.35);
       text-transform: uppercase;
       white-space: nowrap;
       pointer-events: none;
     }
     @keyframes lorePulse {
-      0%, 100% { filter: drop-shadow(0 0 4px rgba(220,170,60,0.3)); }
-      50% { filter: drop-shadow(0 0 10px rgba(220,170,60,0.6)); }
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(80,130,220,0.3)); }
+      50% { filter: drop-shadow(0 0 10px rgba(100,150,240,0.55)); }
     }
     .lore-node.has-audio .lore-diamond svg {
       animation: lorePulse 3s ease-in-out infinite;
     }
 
-    /* ── Lore Panel — Dune filmbook briefing overlay ── */
+    /* ── Lore Panel — motherboard / PCB aesthetic, non-rectangular ── */
     .lore-panel-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: 3999;
-      background: rgba(8,6,4,0.85);
+      background: rgba(6,8,14,0.88);
       opacity: 0;
       transition: opacity 0.6s ease;
       pointer-events: none;
@@ -3560,63 +3560,107 @@
     }
     .lore-panel {
       position: relative;
-      max-width: 580px;
-      width: 90%;
-      padding: 48px 44px;
-      background: linear-gradient(165deg, rgba(35,30,22,0.95), rgba(22,18,12,0.98));
-      border: 1px solid rgba(180,140,50,0.15);
-      border-radius: 2px;
+      max-width: 620px;
+      width: 92%;
+      background: linear-gradient(170deg, #1e2230 0%, #1a1e2a 40%, #161a24 100%);
+      border: 1px solid rgba(100,140,200,0.22);
+      padding: 0;
+      overflow: hidden;
+      /* Non-rectangular — clipped corners like a PCB / node chip */
+      clip-path: polygon(
+        0 12px, 12px 0, calc(100% - 40px) 0, 100% 40px,
+        100% calc(100% - 12px), calc(100% - 12px) 100%,
+        40px 100%, 0 calc(100% - 40px)
+      );
       box-shadow:
-        0 0 60px rgba(180,140,40,0.06),
-        inset 0 1px 0 rgba(180,140,50,0.08);
-      transform: translateY(20px);
+        0 4px 40px rgba(0,0,0,0.7),
+        0 0 80px rgba(80,130,220,0.04),
+        inset 0 0 40px rgba(0,0,0,0.3);
+      transform: translateY(20px) scale(0.97);
       opacity: 0;
-      transition: transform 0.6s ease, opacity 0.5s ease;
+      transition: transform 0.5s ease, opacity 0.4s ease;
     }
     .lore-panel-overlay.visible .lore-panel {
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
       opacity: 1;
+    }
+    /* PCB circuit trace decoration */
+    .lore-panel-traces {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+    .lore-panel-inner {
+      position: relative;
+      z-index: 1;
+      padding: 40px 38px 36px;
     }
     .lore-panel-header {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.45rem;
-      letter-spacing: 0.22em;
-      color: rgba(200,165,80,0.45);
+      font-size: 0.85rem;
+      letter-spacing: 0.18em;
+      color: rgba(160,190,255,0.65);
       text-transform: uppercase;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(180,140,50,0.1);
+      margin-bottom: 6px;
+      text-shadow: 0 0 8px rgba(100,150,255,0.15);
+    }
+    .lore-panel-subheader {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.42rem;
+      letter-spacing: 0.15em;
+      color: rgba(120,155,220,0.3);
+      text-transform: uppercase;
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(100,140,200,0.1);
     }
     .lore-panel-text {
       font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
       font-size: 1.15rem;
       line-height: 1.85;
-      color: rgba(225,215,195,0.82);
+      color: rgba(200,210,230,0.8);
       letter-spacing: 0.015em;
     }
+    /* Rich content from paste (images, links) */
+    .lore-panel-text img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 3px;
+      margin: 12px 0;
+      border: 1px solid rgba(100,140,200,0.15);
+    }
+    .lore-panel-text a {
+      color: rgba(140,180,255,0.7);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(140,180,255,0.2);
+      transition: color 0.2s;
+    }
+    .lore-panel-text a:hover { color: rgba(160,200,255,0.95); }
     .lore-panel-text .lore-word {
       display: inline;
-      opacity: 0.25;
+      opacity: 0.2;
       transition: opacity 0.4s ease;
     }
     .lore-panel-text .lore-word.spoken {
       opacity: 1;
-      color: rgba(235,225,200,0.95);
+      color: rgba(210,220,240,0.95);
     }
     .lore-panel-controls {
       display: flex;
       align-items: center;
       gap: 16px;
-      margin-top: 28px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(180,140,50,0.08);
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(100,140,200,0.08);
     }
     .lore-play-btn {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      border: 1px solid rgba(200,165,80,0.3);
-      background: rgba(200,165,80,0.06);
+      border: 1px solid rgba(100,140,200,0.3);
+      background: rgba(80,120,200,0.06);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -3624,39 +3668,40 @@
       transition: all 0.3s ease;
     }
     .lore-play-btn:hover {
-      border-color: rgba(200,165,80,0.6);
-      background: rgba(200,165,80,0.12);
+      border-color: rgba(120,160,220,0.6);
+      background: rgba(80,120,200,0.12);
     }
-    .lore-play-btn svg { fill: rgba(200,165,80,0.6); }
-    .lore-play-btn:hover svg { fill: rgba(200,165,80,0.9); }
+    .lore-play-btn svg { fill: rgba(140,175,240,0.6); }
+    .lore-play-btn:hover svg { fill: rgba(160,195,255,0.9); }
     .lore-progress {
       flex: 1;
       height: 2px;
-      background: rgba(200,165,80,0.1);
+      background: rgba(100,140,200,0.08);
       border-radius: 1px;
       overflow: hidden;
     }
     .lore-progress-bar {
       height: 100%;
       width: 0%;
-      background: rgba(200,165,80,0.4);
+      background: rgba(120,160,220,0.35);
       transition: width 0.1s linear;
     }
     .lore-close-btn {
       position: absolute;
-      top: 16px;
-      right: 18px;
+      top: 14px;
+      right: 22px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.5rem;
-      color: rgba(200,165,80,0.3);
+      color: rgba(140,170,220,0.25);
       cursor: pointer;
       letter-spacing: 0.1em;
       padding: 4px 8px;
       transition: color 0.3s ease;
       background: none;
       border: none;
+      z-index: 2;
     }
-    .lore-close-btn:hover { color: rgba(200,165,80,0.7); }
+    .lore-close-btn:hover { color: rgba(160,190,255,0.6); }
 
     /* Info panel — C4D node style, connected to focused artwork */
     .node-info-panel {
@@ -12660,6 +12705,301 @@
       })();
 
       // ══════════════════════════════════════════════════════════════
+      // LORE EDITOR — Ctrl+Shift+L to toggle, edit lore in-page
+      // ══════════════════════════════════════════════════════════════
+      (function initLoreEditor() {
+        var _loreEditorOpen = false;
+        var _loreEditorOverlay = null;
+
+        function _openLoreEditor() {
+          if (_loreEditorOverlay) return;
+          _loreEditorOpen = true;
+
+          _loreEditorOverlay = document.createElement('div');
+          _loreEditorOverlay.id = 'loreEditorOverlay';
+          _loreEditorOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:100000;background:rgba(8,10,16,0.92);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);';
+
+          var panel = document.createElement('div');
+          panel.style.cssText = 'background:linear-gradient(170deg,#1e2230,#1a1e2a 40%,#161a24);border:1px solid rgba(100,140,200,0.25);border-radius:4px;width:92%;max-width:740px;max-height:85vh;overflow-y:auto;padding:0;box-shadow:0 4px 40px rgba(0,0,0,0.6),0 0 60px rgba(80,130,220,0.05);';
+
+          // Header
+          var header = document.createElement('div');
+          header.style.cssText = 'padding:18px 24px;border-bottom:1px solid rgba(100,140,200,0.15);display:flex;align-items:center;justify-content:space-between;';
+          header.innerHTML = '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.7rem;letter-spacing:0.2em;color:rgba(160,190,255,0.7);text-transform:uppercase;">Lore Editor</span>' +
+            '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.45rem;color:rgba(160,190,255,0.3);letter-spacing:0.1em;">Ctrl+Shift+L to close</span>';
+          panel.appendChild(header);
+
+          // Collection/Artwork selector
+          var selectorRow = document.createElement('div');
+          selectorRow.style.cssText = 'padding:14px 24px;border-bottom:1px solid rgba(100,140,200,0.08);display:flex;gap:12px;align-items:center;flex-wrap:wrap;';
+
+          var colSelect = document.createElement('select');
+          colSelect.style.cssText = 'background:#12141e;border:1px solid rgba(100,140,200,0.2);color:rgba(200,195,185,0.9);padding:6px 10px;border-radius:3px;font-family:"JetBrains Mono",monospace;font-size:0.6rem;flex:1;min-width:160px;cursor:pointer;';
+          var defaultOpt = document.createElement('option');
+          defaultOpt.textContent = '— select collection —';
+          defaultOpt.value = '';
+          colSelect.appendChild(defaultOpt);
+
+          // Populate from COLLECTIONS
+          if (typeof COLLECTIONS !== 'undefined') {
+            COLLECTIONS.forEach(function(col) {
+              var opt = document.createElement('option');
+              opt.value = col.name;
+              opt.textContent = col.name;
+              colSelect.appendChild(opt);
+            });
+          }
+          selectorRow.appendChild(colSelect);
+
+          var artSelect = document.createElement('select');
+          artSelect.style.cssText = colSelect.style.cssText;
+          artSelect.innerHTML = '<option value="">— collection level —</option>';
+          artSelect.disabled = true;
+          selectorRow.appendChild(artSelect);
+
+          panel.appendChild(selectorRow);
+
+          // Narration text area
+          var editorArea = document.createElement('div');
+          editorArea.style.cssText = 'padding:18px 24px;';
+
+          var narLabel = document.createElement('div');
+          narLabel.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.5rem;letter-spacing:0.12em;color:rgba(160,190,255,0.4);text-transform:uppercase;margin-bottom:8px;';
+          narLabel.textContent = 'Narration Text';
+          editorArea.appendChild(narLabel);
+
+          var narHelp = document.createElement('div');
+          narHelp.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.42rem;color:rgba(160,190,255,0.2);margin-bottom:10px;line-height:1.6;';
+          narHelp.textContent = 'Paste anything — plain text, Twitter threads, article excerpts. Rich content (images, links) will be preserved.';
+          editorArea.appendChild(narHelp);
+
+          var narTextarea = document.createElement('div');
+          narTextarea.contentEditable = 'true';
+          narTextarea.id = 'loreNarrationEditor';
+          narTextarea.style.cssText = 'width:100%;min-height:180px;max-height:400px;overflow-y:auto;background:#0c0e16;border:1px solid rgba(100,140,200,0.15);border-radius:3px;padding:14px 16px;font-family:"EB Garamond",Georgia,serif;font-size:1rem;color:rgba(220,215,200,0.85);line-height:1.8;resize:none;outline:none;white-space:pre-wrap;word-wrap:break-word;';
+          narTextarea.setAttribute('data-placeholder', 'Type or paste lore here...');
+          editorArea.appendChild(narTextarea);
+
+          // Audio path input
+          var audioLabel = document.createElement('div');
+          audioLabel.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.5rem;letter-spacing:0.12em;color:rgba(160,190,255,0.4);text-transform:uppercase;margin-top:18px;margin-bottom:8px;';
+          audioLabel.textContent = 'Narrator Audio (MP3 path)';
+          editorArea.appendChild(audioLabel);
+
+          var audioInput = document.createElement('input');
+          audioInput.type = 'text';
+          audioInput.id = 'loreAudioPathEditor';
+          audioInput.placeholder = 'e.g. lore/broken_keys.mp3';
+          audioInput.style.cssText = 'width:100%;background:#0c0e16;border:1px solid rgba(100,140,200,0.15);border-radius:3px;padding:8px 12px;font-family:"JetBrains Mono",monospace;font-size:0.6rem;color:rgba(200,195,185,0.8);outline:none;box-sizing:border-box;';
+          editorArea.appendChild(audioInput);
+
+          panel.appendChild(editorArea);
+
+          // Button row
+          var btnRow = document.createElement('div');
+          btnRow.style.cssText = 'padding:14px 24px 18px;border-top:1px solid rgba(100,140,200,0.08);display:flex;gap:12px;align-items:center;';
+
+          var saveBtn = document.createElement('button');
+          saveBtn.textContent = 'SAVE LORE';
+          saveBtn.style.cssText = 'background:rgba(80,140,220,0.15);border:1px solid rgba(100,140,200,0.35);color:rgba(160,190,255,0.9);padding:8px 20px;border-radius:3px;cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:0.6rem;letter-spacing:0.12em;transition:all 0.2s;';
+
+          var exportBtn = document.createElement('button');
+          exportBtn.textContent = 'EXPORT ALL LORE';
+          exportBtn.style.cssText = 'background:rgba(220,150,50,0.12);border:1px solid rgba(220,150,50,0.3);color:rgba(220,180,100,0.8);padding:8px 20px;border-radius:3px;cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:0.6rem;letter-spacing:0.12em;transition:all 0.2s;';
+
+          var statusMsg = document.createElement('span');
+          statusMsg.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.5rem;color:rgba(100,220,120,0.6);margin-left:auto;';
+          statusMsg.id = 'loreEditorStatus';
+
+          btnRow.appendChild(saveBtn);
+          btnRow.appendChild(exportBtn);
+          btnRow.appendChild(statusMsg);
+          panel.appendChild(btnRow);
+
+          _loreEditorOverlay.appendChild(panel);
+          document.body.appendChild(_loreEditorOverlay);
+
+          // Click overlay bg to close
+          _loreEditorOverlay.addEventListener('click', function(e) {
+            if (e.target === _loreEditorOverlay) _closeLoreEditor();
+          });
+
+          // ── Wiring ──
+
+          // Collection change → populate artwork dropdown + load existing lore
+          colSelect.addEventListener('change', function() {
+            var colName = colSelect.value;
+            artSelect.innerHTML = '<option value="">— collection level —</option>';
+            artSelect.disabled = !colName;
+
+            if (colName) {
+              // Populate artwork dropdown
+              var col = null;
+              if (typeof COLLECTIONS !== 'undefined') {
+                for (var i = 0; i < COLLECTIONS.length; i++) {
+                  if (COLLECTIONS[i].name === colName) { col = COLLECTIONS[i]; break; }
+                }
+              }
+              if (col && col.artworks) {
+                col.artworks.forEach(function(a) {
+                  var opt = document.createElement('option');
+                  opt.value = a.title;
+                  opt.textContent = a.title;
+                  // Mark if lore exists
+                  var cl = ACK_LORE[colName];
+                  if (cl && cl.artworks && cl.artworks[a.title] && (cl.artworks[a.title].narration || cl.artworks[a.title].audio)) {
+                    opt.textContent += ' *';
+                  }
+                  artSelect.appendChild(opt);
+                });
+              }
+            }
+            _loadLoreIntoEditor(colName, '');
+          });
+
+          artSelect.addEventListener('change', function() {
+            _loadLoreIntoEditor(colSelect.value, artSelect.value);
+          });
+
+          // Load existing lore into editor fields
+          function _loadLoreIntoEditor(colName, artTitle) {
+            var lore = _getLore(colName, artTitle);
+            // For artwork-level, check specifically
+            if (artTitle && ACK_LORE[colName] && ACK_LORE[colName].artworks && ACK_LORE[colName].artworks[artTitle]) {
+              lore = ACK_LORE[colName].artworks[artTitle];
+            } else if (!artTitle && ACK_LORE[colName]) {
+              lore = ACK_LORE[colName];
+            }
+            narTextarea.innerHTML = (lore && lore.narration) ? lore.narration : '';
+            audioInput.value = (lore && lore.audio) ? lore.audio : '';
+          }
+
+          // Save
+          saveBtn.addEventListener('click', function() {
+            var colName = colSelect.value;
+            if (!colName) { statusMsg.textContent = 'Select a collection first'; return; }
+            var artTitle = artSelect.value;
+
+            // Extract text content (preserve HTML for rich pastes)
+            var htmlContent = narTextarea.innerHTML;
+            // Strip wrapping divs/p from contenteditable but keep inner content
+            var textContent = narTextarea.innerText.trim();
+            var audioPath = audioInput.value.trim();
+
+            // Ensure collection exists in ACK_LORE
+            if (!ACK_LORE[colName]) {
+              ACK_LORE[colName] = { narration: '', audio: '', artworks: {} };
+            }
+
+            if (artTitle) {
+              // Artwork-level lore
+              if (!ACK_LORE[colName].artworks) ACK_LORE[colName].artworks = {};
+              ACK_LORE[colName].artworks[artTitle] = {
+                narration: textContent,
+                narrationHtml: htmlContent,
+                audio: audioPath
+              };
+            } else {
+              // Collection-level lore
+              ACK_LORE[colName].narration = textContent;
+              ACK_LORE[colName].narrationHtml = htmlContent;
+              ACK_LORE[colName].audio = audioPath;
+            }
+
+            statusMsg.textContent = 'Saved!';
+            statusMsg.style.color = 'rgba(100,220,120,0.6)';
+            setTimeout(function() { statusMsg.textContent = ''; }, 2000);
+          });
+
+          // Export all lore as JSON (copy to clipboard → send to me for embedding)
+          exportBtn.addEventListener('click', function() {
+            var exportData = {};
+            for (var key in ACK_LORE) {
+              if (!ACK_LORE.hasOwnProperty(key)) continue;
+              var cl = ACK_LORE[key];
+              if (cl.narration || cl.audio || cl.narrationHtml) {
+                exportData[key] = { narration: cl.narration || '', audio: cl.audio || '' };
+                if (cl.narrationHtml) exportData[key].narrationHtml = cl.narrationHtml;
+              }
+              if (cl.artworks) {
+                for (var ak in cl.artworks) {
+                  if (!cl.artworks.hasOwnProperty(ak)) continue;
+                  var al = cl.artworks[ak];
+                  if (al.narration || al.audio || al.narrationHtml) {
+                    if (!exportData[key]) exportData[key] = { narration: '', audio: '', artworks: {} };
+                    if (!exportData[key].artworks) exportData[key].artworks = {};
+                    exportData[key].artworks[ak] = { narration: al.narration || '', audio: al.audio || '' };
+                    if (al.narrationHtml) exportData[key].artworks[ak].narrationHtml = al.narrationHtml;
+                  }
+                }
+              }
+            }
+            var json = JSON.stringify(exportData, null, 2);
+            navigator.clipboard.writeText(json).then(function() {
+              statusMsg.textContent = 'Lore JSON copied to clipboard!';
+              statusMsg.style.color = 'rgba(220,180,100,0.7)';
+            }).catch(function() {
+              // Fallback: show in a textarea
+              prompt('Copy this lore JSON:', json);
+            });
+            setTimeout(function() { statusMsg.textContent = ''; }, 3000);
+          });
+
+          // Handle paste — preserve rich content (Twitter embeds, images, links)
+          narTextarea.addEventListener('paste', function(e) {
+            // Let contentEditable handle it naturally — preserves images, links, formatting
+            // Clean up after paste to sanitize
+            setTimeout(function() {
+              // Remove any script tags that might come through
+              var scripts = narTextarea.querySelectorAll('script');
+              scripts.forEach(function(s) { s.remove(); });
+              // Process pasted images — convert to inline data URLs
+              var imgs = narTextarea.querySelectorAll('img');
+              imgs.forEach(function(img) {
+                img.style.cssText = 'max-width:100%;height:auto;border-radius:4px;margin:8px 0;display:block;border:1px solid rgba(100,140,200,0.15);';
+              });
+              // Style links
+              var links = narTextarea.querySelectorAll('a');
+              links.forEach(function(a) {
+                a.style.color = 'rgba(120,170,255,0.8)';
+                a.target = '_blank';
+              });
+            }, 100);
+          });
+
+          // Placeholder behavior
+          function _checkPlaceholder() {
+            if (!narTextarea.innerText.trim()) {
+              narTextarea.style.color = 'rgba(160,190,255,0.2)';
+              if (!narTextarea.innerHTML.trim()) narTextarea.innerHTML = '';
+            } else {
+              narTextarea.style.color = 'rgba(220,215,200,0.85)';
+            }
+          }
+          narTextarea.addEventListener('focus', _checkPlaceholder);
+          narTextarea.addEventListener('blur', _checkPlaceholder);
+          narTextarea.addEventListener('input', _checkPlaceholder);
+        }
+
+        function _closeLoreEditor() {
+          _loreEditorOpen = false;
+          if (_loreEditorOverlay) {
+            _loreEditorOverlay.remove();
+            _loreEditorOverlay = null;
+          }
+        }
+
+        // Keyboard shortcut: Ctrl+Shift+L
+        document.addEventListener('keydown', function(e) {
+          if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+            e.preventDefault();
+            if (_loreEditorOpen) _closeLoreEditor();
+            else _openLoreEditor();
+          }
+        });
+      })();
+
+      // ══════════════════════════════════════════════════════════════
       // COLLECTION LAYOUT EDITOR — drag + resize artwork nodes
       // ══════════════════════════════════════════════════════════════
       // _collEditorActive is declared at top level (before openDetail) so both scopes can access it
@@ -18607,16 +18947,16 @@
       loreNode.id = 'loreNode';
       loreNode.className = 'lore-node' + (loreData.audio ? ' has-audio' : '');
 
-      // Diamond SVG icon — Dune-style rhombus
+      // Diamond SVG icon — PCB-style rhombus node
       loreNode.innerHTML = '<div class="lore-diamond">' +
         '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">' +
-          '<path d="M18 2 L34 18 L18 34 L2 18 Z" fill="none" stroke="rgba(210,170,70,0.5)" stroke-width="1.2"/>' +
-          '<path d="M18 6 L30 18 L18 30 L6 18 Z" fill="rgba(210,170,70,0.06)" stroke="rgba(210,170,70,0.25)" stroke-width="0.6"/>' +
-          '<circle cx="18" cy="18" r="2.5" fill="rgba(210,170,70,0.4)"/>' +
-          '<line x1="18" y1="8" x2="18" y2="14" stroke="rgba(210,170,70,0.2)" stroke-width="0.4"/>' +
-          '<line x1="18" y1="22" x2="18" y2="28" stroke="rgba(210,170,70,0.2)" stroke-width="0.4"/>' +
-          '<line x1="8" y1="18" x2="14" y2="18" stroke="rgba(210,170,70,0.2)" stroke-width="0.4"/>' +
-          '<line x1="22" y1="18" x2="28" y2="18" stroke="rgba(210,170,70,0.2)" stroke-width="0.4"/>' +
+          '<path d="M18 2 L34 18 L18 34 L2 18 Z" fill="none" stroke="rgba(100,150,230,0.45)" stroke-width="1.2"/>' +
+          '<path d="M18 6 L30 18 L18 30 L6 18 Z" fill="rgba(60,100,180,0.08)" stroke="rgba(100,150,230,0.2)" stroke-width="0.6"/>' +
+          '<circle cx="18" cy="18" r="2.5" fill="rgba(120,170,255,0.45)"/>' +
+          '<line x1="18" y1="8" x2="18" y2="14" stroke="rgba(100,150,230,0.18)" stroke-width="0.4"/>' +
+          '<line x1="18" y1="22" x2="18" y2="28" stroke="rgba(100,150,230,0.18)" stroke-width="0.4"/>' +
+          '<line x1="8" y1="18" x2="14" y2="18" stroke="rgba(100,150,230,0.18)" stroke-width="0.4"/>' +
+          '<line x1="22" y1="18" x2="28" y2="18" stroke="rgba(100,150,230,0.18)" stroke-width="0.4"/>' +
         '</svg>' +
       '</div>' +
       '<span class="lore-label">lore</span>';
@@ -18664,41 +19004,69 @@
       overlay.id = 'lorePanelOverlay';
       overlay.className = 'lore-panel-overlay';
 
-      // Split narration into words for highlight sync
+      // Determine content — prefer rich HTML (from lore editor paste), fall back to plain text
+      var hasRichContent = loreData.narrationHtml && loreData.narrationHtml.trim().length > 0;
       var narrationText = loreData.narration || '';
       var words = narrationText.split(/\s+/).filter(function(w) { return w.length > 0; });
-      var wordSpans = words.map(function(w, i) {
-        return '<span class="lore-word" data-lore-idx="' + i + '">' + w + ' </span>';
-      }).join('');
 
-      // If no narration text but has audio, show minimal panel
-      if (!narrationText && loreData.audio) {
-        wordSpans = '<span class="lore-word spoken" style="opacity:0.5;font-style:italic;">Narration playing...</span>';
+      var contentHtml = '';
+      if (hasRichContent) {
+        // Rich content — show directly (images, links, formatted text from Twitter paste etc)
+        contentHtml = loreData.narrationHtml;
+      } else if (narrationText) {
+        // Plain text — word spans for typewriter/audio sync
+        contentHtml = words.map(function(w, i) {
+          return '<span class="lore-word" data-lore-idx="' + i + '">' + w + ' </span>';
+        }).join('');
+      } else if (loreData.audio) {
+        contentHtml = '<span class="lore-word spoken" style="opacity:0.5;font-style:italic;">Narration playing...</span>';
       }
 
       var hasAudio = loreData.audio && loreData.audio.length > 0;
 
-      var headerText = artworkTitle
-        ? collectionName.toUpperCase() + ' // ' + artworkTitle.toUpperCase()
-        : collectionName.toUpperCase();
+      var headerText = artworkTitle || collectionName;
+      var subText = artworkTitle
+        ? collectionName.toUpperCase()
+        : 'COLLECTION LORE';
+
+      // PCB circuit trace SVG decoration
+      var tracesSvg = '<svg class="lore-panel-traces" viewBox="0 0 620 500" xmlns="http://www.w3.org/2000/svg">' +
+        '<line x1="0" y1="35" x2="80" y2="35" stroke="rgba(80,120,180,0.08)" stroke-width="0.5"/>' +
+        '<line x1="540" y1="35" x2="620" y2="35" stroke="rgba(80,120,180,0.08)" stroke-width="0.5"/>' +
+        '<line x1="15" y1="0" x2="15" y2="60" stroke="rgba(80,120,180,0.06)" stroke-width="0.5"/>' +
+        '<line x1="605" y1="440" x2="605" y2="500" stroke="rgba(80,120,180,0.06)" stroke-width="0.5"/>' +
+        '<circle cx="15" cy="35" r="2" fill="rgba(80,130,200,0.1)"/>' +
+        '<circle cx="605" cy="465" r="2" fill="rgba(80,130,200,0.1)"/>' +
+        '<path d="M0 460 L30 460 L40 470 L80 470" fill="none" stroke="rgba(80,120,180,0.06)" stroke-width="0.5"/>' +
+        '<path d="M540 30 L580 30 L590 20 L620 20" fill="none" stroke="rgba(80,120,180,0.06)" stroke-width="0.5"/>' +
+        // Corner notch marks
+        '<line x1="12" y1="1" x2="40" y2="1" stroke="rgba(100,140,200,0.12)" stroke-width="0.5"/>' +
+        '<line x1="1" y1="12" x2="1" y2="40" stroke="rgba(100,140,200,0.12)" stroke-width="0.5"/>' +
+        '<line x1="580" y1="499" x2="610" y2="499" stroke="rgba(100,140,200,0.12)" stroke-width="0.5"/>' +
+        '<line x1="619" y1="460" x2="619" y2="488" stroke="rgba(100,140,200,0.12)" stroke-width="0.5"/>' +
+      '</svg>';
 
       overlay.innerHTML = '<div class="lore-panel">' +
+        tracesSvg +
         '<button class="lore-close-btn" id="loreCloseBtn">[ESC]</button>' +
-        '<div class="lore-panel-header">' + headerText + '</div>' +
-        '<div class="lore-panel-text" id="lorePanelText">' + wordSpans + '</div>' +
-        (hasAudio ? '<div class="lore-panel-controls">' +
-          '<button class="lore-play-btn" id="lorePlayBtn">' +
-            '<svg width="14" height="14" viewBox="0 0 14 14"><polygon points="4,2 12,7 4,12"/></svg>' +
-          '</button>' +
-          '<div class="lore-progress"><div class="lore-progress-bar" id="loreProgressBar"></div></div>' +
-        '</div>' : '') +
+        '<div class="lore-panel-inner">' +
+          '<div class="lore-panel-header">' + headerText + '</div>' +
+          '<div class="lore-panel-subheader">' + subText + '</div>' +
+          '<div class="lore-panel-text" id="lorePanelText">' + contentHtml + '</div>' +
+          (hasAudio ? '<div class="lore-panel-controls">' +
+            '<button class="lore-play-btn" id="lorePlayBtn">' +
+              '<svg width="14" height="14" viewBox="0 0 14 14"><polygon points="4,2 12,7 4,12"/></svg>' +
+            '</button>' +
+            '<div class="lore-progress"><div class="lore-progress-bar" id="loreProgressBar"></div></div>' +
+          '</div>' : '') +
+        '</div>' +
       '</div>';
 
       document.body.appendChild(overlay);
       requestAnimationFrame(function() { overlay.classList.add('visible'); });
 
-      // If has narration text but no audio, reveal words with typewriter timing
-      if (narrationText && !hasAudio) {
+      // If plain text narration (no rich content) and no audio, reveal words with typewriter
+      if (!hasRichContent && narrationText && !hasAudio) {
         _typewriterReveal(words.length);
       }
 
@@ -18722,12 +19090,9 @@
               playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14"><polygon points="4,2 12,7 4,12"/></svg>';
             } else {
               playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14"><rect x="3" y="2" width="3" height="10"/><rect x="8" y="2" width="3" height="10"/></svg>';
-              // Start word highlighting in sync with audio
               _startWordSync(words.length, loreData.audio);
               ACK_NARRATOR.play(loreData.audio, function() {
-                // Playback ended
                 playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14"><polygon points="4,2 12,7 4,12"/></svg>';
-                // Reveal all remaining words
                 var allWords = document.querySelectorAll('#lorePanelText .lore-word');
                 allWords.forEach(function(w) { w.classList.add('spoken'); });
               });
