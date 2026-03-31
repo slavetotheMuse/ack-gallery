@@ -3914,6 +3914,78 @@
     }
     .coa-info-tabpanel { display: none; }
     .coa-info-tabpanel.active { display: block; }
+
+    /* ── Edition info icon (ⓘ) next to Details tab ── */
+    .rcp-info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 1px solid rgba(220,150,50,0.35);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.38rem;
+      font-style: italic;
+      color: rgba(220,150,50,0.5);
+      margin-left: 5px;
+      cursor: default;
+      position: relative;
+      vertical-align: middle;
+      transition: border-color 0.2s, color 0.2s;
+      line-height: 1;
+    }
+    .rcp-info-icon:hover {
+      border-color: rgba(220,150,50,0.7);
+      color: rgba(220,150,50,0.9);
+    }
+    .rcp-info-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(170deg, #1e2230, #161a24);
+      border: 1px solid rgba(220,150,50,0.25);
+      border-radius: 3px;
+      padding: 10px 14px;
+      width: 210px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 20;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .rcp-info-icon:hover .rcp-info-tooltip {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .rcp-info-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(220,150,50,0.25);
+    }
+    .rcp-info-tooltip-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.42rem;
+      font-style: normal;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(220,150,50,0.7);
+      margin-bottom: 6px;
+    }
+    .rcp-info-tooltip-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.4rem;
+      font-style: normal;
+      line-height: 1.6;
+      color: rgba(200,195,185,0.6);
+      letter-spacing: 0.02em;
+    }
+
     /* Media grid inside COA */
     .coa-media-grid {
       display: grid;
@@ -19714,9 +19786,14 @@
 
       const _showMediaTab = hasMedia || _alwaysTabs;
       const _showExhibTab = hasExhibition || _alwaysTabs;
+      const _editionInfoIcon = (_displayColName === 'Right Click Print' && artwork.editions && artwork.editions.length > 0) ?
+        `<span class="rcp-info-icon">i<span class="rcp-info-tooltip">` +
+          `<div class="rcp-info-tooltip-title">Unique Edition</div>` +
+          `<div class="rcp-info-tooltip-text">Each of the 15 editions is unique — a different polaroid and sheet music on the piano. Click the token # next to the title to browse editions.</div>` +
+        `</span></span>` : '';
       const tabBar = showTabs ? `
         <div class="coa-info-tabs">
-          <button class="coa-info-tab active" data-coa-tab="info">Details</button>
+          <button class="coa-info-tab active" data-coa-tab="info">Details${_editionInfoIcon}</button>
           ${_showMediaTab ? '<button class="coa-info-tab" data-coa-tab="media">Media</button>' : ''}
           ${_showExhibTab ? '<button class="coa-info-tab" data-coa-tab="exhibition">Exhibition</button>' : ''}
         </div>` : '';
