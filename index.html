@@ -12773,11 +12773,11 @@
           narHelp.textContent = 'Paste anything — plain text, Twitter threads, article excerpts. Rich content (images, links) will be preserved.';
           editorArea.appendChild(narHelp);
 
-          var narTextarea = document.createElement('div');
-          narTextarea.contentEditable = 'true';
+          var narTextarea = document.createElement('textarea');
           narTextarea.id = 'loreNarrationEditor';
-          narTextarea.style.cssText = 'width:100%;min-height:180px;max-height:400px;overflow-y:auto;background:#0c0e16;border:1px solid rgba(100,140,200,0.15);border-radius:3px;padding:14px 16px;font-family:"EB Garamond",Georgia,serif;font-size:1rem;color:rgba(220,215,200,0.85);line-height:1.8;resize:none;outline:none;white-space:pre-wrap;word-wrap:break-word;';
-          narTextarea.setAttribute('data-placeholder', 'Type or paste lore here...');
+          narTextarea.rows = 8;
+          narTextarea.placeholder = 'Type or paste lore here...';
+          narTextarea.style.cssText = 'width:100%;min-height:180px;max-height:400px;background:#0c0e16;border:1px solid rgba(100,140,200,0.15);border-radius:3px;padding:14px 16px;font-family:"EB Garamond",Georgia,serif;font-size:1rem;color:#e0ddd0;line-height:1.8;resize:vertical;outline:none;white-space:pre-wrap;word-wrap:break-word;caret-color:#fff;box-sizing:border-box;';
           editorArea.appendChild(narTextarea);
 
           // Audio path input
@@ -12870,7 +12870,7 @@
             } else if (!artTitle && ACK_LORE[colName]) {
               lore = ACK_LORE[colName];
             }
-            narTextarea.innerHTML = (lore && lore.narration) ? lore.narration : '';
+            narTextarea.value = (lore && lore.narration) ? lore.narration : '';
             audioInput.value = (lore && lore.audio) ? lore.audio : '';
           }
 
@@ -12880,10 +12880,7 @@
             if (!colName) { statusMsg.textContent = 'Select a collection first'; return; }
             var artTitle = artSelect.value;
 
-            // Extract text content (preserve HTML for rich pastes)
-            var htmlContent = narTextarea.innerHTML;
-            // Strip wrapping divs/p from contenteditable but keep inner content
-            var textContent = narTextarea.innerText.trim();
+            var textContent = narTextarea.value.trim();
             var audioPath = audioInput.value.trim();
 
             // Ensure collection exists in ACK_LORE
@@ -12896,13 +12893,11 @@
               if (!ACK_LORE[colName].artworks) ACK_LORE[colName].artworks = {};
               ACK_LORE[colName].artworks[artTitle] = {
                 narration: textContent,
-                narrationHtml: htmlContent,
                 audio: audioPath
               };
             } else {
               // Collection-level lore
               ACK_LORE[colName].narration = textContent;
-              ACK_LORE[colName].narrationHtml = htmlContent;
               ACK_LORE[colName].audio = audioPath;
             }
 
@@ -12945,40 +12940,7 @@
             setTimeout(function() { statusMsg.textContent = ''; }, 3000);
           });
 
-          // Handle paste — preserve rich content (Twitter embeds, images, links)
-          narTextarea.addEventListener('paste', function(e) {
-            // Let contentEditable handle it naturally — preserves images, links, formatting
-            // Clean up after paste to sanitize
-            setTimeout(function() {
-              // Remove any script tags that might come through
-              var scripts = narTextarea.querySelectorAll('script');
-              scripts.forEach(function(s) { s.remove(); });
-              // Process pasted images — convert to inline data URLs
-              var imgs = narTextarea.querySelectorAll('img');
-              imgs.forEach(function(img) {
-                img.style.cssText = 'max-width:100%;height:auto;border-radius:4px;margin:8px 0;display:block;border:1px solid rgba(100,140,200,0.15);';
-              });
-              // Style links
-              var links = narTextarea.querySelectorAll('a');
-              links.forEach(function(a) {
-                a.style.color = 'rgba(120,170,255,0.8)';
-                a.target = '_blank';
-              });
-            }, 100);
-          });
-
-          // Placeholder behavior
-          function _checkPlaceholder() {
-            if (!narTextarea.innerText.trim()) {
-              narTextarea.style.color = 'rgba(160,190,255,0.2)';
-              if (!narTextarea.innerHTML.trim()) narTextarea.innerHTML = '';
-            } else {
-              narTextarea.style.color = 'rgba(220,215,200,0.85)';
-            }
-          }
-          narTextarea.addEventListener('focus', _checkPlaceholder);
-          narTextarea.addEventListener('blur', _checkPlaceholder);
-          narTextarea.addEventListener('input', _checkPlaceholder);
+          // Paste handler — textarea handles plain text natively, just let it work
         }
 
         function _closeLoreEditor() {
