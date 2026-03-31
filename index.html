@@ -1773,6 +1773,36 @@
     .node-card.servant-coin-node.focused .servant-coin-rim-highlight {
       opacity: 1;
     }
+    /* Servant MP4/PNG toggle button */
+    .servant-media-toggle {
+      position: absolute;
+      bottom: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(30,28,26,0.85);
+      border: 1px solid rgba(195,165,115,0.25);
+      border-radius: 3px;
+      padding: 2px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.5rem;
+      letter-spacing: 1px;
+      color: rgba(195,165,115,0.5);
+      cursor: pointer;
+      transition: color 0.3s ease, border-color 0.3s ease;
+      white-space: nowrap;
+      opacity: 0;
+      animation: fadeIn 0.6s ease 0.8s forwards;
+    }
+    .servant-media-toggle:hover {
+      color: rgba(195,165,115,0.85);
+      border-color: rgba(195,165,115,0.5);
+    }
+    .servant-media-toggle.active {
+      color: rgba(180,20,20,0.7);
+      border-color: rgba(180,20,20,0.3);
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
 
     /* Salon layout: thumbnails fill their node entirely */
     .collections-grid .collection-node .collection-thumbnail {
@@ -7009,10 +7039,34 @@
       }
 
       // ── Resolve ENS or truncate address for display ──
+      var _ensCache = {}; // addr → ENS name or null
       function shortAddr(addr) {
         if (!addr) return '—';
         if (addr.endsWith('.eth')) return addr;
+        // Check ENS cache
+        if (_ensCache[addr.toLowerCase()]) return _ensCache[addr.toLowerCase()];
         return addr.slice(0, 6) + '...' + addr.slice(-4);
+      }
+
+      // ── Reverse ENS lookup via ensideas.com (free, no key needed) ──
+      function resolveENS(addr) {
+        if (!addr || addr.endsWith('.eth')) return Promise.resolve(addr || null);
+        var lc = addr.toLowerCase();
+        if (_ensCache[lc] !== undefined) return Promise.resolve(_ensCache[lc]);
+        return fetch('https://api.ensideas.com/ens/resolve/' + lc)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data && data.name) {
+              _ensCache[lc] = data.name;
+              return data.name;
+            }
+            _ensCache[lc] = null;
+            return null;
+          })
+          .catch(function() {
+            _ensCache[lc] = null;
+            return null;
+          });
       }
 
       // ── Fetch + merge live data into an artwork object ──
@@ -7031,10 +7085,18 @@
         ]).then(function(results) {
           var owners = results[0];
           var meta = results[1];
-          // Owner
+          // Owner — resolve ENS name if available
           if (owners && owners.owners && owners.owners.length > 0) {
             artworkObj.liveOwner = owners.owners[0];
             artworkObj.liveOwnerShort = shortAddr(owners.owners[0]);
+            // Async ENS resolution — updates display once resolved
+            artworkObj._ensPromise = resolveENS(owners.owners[0]).then(function(ensName) {
+              if (ensName) {
+                artworkObj.liveOwnerShort = ensName;
+                artworkObj.liveOwnerENS = ensName;
+              }
+              return ensName;
+            });
           }
           // Collection metadata from Alchemy (collection name, title — NOT floor price, which is collection-level)
           if (meta) {
@@ -7245,6 +7307,7 @@
         openSeaUrl: openSeaUrl,
         etherscanUrl: etherscanUrl,
         shortAddr: shortAddr,
+        resolveENS: resolveENS,
         enrichArtwork: enrichArtwork,
         enrichCollection: enrichCollection,
         connectWallet: connectWallet,
@@ -7657,6 +7720,12 @@
             {title:"The Isle of Kek",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/2531b5dd260a565955c6c3851e3ced69.png?w=500"},
             {title:"les femmes glissees",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/c31d21086f7d7a028b47e7fa767e32eb.png?w=500"}
         ]},
+        { name: "Starry Nights", image: "starrynights/elephantssmall.png",
+          wallLayout: true,
+          description: "Starry Nights — 111 works by AlphaCentauriKid. A nocturnal series inspired by the cosmos and the elephants of memory.",
+          token: "ERC-721", chain: "Ethereum",
+          artworks: (function(){var a=[];for(var t=0;t<111;t++){a.push({title:"Starry Night #"+(t+1),image:"starrynights/elephantssmall.png",fullRes:"starrynights/elephants.jpg",tokenId:t+1})}return a})()
+        },
         { name: "SuperRare", image: "but_wait_thumb.jpg", artworks: [] },
         { name: "Opepen", image: "supernatural_web.jpg", artworks: [] },
         { name: "notxcopy", image: "selfreflect_thumb.jpg", artworks: [] },
@@ -12427,6 +12496,7 @@
         { name: "6529",                    x: 83.6, y: 48.1, w: 4.4,  ar: 0.926 },
         { name: "Ackstract",               x: 20.6, y: 65.4, w: 16,   ar: 2.39 },
         { name: "SuperRare",               x: 80.9, y: 63.2, w: 11.3, ar: 1.797 },
+        { name: "Starry Nights",            x: 44.2, y: 14.5, w: 8,   ar: 1 },
       ];
 
       // Usable area
@@ -17516,13 +17586,46 @@
               const frameSvg = generateServantFrame(localW, localH, pal, servTitle);
               node.appendChild(frameSvg);
             }, 500);
-            // Click on focused coin → open MP4 in new tab
-            coinWrap.style.cursor = 'pointer';
-            coinWrap._servantClickHandler = function(e) {
+            // MP4/PNG toggle button below the coin
+            var _toggleBtn = document.createElement('div');
+            _toggleBtn.className = 'servant-media-toggle';
+            _toggleBtn.textContent = 'PLAY MP4';
+            _toggleBtn.dataset.showing = 'png';
+            coinWrap.appendChild(_toggleBtn);
+            coinWrap._servantToggleBtn = _toggleBtn;
+            _toggleBtn.addEventListener('click', function(e) {
               e.stopPropagation();
-              window.open('servant_muse.mp4', '_blank');
-            };
-            coinWrap.addEventListener('click', coinWrap._servantClickHandler);
+              var faceEl = coinWrap.querySelector('.servant-coin-face');
+              if (!faceEl) return;
+              if (_toggleBtn.dataset.showing === 'png') {
+                // Switch to video
+                var existingImg = faceEl.querySelector('img');
+                if (existingImg) existingImg.style.display = 'none';
+                var vid = document.createElement('video');
+                vid.src = (artData && artData.fullRes) ? artData.fullRes : 'servant_muse.mp4';
+                vid.loop = true;
+                vid.muted = true;
+                vid.playsInline = true;
+                vid.autoplay = true;
+                vid.setAttribute('playsinline', '');
+                vid.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;';
+                vid.className = 'servant-coin-video';
+                faceEl.appendChild(vid);
+                vid.play().catch(function(){});
+                _toggleBtn.textContent = 'SHOW PNG';
+                _toggleBtn.dataset.showing = 'mp4';
+                _toggleBtn.classList.add('active');
+              } else {
+                // Switch back to PNG
+                var vidEl = faceEl.querySelector('.servant-coin-video');
+                if (vidEl) { vidEl.pause(); vidEl.remove(); }
+                var imgEl = faceEl.querySelector('img');
+                if (imgEl) imgEl.style.display = '';
+                _toggleBtn.textContent = 'PLAY MP4';
+                _toggleBtn.dataset.showing = 'png';
+                _toggleBtn.classList.remove('active');
+              }
+            });
           }
         } else {
           const nodeImg = node.querySelector('.node-preview img');
@@ -20030,11 +20133,20 @@
                 var aw = results[0];
                 var sections = [];
                 if (aw.liveOwner) {
-                  var ownerDisplay = ACK_CHAIN.shortAddr(aw.liveOwner);
-                  var ownerLink = aw.liveOwner.endsWith('.eth')
-                    ? 'https://etherscan.io/name-lookup-search?id=' + aw.liveOwner
+                  var ownerDisplay = aw.liveOwnerENS || ACK_CHAIN.shortAddr(aw.liveOwner);
+                  var ownerLink = (aw.liveOwnerENS || aw.liveOwner.endsWith('.eth'))
+                    ? 'https://etherscan.io/name-lookup-search?id=' + (aw.liveOwnerENS || aw.liveOwner)
                     : 'https://etherscan.io/address/' + aw.liveOwner;
-                  sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(80,200,120,0.6);">Owner</div><div class="node-info-value"><a href="' + ownerLink + '" target="_blank" rel="noopener" style="color:rgba(200,190,170,0.85);text-decoration:none;border-bottom:1px dotted rgba(220,150,50,0.3);">' + ownerDisplay + '</a></div></div>');
+                  sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(80,200,120,0.6);">Owner</div><div class="node-info-value"><a id="rcpOwnerLink" href="' + ownerLink + '" target="_blank" rel="noopener" style="color:rgba(200,190,170,0.85);text-decoration:none;border-bottom:1px dotted rgba(220,150,50,0.3);">' + ownerDisplay + '</a></div></div>');
+                  // Async ENS update
+                  if (!aw.liveOwnerENS && !aw.liveOwner.endsWith('.eth')) {
+                    ACK_CHAIN.resolveENS(aw.liveOwner).then(function(ens) {
+                      if (ens) {
+                        var el = document.getElementById('rcpOwnerLink');
+                        if (el) { el.textContent = ens; el.href = 'https://etherscan.io/name-lookup-search?id=' + ens; }
+                      }
+                    });
+                  }
                 }
                 if (aw.isListed && aw.listingPriceEth) {
                   sections.push('<div style="border-top:1px solid rgba(80,80,75,0.25);margin:5px 0;"></div>');
@@ -20204,11 +20316,20 @@
               var sections = [];
               // ── Owner section (skip for ERC-1155 editions — use COLLECTORS popup instead) ──
               if (aw.liveOwner && !_isEdition) {
-                var ownerDisplay = ACK_CHAIN.shortAddr(aw.liveOwner);
-                var ownerLink = aw.liveOwner.endsWith('.eth')
-                  ? 'https://etherscan.io/name-lookup-search?id=' + aw.liveOwner
+                var ownerDisplay = aw.liveOwnerENS || ACK_CHAIN.shortAddr(aw.liveOwner);
+                var ownerLink = (aw.liveOwnerENS || aw.liveOwner.endsWith('.eth'))
+                  ? 'https://etherscan.io/name-lookup-search?id=' + (aw.liveOwnerENS || aw.liveOwner)
                   : 'https://etherscan.io/address/' + aw.liveOwner;
-                sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(80,200,120,0.6);">Owner</div><div class="node-info-value"><a href="' + ownerLink + '" target="_blank" rel="noopener" style="color:rgba(200,190,170,0.85);text-decoration:none;border-bottom:1px dotted rgba(220,150,50,0.3);" onmouseover="this.style.color=\'rgba(220,150,50,0.95)\'" onmouseout="this.style.color=\'rgba(200,190,170,0.85)\'">' + ownerDisplay + '</a></div></div>');
+                sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(80,200,120,0.6);">Owner</div><div class="node-info-value"><a id="mainOwnerLink" href="' + ownerLink + '" target="_blank" rel="noopener" style="color:rgba(200,190,170,0.85);text-decoration:none;border-bottom:1px dotted rgba(220,150,50,0.3);" onmouseover="this.style.color=\'rgba(220,150,50,0.95)\'" onmouseout="this.style.color=\'rgba(200,190,170,0.85)\'">' + ownerDisplay + '</a></div></div>');
+                // Async ENS update
+                if (!aw.liveOwnerENS && !aw.liveOwner.endsWith('.eth')) {
+                  ACK_CHAIN.resolveENS(aw.liveOwner).then(function(ens) {
+                    if (ens) {
+                      var el = document.getElementById('mainOwnerLink');
+                      if (el) { el.textContent = ens; el.href = 'https://etherscan.io/name-lookup-search?id=' + ens; }
+                    }
+                  });
+                }
               }
               // ── Divider + Listing (per-token, not collection floor) ──
               if (aw.isListed && aw.listingPriceEth) {
@@ -21087,27 +21208,53 @@
           const totalSupply = ownerBalances.reduce(function(sum, o) { return sum + o.balance; }, 0);
 
           let listHTML = '<div class="cp-summary">' + totalOwners + ' unique owner' + (totalOwners !== 1 ? 's' : '') + ' \u00B7 ' + totalSupply + ' total</div><div class="cp-list">';
-          ownerBalances.forEach(function(owner) {
+          ownerBalances.forEach(function(owner, idx) {
             const addr = owner.address;
             const isEns = addr.endsWith('.eth');
             const is0x = addr.startsWith('0x');
+            var cachedENS = is0x ? ACK_CHAIN.shortAddr(addr) : null;
+            var hasENSAlready = cachedENS && cachedENS.endsWith('.eth');
             let displayName = addr;
             let linkHref = '';
             let pfpUrl = '';
-            if (isEns) {
-              linkHref = 'https://etherscan.io/name-lookup-search?id=' + addr;
-              pfpUrl = 'https://metadata.ens.domains/mainnet/avatar/' + addr;
+            if (isEns || hasENSAlready) {
+              var ensName = isEns ? addr : cachedENS;
+              displayName = ensName;
+              linkHref = 'https://etherscan.io/name-lookup-search?id=' + ensName;
+              pfpUrl = 'https://metadata.ens.domains/mainnet/avatar/' + ensName;
             } else if (is0x) {
               displayName = addr.slice(0, 6) + '\u2026' + addr.slice(-4);
               linkHref = 'https://etherscan.io/address/' + addr;
             }
             const pfpHtml = pfpUrl
               ? '<img class="cp-pfp" src="' + pfpUrl + '" onerror="this.style.display=\'none\'">'
-              : '<div class="cp-pfp" style="display:flex;align-items:center;justify-content:center;"><span style="font-size:0.5rem;color:rgba(160,158,150,0.4);">\u229E</span></div>';
+              : '<div class="cp-pfp" id="cpPfp_' + idx + '" style="display:flex;align-items:center;justify-content:center;"><span style="font-size:0.5rem;color:rgba(160,158,150,0.4);">\u229E</span></div>';
             const countText = owner.balance + ' ITEM' + (owner.balance !== 1 ? 'S' : '');
             listHTML += '<div class="cp-row">' + pfpHtml +
-              '<a href="' + linkHref + '" target="_blank" class="cp-name">' + displayName + '</a>' +
+              '<a href="' + linkHref + '" target="_blank" class="cp-name" id="cpName_' + idx + '">' + displayName + '</a>' +
               '<span class="cp-count">' + countText + '</span></div>';
+            // Async ENS resolve for 0x addresses that aren't cached yet
+            if (is0x && !hasENSAlready) {
+              (function(i, address) {
+                ACK_CHAIN.resolveENS(address).then(function(ens) {
+                  if (!ens || !document.getElementById('collectorsPopup')) return;
+                  var nameEl = document.getElementById('cpName_' + i);
+                  if (nameEl) {
+                    nameEl.textContent = ens;
+                    nameEl.href = 'https://etherscan.io/name-lookup-search?id=' + ens;
+                  }
+                  var pfpEl = document.getElementById('cpPfp_' + i);
+                  if (pfpEl) {
+                    var avatarUrl = 'https://metadata.ens.domains/mainnet/avatar/' + ens;
+                    var img = document.createElement('img');
+                    img.className = 'cp-pfp';
+                    img.src = avatarUrl;
+                    img.onerror = function() { img.style.display = 'none'; };
+                    pfpEl.parentNode.replaceChild(img, pfpEl);
+                  }
+                });
+              })(idx, addr);
+            }
           });
           listHTML += '</div>';
 
@@ -25701,7 +25848,7 @@
       // Refined ritual clock frame — delicate, elegant, clock-inspired
       // Focus view only (no collection view frames for spinning coins)
       const ns = 'http://www.w3.org/2000/svg';
-      const pad = 48; // generous padding so arc text + ticks never clip
+      const pad = 28; // tighter padding — smaller ritual frame
       const svgW = imgW + pad * 2;
       const svgH = imgH + pad * 2;
       const svg = document.createElementNS(ns, 'svg');
@@ -25734,7 +25881,7 @@
       const ring = document.createElementNS(ns, 'circle');
       ring.setAttribute('cx', cx);
       ring.setAttribute('cy', cy);
-      ring.setAttribute('r', radius + 6);
+      ring.setAttribute('r', radius + 3);
       ring.setAttribute('fill', 'none');
       ring.setAttribute('stroke', bloodRed(0.15));
       ring.setAttribute('stroke-width', '0.4');
@@ -25742,14 +25889,14 @@
 
       // ── 69 devotion ticks — clock-style, thin hairlines ──
       const servantNum = parseInt((title || '').match(/\d+/)?.[0] || '1');
-      const tickBase = radius + 8;
+      const tickBase = radius + 4;
       for (let si = 0; si < 69; si++) {
         const angle = (si / 69) * Math.PI * 2 - Math.PI / 2;
         const isThis = (si + 1) === servantNum;
         // Every ~12th tick is slightly longer (like hour marks on a clock)
         const isHour = (si % 12 === 0);
         const r1 = tickBase;
-        const r2 = isThis ? tickBase + 6 : (isHour ? tickBase + 6 : tickBase + 3);
+        const r2 = isThis ? tickBase + 4 : (isHour ? tickBase + 4 : tickBase + 2);
         const x1 = cx + Math.cos(angle) * r1;
         const y1 = cy + Math.sin(angle) * r1;
         const x2 = cx + Math.cos(angle) * r2;
@@ -25775,7 +25922,7 @@
 
       // ── 4 cardinal hairline crosses at N/S/E/W — very subtle ──
       [[0, -1], [0, 1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
-        const dist = radius + 20;
+        const dist = radius + 12;
         const mx = cx + dx * dist;
         const my = cy + dy * dist;
         const s = 2;
@@ -25794,7 +25941,7 @@
       const defs = document.createElementNS(ns, 'defs');
       const arcPath = document.createElementNS(ns, 'path');
       arcPath.setAttribute('id', arcId);
-      const arcR = radius + 28;
+      const arcR = radius + 16;
       arcPath.setAttribute('d', `M${cx - arcR},${cy} A${arcR},${arcR} 0 0,1 ${cx + arcR},${cy}`);
       defs.appendChild(arcPath);
       svg.appendChild(defs);
@@ -25814,7 +25961,7 @@
       // ── Token number at bottom — delicate ──
       const numTxt = document.createElementNS(ns, 'text');
       numTxt.setAttribute('x', cx);
-      numTxt.setAttribute('y', cy + radius + 30);
+      numTxt.setAttribute('y', cy + radius + 18);
       numTxt.setAttribute('text-anchor', 'middle');
       numTxt.setAttribute('font-family', 'JetBrains Mono, monospace');
       numTxt.setAttribute('font-size', '3.5');
@@ -25826,7 +25973,7 @@
       // ── Sparse dust particles — just 10, very subtle ──
       for (let pi = 0; pi < 10; pi++) {
         const angle = rand() * Math.PI * 2;
-        const dist = radius + 12 + rand() * 18;
+        const dist = radius + 6 + rand() * 12;
         const px = cx + Math.cos(angle) * dist;
         const py = cy + Math.sin(angle) * dist;
         const dot = document.createElementNS(ns, 'circle');
@@ -27196,11 +27343,15 @@
         // Spin resumes automatically when .focused class is removed (CSS animation: none is gone)
         const _coinEl = _coinWrapExit.querySelector('.servant-coin');
         if (_coinEl) delete _coinEl.dataset.pausedTransform;
-        // Remove click-to-open-mp4 handler
-        if (_coinWrapExit._servantClickHandler) {
-          _coinWrapExit.removeEventListener('click', _coinWrapExit._servantClickHandler);
-          delete _coinWrapExit._servantClickHandler;
+        // Remove MP4/PNG toggle button and any playing video
+        if (_coinWrapExit._servantToggleBtn) {
+          _coinWrapExit._servantToggleBtn.remove();
+          delete _coinWrapExit._servantToggleBtn;
         }
+        var _exitVid = _coinWrapExit.querySelector('.servant-coin-video');
+        if (_exitVid) { _exitVid.pause(); _exitVid.remove(); }
+        var _exitFaceImg = _coinWrapExit.querySelector('.servant-coin-face img');
+        if (_exitFaceImg) _exitFaceImg.style.display = '';
         _coinWrapExit.style.cursor = '';
       }
       const nodeImg = focusedNode.querySelector('.node-preview img');
