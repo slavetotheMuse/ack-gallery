@@ -2527,10 +2527,15 @@
     .rcp-deco-node {
       position: absolute;
       pointer-events: none;
-      z-index: 0;
+      z-index: -1;
       opacity: 0;
       transform: scale(0.3) rotate(5deg);
       transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    /* Ensure RCP title tag stays above floating decorations */
+    .node-card.has-rcp-frame .node-title-tag {
+      position: relative; z-index: 2;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.5);
     }
     .rcp-deco-node.visible {
       opacity: 1;
@@ -3787,6 +3792,74 @@
       margin-bottom: 12px;
       border-bottom: 1px solid rgba(220, 150, 50, 0.35);
       padding-bottom: 10px;
+    }
+    /* ── RCP Edition Picker ── */
+    .rcp-edition-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-left: 8px; vertical-align: middle; cursor: pointer;
+      position: relative;
+    }
+    .rcp-edition-num {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.55rem;
+      color: rgba(80,160,240,0.85); letter-spacing: 0.06em;
+      background: rgba(80,160,240,0.08); border: 1px solid rgba(80,160,240,0.2);
+      border-radius: 2px; padding: 1px 5px; transition: all 0.3s;
+    }
+    .rcp-edition-badge:hover .rcp-edition-num {
+      color: rgba(80,160,240,1); border-color: rgba(80,160,240,0.5);
+      background: rgba(80,160,240,0.14);
+    }
+    .rcp-edition-arrow {
+      font-size: 7px; color: rgba(80,160,240,0.5); transition: transform 0.3s, color 0.3s;
+    }
+    .rcp-edition-badge:hover .rcp-edition-arrow { color: rgba(80,160,240,0.9); }
+    .rcp-edition-badge.open .rcp-edition-arrow { transform: rotate(180deg); }
+    .rcp-picker-dropdown {
+      position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+      background: rgba(12,11,14,0.96); border: 1px solid rgba(80,160,240,0.2);
+      border-radius: 4px; padding: 4px; z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 12px rgba(80,160,240,0.06);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+      transform: translateX(-50%) translateY(-4px);
+    }
+    .rcp-picker-dropdown.visible {
+      opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0);
+    }
+    .rcp-picker-scroll {
+      max-height: 180px; overflow-y: auto; scrollbar-width: thin;
+      scrollbar-color: rgba(80,160,240,0.3) transparent;
+    }
+    .rcp-picker-scroll::-webkit-scrollbar { width: 4px; }
+    .rcp-picker-scroll::-webkit-scrollbar-track { background: transparent; }
+    .rcp-picker-scroll::-webkit-scrollbar-thumb { background: rgba(80,160,240,0.25); border-radius: 2px; }
+    .rcp-picker-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 10px; cursor: pointer; border-radius: 2px;
+      transition: background 0.2s; white-space: nowrap; min-width: 160px;
+    }
+    .rcp-picker-item:hover { background: rgba(80,160,240,0.1); }
+    .rcp-picker-item.active { background: rgba(80,160,240,0.15); }
+    .rcp-picker-item-num {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.5rem;
+      color: rgba(80,160,240,0.7); min-width: 22px; text-align: right;
+    }
+    .rcp-picker-item.active .rcp-picker-item-num { color: rgba(80,160,240,1); }
+    .rcp-picker-item-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.42rem;
+      color: rgba(200,190,180,0.55); letter-spacing: 0.04em;
+    }
+    .rcp-picker-item.active .rcp-picker-item-label { color: rgba(200,190,180,0.85); }
+    /* RCP details sub-info (polaroid + music) */
+    .rcp-edition-details {
+      margin-top: 6px; padding: 6px 0; border-top: 1px solid rgba(80,160,240,0.08);
+    }
+    .rcp-detail-line {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.42rem;
+      color: rgba(200,190,180,0.5); letter-spacing: 0.04em; line-height: 1.8;
+    }
+    .rcp-detail-line .rcp-detail-label {
+      color: rgba(80,160,240,0.5); margin-right: 6px;
     }
     .node-info-line {
       margin-bottom: 8px;
@@ -7384,7 +7457,24 @@
           token: "ERC-721", chain: "Ethereum", contract: "0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3",
           mintDate: "2021",
           artworks: [
-            {title:"Right Click Print",image:"right_click_print/rcp.png",fullRes:"right_click_print/rcp.mp4",edition:"Edition of 15",tokenId:30,description:"A flooded studio of stolen masterpieces. The water rises but the art endures."}
+            {title:"Right Click Print",image:"right_click_print/rcp.png",fullRes:"right_click_print/rcp.mp4",edition:"Unique Edition of 15",tokenId:30,description:"Hide your jpegs… Each edition is unique — a different polaroid and sheet music on the piano.",
+              editions: [
+                {num:1, tokenId:30, polaroid:'ACK', music:'Beethoven — Sonata No.14 "Quasi una fantasia" Op.27', still:'right_click_print/final%20assets/%231ACK/ack.png', video:'right_click_print/final%20assets/%231ACK/rcpACK.mp4'},
+                {num:2, tokenId:31, polaroid:'Beeple', music:'Mozart — Lacrimosa', still:'right_click_print/final%20assets/%232.Beeple/beeple.png', video:'right_click_print/final%20assets/%232.Beeple/rcpbeeple.mp4'},
+                {num:3, tokenId:32, polaroid:'Fewocious', music:'Beethoven — String Quartet Op.18 No.4', still:'right_click_print/final%20assets/%233Fewo/fewo.png', video:'right_click_print/final%20assets/%233Fewo/fewo.mp4'},
+                {num:4, tokenId:33, polaroid:'Hackatao', music:'Vivaldi — Presto Summer', still:'right_click_print/final%20assets/%234hackatao/hackatao.png', video:'right_click_print/final%20assets/%234hackatao/rcphackatao.mp4'},
+                {num:5, tokenId:34, polaroid:'Vitalik', music:'Beethoven — In Questa Tomba Oscura', still:'right_click_print/final%20assets/%235vitalik/vitalik.png', video:'right_click_print/final%20assets/%235vitalik/rcpvitalik.mp4'},
+                {num:6, tokenId:35, polaroid:'ThankYouX', music:'Hans Zimmer — No Time For Caution', still:'right_click_print/final%20assets/%236ThankyouX/thankyoux.png', video:'right_click_print/final%20assets/%236ThankyouX/rcpthankyoux.mp4'},
+                {num:7, tokenId:36, polaroid:'Mad Dog Jones', music:'Debussy — Claire De Lune', still:'right_click_print/final%20assets/%237Maddogjones/MDJ.png', video:'right_click_print/final%20assets/%237Maddogjones/rcpmaddogjones.mp4'},
+                {num:8, tokenId:37, polaroid:'XCOPY', music:'static', still:'right_click_print/final%20assets/%238xcopy/xcopy.png', video:'right_click_print/final%20assets/%238xcopy/xcopyfinal.mp4'},
+                {num:9, tokenId:38, polaroid:'Fvckrender', music:'Bach — Cello Suite No.1 in G', still:'right_click_print/final%20assets/%239Fvckrender/fvck.png', video:'right_click_print/final%20assets/%239Fvckrender/rcpFVCK.mp4'},
+                {num:10, tokenId:39, polaroid:'Warhol', music:'Chopin — Fantaisie Impromptu No.4 C♯ Minor', still:'right_click_print/final%20assets/%2310warhol/warhol.png', video:'right_click_print/final%20assets/%2310warhol/warhol.mp4'},
+                {num:11, tokenId:40, polaroid:'Justin Aversano', music:'Schubert — Fantasy in F minor D.940', still:'right_click_print/final%20assets/%2311aversano/aversano.png', video:'right_click_print/final%20assets/%2311aversano/aversano.mp4'},
+                {num:12, tokenId:41, polaroid:'Einstein', music:'Beethoven — String Quartet Op.18 No.4', still:'right_click_print/final%20assets/%2312Einstein/einsteinstill.png', video:'right_click_print/final%20assets/%2312Einstein/rcpeinstein.mp4'},
+                {num:13, tokenId:42, polaroid:'Unknown', music:'unknown', still:'right_click_print/final%20assets/%2313unknown/unknown.still.png', video:'right_click_print/final%20assets/%2313unknown/rcpunknown.mp4'},
+                {num:14, tokenId:43, polaroid:'Raf Grassetti', music:'Chopin — Nocturne in C♯ Minor No.20', still:'right_click_print/final%20assets/%2314rafGrassetti/raf.png', video:'right_click_print/final%20assets/%2314rafGrassetti/RCPrafgrassiti.mp4'},
+                {num:15, tokenId:44, polaroid:'Picasso', music:'Beethoven — Sonata No.17 Tempest 3rd Mvt', still:'right_click_print/final%20assets/%2315picasso/rckpicasso.png', video:'right_click_print/final%20assets/%2315picasso/picasso.final.mp4'}
+              ]}
         ]},
         { name: "Made these for your girl", image: "foryourgirl/web/foryourgirl_web.gif",
           wallLayout: true,
@@ -15446,6 +15536,7 @@
                 frameSvg.style.transition = 'none';
                 frameSvg.dataset.collectionFrame = 'true';
                 heroNodeRCP.appendChild(frameSvg);
+                heroNodeRCP.classList.add('has-rcp-frame');
               } else {
                 setTimeout(_applyRCPFrame, 500);
               }
@@ -17612,7 +17703,12 @@
       setTimeout(() => {
         const focusTitleEl = document.createElement('div');
         focusTitleEl.id = 'focusModeTitle';
-        focusTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + artworkTitle;
+        var _focusTitleText = artworkTitle;
+        var _fArtData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks ? COLLECTIONS[collectionIndex].artworks[artworkIndex] : null;
+        if (_fArtData && _fArtData.editions && _fArtData.editions.length > 0) {
+          _focusTitleText = artworkTitle + ' <span id="focusTitleEdNum" style="color:rgba(220,150,50,0.7);font-size:0.85em;">#1</span>';
+        }
+        focusTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + _focusTitleText;
         const _titleLeft = node._focusLeftEdge || 24;
         const _titleTop = (node._focusBottomEdge || (window.innerHeight * 0.85)) + 50;
         focusTitleEl.style.cssText = 'position:fixed;z-index:2500;font-family:"JetBrains Mono",monospace;font-size:1.05rem;color:rgba(200,195,185,0.7);letter-spacing:0.06em;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.4s ease;left:' + _titleLeft + 'px;top:' + _titleTop + 'px;';
@@ -19606,6 +19702,22 @@
         </div>` : '';
 
       // ── Pantone swatch for Color Study collection ──
+      // ── RCP Edition Picker badge + details ──
+      const _isRCP = _displayColName === 'Right Click Print' && artwork.editions && artwork.editions.length > 0;
+      let _rcpBadgeHtml = '';
+      let _rcpDetailsHtml = '';
+      if (_isRCP) {
+        const _ed1 = artwork.editions[0];
+        _rcpBadgeHtml = `<span class="rcp-edition-badge" id="rcpEditionBadge" data-current="1">` +
+          `<span class="rcp-edition-num" id="rcpEditionNumLabel">#1</span>` +
+          `<span class="rcp-edition-arrow">▾</span>` +
+        `</span>`;
+        _rcpDetailsHtml = `<div class="rcp-edition-details" id="rcpEditionDetails">` +
+          `<div class="rcp-detail-line"><span class="rcp-detail-label">POLAROID</span><span id="rcpPolaroidVal">${_ed1.polaroid}</span></div>` +
+          `<div class="rcp-detail-line"><span class="rcp-detail-label">SHEET MUSIC</span><span id="rcpMusicVal">${_ed1.music}</span></div>` +
+        `</div>`;
+      }
+
       let _pantoneSwatch = '';
       if (_displayColName === 'The Great Color Study' && artwork.description) {
         const _pantoneMatch = artwork.description.match(/Pantone\s+([\w\s]+?)(?:\.|$)/i);
@@ -19629,7 +19741,8 @@
         ${tabBar}
         <div class="coa-info-tabpanel active" data-coa-panel="info">
           <div class="node-info-panel-body">
-            <div class="node-info-panel-title">${artwork.title}${_pantoneSwatch}</div>
+            <div class="node-info-panel-title">${artwork.title}${_rcpBadgeHtml}${_pantoneSwatch}</div>
+            ${_rcpDetailsHtml}
             ${editionLine}
             ${physicalPrintLine}
             <div class="node-info-line">
@@ -19674,6 +19787,170 @@
             if (panel) panel.classList.add('active');
           });
         });
+      }
+
+      // ── RCP Edition Picker Logic ──
+      if (_isRCP) {
+        const _rcpBadge = document.getElementById('rcpEditionBadge');
+        if (_rcpBadge) {
+          let _rcpDropdown = null;
+          let _rcpOpen = false;
+
+          function _rcpTogglePicker() {
+            if (_rcpOpen) { _rcpClosePicker(); return; }
+            _rcpOpen = true;
+            _rcpBadge.classList.add('open');
+            if (!_rcpDropdown) {
+              _rcpDropdown = document.createElement('div');
+              _rcpDropdown.className = 'rcp-picker-dropdown';
+              const scroll = document.createElement('div');
+              scroll.className = 'rcp-picker-scroll';
+              artwork.editions.forEach(function(ed) {
+                const item = document.createElement('div');
+                item.className = 'rcp-picker-item' + (ed.num === 1 ? ' active' : '');
+                item.dataset.num = ed.num;
+                item.innerHTML = '<span class="rcp-picker-item-num">#' + ed.num + '</span>' +
+                  '<span class="rcp-picker-item-label">' + ed.polaroid + '</span>';
+                item.addEventListener('click', function(ev) {
+                  ev.stopPropagation();
+                  ACK_SFX.micro();
+                  _rcpSelectEdition(ed.num);
+                  _rcpClosePicker();
+                });
+                scroll.appendChild(item);
+              });
+              _rcpDropdown.appendChild(scroll);
+              _rcpBadge.appendChild(_rcpDropdown);
+            }
+            requestAnimationFrame(function() { _rcpDropdown.classList.add('visible'); });
+          }
+
+          function _rcpClosePicker() {
+            _rcpOpen = false;
+            _rcpBadge.classList.remove('open');
+            if (_rcpDropdown) _rcpDropdown.classList.remove('visible');
+          }
+
+          function _rcpSelectEdition(num) {
+            const ed = artwork.editions.find(function(e) { return e.num === num; });
+            if (!ed) return;
+            _rcpBadge.dataset.current = num;
+            // Update badge label
+            var numLabel = document.getElementById('rcpEditionNumLabel');
+            if (numLabel) numLabel.textContent = '#' + num;
+            // Update polaroid + music details
+            var polVal = document.getElementById('rcpPolaroidVal');
+            var musVal = document.getElementById('rcpMusicVal');
+            if (polVal) polVal.textContent = ed.polaroid;
+            if (musVal) musVal.textContent = ed.music;
+            // Update active state in dropdown
+            if (_rcpDropdown) {
+              _rcpDropdown.querySelectorAll('.rcp-picker-item').forEach(function(it) {
+                it.classList.toggle('active', parseInt(it.dataset.num) === num);
+              });
+            }
+            // Update OpenSea + Etherscan links
+            var osLink = infoPanel.querySelector('a[style*="80,130,200"]');
+            var esLink = infoPanel.querySelector('a[style*="100,180,100"]');
+            if (osLink && collection.contract) osLink.href = ACK_CHAIN.openSeaUrl(collection.contract, ed.tokenId);
+            if (esLink && collection.contract) esLink.href = ACK_CHAIN.etherscanUrl(collection.contract, ed.tokenId);
+            // Update focus title edition number
+            var _fEdSpan = document.getElementById('focusTitleEdNum');
+            if (_fEdSpan) {
+              _fEdSpan.textContent = '#' + num;
+            }
+            // Swap image + video
+            _rcpSwapMedia(ed);
+            // Fetch live chain data for this token
+            var _liveDiv = document.getElementById('liveChainData');
+            if (_liveDiv && ACK_CHAIN.hasKey() && collection.contract) {
+              _liveDiv.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.42rem;color:rgba(220,150,50,0.3);letter-spacing:0.1em;">LOADING...</div>';
+              Promise.all([
+                ACK_CHAIN.enrichArtwork(collection.contract, ed.tokenId, artwork),
+                ACK_CHAIN.getMarketStatus(collection.contract, ed.tokenId, artwork)
+              ]).then(function(results) {
+                var aw = results[0];
+                var sections = [];
+                if (aw.liveOwner) {
+                  var ownerDisplay = ACK_CHAIN.shortAddr(aw.liveOwner);
+                  var ownerLink = aw.liveOwner.endsWith('.eth')
+                    ? 'https://etherscan.io/name-lookup-search?id=' + aw.liveOwner
+                    : 'https://etherscan.io/address/' + aw.liveOwner;
+                  sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(80,200,120,0.6);">Owner</div><div class="node-info-value"><a href="' + ownerLink + '" target="_blank" rel="noopener" style="color:rgba(200,190,170,0.85);text-decoration:none;border-bottom:1px dotted rgba(220,150,50,0.3);">' + ownerDisplay + '</a></div></div>');
+                }
+                if (aw.isListed && aw.listingPriceEth) {
+                  sections.push('<div style="border-top:1px solid rgba(80,80,75,0.25);margin:5px 0;"></div>');
+                  sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(50,205,50,0.7);">Listing</div><div class="node-info-value" style="color:rgba(50,205,50,0.85);">' + aw.listingPriceEth + ' ETH</div></div>');
+                }
+                if (aw.hasOffer && aw.bestOfferEth) {
+                  sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(255,165,0,0.7);">Offer</div><div class="node-info-value" style="color:rgba(255,165,0,0.85);">' + aw.bestOfferEth + ' ETH</div></div>');
+                }
+                _liveDiv.innerHTML = sections.length > 0 ? sections.join('') : '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.42rem;color:rgba(220,150,50,0.2);letter-spacing:0.06em;">on-chain ✓</div>';
+              }).catch(function() { _liveDiv.innerHTML = ''; });
+            }
+          }
+
+          function _rcpSwapMedia(ed) {
+            var preview = node.querySelector('.node-preview');
+            if (!preview) return;
+            // Remove existing video
+            var oldVid = preview.querySelector('#rcpFocusVideo');
+            if (oldVid) { oldVid.pause(); oldVid.src = ''; oldVid.remove(); }
+            var oldBtn = preview.querySelector('#rcpSoundBtn');
+            if (oldBtn) oldBtn.remove();
+            // Update still image
+            var img = preview.querySelector('img');
+            if (img) {
+              img.src = ed.still;
+              img.dataset.thumbSrc = ed.still;
+            }
+            // Launch new video (same simple loop pattern)
+            if (!_isRealMobile || preview.querySelector('.lo-touch-btn')) {
+              var vid = document.createElement('video');
+              vid.id = 'rcpFocusVideo';
+              vid.src = ed.video;
+              vid.loop = true;
+              vid.muted = true;
+              vid.playsInline = true;
+              vid.preload = 'auto';
+              vid.setAttribute('playsinline', '');
+              vid.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;';
+              preview.style.position = 'relative';
+              preview.appendChild(vid);
+              vid.autoplay = true;
+              vid.play().catch(function(){});
+              if (img) img.style.visibility = 'hidden';
+              var _vMuted = true;
+              var soundBtn = document.createElement('div');
+              soundBtn.className = 'video-sound-btn';
+              soundBtn.id = 'rcpSoundBtn';
+              soundBtn.innerHTML = '🔇';
+              soundBtn.title = 'Click for sound';
+              soundBtn.style.zIndex = '10';
+              soundBtn.onclick = function(ev) {
+                ev.stopPropagation();
+                _vMuted = !_vMuted;
+                vid.muted = _vMuted;
+                soundBtn.innerHTML = _vMuted ? '🔇' : '🔊';
+                if (!_vMuted) { vid.currentTime = 0; vid.play(); }
+              };
+              preview.appendChild(soundBtn);
+            }
+          }
+
+          _rcpBadge.addEventListener('click', function(ev) {
+            ev.stopPropagation();
+            ACK_SFX.micro();
+            _rcpTogglePicker();
+          });
+
+          // Close picker when clicking outside
+          document.addEventListener('click', function _rcpOutside(ev) {
+            if (_rcpOpen && !_rcpBadge.contains(ev.target)) {
+              _rcpClosePicker();
+            }
+          });
+        }
       }
 
       // Physical print link → switch to Exhibition tab
