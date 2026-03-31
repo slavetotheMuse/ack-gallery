@@ -8071,9 +8071,23 @@
         var tapPrompt = document.getElementById('whispersTapPrompt');
         if (tapPrompt) tapPrompt.style.display = 'none';
 
-        var audio = new Audio('dreamsarewhispers.wav');
-        audio.volume = 0.6;
-        audio.play().catch(function() {});
+        // Play intro audio — quiet and ambient
+        var _wCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var _wAudio = new Audio('dreamsarewhispers.wav');
+        _wAudio.crossOrigin = 'anonymous';
+        var _wSrc = _wCtx.createMediaElementSource(_wAudio);
+        var _wGain = _wCtx.createGain();
+        _wGain.gain.value = 0.25;
+        // Low-pass filter for muffled ambient feel
+        var _wFilter = _wCtx.createBiquadFilter();
+        _wFilter.type = 'lowpass';
+        _wFilter.frequency.value = 2200;
+        _wFilter.Q.value = 0.5;
+        _wSrc.connect(_wFilter);
+        _wFilter.connect(_wGain);
+        _wGain.connect(_wCtx.destination);
+        if (_wCtx.state === 'suspended') _wCtx.resume();
+        _wAudio.play().catch(function() {});
 
         var textWrap = document.getElementById('whispersTextWrap');
         var textEl = document.getElementById('whispersText');
