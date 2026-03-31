@@ -5377,271 +5377,374 @@
         drone2.start();
         _ambientNodes.push(drone2, drone2G, drone2LFO);
 
-        // ═══ STOCHASTIC EVENTS — context-aware, sporadic ═══
+        // ═══ STOCHASTIC EVENTS — unique soundkit per collection ═══
         var _ambientEventTimer = null;
 
-        // Helper: detect current collection context
         function _getContext() {
           if (typeof focusedCollectionIndex === 'number' && focusedCollectionIndex !== null && typeof COLLECTIONS !== 'undefined') {
-            var col = COLLECTIONS[focusedCollectionIndex];
-            if (col) return col.name;
+            var c = COLLECTIONS[focusedCollectionIndex]; if (c) return c.name;
           }
           if (typeof currentCollectionIndex === 'number' && currentCollectionIndex !== null && typeof COLLECTIONS !== 'undefined') {
-            var col2 = COLLECTIONS[currentCollectionIndex];
-            if (col2) return col2.name;
+            var c2 = COLLECTIONS[currentCollectionIndex]; if (c2) return c2.name;
           }
           return 'vortex';
         }
 
+        // ── Shared sound primitives ──
+        function _pip(freq, vol, dur, delay) {
+          setTimeout(function() {
+            var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+            var o = c.createOscillator(); o.type = 'triangle';
+            o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(freq * 0.4, t + dur);
+            var g = c.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+            var lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(1500, t);
+            o.connect(lp); lp.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur + 0.01);
+          }, delay || 0);
+        }
+        function _tone(type, freq, vol, dur, filterF, delay) {
+          setTimeout(function() {
+            var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+            var o = c.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t);
+            var g = c.createGain(); g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(vol, t + dur * 0.15);
+            g.gain.linearRampToValueAtTime(vol * 0.6, t + dur * 0.6);
+            g.gain.linearRampToValueAtTime(0, t + dur);
+            if (filterF) { var f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(filterF, t); o.connect(f); f.connect(g); } else { o.connect(g); }
+            g.connect(masterGain); o.start(t); o.stop(t + dur + 0.05);
+          }, delay || 0);
+        }
+        function _pianoNote(freq, vol, dur, filterF, delay) {
+          setTimeout(function() {
+            var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+            var o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(freq, t);
+            var g = c.createGain(); g.gain.setValueAtTime(vol, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+            var f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(filterF || 500, t);
+            o.connect(f); f.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur + 0.05);
+          }, delay || 0);
+        }
+
+        // ═══════════════════════════════════════════════
+        // ── COLLECTION SOUNDKITS ──
+        // ═══════════════════════════════════════════════
+
+        function _soundkit_brokenKeys(r) {
+          // Dark cathedral piano, stone echoes, organ drones
+          if (r < 0.35) { // Distant dark piano — minor keys, heavy reverb
+            var notes = [196, 220, 233, 262, 294, 311];
+            var ct = 1 + Math.floor(Math.random() * 2);
+            for (var i = 0; i < ct; i++) _pianoNote(notes[Math.floor(Math.random() * notes.length)], 0.003, 2.5 + Math.random(), 380, i * 500);
+          } else if (r < 0.55) { // Stone chamber echo — single tone bouncing
+            var f = 200 + Math.random() * 100;
+            [0, 120, 260, 420].forEach(function(d, i) { _tone('triangle', f * (1 - i * 0.06), 0.005 - i * 0.001, 0.08, 400, d); });
+          } else if (r < 0.75) { // Organ drone swell
+            _tone('sine', 65 + Math.random() * 20, 0.006, 3 + Math.random() * 2, 150, 0);
+          } else { // Distant cracked bell
+            _pip(800 + Math.random() * 400, 0.004, 1.5, 0);
+          }
+        }
+
+        function _soundkit_pianoBlossoms(r) {
+          // Garden: birdsong, warm piano, leaf breeze, petal chimes
+          if (r < 0.3) { // Birdsong chirps
+            var ct = 2 + Math.floor(Math.random() * 3);
+            for (var i = 0; i < ct; i++) {
+              (function(idx) { setTimeout(function() {
+                var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+                var bf = 1800 + Math.random() * 1400; var o = c.createOscillator(); o.type = 'sine';
+                o.frequency.setValueAtTime(bf, t); o.frequency.linearRampToValueAtTime(bf * 1.3, t + 0.04);
+                o.frequency.linearRampToValueAtTime(bf * 0.85, t + 0.1);
+                var g = c.createGain(); g.gain.setValueAtTime(0.003, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+                o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.15);
+              }, idx * (80 + Math.random() * 180)); })(i);
+            }
+          } else if (r < 0.55) { // Warm bright piano
+            var notes = [330, 392, 440, 523, 587, 659];
+            _pianoNote(notes[Math.floor(Math.random() * notes.length)], 0.004, 2.5, 800, 0);
+          } else if (r < 0.75) { // Leaf breeze
+            _tone('sine', 200 + Math.random() * 80, 0.004, 2.5 + Math.random(), 280, 0);
+          } else { // Petal-fall chime — high delicate ring
+            _pip(1800 + Math.random() * 600, 0.003, 1.2, 0);
+          }
+        }
+
+        function _soundkit_clownParty(r) {
+          // Circus: calliope, distant laughter, carousel, jack-in-the-box
+          if (r < 0.3) { // Calliope organ — bright staccato notes
+            var calNotes = [523, 587, 659, 698, 784, 880];
+            var ct = 3 + Math.floor(Math.random() * 3);
+            for (var i = 0; i < ct; i++) _pip(calNotes[Math.floor(Math.random() * calNotes.length)], 0.003, 0.15, i * 120);
+          } else if (r < 0.5) { // Distant giggling — rapid high sine flutters
+            var gCt = 4 + Math.floor(Math.random() * 4);
+            for (var i = 0; i < gCt; i++) {
+              (function(idx) { setTimeout(function() {
+                var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+                var o = c.createOscillator(); o.type = 'sine';
+                o.frequency.setValueAtTime(600 + Math.random() * 300, t);
+                o.frequency.linearRampToValueAtTime(800 + Math.random() * 400, t + 0.06);
+                var g = c.createGain(); g.gain.setValueAtTime(0.002, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+                var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(700, t); bp.Q.setValueAtTime(3, t);
+                o.connect(bp); bp.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.1);
+              }, idx * (60 + Math.random() * 40)); })(i);
+            }
+          } else if (r < 0.75) { // Carousel music box
+            var mbNotes = [659, 784, 880, 784, 659, 587];
+            for (var i = 0; i < 4; i++) _pip(mbNotes[Math.floor(Math.random() * mbNotes.length)], 0.003, 0.3 + Math.random() * 0.2, i * 200);
+          } else { // Jack-in-the-box spring — rising pitch
+            _tone('triangle', 300, 0.004, 0.3, 800, 0);
+            setTimeout(function() { var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+              var o = c.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(300, t);
+              o.frequency.exponentialRampToValueAtTime(1200, t + 0.15);
+              var g = c.createGain(); g.gain.setValueAtTime(0.005, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+              o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.25);
+            }, 100);
+          }
+        }
+
+        function _soundkit_ackEditions(r) {
+          // Sci-fi: void hum, thumper, deep space pings, machinery
+          if (r < 0.3) { // Void hum — detuned oscillator pair
+            _tone('sine', 50 + Math.random() * 15, 0.008, 3 + Math.random() * 2, 80, 0);
+            _tone('sine', 52 + Math.random() * 15, 0.006, 3 + Math.random() * 2, 85, 200);
+          } else if (r < 0.5) { // Thumper signal
+            _tone('triangle', 110 + Math.random() * 30, 0.008, 1.5, 220, 0);
+          } else if (r < 0.75) { // Deep space ping
+            _pip(1400 + Math.random() * 800, 0.003, 1.8, 0);
+          } else { // Machinery whir
+            var c2 = _ensureCtx(); if (c2) { var now = c2.currentTime; var dur = 0.6 + Math.random() * 0.8;
+              var w = c2.createOscillator(); w.type = 'triangle'; var wf = 80 + Math.random() * 50;
+              w.frequency.setValueAtTime(wf, now); w.frequency.linearRampToValueAtTime(wf * 2.2, now + dur * 0.3);
+              w.frequency.exponentialRampToValueAtTime(wf * 0.4, now + dur);
+              var wG = c2.createGain(); wG.gain.setValueAtTime(0, now); wG.gain.linearRampToValueAtTime(0.005, now + dur * 0.15);
+              wG.gain.linearRampToValueAtTime(0, now + dur);
+              var wLP = c2.createBiquadFilter(); wLP.type = 'lowpass'; wLP.frequency.setValueAtTime(180, now);
+              w.connect(wLP); wLP.connect(wG); wG.connect(masterGain); w.start(now); w.stop(now + dur + 0.1);
+            }
+          }
+        }
+
+        function _soundkit_servants(r) {
+          // Ritualistic: low chanting, coin clinks, devotional bell
+          if (r < 0.35) { // Chanting drone — two detuned low sines
+            _tone('sine', 82, 0.005, 4 + Math.random() * 2, 130, 0);
+            _tone('sine', 85, 0.004, 4 + Math.random() * 2, 135, 300);
+          } else if (r < 0.6) { // Coin clink — bright metallic ping
+            _pip(2200 + Math.random() * 600, 0.004, 0.4, 0);
+            _pip(1800 + Math.random() * 400, 0.003, 0.3, 80);
+          } else { // Devotional bell — low sustained ring
+            _pianoNote(220, 0.005, 3.5, 400, 0);
+            _pianoNote(330, 0.003, 2.5, 500, 100);
+          }
+        }
+
+        function _soundkit_warothys(r) {
+          // Oz fairytale: music box, wind chimes, tornado rumble, ruby clicks
+          if (r < 0.3) { // Music box melody fragment
+            var mbN = [659, 784, 880, 988, 1047];
+            for (var i = 0; i < 3 + Math.floor(Math.random() * 2); i++) _pip(mbN[Math.floor(Math.random() * mbN.length)], 0.003, 0.25, i * 180);
+          } else if (r < 0.55) { // Wind chime cluster
+            for (var i = 0; i < 3; i++) _pip(1500 + Math.random() * 1000, 0.002, 1.5 + Math.random(), i * 150);
+          } else if (r < 0.78) { // Distant tornado rumble
+            _tone('sine', 35 + Math.random() * 10, 0.01, 2.5 + Math.random() * 1.5, 50, 0);
+          } else { // Ruby slipper clicks — three bright taps
+            _pip(1200, 0.004, 0.06, 0); _pip(1200, 0.004, 0.06, 150); _pip(1200, 0.004, 0.06, 300);
+          }
+        }
+
+        function _soundkit_ackpfp(r) {
+          // Grungy glitch: digital artifacts, faint giggling, clock ticking, distortion bursts
+          if (r < 0.25) { // Glitch burst — rapid frequency jumps
+            var gCt = 4 + Math.floor(Math.random() * 5);
+            for (var i = 0; i < gCt; i++) {
+              (function(idx) { setTimeout(function() {
+                var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+                var o = c.createOscillator(); o.type = 'square';
+                o.frequency.setValueAtTime(100 + Math.random() * 2000, t);
+                var g = c.createGain(); g.gain.setValueAtTime(0.003, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+                var lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(1000, t);
+                o.connect(lp); lp.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.03);
+              }, idx * (30 + Math.random() * 30)); })(i);
+            }
+          } else if (r < 0.45) { // Faint giggling (misterShady) — rapid sine flutters through bandpass
+            var gig = 5 + Math.floor(Math.random() * 4);
+            for (var i = 0; i < gig; i++) {
+              (function(idx) { setTimeout(function() {
+                var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+                var o = c.createOscillator(); o.type = 'sine';
+                o.frequency.setValueAtTime(500 + Math.random() * 400, t);
+                o.frequency.linearRampToValueAtTime(700 + Math.random() * 500, t + 0.05);
+                o.frequency.linearRampToValueAtTime(400 + Math.random() * 300, t + 0.09);
+                var g = c.createGain(); g.gain.setValueAtTime(0.002, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+                var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(600, t); bp.Q.setValueAtTime(4, t);
+                o.connect(bp); bp.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.12);
+              }, idx * (50 + Math.random() * 40)); })(i);
+            }
+          } else if (r < 0.7) { // Clock ticking (timeReaper) — steady mechanical tick-tock
+            var ticks = 4 + Math.floor(Math.random() * 4);
+            for (var i = 0; i < ticks; i++) {
+              _pip(i % 2 === 0 ? 800 : 600, 0.004, 0.015, i * 500);
+            }
+          } else { // Digital artifact — descending square blip
+            var c2 = _ensureCtx(); if (c2) { var now = c2.currentTime;
+              var o = c2.createOscillator(); o.type = 'square';
+              o.frequency.setValueAtTime(1500, now); o.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+              var g = c2.createGain(); g.gain.setValueAtTime(0.003, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+              var lp = c2.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(800, now);
+              o.connect(lp); lp.connect(g); g.connect(masterGain); o.start(now); o.stop(now + 0.3);
+            }
+          }
+        }
+
+        function _soundkit_colorStudy(r) {
+          // Synesthesia: Pantone frequency tones, static crackle, tension
+          if (r < 0.4) { // Pantone frequency — pure sine at color-mapped pitch
+            var pantoneF = [262, 294, 330, 349, 392, 440, 494, 523];
+            _pianoNote(pantoneF[Math.floor(Math.random() * pantoneF.length)], 0.004, 2.5, 600, 0);
+          } else if (r < 0.65) { // Static crackle — rapid tiny pips
+            var cr = 6 + Math.floor(Math.random() * 6);
+            for (var i = 0; i < cr; i++) _pip(1000 + Math.random() * 3000, 0.002, 0.01, i * (20 + Math.random() * 40));
+          } else { // Tension drone — slowly detuning pair
+            _tone('sine', 220, 0.004, 3, 350, 0);
+            _tone('sine', 223, 0.003, 3, 360, 100);
+          }
+        }
+
+        function _soundkit_ackek(r) {
+          // Meme chaos: frog croaks, faint giggling, absurdist pops
+          if (r < 0.35) { // Frog croak — low sine pitch bend
+            var c2 = _ensureCtx(); if (c2) { var now = c2.currentTime;
+              var o = c2.createOscillator(); o.type = 'sine';
+              o.frequency.setValueAtTime(120, now); o.frequency.linearRampToValueAtTime(80, now + 0.15);
+              o.frequency.linearRampToValueAtTime(130, now + 0.2);
+              var g = c2.createGain(); g.gain.setValueAtTime(0.005, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+              var lp = c2.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(300, now);
+              o.connect(lp); lp.connect(g); g.connect(masterGain); o.start(now); o.stop(now + 0.3);
+            }
+          } else if (r < 0.6) { // Absurdist pop
+            _pip(400 + Math.random() * 800, 0.004, 0.05, 0);
+            _pip(600 + Math.random() * 600, 0.003, 0.05, 120);
+          } else { // Giggling
+            var gig = 3 + Math.floor(Math.random() * 3);
+            for (var i = 0; i < gig; i++) {
+              (function(idx) { setTimeout(function() {
+                var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+                var o = c.createOscillator(); o.type = 'sine';
+                o.frequency.setValueAtTime(550 + Math.random() * 350, t);
+                o.frequency.linearRampToValueAtTime(750 + Math.random() * 400, t + 0.06);
+                var g = c.createGain(); g.gain.setValueAtTime(0.002, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+                var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(650, t); bp.Q.setValueAtTime(3, t);
+                o.connect(bp); bp.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.1);
+              }, idx * (55 + Math.random() * 35)); })(i);
+            }
+          }
+        }
+
+        function _soundkit_lastOrders(r) {
+          // Bar: glass clink, neon buzz, XCOPY glitch
+          if (r < 0.35) { // Glass clink
+            _pip(2500 + Math.random() * 800, 0.004, 0.5, 0);
+            _pip(2200 + Math.random() * 600, 0.003, 0.3, 60);
+          } else if (r < 0.65) { // Neon buzz — triangle hum at 60Hz-ish
+            _tone('triangle', 58 + Math.random() * 4, 0.004, 1.5 + Math.random(), 120, 0);
+          } else { // XCOPY glitch — harsh digital stutter
+            var gc = 3 + Math.floor(Math.random() * 4);
+            for (var i = 0; i < gc; i++) {
+              (function(idx) { setTimeout(function() {
+                var c = _ensureCtx(); if (!c) return; var t = c.currentTime;
+                var o = c.createOscillator(); o.type = 'square';
+                o.frequency.setValueAtTime(200 + Math.random() * 1500, t);
+                var g = c.createGain(); g.gain.setValueAtTime(0.003, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+                o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.02);
+              }, idx * (25 + Math.random() * 25)); })(i);
+            }
+          }
+        }
+
+        function _soundkit_ackstract(r) {
+          // Cosmic: deep space, star pings, creation hum
+          if (r < 0.35) { // Star ping — high clear sine
+            _pip(1600 + Math.random() * 1200, 0.003, 2.0, 0);
+          } else if (r < 0.65) { // Creation hum — slowly modulating drone
+            _tone('sine', 55 + Math.random() * 20, 0.006, 4 + Math.random() * 2, 100, 0);
+          } else { // Deep space — sub-bass swell
+            _tone('sine', 30 + Math.random() * 12, 0.012, 3 + Math.random() * 2, 50, 0);
+          }
+        }
+
+        function _soundkit_default(r) {
+          // Vortex/Dune base: whispers, gears, whirring, Harkonnen, horn, chime
+          if (r < 0.15) { // Whispering
+            var wCt = 2 + Math.floor(Math.random() * 2);
+            for (var i = 0; i < wCt; i++) {
+              (function(idx) { setTimeout(function() {
+                var c = _ensureCtx(); if (!c) return; var t = c.currentTime; var dur = 0.4 + Math.random() * 0.5;
+                var f0 = 800 + Math.random() * 1200; var o = c.createOscillator(); o.type = 'sine';
+                o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * (0.85 + Math.random() * 0.3), t + dur);
+                var g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.003, t + dur * 0.15);
+                g.gain.linearRampToValueAtTime(0, t + dur);
+                var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(f0 * 0.9, t); bp.Q.setValueAtTime(5, t);
+                o.connect(bp); bp.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur + 0.05);
+              }, idx * (200 + Math.random() * 250)); })(i);
+            }
+          } else if (r < 0.28) { // Gear teeth
+            var gc = 3 + Math.floor(Math.random() * 5);
+            for (var i = 0; i < gc; i++) _pip(600 + Math.random() * 200, 0.035, 0.012, i * (40 + Math.random() * 40));
+          } else if (r < 0.40) { // Sporadic whirring
+            var c2 = _ensureCtx(); if (c2) { var now = c2.currentTime; var dur = 0.5 + Math.random() * 0.8;
+              var w = c2.createOscillator(); w.type = 'triangle'; var wf = 90 + Math.random() * 50;
+              w.frequency.setValueAtTime(wf, now); w.frequency.linearRampToValueAtTime(wf * 2.5, now + dur * 0.3);
+              w.frequency.exponentialRampToValueAtTime(wf * 0.5, now + dur);
+              var wG = c2.createGain(); wG.gain.setValueAtTime(0, now); wG.gain.linearRampToValueAtTime(0.005, now + dur * 0.15);
+              wG.gain.linearRampToValueAtTime(0, now + dur);
+              var wLP = c2.createBiquadFilter(); wLP.type = 'lowpass'; wLP.frequency.setValueAtTime(190, now);
+              w.connect(wLP); wLP.connect(wG); wG.connect(masterGain); w.start(now); w.stop(now + dur + 0.1);
+            }
+          } else if (r < 0.52) { // Harkonnen industrial
+            _tone('sawtooth', 40 + Math.random() * 25, 0.007, 0.8 + Math.random() * 0.6, 95, 0);
+          } else if (r < 0.65) { // Quiet distant piano
+            _pianoNote([220, 262, 294, 330][Math.floor(Math.random() * 4)], 0.003, 2.0, 380, 0);
+          } else if (r < 0.78) { // Dune horn
+            _tone('triangle', 110 + Math.random() * 30, 0.007, 1.2 + Math.random(), 220, 0);
+          } else if (r < 0.90) { // Sandworm rumble
+            _tone('sine', 30 + Math.random() * 12, 0.012, 2.5 + Math.random() * 1.5, 50, 0);
+          } else { // Crystal chime
+            _pip(1200 + Math.random() * 800, 0.003, 1.8, 0);
+          }
+        }
+
+        // ═══ Soundkit router ═══
+        var _soundkitMap = {
+          'Broken Keys': _soundkit_brokenKeys,
+          'Piano Blossoms': _soundkit_pianoBlossoms,
+          'Tempted in the Garden': _soundkit_pianoBlossoms,
+          'Clown Party': _soundkit_clownParty,
+          'ACK Editions': _soundkit_ackEditions,
+          'servants': _soundkit_servants,
+          'Opepen Set 030: a.c.k.': _soundkit_servants,
+          'Warothys': _soundkit_warothys,
+          'ACKPFP': _soundkit_ackpfp,
+          'The Great Color Study': _soundkit_colorStudy,
+          'ACKek': _soundkit_ackek,
+          'Last Orders': _soundkit_lastOrders,
+          'Ackstract': _soundkit_ackstract,
+          '1 of 1s': _soundkit_brokenKeys,
+          'Made these for your girl': _soundkit_pianoBlossoms,
+          'Her Favorite Flowers': _soundkit_pianoBlossoms,
+          'Heart You': _soundkit_pianoBlossoms,
+          'Noble Gallery': _soundkit_lastOrders,
+          'ACKFTW': _soundkit_colorStudy
+        };
+
         function _playAmbientEvent() {
           var ctx2 = _ensureCtx();
           if (!ctx2 || !_enabled || !_ambientRunning) return;
-          var now = ctx2.currentTime;
-          var roll = Math.random();
           var context = _getContext();
-          var isPianoBlossoms = context === 'Piano Blossoms';
-          var isBrokenKeys = context === 'Broken Keys';
-
-          // ── WHISPERING — breathy layered sine tones, like distant murmuring ──
-          if (roll < 0.14) {
-            var whisperCount = 2 + Math.floor(Math.random() * 2);
-            for (var w = 0; w < whisperCount; w++) {
-              (function(idx) {
-                setTimeout(function() {
-                  var c = _ensureCtx(); if (!c) return;
-                  var t = c.currentTime;
-                  var dur = 0.4 + Math.random() * 0.6;
-                  // Breathy fundamental — very high, very soft
-                  var o = c.createOscillator();
-                  o.type = 'sine';
-                  var f0 = 800 + Math.random() * 1200;
-                  o.frequency.setValueAtTime(f0, t);
-                  o.frequency.linearRampToValueAtTime(f0 * (0.85 + Math.random() * 0.3), t + dur);
-                  var g = c.createGain();
-                  g.gain.setValueAtTime(0, t);
-                  g.gain.linearRampToValueAtTime(0.003, t + dur * 0.15);
-                  g.gain.linearRampToValueAtTime(0.002, t + dur * 0.5);
-                  g.gain.linearRampToValueAtTime(0, t + dur);
-                  var bp = c.createBiquadFilter();
-                  bp.type = 'bandpass';
-                  bp.frequency.setValueAtTime(f0 * 0.9, t);
-                  bp.Q.setValueAtTime(5, t);
-                  o.connect(bp); bp.connect(g); g.connect(masterGain);
-                  o.start(t); o.stop(t + dur + 0.05);
-                }, idx * (200 + Math.random() * 300));
-              })(w);
-            }
-
-          // ── GEAR TEETH — rapid clicking sequence, like clockwork ──
-          } else if (roll < 0.26) {
-            var clickCount = 3 + Math.floor(Math.random() * 5);
-            var gearSpeed = 0.04 + Math.random() * 0.04; // time between clicks
-            for (var gc = 0; gc < clickCount; gc++) {
-              (function(idx) {
-                setTimeout(function() {
-                  var c = _ensureCtx(); if (!c) return;
-                  var t = c.currentTime;
-                  var tick = c.createOscillator();
-                  tick.type = 'triangle';
-                  tick.frequency.setValueAtTime(600 + Math.random() * 200, t);
-                  tick.frequency.exponentialRampToValueAtTime(200, t + 0.008);
-                  var tG = c.createGain();
-                  tG.gain.setValueAtTime(0.04 + Math.random() * 0.02, t);
-                  tG.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
-                  var tLP = c.createBiquadFilter();
-                  tLP.type = 'lowpass';
-                  tLP.frequency.setValueAtTime(1200, t);
-                  tick.connect(tLP); tLP.connect(tG); tG.connect(masterGain);
-                  tick.start(t); tick.stop(t + 0.02);
-                }, idx * gearSpeed * 1000);
-              })(gc);
-            }
-
-          // ── SPORADIC WHIRRING — short servo burst that spins up and dies ──
-          } else if (roll < 0.38) {
-            var whirDur = 0.5 + Math.random() * 1.0;
-            var whir = ctx2.createOscillator();
-            whir.type = 'triangle';
-            var whirBase = 90 + Math.random() * 60;
-            whir.frequency.setValueAtTime(whirBase, now);
-            // Spin up then slow down
-            whir.frequency.linearRampToValueAtTime(whirBase * 2.5, now + whirDur * 0.3);
-            whir.frequency.linearRampToValueAtTime(whirBase * 1.8, now + whirDur * 0.6);
-            whir.frequency.exponentialRampToValueAtTime(whirBase * 0.5, now + whirDur);
-            var whirG = ctx2.createGain();
-            whirG.gain.setValueAtTime(0, now);
-            whirG.gain.linearRampToValueAtTime(0.006, now + whirDur * 0.15);
-            whirG.gain.linearRampToValueAtTime(0.004, now + whirDur * 0.5);
-            whirG.gain.linearRampToValueAtTime(0, now + whirDur);
-            var whirLP = ctx2.createBiquadFilter();
-            whirLP.type = 'lowpass';
-            whirLP.frequency.setValueAtTime(200, now);
-            whir.connect(whirLP); whirLP.connect(whirG); whirG.connect(masterGain);
-            whir.start(now); whir.stop(now + whirDur + 0.1);
-
-          // ── DISTANT PIANO — very quiet, through stone walls ──
-          } else if (roll < 0.48) {
-            var noteCount = 1 + Math.floor(Math.random() * 2);
-            var pianoNotes = isPianoBlossoms
-              ? [262, 330, 392, 523, 659] // brighter for Piano Blossoms
-              : [220, 262, 294, 330, 349];
-            var pianoVol = isPianoBlossoms ? 0.005 : 0.003; // quieter overall
-            for (var n = 0; n < noteCount; n++) {
-              (function(idx) {
-                setTimeout(function() {
-                  var c = _ensureCtx(); if (!c) return;
-                  var t = c.currentTime;
-                  var freq = pianoNotes[Math.floor(Math.random() * pianoNotes.length)];
-                  var o = c.createOscillator();
-                  o.type = 'sine';
-                  o.frequency.setValueAtTime(freq, t);
-                  var g = c.createGain();
-                  g.gain.setValueAtTime(pianoVol + Math.random() * 0.002, t);
-                  g.gain.exponentialRampToValueAtTime(0.001, t + 2.0 + Math.random() * 1.0);
-                  var f = c.createBiquadFilter();
-                  f.type = 'lowpass';
-                  f.frequency.setValueAtTime(isPianoBlossoms ? 700 : 400, t);
-                  o.connect(f); f.connect(g); g.connect(masterGain);
-                  o.start(t); o.stop(t + 3.0);
-                }, idx * (400 + Math.random() * 600));
-              })(n);
-            }
-
-          // ── HARKONNEN INDUSTRIAL — brutal low grinding + pressure release ──
-          } else if (roll < 0.56) {
-            // Heavy grinding oscillator — sawtooth through tight lowpass
-            var grindDur = 0.8 + Math.random() * 0.8;
-            var grindF = 40 + Math.random() * 25;
-            var grind = ctx2.createOscillator();
-            grind.type = 'sawtooth';
-            grind.frequency.setValueAtTime(grindF, now);
-            grind.frequency.linearRampToValueAtTime(grindF * 0.7, now + grindDur);
-            var grindG = ctx2.createGain();
-            grindG.gain.setValueAtTime(0, now);
-            grindG.gain.linearRampToValueAtTime(0.008, now + grindDur * 0.2);
-            grindG.gain.linearRampToValueAtTime(0.005, now + grindDur * 0.7);
-            grindG.gain.linearRampToValueAtTime(0, now + grindDur);
-            var grindLP = ctx2.createBiquadFilter();
-            grindLP.type = 'lowpass';
-            grindLP.frequency.setValueAtTime(100, now);
-            grindLP.Q.setValueAtTime(4, now);
-            grind.connect(grindLP); grindLP.connect(grindG); grindG.connect(masterGain);
-            grind.start(now); grind.stop(now + grindDur + 0.1);
-            // Pressure release hiss — high triangle pip at end
-            setTimeout(function() {
-              var c = _ensureCtx(); if (!c) return;
-              var t = c.currentTime;
-              var hiss = c.createOscillator();
-              hiss.type = 'triangle';
-              hiss.frequency.setValueAtTime(2000, t);
-              hiss.frequency.exponentialRampToValueAtTime(800, t + 0.05);
-              var hG = c.createGain();
-              hG.gain.setValueAtTime(0.003, t);
-              hG.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-              hiss.connect(hG); hG.connect(masterGain);
-              hiss.start(t); hiss.stop(t + 0.1);
-            }, grindDur * 900);
-
-          // ── FOREST / GARDEN — birdsong sine chirps + leaf rustle (Piano Blossoms context) ──
-          } else if (roll < 0.66 && isPianoBlossoms) {
-            // Bird-like chirps — rapid sine frequency sweeps
-            var chirpCount = 2 + Math.floor(Math.random() * 3);
-            for (var bc = 0; bc < chirpCount; bc++) {
-              (function(idx) {
-                setTimeout(function() {
-                  var c = _ensureCtx(); if (!c) return;
-                  var t = c.currentTime;
-                  var baseF = 1800 + Math.random() * 1200;
-                  var o = c.createOscillator();
-                  o.type = 'sine';
-                  o.frequency.setValueAtTime(baseF, t);
-                  o.frequency.linearRampToValueAtTime(baseF * 1.4, t + 0.04);
-                  o.frequency.linearRampToValueAtTime(baseF * 0.9, t + 0.1);
-                  var g = c.createGain();
-                  g.gain.setValueAtTime(0.003, t);
-                  g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-                  var lp = c.createBiquadFilter();
-                  lp.type = 'lowpass';
-                  lp.frequency.setValueAtTime(3000, t);
-                  o.connect(lp); lp.connect(g); g.connect(masterGain);
-                  o.start(t); o.stop(t + 0.15);
-                }, idx * (100 + Math.random() * 200));
-              })(bc);
-            }
-
-          // ── FOREST / GARDEN — gentle wind through trees (also Piano Blossoms) ──
-          } else if (roll < 0.72 && isPianoBlossoms) {
-            var leafDur = 2.0 + Math.random() * 1.5;
-            var leaf = ctx2.createOscillator();
-            leaf.type = 'sine';
-            leaf.frequency.setValueAtTime(200 + Math.random() * 80, now);
-            leaf.frequency.linearRampToValueAtTime(260 + Math.random() * 60, now + leafDur * 0.4);
-            leaf.frequency.linearRampToValueAtTime(180 + Math.random() * 40, now + leafDur);
-            var leafG = ctx2.createGain();
-            leafG.gain.setValueAtTime(0, now);
-            leafG.gain.linearRampToValueAtTime(0.004, now + leafDur * 0.3);
-            leafG.gain.linearRampToValueAtTime(0, now + leafDur);
-            var leafLP = ctx2.createBiquadFilter();
-            leafLP.type = 'lowpass';
-            leafLP.frequency.setValueAtTime(300, now);
-            leaf.connect(leafLP); leafLP.connect(leafG); leafG.connect(masterGain);
-            leaf.start(now); leaf.stop(now + leafDur + 0.1);
-
-          // ── DUNE HORN — distant low brass ──
-          } else if (roll < 0.80) {
-            var hornF = 110 + Math.random() * 30;
-            var hornDur = 1.0 + Math.random() * 1.5;
-            var h = ctx2.createOscillator();
-            h.type = 'triangle';
-            h.frequency.setValueAtTime(hornF, now);
-            h.frequency.linearRampToValueAtTime(hornF * 0.92, now + hornDur);
-            var hG = ctx2.createGain();
-            hG.gain.setValueAtTime(0, now);
-            hG.gain.linearRampToValueAtTime(0.008, now + hornDur * 0.15);
-            hG.gain.linearRampToValueAtTime(0.005, now + hornDur * 0.6);
-            hG.gain.linearRampToValueAtTime(0, now + hornDur);
-            var hF = ctx2.createBiquadFilter();
-            hF.type = 'lowpass';
-            hF.frequency.setValueAtTime(220, now);
-            h.connect(hF); hF.connect(hG); hG.connect(masterGain);
-            h.start(now); h.stop(now + hornDur + 0.1);
-
-          // ── SANDWORM RUMBLE — sub-bass swell ──
-          } else if (roll < 0.90) {
-            var rumDur = 2.0 + Math.random() * 2;
-            var rum = ctx2.createOscillator();
-            rum.type = 'sine';
-            rum.frequency.setValueAtTime(30 + Math.random() * 15, now);
-            rum.frequency.linearRampToValueAtTime(25, now + rumDur);
-            var rumG = ctx2.createGain();
-            rumG.gain.setValueAtTime(0, now);
-            rumG.gain.linearRampToValueAtTime(0.015, now + rumDur * 0.3);
-            rumG.gain.linearRampToValueAtTime(0, now + rumDur);
-            var rumLP = ctx2.createBiquadFilter();
-            rumLP.type = 'lowpass';
-            rumLP.frequency.setValueAtTime(55, now);
-            rum.connect(rumLP); rumLP.connect(rumG); rumG.connect(masterGain);
-            rum.start(now); rum.stop(now + rumDur + 0.1);
-
-          // ── CRYSTAL CHIME — spice vision ──
-          } else {
-            var chimeF = 1200 + Math.random() * 800;
-            var ch = ctx2.createOscillator();
-            ch.type = 'sine';
-            ch.frequency.setValueAtTime(chimeF, now);
-            var chG = ctx2.createGain();
-            chG.gain.setValueAtTime(0.003, now);
-            chG.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-            ch.connect(chG); chG.connect(masterGain);
-            ch.start(now); ch.stop(now + 2.0);
-          }
-
-          // Schedule next — sporadic, 6-20 seconds
+          var kit = _soundkitMap[context] || _soundkit_default;
+          kit(Math.random());
           var nextDelay = 6000 + Math.random() * 14000;
           _ambientEventTimer = setTimeout(_playAmbientEvent, nextDelay);
         }
 
-        // Start events after initial fade-in
         _ambientEventTimer = setTimeout(_playAmbientEvent, 5000);
         _ambientNodes.push(masterGain);
         _ambientNodes._eventTimer = _ambientEventTimer;
