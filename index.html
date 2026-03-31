@@ -1919,20 +1919,15 @@
     .collection-name {
       font-size: 0.75rem;
       color: var(--text-muted);
-      text-align: center;
+      text-align: left;
       font-weight: 500;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       font-family: 'JetBrains Mono', monospace;
       transition: color 0.4s ease, opacity 0.35s ease;
+      margin-top: 8px;
       opacity: 0;
       pointer-events: none;
-    }
-    .collection-node .collection-name {
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 0;
-      right: 0;
     }
 
     .collection-node:hover .collection-name {
@@ -8518,19 +8513,19 @@
         '<div style="position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(transparent,rgba(200,170,90,0.04),transparent);' +
         'animation:mwScanline 4s linear infinite;pointer-events:none;z-index:1;"></div>' +
         // Title
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;letter-spacing:0.35em;' +
-        'color:rgba(200,170,90,0.35);text-transform:uppercase;margin-bottom:40px;">a.c.k. art</div>' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:clamp(14px, 3.5vw, 18px);letter-spacing:0.35em;' +
+        'color:rgba(200,170,90,0.35);text-transform:uppercase;margin-bottom:48px;">a.c.k. art</div>' +
         // Main message
-        '<div style="font-family:\'EB Garamond\',Georgia,serif;font-size:clamp(26px, 6vw, 36px);' +
+        '<div style="font-family:\'EB Garamond\',Georgia,serif;font-size:clamp(32px, 8vw, 48px);' +
         'color:rgba(225,215,195,0.8);line-height:1.7;letter-spacing:0.02em;">' +
         'this gallery was built<br>for large screens</div>' +
         // Sub text
-        '<div style="margin-top:32px;font-family:\'JetBrains Mono\',monospace;font-size:12px;' +
+        '<div style="margin-top:40px;font-family:\'JetBrains Mono\',monospace;font-size:clamp(13px, 3vw, 16px);' +
         'color:rgba(200,180,150,0.3);line-height:2.4;letter-spacing:0.08em;">' +
         'full experience on desktop<br>' +
         '<span style="color:rgba(200,170,90,0.35);">mobile supported</span></div>' +
         // Divider
-        '<div style="margin-top:36px;width:40px;height:1px;background:rgba(200,170,90,0.12);margin:36px auto 0;"></div>';
+        '<div style="margin-top:44px;width:50px;height:1px;background:rgba(200,170,90,0.12);margin:44px auto 0;"></div>';
 
       document.body.appendChild(popup);
 
@@ -8626,14 +8621,14 @@
         'backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);';
 
       r.innerHTML =
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:0.4em;' +
-        'color:rgba(180,20,20,0.4);text-transform:uppercase;margin-bottom:36px;">' + roast.title + '</div>' +
-        '<div style="font-family:\'EB Garamond\',Georgia,serif;font-size:clamp(24px, 5.5vw, 32px);' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:clamp(12px, 3vw, 16px);letter-spacing:0.4em;' +
+        'color:rgba(180,20,20,0.4);text-transform:uppercase;margin-bottom:44px;">' + roast.title + '</div>' +
+        '<div style="font-family:\'EB Garamond\',Georgia,serif;font-size:clamp(28px, 7vw, 42px);' +
         'color:rgba(225,215,195,0.75);line-height:1.6;letter-spacing:0.02em;">' + roast.msg + '</div>' +
-        '<div style="margin-top:28px;font-family:\'JetBrains Mono\',monospace;font-size:11px;' +
+        '<div style="margin-top:36px;font-family:\'JetBrains Mono\',monospace;font-size:clamp(12px, 2.8vw, 15px);' +
         'color:rgba(200,180,150,0.25);line-height:2.2;letter-spacing:0.06em;">' + roast.sub + '</div>' +
-        '<div style="margin-top:40px;width:30px;height:1px;background:rgba(180,20,20,0.1);"></div>' +
-        '<div style="margin-top:20px;font-family:\'JetBrains Mono\',monospace;font-size:9px;' +
+        '<div style="margin-top:44px;width:30px;height:1px;background:rgba(180,20,20,0.1);"></div>' +
+        '<div style="margin-top:24px;font-family:\'JetBrains Mono\',monospace;font-size:clamp(10px, 2.5vw, 13px);' +
         'letter-spacing:0.2em;color:rgba(200,180,150,0.15);text-transform:uppercase;">tap to dismiss</div>';
 
       document.body.appendChild(r);
@@ -18601,7 +18596,8 @@
           const img = preview ? preview.querySelector('img') : null;
           if (preview && img) {
             const localW = parseFloat(node.style.width) || preview.offsetWidth;
-            const localH = img.naturalHeight > 0 ? (localW * img.naturalHeight / img.naturalWidth) : preview.offsetHeight || localW * 0.56;
+            // Last Orders is 16:9 landscape — use known AR as fallback
+            const localH = img.naturalHeight > 0 ? (localW * img.naturalHeight / img.naturalWidth) : localW / 1.779;
             const frameSvg = generateBarFrame(localW, localH, true);
             node.appendChild(frameSvg);
           }
@@ -18617,7 +18613,8 @@
           const img = preview ? preview.querySelector('img') : null;
           if (preview && img) {
             const localW = parseFloat(node.style.width) || preview.offsetWidth;
-            const localH = img.naturalHeight > 0 ? (localW * img.naturalHeight / img.naturalWidth) : preview.offsetHeight || localW * 0.56;
+            // RCP is 16:9 landscape — use known AR as fallback (mobile img may not be loaded yet)
+            const localH = img.naturalHeight > 0 ? (localW * img.naturalHeight / img.naturalWidth) : localW / 1.779;
             const frameSvg = generateRCPFrame(localW, localH, true);
             node.appendChild(frameSvg);
           }
@@ -18741,20 +18738,39 @@
             }
 
             if (_isRealMobile) {
-              // Mobile: show PNG with "touch" play button overlay
-              var touchBtn = document.createElement('div');
-              touchBtn.className = 'lo-touch-btn';
-              touchBtn.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;' +
-                'font-family:"EB Garamond",Georgia,serif;font-size:14px;letter-spacing:0.35em;color:rgba(245,240,230,0.5);' +
-                'text-transform:lowercase;animation:whisperPulse 2.5s ease-in-out infinite;cursor:pointer;padding:20px;' +
-                'text-shadow:0 0 10px rgba(210,50,70,0.3);';
-              touchBtn.textContent = 'touch';
-              touchBtn.onclick = function(ev) {
-                ev.stopPropagation();
-                _launchLastOrdersVideo();
-              };
+              // Mobile: single lightweight video (no dual crossfade — too heavy for phones)
+              var _tBtn = preview.querySelector('.lo-touch-btn');
+              if (_tBtn) _tBtn.remove();
               preview.style.position = 'relative';
-              preview.appendChild(touchBtn);
+              var mVid = document.createElement('video');
+              mVid.id = 'lastOrdersFocusVideo';
+              mVid.src = 'lastorders/web/lastorders_web.mp4';
+              mVid.loop = true;
+              mVid.muted = true;
+              mVid.playsInline = true;
+              mVid.preload = 'auto';
+              mVid.setAttribute('playsinline', '');
+              mVid.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;';
+              preview.appendChild(mVid);
+              mVid.autoplay = true;
+              mVid.play().catch(function(){});
+              img.style.visibility = 'hidden';
+              // Sound toggle
+              var _loMobileMuted = true;
+              var mSoundBtn = document.createElement('div');
+              mSoundBtn.className = 'video-sound-btn';
+              mSoundBtn.id = 'lastOrdersSoundBtn';
+              mSoundBtn.innerHTML = '🔇';
+              mSoundBtn.title = 'Tap for sound';
+              mSoundBtn.style.zIndex = '10';
+              mSoundBtn.onclick = function(ev) {
+                ev.stopPropagation();
+                _loMobileMuted = !_loMobileMuted;
+                mVid.muted = _loMobileMuted;
+                mSoundBtn.innerHTML = _loMobileMuted ? '🔇' : '🔊';
+                if (!_loMobileMuted) { mVid.currentTime = 0; mVid.play(); }
+              };
+              preview.appendChild(mSoundBtn);
             } else {
               // Desktop: keep image in layout (visibility hidden) so preview has dimensions, video sits on top
               img.style.visibility = 'hidden';
@@ -18818,17 +18834,9 @@
             }
 
             if (_isRealMobile) {
-              // Mobile: touch button to start video
-              var touchBtn = document.createElement('div');
-              touchBtn.className = 'lo-touch-btn';
-              touchBtn.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;' +
-                'font-family:"EB Garamond",Georgia,serif;font-size:14px;letter-spacing:0.35em;color:rgba(245,240,230,0.5);' +
-                'text-transform:lowercase;animation:whisperPulse 2.5s ease-in-out infinite;cursor:pointer;padding:20px;' +
-                'text-shadow:0 0 10px rgba(60,180,220,0.3);';
-              touchBtn.textContent = 'touch';
-              touchBtn.onclick = function(ev) { ev.stopPropagation(); _launchRCPVideo(); };
-              preview.style.position = 'relative';
-              preview.appendChild(touchBtn);
+              // Mobile: auto-play video directly (no touch barrier)
+              img.style.visibility = 'hidden';
+              _launchRCPVideo();
             } else {
               // Desktop: keep image in layout (visibility hidden) so preview has dimensions, video sits on top
               img.style.visibility = 'hidden';
