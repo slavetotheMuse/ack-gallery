@@ -18424,8 +18424,8 @@
               preview.style.position = 'relative';
               preview.appendChild(touchBtn);
             } else {
-              // Desktop: show still until video is ready, then auto-play
-              preview.style.position = 'relative';
+              // Desktop: keep image in layout (visibility hidden) so preview has dimensions, video sits on top
+              img.style.visibility = 'hidden';
               _launchRCPVideo();
             }
           }
