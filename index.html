@@ -1925,9 +1925,14 @@
       text-transform: uppercase;
       font-family: 'JetBrains Mono', monospace;
       transition: color 0.4s ease, opacity 0.35s ease;
-      margin-top: 8px;
       opacity: 0;
       pointer-events: none;
+    }
+    .collection-node .collection-name {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      right: 0;
     }
 
     .collection-node:hover .collection-name {
@@ -12533,6 +12538,8 @@
 
           const port = document.createElement('div');
           port.className = 'node-port';
+          port.style.top = 'auto';
+          port.style.bottom = '-4px';
           node.appendChild(port);
 
           const thumbnail = document.createElement('div');
@@ -12597,7 +12604,7 @@
 
           nodeInfos.push({
             portX: x + w / 2,
-            portY: y,
+            portY: y + h + 10,
             node, size: w, origIndex,
           });
 
@@ -12722,6 +12729,8 @@
 
         const port = document.createElement('div');
         port.className = 'node-port';
+        port.style.top = 'auto';
+        port.style.bottom = '-4px';
         node.appendChild(port);
 
         const thumbnail = document.createElement('div');
@@ -12854,7 +12863,7 @@
 
         nodeInfos.push({
           portX: x + w / 2,
-          portY: y,
+          portY: y + h + 10,
           node, size: w, origIndex,
         });
       });
@@ -12894,7 +12903,7 @@
         nodeInfos.forEach((info) => {
           const toX = info.portX;
           const toY = info.portY;
-          // Wires go UP from master (bottom) to each node port (top of thumbnail)
+          // Wires go UP from master (bottom) to each node port (bottom of thumbnail)
           const dy = masterPortY - toY;
           const pull = Math.min(dy * 0.35, 120);
           const cx1 = masterPortX;
