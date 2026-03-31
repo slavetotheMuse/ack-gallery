@@ -1512,6 +1512,9 @@
       line-height: 1.4;
       letter-spacing: 0.05em;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
       color: rgba(130,150,190,0.35);
     }
     .pcb-ticker-line.bright {
@@ -4626,11 +4629,11 @@
     }
 
 
-    /* ── ESC hint — subtle bottom-right indicator ── */
+    /* ── ESC hint — subtle top-left indicator with periodic pulse ── */
     .esc-hint {
       position: fixed;
-      bottom: 18px;
-      right: 20px;
+      top: 18px;
+      left: 20px;
       z-index: 2500;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.42rem;
@@ -4641,7 +4644,11 @@
       opacity: 0;
       transition: opacity 0.5s ease;
     }
-    .esc-hint.visible { opacity: 1; }
+    .esc-hint.visible { opacity: 1; animation: escPulse 4s ease-in-out infinite; }
+    @keyframes escPulse {
+      0%, 100% { opacity: 0.85; }
+      50% { opacity: 0.2; }
+    }
     .esc-hint kbd {
       display: inline-block;
       padding: 1px 5px;
@@ -7303,7 +7310,7 @@
             {title:"max pain v2",image:"colorstudys/maxpainv2.gif",tokenId:14,edition:"Edition of 613",description:"oh the agony",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"}
         ]},
         { name: "1 of 1s", image: "wotm.jpg", artworks: [
-            {title:"Curation of Saints",image:"curation_of_saints_web.jpg",fullRes:"curation_of_saints.jpg",masterwork:true},
+            // {title:"Curation of Saints",image:"curation_of_saints_web.jpg",fullRes:"curation_of_saints.jpg",masterwork:true}, // WIP — hidden for now
             {title:"Manifold Nights",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/9b5f4b07d150f62d8570fc2a822f4f/a79b5f4b07d150f62d8570fc2a822f4f.jpeg?w=500"},
             {title:"til death do us part",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/847a0a2ba7867b631de3e0e82426fb/b7847a0a2ba7867b631de3e0e82426fb.gif?w=500"},
             {title:"Scare City",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/a616be76118f482a5dd4b13d66d458/4fa616be76118f482a5dd4b13d66d458.png?w=500"},
@@ -12191,13 +12198,19 @@
           openDetail(origIndex);
         };
 
-        // Hover: show title on motherboard chip
+        // Hover: show title on motherboard chip (only marquee if text overflows chip)
         node.addEventListener('mouseenter', () => {
           const chipLabel = document.querySelector('.pcb-chip-label');
           if (chipLabel) {
             chipLabel.textContent = collection.name;
-            chipLabel.classList.add('marquee');
-            chipLabel.style.setProperty('--marquee-dur', Math.max(3, collection.name.length * 0.25) + 's');
+            chipLabel.classList.remove('marquee');
+            chipLabel.style.removeProperty('--marquee-dur');
+            // Check if text overflows the chip container
+            var chipContainer = chipLabel.parentElement;
+            if (chipContainer && chipLabel.scrollWidth > chipContainer.clientWidth) {
+              chipLabel.classList.add('marquee');
+              chipLabel.style.setProperty('--marquee-dur', Math.max(3, collection.name.length * 0.25) + 's');
+            }
           }
         });
         node.addEventListener('mouseleave', () => {
@@ -12717,7 +12730,7 @@
 
           _loreEditorOverlay = document.createElement('div');
           _loreEditorOverlay.id = 'loreEditorOverlay';
-          _loreEditorOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:100000;background:rgba(8,10,16,0.92);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);';
+          _loreEditorOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:100000;background:rgba(8,10,16,0.95);display:flex;align-items:center;justify-content:center;';
 
           var panel = document.createElement('div');
           panel.style.cssText = 'background:linear-gradient(170deg,#1e2230,#1a1e2a 40%,#161a24);border:1px solid rgba(100,140,200,0.25);border-radius:4px;width:92%;max-width:740px;max-height:85vh;overflow-y:auto;padding:0;box-shadow:0 4px 40px rgba(0,0,0,0.6),0 0 60px rgba(80,130,220,0.05);';
@@ -12818,6 +12831,9 @@
 
           _loreEditorOverlay.appendChild(panel);
           document.body.appendChild(_loreEditorOverlay);
+
+          // Force focus on textarea after render so cursor is visible
+          setTimeout(function() { narTextarea.focus(); }, 100);
 
           // Click overlay bg to close
           _loreEditorOverlay.addEventListener('click', function(e) {
@@ -13245,10 +13261,15 @@
             chipLabel.style.opacity = '0';
             setTimeout(() => {
               chipLabel.textContent = collection.name;
-              chipLabel.classList.add('marquee');
-              // Speed based on name length — longer names scroll slower
-              const dur = Math.max(4, collection.name.length * 0.55);
-              chipLabel.style.setProperty('--marquee-dur', dur.toFixed(1) + 's');
+              chipLabel.classList.remove('marquee');
+              chipLabel.style.removeProperty('--marquee-dur');
+              // Only marquee if text overflows the chip container
+              var _chipCont = chipLabel.parentElement;
+              if (_chipCont && chipLabel.scrollWidth > _chipCont.clientWidth) {
+                chipLabel.classList.add('marquee');
+                const dur = Math.max(4, collection.name.length * 0.55);
+                chipLabel.style.setProperty('--marquee-dur', dur.toFixed(1) + 's');
+              }
               chipLabel.style.opacity = '1';
             }, 200);
           }
@@ -13721,19 +13742,25 @@
         return;
       }
 
-      function buildTickerHTML(lines) {
-        // Duplicate for seamless loop
+      function buildTickerHTML(lines, tickerInner) {
+        // Build single set of lines first
         let html = '';
         lines.forEach(l => {
           const cls = l.bright ? ' bright' : l.dim ? ' dim' : '';
           html += '<span class="pcb-ticker-line' + cls + '">' + l.text + '</span>';
         });
-        // Duplicate for loop
-        lines.forEach(l => {
-          const cls = l.bright ? ' bright' : l.dim ? ' dim' : '';
-          html += '<span class="pcb-ticker-line' + cls + '">' + l.text + '</span>';
-        });
-        return html;
+        // Temporarily render to measure
+        tickerInner.innerHTML = html;
+        tickerInner.style.animation = 'none';
+        var containerH = tickerInner.parentElement.clientHeight;
+        var contentH = tickerInner.scrollHeight;
+        if (contentH > containerH) {
+          // Content overflows — duplicate for seamless scroll loop
+          tickerInner.innerHTML = html + html;
+          tickerInner.style.animation = '';
+        }
+        // else: fits — leave as-is with no animation
+        return null; // innerHTML already set
       }
 
       if (artwork) {
@@ -13776,8 +13803,8 @@
         }
         while (rightLines.length < 4) rightLines.push({text: 'on-chain', dim: true});
 
-        leftTicker.innerHTML = buildTickerHTML(leftLines);
-        rightTicker.innerHTML = buildTickerHTML(rightLines);
+        buildTickerHTML(leftLines, leftTicker);
+        buildTickerHTML(rightLines, rightTicker);
 
       } else {
         // ── Collection view: collection-level metadata ──
@@ -13815,8 +13842,8 @@
         }
         while (rightLines.length < 4) rightLines.push({text: 'on-chain', dim: true});
 
-        leftTicker.innerHTML = buildTickerHTML(leftLines);
-        rightTicker.innerHTML = buildTickerHTML(rightLines);
+        buildTickerHTML(leftLines, leftTicker);
+        buildTickerHTML(rightLines, rightTicker);
       }
     }
 
@@ -16759,12 +16786,14 @@
           if (aw) {
             // For Last Orders (video), toggle sound instead of opening in new tab
             if (aw.fullRes && aw.fullRes.endsWith('.mp4')) {
-              const focVid = node.querySelector('#lastOrdersFocusVideo');
-              if (focVid) {
-                focVid.muted = !focVid.muted;
-                const sBtn = node.querySelector('#lastOrdersSoundBtn');
-                if (sBtn) sBtn.innerHTML = focVid.muted ? '🔇' : '🔊';
-                if (!focVid.muted) { focVid.currentTime = 0; focVid.play(); }
+              const focVidA = node.querySelector('#lastOrdersFocusVideo');
+              const focVidB = node.querySelector('#lastOrdersFocusVideoB');
+              const sBtn = node.querySelector('#lastOrdersSoundBtn');
+              if (focVidA) {
+                var nowMuted = !focVidA.muted;
+                focVidA.muted = nowMuted;
+                if (focVidB) focVidB.muted = nowMuted;
+                if (sBtn) sBtn.innerHTML = nowMuted ? '🔇' : '🔊';
               }
               return;
             }
@@ -16846,6 +16875,14 @@
           const squareMaxH = vpH * 0.63;
           const squareMaxW = vpW * 0.414;
           scaleFactor = Math.min(scaleFactor, squareMaxW / nodeW, squareMaxH / nodeH);
+        }
+      }
+
+      // Last Orders on mobile — constrain to 16:9 landscape aspect
+      if (_isMobileFocus && _focusColNameEarly === 'Last Orders') {
+        const loMaxH = maxW * 0.5625; // 16:9
+        if (nodeH * scaleFactor > loMaxH) {
+          scaleFactor = loMaxH / nodeH;
         }
       }
 
@@ -17391,7 +17428,7 @@
         focusTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + artworkTitle;
         const _titleLeft = node._focusLeftEdge || 24;
         const _titleTop = (node._focusBottomEdge || (window.innerHeight * 0.85)) + 50;
-        focusTitleEl.style.cssText = 'position:fixed;z-index:2500;font-family:"JetBrains Mono",monospace;font-size:0.85rem;color:rgba(200,195,185,0.7);letter-spacing:0.06em;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.4s ease;left:' + _titleLeft + 'px;top:' + _titleTop + 'px;';
+        focusTitleEl.style.cssText = 'position:fixed;z-index:2500;font-family:"JetBrains Mono",monospace;font-size:1.05rem;color:rgba(200,195,185,0.7);letter-spacing:0.06em;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.4s ease;left:' + _titleLeft + 'px;top:' + _titleTop + 'px;';
         document.body.appendChild(focusTitleEl);
         requestAnimationFrame(() => { focusTitleEl.style.opacity = '1'; });
       }, _scatterWait + 300);
@@ -17825,41 +17862,118 @@
           if (preview && img) {
             // Store original src for restoration on exit
             img.dataset.thumbSrc = img.src;
-            // Create video element to replace image
-            const vid = document.createElement('video');
-            vid.id = 'lastOrdersFocusVideo';
-            vid.src = 'lastorders/lastorders2023.mp4';
-            vid.loop = true;
-            vid.muted = true;
-            vid.playsInline = true;
-            vid.autoplay = true;
-            vid.preload = 'auto';
-            vid.style.width = '100%';
-            vid.style.height = 'auto';
-            vid.style.objectFit = 'cover';
-            vid.style.display = 'block';
-            vid.style.position = 'relative';
-            vid.style.zIndex = '1';
-            vid.setAttribute('playsinline', '');
-            vid.setAttribute('autoplay', '');
-            // Hide the still image, show the video
-            img.style.display = 'none';
-            preview.appendChild(vid);
-            vid.play().catch(() => {});
-            // Sound toggle button
-            const soundBtn = document.createElement('div');
-            soundBtn.className = 'video-sound-btn';
-            soundBtn.id = 'lastOrdersSoundBtn';
-            soundBtn.innerHTML = '🔇';
-            soundBtn.title = 'Click for sound';
-            soundBtn.style.zIndex = '10';
-            soundBtn.onclick = (ev) => {
-              ev.stopPropagation();
-              vid.muted = !vid.muted;
-              soundBtn.innerHTML = vid.muted ? '🔇' : '🔊';
-              if (!vid.muted) { vid.currentTime = 0; vid.play(); }
-            };
-            preview.appendChild(soundBtn);
+            // Ensure image stays visible as poster frame
+            img.style.display = 'block';
+            img.style.objectFit = 'contain';
+
+            function _launchLastOrdersVideo() {
+              // Remove touch overlay if present
+              var _tBtn = preview.querySelector('.lo-touch-btn');
+              if (_tBtn) _tBtn.remove();
+
+              // ── Dual-video crossfade for seamless looping ──
+              // Two identical videos: when one nears its end, the other fades in
+              // from the start, creating a smooth dissolve at the loop boundary.
+              var _loSrc = 'lastorders/lastorders2023.mp4';
+              var _loFadeTime = 0.8; // seconds of crossfade overlap
+
+              function _makeVid(id) {
+                var v = document.createElement('video');
+                v.id = id;
+                v.src = _loSrc;
+                v.loop = false; // we handle looping manually
+                v.muted = true;
+                v.playsInline = true;
+                v.preload = 'auto';
+                v.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;transition:opacity ' + _loFadeTime + 's ease;';
+                v.setAttribute('playsinline', '');
+                return v;
+              }
+
+              var vidA = _makeVid('lastOrdersFocusVideo');
+              var vidB = _makeVid('lastOrdersFocusVideoB');
+              vidB.style.opacity = '0';
+              vidB.style.zIndex = '3';
+              preview.style.position = 'relative';
+              preview.appendChild(vidA);
+              preview.appendChild(vidB);
+
+              var _loActive = vidA, _loStandby = vidB;
+              var _loMuted = true;
+
+              function _loSwap() {
+                // Standby starts from beginning, fades in
+                _loStandby.currentTime = 0;
+                _loStandby.muted = _loMuted;
+                _loStandby.play().catch(function(){});
+                _loStandby.style.opacity = '1';
+                // Active fades out
+                _loActive.style.opacity = '0';
+                // After crossfade completes, pause the old one and swap roles
+                var oldActive = _loActive;
+                _loActive = _loStandby;
+                _loStandby = oldActive;
+                setTimeout(function() {
+                  oldActive.pause();
+                }, _loFadeTime * 1000 + 200);
+              }
+
+              // Monitor active video — when it nears end, trigger crossfade
+              function _loMonitor() {
+                if (!document.getElementById('lastOrdersFocusVideo')) return; // cleaned up
+                if (_loActive.duration && _loActive.currentTime > 0) {
+                  var remaining = _loActive.duration - _loActive.currentTime;
+                  if (remaining <= _loFadeTime + 0.1) {
+                    _loSwap();
+                  }
+                }
+                requestAnimationFrame(_loMonitor);
+              }
+
+              vidA.addEventListener('loadedmetadata', function() {
+                requestAnimationFrame(_loMonitor);
+              });
+              vidA.autoplay = true;
+              vidA.play().catch(function(){});
+
+              // Sound toggle button
+              var soundBtn = document.createElement('div');
+              soundBtn.className = 'video-sound-btn';
+              soundBtn.id = 'lastOrdersSoundBtn';
+              soundBtn.innerHTML = '🔇';
+              soundBtn.title = 'Click for sound';
+              soundBtn.style.zIndex = '10';
+              soundBtn.onclick = function(ev) {
+                ev.stopPropagation();
+                _loMuted = !_loMuted;
+                vidA.muted = _loMuted;
+                vidB.muted = _loMuted;
+                soundBtn.innerHTML = _loMuted ? '🔇' : '🔊';
+                if (!_loMuted) { _loActive.currentTime = 0; _loActive.play(); }
+              };
+              preview.appendChild(soundBtn);
+            }
+
+            if (_isRealMobile) {
+              // Mobile: show PNG with "touch" play button overlay
+              var touchBtn = document.createElement('div');
+              touchBtn.className = 'lo-touch-btn';
+              touchBtn.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;' +
+                'font-family:"EB Garamond",Georgia,serif;font-size:14px;letter-spacing:0.35em;color:rgba(245,240,230,0.5);' +
+                'text-transform:lowercase;animation:whisperPulse 2.5s ease-in-out infinite;cursor:pointer;padding:20px;' +
+                'text-shadow:0 0 10px rgba(210,50,70,0.3);';
+              touchBtn.textContent = 'touch';
+              touchBtn.onclick = function(ev) {
+                ev.stopPropagation();
+                _launchLastOrdersVideo();
+              };
+              preview.style.position = 'relative';
+              preview.appendChild(touchBtn);
+            } else {
+              // Desktop: keep image in layout (visibility hidden) so preview has dimensions, video sits on top
+              img.style.visibility = 'hidden';
+              _launchLastOrdersVideo();
+            }
           }
         }, 600);
       }
@@ -25233,25 +25347,27 @@
         svg.appendChild(px);
       }
 
-      // ── "XCOPY" text bottom-left, "ACK" bottom-right — neon glow style ──
-      const xcopyTxt = document.createElementNS(ns, 'text');
-      xcopyTxt.setAttribute('x', L + 6);
-      xcopyTxt.setAttribute('y', B + 14);
-      xcopyTxt.setAttribute('font-family', 'JetBrains Mono, monospace');
-      xcopyTxt.setAttribute('font-size', '5.5');
-      xcopyTxt.setAttribute('fill', neonRed(focusMode ? 0.3 : 0.18));
-      xcopyTxt.setAttribute('letter-spacing', '1.5');
-      xcopyTxt.textContent = 'XCOPY';
-      svg.appendChild(xcopyTxt);
+      // ── "XCOPY" text bottom-left (focus only), "ACK" bottom-right — neon glow style ──
+      if (focusMode) {
+        const xcopyTxt = document.createElementNS(ns, 'text');
+        xcopyTxt.setAttribute('x', L + 6);
+        xcopyTxt.setAttribute('y', B + 18);
+        xcopyTxt.setAttribute('font-family', 'JetBrains Mono, monospace');
+        xcopyTxt.setAttribute('font-size', '9');
+        xcopyTxt.setAttribute('fill', neonRed(0.4));
+        xcopyTxt.setAttribute('letter-spacing', '2');
+        xcopyTxt.textContent = 'XCOPY';
+        svg.appendChild(xcopyTxt);
+      }
 
       const ackTxt = document.createElementNS(ns, 'text');
       ackTxt.setAttribute('x', R - 6);
-      ackTxt.setAttribute('y', B + 14);
+      ackTxt.setAttribute('y', B + 18);
       ackTxt.setAttribute('text-anchor', 'end');
       ackTxt.setAttribute('font-family', 'JetBrains Mono, monospace');
-      ackTxt.setAttribute('font-size', '5.5');
-      ackTxt.setAttribute('fill', neonRed(focusMode ? 0.3 : 0.18));
-      ackTxt.setAttribute('letter-spacing', '1.5');
+      ackTxt.setAttribute('font-size', '9');
+      ackTxt.setAttribute('fill', neonRed(focusMode ? 0.4 : 0.25));
+      ackTxt.setAttribute('letter-spacing', '2');
       ackTxt.textContent = 'ACK';
       svg.appendChild(ackTxt);
 
@@ -25775,16 +25891,19 @@
         else bf.style.display = ''; // unhide collection frames (Piano Blossoms hides them on focus)
       });
 
-      // Clean up Last Orders focus video
-      const _loVid = focusedNode.querySelector('#lastOrdersFocusVideo');
-      if (_loVid) {
-        _loVid.pause();
-        _loVid.src = '';
-        _loVid.remove();
+      // Clean up Last Orders focus videos (dual crossfade)
+      const _loVidA = focusedNode.querySelector('#lastOrdersFocusVideo');
+      const _loVidB = focusedNode.querySelector('#lastOrdersFocusVideoB');
+      if (_loVidA) { _loVidA.pause(); _loVidA.src = ''; _loVidA.remove(); }
+      if (_loVidB) { _loVidB.pause(); _loVidB.src = ''; _loVidB.remove(); }
+      if (_loVidA || _loVidB) {
         // Show the still image again
         const _loImg = focusedNode.querySelector('.node-preview img');
-        if (_loImg) _loImg.style.display = '';
+        if (_loImg) { _loImg.style.display = ''; _loImg.style.visibility = ''; }
       }
+      // Clean up touch button if present (mobile)
+      const _loTouchBtn = focusedNode.querySelector('.lo-touch-btn');
+      if (_loTouchBtn) _loTouchBtn.remove();
       const _loSoundBtn = focusedNode.querySelector('#lastOrdersSoundBtn');
       if (_loSoundBtn) _loSoundBtn.remove();
 
