@@ -17054,6 +17054,14 @@
         // Clear re-entrancy guard once the view is fully built and visible
         _openDetailBusy = false;
 
+        // ── COLLECTION LORE NODE — show if collection-level lore exists ──
+        setTimeout(function() {
+          var _colLore = _getLore(collection.name, '');
+          if (_colLore) {
+            _createLoreNode(null, collection.name, '', _colLore);
+          }
+        }, 800);
+
         // Show ESC hint on collection detail entry
         showEscHint('to go back');
 
@@ -27542,6 +27550,7 @@
       ACK_SFX.close();
       hideEscHint();
       _stopServantMusic(); // stop servant music on any collection close
+      _removeLoreNode(); // remove collection-level lore node if present
       exitFocusMode();
       clearDetailConnectionWires();
       // Mobile: hide back button, restore candles
