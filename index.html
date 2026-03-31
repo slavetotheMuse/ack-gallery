@@ -8072,18 +8072,22 @@
         if (tapPrompt) tapPrompt.style.display = 'none';
 
         var audio = new Audio('dreamsarewhispers.wav');
-        audio.volume = 0.15;
+        audio.volume = 1.0; // Web Audio controls actual volume
         // Web Audio for reverb/echo effect
         try {
           var _wCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (_wCtx.state === 'suspended') _wCtx.resume();
           var _wSrc = _wCtx.createMediaElementSource(audio);
+          // Master gain — controls overall volume
+          var _masterGain = _wCtx.createGain();
+          _masterGain.gain.value = 0.2;
           // Low-pass to soften highs
           var _wLP = _wCtx.createBiquadFilter();
           _wLP.type = 'lowpass';
           _wLP.frequency.value = 1800;
           _wLP.Q.value = 0.4;
-          // Convolver reverb — generate synthetic impulse response
-          var _irLen = _wCtx.sampleRate * 2.5; // 2.5s reverb tail
+          // Convolver reverb — synthetic impulse response
+          var _irLen = _wCtx.sampleRate * 2.5;
           var _irBuf = _wCtx.createBuffer(2, _irLen, _wCtx.sampleRate);
           for (var ch = 0; ch < 2; ch++) {
             var _irData = _irBuf.getChannelData(ch);
@@ -8095,18 +8099,20 @@
           _conv.buffer = _irBuf;
           // Dry/wet mix
           var _dryGain = _wCtx.createGain();
-          _dryGain.gain.value = 0.5;
+          _dryGain.gain.value = 0.6;
           var _wetGain = _wCtx.createGain();
-          _wetGain.gain.value = 0.5;
+          _wetGain.gain.value = 0.4;
+          // Chain: source → lowpass → dry + reverb → master → output
           _wSrc.connect(_wLP);
           _wLP.connect(_dryGain);
           _wLP.connect(_conv);
           _conv.connect(_wetGain);
-          _dryGain.connect(_wCtx.destination);
-          _wetGain.connect(_wCtx.destination);
-          if (_wCtx.state === 'suspended') _wCtx.resume();
+          _dryGain.connect(_masterGain);
+          _wetGain.connect(_masterGain);
+          _masterGain.connect(_wCtx.destination);
         } catch(e) {
           // Fallback: just play quiet audio without effects
+          audio.volume = 0.15;
         }
         audio.play().catch(function() {});
 
