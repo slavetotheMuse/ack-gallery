@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AERIAL SCREW — ack.art arcade node</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: 'JetBrains Mono', monospace;
+      background: #1e1c1a;
+      color: #e0e0dc;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1e1c1a 0%, #2a2620 100%);
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #1e1c1a;
+    }
+
+    /* HUD Elements */
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .score-display {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: #dca832;
+      text-shadow: 0 0 10px rgba(220, 168, 50, 0.3);
+      z-index: 101;
+    }
+
+    .score-label {
+      color: #8a8a86;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .score-value {
+      font-size: 24px;
+      font-weight: 500;
+      color: #dca832;
+    }
+
+    .high-score-display {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #8a8a86;
+      text-align: right;
+      z-index: 101;
+    }
+
+    .high-score-label {
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .high-score-value {
+      font-size: 18px;
+      color: #dca832;
+    }
+
+    /* Start Screen */
+    #startScreen {
+      position: absolute;
+      inset: 0;
+      background: rgba(30, 28, 26, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 1;
+      transition: opacity 0.6s ease;
+    }
+
+    #startScreen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .start-content {
+      text-align: center;
+      animation: fadeInScale 0.8s ease 0.3s backwards;
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .game-title {
+      font-size: 48px;
+      font-weight: 500;
+      color: #dca832;
+      margin-bottom: 10px;
+      text-shadow: 0 0 20px rgba(220, 168, 50, 0.4);
+      letter-spacing: 3px;
+    }
+
+    .game-subtitle {
+      font-size: 14px;
+      color: #8a8a86;
+      margin-bottom: 40px;
+      letter-spacing: 2px;
+    }
+
+    .tap-prompt {
+      font-size: 13px;
+      color: #c0c0bc;
+      animation: pulse 1.5s ease-in-out infinite;
+      margin-top: 20px;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* Game Over Screen */
+    #gameOverScreen {
+      position: absolute;
+      inset: 0;
+      background: rgba(30, 28, 26, 0.98);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    #gameOverScreen.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .game-over-content {
+      text-align: center;
+    }
+
+    .game-over-title {
+      font-size: 36px;
+      color: #e0e0dc;
+      margin-bottom: 30px;
+      letter-spacing: 2px;
+    }
+
+    .final-stats {
+      margin-bottom: 40px;
+    }
+
+    .stat-line {
+      font-size: 14px;
+      color: #c0c0bc;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .stat-label {
+      color: #8a8a86;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    .stat-value {
+      color: #dca832;
+      font-weight: 500;
+    }
+
+    .retry-prompt {
+      font-size: 13px;
+      color: #c0c0bc;
+      animation: pulse 1.5s ease-in-out infinite;
+      margin-top: 30px;
+    }
+
+    /* Grid background */
+    #gridCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0.08;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Instructions */
+    .instructions {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      font-size: 11px;
+      color: #8a8a86;
+      line-height: 1.6;
+      z-index: 50;
+    }
+
+    @media (max-width: 768px) {
+      .game-title {
+        font-size: 32px;
+      }
+      .score-display {
+        font-size: 12px;
+      }
+      .score-value {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gridCanvas"></canvas>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="hud">
+      <div class="score-display">
+        <div class="score-label">COINS</div>
+        <div class="score-value" id="scoreValue">0</div>
+      </div>
+      <div class="high-score-display">
+        <div class="high-score-label">BEST</div>
+        <div class="high-score-value" id="highScoreValue">0</div>
+      </div>
+    </div>
+
+    <div id="startScreen">
+      <div class="start-content">
+        <div class="game-title">AERIAL SCREW</div>
+        <div class="game-subtitle">leonardo da vinci's dream machine</div>
+        <div style="color: #8a8a86; font-size: 12px; margin-top: 15px; line-height: 1.8;">
+          collect spinning coins • avoid obstacles • rise to glory
+        </div>
+        <div class="tap-prompt">TAP OR CLICK TO FLY</div>
+      </div>
+    </div>
+
+    <div id="gameOverScreen">
+      <div class="game-over-content">
+        <div class="game-over-title">COLLISION DETECTED</div>
+        <div class="final-stats">
+          <div class="stat-line">
+            <div class="stat-label">COINS:</div>
+            <div class="stat-value" id="finalScore">0</div>
+          </div>
+          <div class="stat-line">
+            <div class="stat-label">DISTANCE:</div>
+            <div class="stat-value" id="finalDistance">0</div>
+          </div>
+          <div class="stat-line">
+            <div class="stat-label">TOTAL:</div>
+            <div class="stat-value" id="finalTotal">0</div>
+          </div>
+          <div class="stat-line" style="margin-top: 20px;">
+            <div class="stat-label">BEST SCORE:</div>
+            <div class="stat-value" id="finalHighScore">0</div>
+          </div>
+        </div>
+        <div class="retry-prompt">TAP OR CLICK TO RETRY</div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <div>← TAP/CLICK TO RISE →</div>
+      <div style="margin-top: 8px; font-size: 10px; color: #6a6a66;">
+        avoid obstacles • collect coins
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ────────────────────────────────────────
+    // GAME STATE
+    // ────────────────────────────────────────
+    const game = {
+      canvas: document.getElementById('gameCanvas'),
+      ctx: document.getElementById('gameCanvas').getContext('2d'),
+      gridCanvas: document.getElementById('gridCanvas'),
+      gridCtx: document.getElementById('gridCanvas').getContext('2d'),
+
+      width: window.innerWidth,
+      height: window.innerHeight,
+
+      state: 'start', // start, playing, gameOver
+      score: 0,
+      distance: 0,
+      highScore: 0,
+
+      gameSpeed: 4,
+      maxGameSpeed: 8,
+      speedIncrement: 0.0005,
+
+      // Screw properties
+      screw: {
+        x: 0,
+        y: 0,
+        width: 80,
+        height: 80,
+        velocityY: 0,
+        gravity: 0.4,
+        jumpForce: -10,
+        maxVelocity: 10
+      },
+
+      coins: [],
+      obstacles: [],
+
+      spriteSheet: null,
+      spriteFrameCount: 10,
+      spriteFrameWidth: 500,
+      spriteFrameHeight: 1070,
+      currentFrame: 0,
+      frameCounter: 0,
+
+      coinImages: { face: null, back: null },
+      coinRotation: 0,
+
+      audioContext: null,
+
+      touchStartX: 0,
+      touchStartY: 0
+    };
+
+    // ────────────────────────────────────────
+    // INITIALIZATION
+    // ────────────────────────────────────────
+    function init() {
+      // Setup canvas
+      game.canvas.width = game.width;
+      game.canvas.height = game.height;
+      game.gridCanvas.width = game.width;
+      game.gridCanvas.height = game.height;
+
+      // Draw grid
+      drawGrid();
+
+      // Load sprites
+      loadSprites();
+
+      // Setup audio context
+      try {
+        game.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        console.log('Web Audio API not available');
+      }
+
+      // Position initial screw
+      game.screw.x = game.width * 0.15;
+      game.screw.y = game.height / 2;
+
+      // Event listeners
+      document.addEventListener('click', handleInput);
+      document.addEventListener('touchstart', handleTouchStart, false);
+      document.addEventListener('touchend', handleTouchEnd, false);
+      window.addEventListener('resize', handleResize);
+
+      // Start game loop
+      gameLoop();
+    }
+
+    function drawGrid() {
+      const gridSize = 40;
+      game.gridCtx.strokeStyle = 'rgba(220, 168, 50, 0.1)';
+      game.gridCtx.lineWidth = 1;
+
+      // Vertical lines
+      for (let x = 0; x < game.width; x += gridSize) {
+        game.gridCtx.beginPath();
+        game.gridCtx.moveTo(x, 0);
+        game.gridCtx.lineTo(x, game.height);
+        game.gridCtx.stroke();
+      }
+
+      // Horizontal lines
+      for (let y = 0; y < game.height; y += gridSize) {
+        game.gridCtx.beginPath();
+        game.gridCtx.moveTo(0, y);
+        game.gridCtx.lineTo(game.width, y);
+        game.gridCtx.stroke();
+      }
+    }
+
+    function loadSprites() {
+      // Load aerial screw sprite sheet
+      game.spriteSheet = new Image();
+      game.spriteSheet.onload = () => {
+        console.log('Sprite sheet loaded');
+      };
+      game.spriteSheet.src = 'aerialscrew_sprite.png';
+
+      // Load coin images
+      game.coinImages.face = new Image();
+      game.coinImages.face.src = 'servant_face_web.png';
+
+      game.coinImages.back = new Image();
+      game.coinImages.back.src = 'servant_back_web.png';
+    }
+
+    // ────────────────────────────────────────
+    // INPUT HANDLING
+    // ────────────────────────────────────────
+    function handleInput(e) {
+      if (game.state === 'start') {
+        startGame();
+      } else if (game.state === 'gameOver') {
+        resetGame();
+      } else if (game.state === 'playing') {
+        applyJump();
+      }
+    }
+
+    function handleTouchStart(e) {
+      if (game.state === 'playing') {
+        game.touchStartX = e.touches[0].clientX;
+        game.touchStartY = e.touches[0].clientY;
+      }
+    }
+
+    function handleTouchEnd(e) {
+      e.preventDefault(); // prevent ghost click
+      if (game.state === 'start') {
+        startGame();
+      } else if (game.state === 'gameOver') {
+        resetGame();
+      } else if (game.state === 'playing') {
+        applyJump();
+      }
+    }
+
+    function applyJump() {
+      game.screw.velocityY = game.screw.jumpForce;
+      playSound('flap');
+    }
+
+    function handleResize() {
+      game.width = window.innerWidth;
+      game.height = window.innerHeight;
+      game.canvas.width = game.width;
+      game.canvas.height = game.height;
+      game.gridCanvas.width = game.width;
+      game.gridCanvas.height = game.height;
+      drawGrid();
+    }
+
+    // ────────────────────────────────────────
+    // GAME STATES
+    // ────────────────────────────────────────
+    function startGame() {
+      game.state = 'playing';
+      game.score = 0;
+      game.distance = 0;
+      game.gameSpeed = 4;
+      game.screw.velocityY = 0;
+      game.coins = [];
+      game.obstacles = [];
+
+      document.getElementById('startScreen').classList.add('hidden');
+
+      // Spawn initial obstacles and coins
+      for (let i = 0; i < 15; i++) {
+        spawnCoin(600 + i * 200);
+        if (i % 3 === 0) {
+          spawnObstacle(800 + i * 300);
+        }
+      }
+    }
+
+    function resetGame() {
+      game.state = 'start';
+      document.getElementById('gameOverScreen').classList.remove('visible');
+      document.getElementById('startScreen').classList.remove('hidden');
+    }
+
+    function endGame() {
+      game.state = 'gameOver';
+
+      const totalScore = game.score + Math.floor(game.distance / 10);
+      if (totalScore > game.highScore) {
+        game.highScore = totalScore;
+      }
+
+      document.getElementById('finalScore').textContent = game.score;
+      document.getElementById('finalDistance').textContent = Math.floor(game.distance);
+      document.getElementById('finalTotal').textContent = totalScore;
+      document.getElementById('finalHighScore').textContent = game.highScore;
+
+      document.getElementById('gameOverScreen').classList.add('visible');
+      playSound('crash');
+    }
+
+    // ────────────────────────────────────────
+    // SPAWNING
+    // ────────────────────────────────────────
+    function spawnCoin(x) {
+      game.coins.push({
+        x: x,
+        y: Math.random() * (game.height - 100) + 50,
+        radius: 25,
+        collected: false,
+        rotationAngle: Math.random() * Math.PI * 2,
+        isFront: Math.random() > 0.5
+      });
+    }
+
+    function spawnObstacle(x) {
+      const height = 60 + Math.random() * 40;
+      const type = Math.random() > 0.5 ? 'top' : 'bottom';
+
+      game.obstacles.push({
+        x: x,
+        y: type === 'top' ? 0 : game.height - height,
+        width: 80,
+        height: height,
+        type: type
+      });
+    }
+
+    // ────────────────────────────────────────
+    // UPDATE
+    // ────────────────────────────────────────
+    function update() {
+      if (game.state !== 'playing') return;
+
+      // Update screw physics
+      game.screw.velocityY += game.screw.gravity;
+      game.screw.velocityY = Math.min(game.screw.velocityY, game.screw.maxVelocity);
+      game.screw.y += game.screw.velocityY;
+
+      // Check bounds (death)
+      if (game.screw.y - game.screw.height / 2 < 0 ||
+          game.screw.y + game.screw.height / 2 > game.height) {
+        endGame();
+        return;
+      }
+
+      // Update game speed (progressive difficulty)
+      game.gameSpeed += game.speedIncrement;
+      game.gameSpeed = Math.min(game.gameSpeed, game.maxGameSpeed);
+
+      // Update distance
+      game.distance += game.gameSpeed;
+
+      // Update sprite animation
+      game.frameCounter++;
+      if (game.frameCounter % 4 === 0) {
+        game.currentFrame = (game.currentFrame + 1) % game.spriteFrameCount;
+      }
+
+      // Update coin rotation
+      game.coinRotation += 0.08;
+
+      // Update coins
+      for (let i = game.coins.length - 1; i >= 0; i--) {
+        const coin = game.coins[i];
+        coin.x -= game.gameSpeed;
+
+        // Check collision with screw
+        if (!coin.collected && checkCollision(game.screw, coin)) {
+          coin.collected = true;
+          game.score++;
+          playSound('coin');
+          game.coins.splice(i, 1);
+          continue;
+        }
+
+        // Remove off-screen coins
+        if (coin.x < -100) {
+          game.coins.splice(i, 1);
+        }
+      }
+
+      // Spawn new coins
+      if (game.coins.length < 8 && Math.random() < 0.02) {
+        spawnCoin(game.width + 50);
+      }
+
+      // Update obstacles
+      for (let i = game.obstacles.length - 1; i >= 0; i--) {
+        const obs = game.obstacles[i];
+        obs.x -= game.gameSpeed;
+
+        // Check collision with screw
+        if (checkCollision(game.screw, obs)) {
+          endGame();
+          return;
+        }
+
+        // Remove off-screen obstacles
+        if (obs.x + obs.width < 0) {
+          game.obstacles.splice(i, 1);
+        }
+      }
+
+      // Spawn new obstacles
+      if (game.obstacles.length < 5 && Math.random() < 0.008) {
+        spawnObstacle(game.width + 50);
+      }
+
+      // Update HUD
+      document.getElementById('scoreValue').textContent = game.score;
+      document.getElementById('highScoreValue').textContent = game.highScore;
+    }
+
+    function checkCollision(screw, obj) {
+      const screwLeft = screw.x - screw.width / 2;
+      const screwRight = screw.x + screw.width / 2;
+      const screwTop = screw.y - screw.height / 2;
+      const screwBottom = screw.y + screw.height / 2;
+
+      if (obj.radius) {
+        // Coin collision (circular)
+        const dx = screw.x - obj.x;
+        const dy = screw.y - obj.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < screw.width / 2 + obj.radius;
+      } else {
+        // Obstacle collision (rectangular)
+        return !(screwRight < obj.x ||
+                 screwLeft > obj.x + obj.width ||
+                 screwBottom < obj.y ||
+                 screwTop > obj.y + obj.height);
+      }
+    }
+
+    // ────────────────────────────────────────
+    // RENDERING
+    // ────────────────────────────────────────
+    function draw() {
+      // Clear canvas
+      game.ctx.fillStyle = '#1e1c1a';
+      game.ctx.fillRect(0, 0, game.width, game.height);
+
+      // Draw subtle gradient overlay
+      const gradient = game.ctx.createLinearGradient(0, 0, game.width, game.height);
+      gradient.addColorStop(0, 'rgba(30, 28, 26, 0)');
+      gradient.addColorStop(1, 'rgba(30, 28, 26, 0.1)');
+      game.ctx.fillStyle = gradient;
+      game.ctx.fillRect(0, 0, game.width, game.height);
+
+      if (game.state === 'playing' || game.state === 'gameOver') {
+        // Draw obstacles
+        game.ctx.fillStyle = 'rgba(100, 80, 60, 0.6)';
+        game.ctx.strokeStyle = '#8b7355';
+        game.ctx.lineWidth = 2;
+
+        for (const obs of game.obstacles) {
+          game.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+          game.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+
+          // Add detail lines
+          game.ctx.strokeStyle = 'rgba(220, 168, 50, 0.2)';
+          game.ctx.lineWidth = 1;
+          for (let i = 0; i < obs.height; i += 15) {
+            game.ctx.beginPath();
+            game.ctx.moveTo(obs.x, obs.y + i);
+            game.ctx.lineTo(obs.x + obs.width, obs.y + i);
+            game.ctx.stroke();
+          }
+        }
+
+        // Draw coins
+        for (const coin of game.coins) {
+          drawCoin(coin);
+        }
+
+        // Draw screw with sprite animation
+        drawScrew();
+      }
+    }
+
+    function drawScrew() {
+      if (!game.spriteSheet || !game.spriteSheet.complete) {
+        // Fallback: draw a simple shape
+        game.ctx.fillStyle = '#dca832';
+        game.ctx.beginPath();
+        game.ctx.arc(game.screw.x, game.screw.y, game.screw.width / 2, 0, Math.PI * 2);
+        game.ctx.fill();
+        return;
+      }
+
+      const frameWidth = game.spriteFrameWidth;
+      const frameHeight = game.spriteFrameHeight;
+      const sourceX = game.currentFrame * frameWidth;
+
+      // Draw sprite centered on screw position
+      const scale = game.screw.width / frameWidth;
+      const displayHeight = frameHeight * scale;
+
+      game.ctx.save();
+      game.ctx.translate(game.screw.x, game.screw.y);
+      game.ctx.scale(scale, scale);
+      game.ctx.drawImage(
+        game.spriteSheet,
+        sourceX, 0, frameWidth, frameHeight,
+        -frameWidth / 2, -frameHeight / 2, frameWidth, frameHeight
+      );
+      game.ctx.restore();
+    }
+
+    function drawCoin(coin) {
+      const image = coin.isFront ? game.coinImages.face : game.coinImages.back;
+
+      if (!image || !image.complete) {
+        // Fallback: simple circle
+        game.ctx.fillStyle = '#dca832';
+        game.ctx.beginPath();
+        game.ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+        game.ctx.fill();
+        return;
+      }
+
+      game.ctx.save();
+      game.ctx.translate(coin.x, coin.y);
+      game.ctx.rotate(game.coinRotation);
+
+      game.ctx.drawImage(
+        image,
+        -coin.radius, -coin.radius,
+        coin.radius * 2, coin.radius * 2
+      );
+
+      game.ctx.restore();
+
+      // Add glow effect
+      game.ctx.strokeStyle = 'rgba(220, 168, 50, 0.4)';
+      game.ctx.lineWidth = 1;
+      game.ctx.beginPath();
+      game.ctx.arc(coin.x, coin.y, coin.radius + 3, 0, Math.PI * 2);
+      game.ctx.stroke();
+    }
+
+    // ────────────────────────────────────────
+    // AUDIO
+    // ────────────────────────────────────────
+    function playSound(type) {
+      if (!game.audioContext) return;
+
+      const now = game.audioContext.currentTime;
+      const osc = game.audioContext.createOscillator();
+      const gain = game.audioContext.createGain();
+
+      osc.connect(gain);
+      gain.connect(game.audioContext.destination);
+
+      switch (type) {
+        case 'coin':
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+          break;
+
+        case 'flap':
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(600, now + 0.05);
+          osc.type = 'triangle';
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+          break;
+
+        case 'crash':
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+          osc.type = 'sawtooth';
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+          break;
+      }
+    }
+
+    // ────────────────────────────────────────
+    // GAME LOOP
+    // ────────────────────────────────────────
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Start the game
+    init();
+  </script>
+</body>
+</html>
