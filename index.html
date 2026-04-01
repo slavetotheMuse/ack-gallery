@@ -875,6 +875,27 @@
       overflow: hidden;
     }
 
+    /* Center title in header — shows collection/artwork name */
+    .nav-center-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: rgba(200,190,175,0.55);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 40%;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease, color 0.3s ease;
+    }
+    .nav-center-title.visible {
+      opacity: 1;
+    }
     .nav-title {
       font-size: 1.1rem;
       letter-spacing: 0.35em;
@@ -4915,6 +4936,10 @@
       touch-action: none !important; /* all touch handled in JS for swipe between works */
       overscroll-behavior: none !important;
     }
+    /* Override child touch-action so browser doesn't intercept swipe gestures */
+    body.mobile-focus-locked * {
+      touch-action: none !important;
+    }
 
     /* ── Mobile: disable double-tap zoom (keeps pinch zoom) ── */
     body.is-real-mobile {
@@ -5299,6 +5324,7 @@
       <div class="nav-coin"><img src="ACK_gold_logo.png" alt="ACK" style="width:100%;height:100%;object-fit:contain;border-radius:0;"></div>
       <div class="nav-title">AlphaCentauriKid</div>
     </div>
+    <div class="nav-center-title" id="navCenterTitle"></div>
       <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()">
         <span></span><span></span><span></span>
       </button>
@@ -8164,7 +8190,7 @@
 
     // ── Mobile: skip intro entirely, show brief message, then gallery ──
     // Detect real mobile device (viewport trick makes innerWidth=1400)
-    var _isRealMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    var _isRealMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent));
     if (_isRealMobile) document.body.classList.add('is-real-mobile');
 
     // ── Mobile back button logic ──
@@ -14502,6 +14528,10 @@
 
       titleEl.textContent = collection.name;
 
+      // Update header center title
+      var _navCt = document.getElementById('navCenterTitle');
+      if (_navCt) { _navCt.textContent = collection.name; _navCt.classList.add('visible'); }
+
       // Servant ambient music — starts on open, stops on close
       if (collection.name === 'servants') {
         _startServantMusic();
@@ -17725,6 +17755,10 @@
       const _earlyArt = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks ? COLLECTIONS[collectionIndex].artworks[artworkIndex] : null;
       const _focusColNameEarly = (_earlyArt && _earlyArt._sourceCollection) ? _earlyArt._sourceCollection : (COLLECTIONS[collectionIndex] ? COLLECTIONS[collectionIndex].name : '');
 
+      // Update header center title with artwork name
+      var _navCtFocus = document.getElementById('navCenterTitle');
+      if (_navCtFocus && _earlyArt) { _navCtFocus.textContent = _earlyArt.title || ''; }
+
       // Calculate where the node needs to fly to center it in the viewport
       const canvas = inner.closest('.node-graph-canvas');
       const scrollLeft = canvas ? canvas.scrollLeft : 0;
@@ -19320,28 +19354,31 @@
 
       // ── TOUCH SWIPE: navigate between artworks in focus mode ──
       if ('ontouchstart' in window) {
-        let _swipeStartX = 0, _swipeStartY = 0, _swipeDelta = 0;
+        let _swipeStartX = 0, _swipeStartY = 0, _swipeDelta = 0, _swipeDeltaY = 0;
         let _swipeTransitioning = false;
-        const _swipeThreshold = 60;
+        const _swipeThreshold = 40;
         const _isMobileSwipe = _isRealMobile;
         const onTouchStart = (evt) => {
           if (_swipeTransitioning) return;
           _swipeStartX = evt.touches[0].clientX;
           _swipeStartY = evt.touches[0].clientY;
           _swipeDelta = 0;
+          _swipeDeltaY = 0;
         };
         const onTouchMove = (evt) => {
           if (_swipeTransitioning) return;
           _swipeDelta = evt.touches[0].clientX - _swipeStartX;
+          _swipeDeltaY = evt.touches[0].clientY - _swipeStartY;
           // Always prevent scroll in focus mode to avoid bounce/crash
-          evt.preventDefault();
+          if (evt.cancelable) evt.preventDefault();
         };
         const onTouchEnd = () => {
           if (_swipeTransitioning) return;
           if (!inner.classList.contains('focus-mode')) {
             cleanupSwipe(); return;
           }
-          if (Math.abs(_swipeDelta) > _swipeThreshold) {
+          // Only register horizontal swipe (ignore vertical gestures)
+          if (Math.abs(_swipeDelta) > _swipeThreshold && Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY) * 1.2) {
             const col = COLLECTIONS[focusedCollectionIndex];
             const dir = _swipeDelta < 0 ? 1 : -1; // swipe left = next, right = prev
             const nextIdx = focusedArtworkIndex + dir;
@@ -19440,6 +19477,9 @@
                     if (_swipeTitleEl && nextArt.title) {
                       _swipeTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + nextArt.title;
                     }
+                    // Update header center title on swipe
+                    var _swipeNavCt = document.getElementById('navCenterTitle');
+                    if (_swipeNavCt && nextArt.title) _swipeNavCt.textContent = nextArt.title;
                     // Update lore node for new artwork
                     _removeLoreNode();
                     var _swipeColName = (nextArt._sourceCollection) ? nextArt._sourceCollection : col.name;
@@ -20711,7 +20751,7 @@
         <div class="info-port-in"></div>
         <div class="info-port-out"></div>
         <div class="node-info-panel-header">
-          <span class="node-info-panel-header-title">DETAILS${_servantPlayIcon}</span>
+          <span class="node-info-panel-header-title">DETAILS${_servantPlayIcon}${_isRCP ? '<span class="rcp-info-icon">i<span class="rcp-info-tooltip"><div class="rcp-info-tooltip-title">Unique Editions</div><div class="rcp-info-tooltip-text">Each of the 15 editions is unique — a different polaroid and sheet music on the piano. Click the <span style="color:rgba(80,160,240,0.9);">token #</span> in blue next to the title to browse editions.</div></span></span>' : ''}</span>
         </div>
         ${tabBar}
         <div class="coa-info-tabpanel active" data-coa-panel="info">
@@ -29189,6 +29229,12 @@
         delete focusedNode._swipeCleanup;
       }
 
+      // Restore header center title to collection name
+      var _navCtExit = document.getElementById('navCenterTitle');
+      if (_navCtExit && focusedCollectionIndex >= 0 && COLLECTIONS[focusedCollectionIndex]) {
+        _navCtExit.textContent = COLLECTIONS[focusedCollectionIndex].name;
+      }
+
       // Remove fixed-position focus title + mobile Pantone swatch + lore node
       const focTitle = document.getElementById('focusModeTitle');
       if (focTitle) focTitle.remove();
@@ -29635,6 +29681,9 @@
       _openDetailBusy = false; // clear re-entrancy guard
       ACK_SFX.close();
       hideEscHint();
+      // Clear header center title
+      var _navCtClose = document.getElementById('navCenterTitle');
+      if (_navCtClose) { _navCtClose.textContent = ''; _navCtClose.classList.remove('visible'); }
       _stopServantMusic(); // stop servant music on any collection close
       _removeLoreNode(); // remove collection-level lore node if present
       exitFocusMode();
