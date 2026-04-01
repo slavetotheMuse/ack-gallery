@@ -7757,7 +7757,7 @@
              tokenId:32650,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"she loves me not",image:"superrare/she_loves_me_not/shelovesmenot.gif",
              tokenId:32516,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
-            {title:"all time high",image:"superrare/alltimehigh/alltimehigh_web.jpg",
+            {title:"all time high on centauri",image:"superrare/alltimehigh/alltimehigh_web.jpg",
              fullRes:"superrare/alltimehigh/alltimehigh.mp4",
              tokenId:31322,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"ctrl + alt + generate",image:"superrare/ctrlaltgen/ctrlaltgen_web.jpg",
@@ -17537,9 +17537,9 @@
             // For video collections (Last Orders, RCP), toggle sound instead of opening in new tab
             if (aw.fullRes && aw.fullRes.endsWith('.mp4')) {
               // Find whichever video pair is present
-              var focVidA = node.querySelector('#lastOrdersFocusVideo') || node.querySelector('#rcpFocusVideo');
-              var focVidB = node.querySelector('#lastOrdersFocusVideoB') || node.querySelector('#rcpFocusVideoB');
-              var sBtn = node.querySelector('#lastOrdersSoundBtn') || node.querySelector('#rcpSoundBtn');
+              var focVidA = node.querySelector('#lastOrdersFocusVideo') || node.querySelector('#rcpFocusVideo') || node.querySelector('#srFocusVideo');
+              var focVidB = node.querySelector('#lastOrdersFocusVideoB') || node.querySelector('#rcpFocusVideoB') || node.querySelector('#srFocusVideoB');
+              var sBtn = node.querySelector('#lastOrdersSoundBtn') || node.querySelector('#rcpSoundBtn') || node.querySelector('#srSoundBtn');
               if (focVidA) {
                 var nowMuted = !focVidA.muted;
                 focVidA.muted = nowMuted;
@@ -18898,6 +18898,161 @@
               // Desktop: keep image in layout (visibility hidden) so preview has dimensions, video sits on top
               img.style.visibility = 'hidden';
               _launchRCPVideo();
+            }
+          }
+        }, 600);
+      }
+
+      // ── SuperRare video artworks: swap still → video on focus ──
+      if (_focusColName === 'SuperRare' && artData && artData.fullRes && artData.fullRes.endsWith('.mp4')) {
+        setTimeout(() => {
+          const preview = node.querySelector('.node-preview');
+          const img = preview ? preview.querySelector('img') : null;
+          if (preview && img) {
+            img.dataset.thumbSrc = img.src;
+            img.style.display = 'block';
+            img.style.objectFit = 'contain';
+
+            const _srVidSrc = artData.fullRes;
+            const _srTitle = artData.title || '';
+            // "all time high on centauri" gets crossfade loop like Last Orders
+            const _srCrossfade = _srTitle.indexOf('all time high') !== -1;
+            const _srFadeTime = 0.8;
+
+            function _launchSRVideo() {
+              if (_srCrossfade) {
+                // ── Dual-video crossfade for seamless looping ──
+                function _makeSRVid(id) {
+                  var v = document.createElement('video');
+                  v.id = id;
+                  v.src = _srVidSrc;
+                  v.loop = false;
+                  v.muted = true;
+                  v.playsInline = true;
+                  v.preload = 'auto';
+                  v.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;transition:opacity ' + _srFadeTime + 's ease;';
+                  v.setAttribute('playsinline', '');
+                  return v;
+                }
+                var vidA = _makeSRVid('srFocusVideo');
+                var vidB = _makeSRVid('srFocusVideoB');
+                vidB.style.opacity = '0';
+                vidB.style.zIndex = '3';
+                preview.style.position = 'relative';
+                preview.appendChild(vidA);
+                preview.appendChild(vidB);
+
+                var _srActive = vidA, _srStandby = vidB;
+                var _srMuted = true;
+
+                function _srSwap() {
+                  _srStandby.currentTime = 0;
+                  _srStandby.muted = _srMuted;
+                  _srStandby.play().catch(function(){});
+                  _srStandby.style.opacity = '1';
+                  _srActive.style.opacity = '0';
+                  var oldActive = _srActive;
+                  _srActive = _srStandby;
+                  _srStandby = oldActive;
+                  setTimeout(function() { oldActive.pause(); }, _srFadeTime * 1000 + 200);
+                }
+
+                function _srMonitor() {
+                  if (!document.getElementById('srFocusVideo')) return;
+                  if (_srActive.duration && _srActive.currentTime > 0) {
+                    var remaining = _srActive.duration - _srActive.currentTime;
+                    if (remaining <= _srFadeTime + 0.1) { _srSwap(); }
+                  }
+                  requestAnimationFrame(_srMonitor);
+                }
+
+                vidA.addEventListener('loadedmetadata', function() { requestAnimationFrame(_srMonitor); });
+                vidA.autoplay = true;
+                vidA.play().catch(function(){});
+
+                // Sound toggle
+                var soundBtn = document.createElement('div');
+                soundBtn.className = 'video-sound-btn';
+                soundBtn.id = 'srSoundBtn';
+                soundBtn.innerHTML = '🔇';
+                soundBtn.title = 'Click for sound';
+                soundBtn.style.zIndex = '10';
+                soundBtn.onclick = function(ev) {
+                  ev.stopPropagation();
+                  _srMuted = !_srMuted;
+                  vidA.muted = _srMuted;
+                  vidB.muted = _srMuted;
+                  soundBtn.innerHTML = _srMuted ? '🔇' : '🔊';
+                  if (!_srMuted) { _srActive.currentTime = 0; _srActive.play(); }
+                };
+                preview.appendChild(soundBtn);
+              } else {
+                // ── Single looping video (ctrl+alt+generate etc.) ──
+                var vid = document.createElement('video');
+                vid.id = 'srFocusVideo';
+                vid.src = _srVidSrc;
+                vid.loop = true;
+                vid.muted = true;
+                vid.playsInline = true;
+                vid.preload = 'auto';
+                vid.setAttribute('playsinline', '');
+                vid.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;';
+                preview.style.position = 'relative';
+                preview.appendChild(vid);
+                vid.autoplay = true;
+                vid.play().catch(function(){});
+
+                var _srSingleMuted = true;
+                var soundBtn = document.createElement('div');
+                soundBtn.className = 'video-sound-btn';
+                soundBtn.id = 'srSoundBtn';
+                soundBtn.innerHTML = '🔇';
+                soundBtn.title = 'Click for sound';
+                soundBtn.style.zIndex = '10';
+                soundBtn.onclick = function(ev) {
+                  ev.stopPropagation();
+                  _srSingleMuted = !_srSingleMuted;
+                  vid.muted = _srSingleMuted;
+                  soundBtn.innerHTML = _srSingleMuted ? '🔇' : '🔊';
+                  if (!_srSingleMuted) { vid.currentTime = 0; vid.play(); }
+                };
+                preview.appendChild(soundBtn);
+              }
+            }
+
+            if (_isRealMobile) {
+              img.style.display = 'none';
+              var mVid = document.createElement('video');
+              mVid.id = 'srFocusVideo';
+              mVid.src = _srVidSrc;
+              mVid.loop = true;
+              mVid.muted = true;
+              mVid.playsInline = true;
+              mVid.preload = 'auto';
+              mVid.setAttribute('playsinline', '');
+              mVid.setAttribute('autoplay', '');
+              mVid.style.cssText = 'width:100%;height:auto;object-fit:contain;display:block;';
+              preview.appendChild(mVid);
+              mVid.play().catch(function(e){ console.warn('[ACK] SR mobile play failed:', e); });
+              var _srMobileMuted = true;
+              var mSoundBtn = document.createElement('div');
+              mSoundBtn.className = 'video-sound-btn';
+              mSoundBtn.id = 'srSoundBtn';
+              mSoundBtn.innerHTML = '🔇';
+              mSoundBtn.title = 'Tap for sound';
+              mSoundBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:10;';
+              mSoundBtn.onclick = function(ev) {
+                ev.stopPropagation();
+                _srMobileMuted = !_srMobileMuted;
+                mVid.muted = _srMobileMuted;
+                mSoundBtn.innerHTML = _srMobileMuted ? '🔇' : '🔊';
+                if (!_srMobileMuted) { mVid.currentTime = 0; mVid.play(); }
+              };
+              preview.style.position = 'relative';
+              preview.appendChild(mSoundBtn);
+            } else {
+              img.style.visibility = 'hidden';
+              _launchSRVideo();
             }
           }
         }, 600);
@@ -27677,6 +27832,18 @@
       if (_loTouchBtn) _loTouchBtn.remove();
       const _loSoundBtn = focusedNode.querySelector('#lastOrdersSoundBtn');
       if (_loSoundBtn) _loSoundBtn.remove();
+
+      // Clean up SuperRare focus videos
+      const _srVidA = focusedNode.querySelector('#srFocusVideo');
+      const _srVidB = focusedNode.querySelector('#srFocusVideoB');
+      if (_srVidA) { _srVidA.pause(); _srVidA.src = ''; _srVidA.remove(); }
+      if (_srVidB) { _srVidB.pause(); _srVidB.src = ''; _srVidB.remove(); }
+      if (_srVidA || _srVidB) {
+        const _srImg = focusedNode.querySelector('.node-preview img');
+        if (_srImg) { _srImg.style.display = ''; _srImg.style.visibility = ''; }
+      }
+      const _srSoundBtn = focusedNode.querySelector('#srSoundBtn');
+      if (_srSoundBtn) _srSoundBtn.remove();
 
       // Clean up LIAR easter egg listener
       if (focusedNode._liarCleanup) { focusedNode._liarCleanup(); delete focusedNode._liarCleanup; }
