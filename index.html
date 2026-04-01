@@ -7268,6 +7268,12 @@
 
     // Collections Data
     const COLLECTIONS = [
+        { name: "Starry Nights", image: "starrynights/elephants_web.jpg",
+          wallLayout: true, comingSoon: true,
+          description: "Starry Nights — a collection of 111 works by AlphaCentauriKid.",
+          token: "ERC-721", chain: "Ethereum",
+          artworks: (function(){var a=[];for(var t=0;t<111;t++){a.push({title:"Starry Night #"+(t+1),image:"starrynights/elephants_web.jpg",fullRes:"starrynights/elephants.jpg",tokenId:t+1})}return a})()
+        },
         { name: "Broken Keys", image: "there_is_no_piano_web.jpg",
           wallLayout: true,
           description: "A collection of forty-eight one-of-one piano themed artworks by AlphaCentauriKid.",
@@ -7649,12 +7655,6 @@
             {title:"The Isle of Kek",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/2531b5dd260a565955c6c3851e3ced69.png?w=500"},
             {title:"les femmes glissees",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/c31d21086f7d7a028b47e7fa767e32eb.png?w=500"}
         ]},
-        { name: "Starry Nights", image: "starrynights/elephants_web.jpg",
-          wallLayout: true, comingSoon: true,
-          description: "Starry Nights — a collection of 111 works by AlphaCentauriKid.",
-          token: "ERC-721", chain: "Ethereum",
-          artworks: (function(){var a=[];for(var t=0;t<111;t++){a.push({title:"Starry Night #"+(t+1),image:"starrynights/elephants_web.jpg",fullRes:"starrynights/elephants.jpg",tokenId:t+1})}return a})()
-        },
         { name: "SuperRare", image: "but_wait_thumb.jpg", contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0", artworks: [
             {title:"but wait...my bags!",image:"superrare/butwait/but_wait_small.gif",fullRes:"superrare/butwait/butwait_fullres.gif",
              tokenId:47875,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
@@ -29098,7 +29098,7 @@
         'Made these for your girl':'💐','Her Favorite Flowers':'🌷',
         'Heart You':'❤','Warothys':'🧙','Ackstract':'◼','ACKPFP':'👾',
         '6529':'🔢','Noble Gallery':'🏛','ACKek':'🐸',
-        'SuperRare':'⭐','Opepen':'◎','notxcopy':'🔄'
+        'Starry Nights':'🌙','SuperRare':'⭐','Opepen':'◎','notxcopy':'🔄'
       };
 
       COLLECTIONS.forEach((col, idx) => {
