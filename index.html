@@ -8290,7 +8290,21 @@
             });
           });
         }
-        _playWhisperAudio();
+        // Only play intro audio once per day — mute on subsequent visits
+        var _introAudioMuted = false;
+        try {
+          var _lastIntroAudio = localStorage.getItem('ack_intro_audio_ts');
+          if (_lastIntroAudio) {
+            var _elapsed = Date.now() - parseInt(_lastIntroAudio, 10);
+            // 24 hours = 86400000ms
+            if (_elapsed < 86400000) _introAudioMuted = true;
+          }
+        } catch(e) { /* localStorage unavailable — play audio */ }
+
+        if (!_introAudioMuted) {
+          _playWhisperAudio();
+          try { localStorage.setItem('ack_intro_audio_ts', String(Date.now())); } catch(e) {}
+        }
 
         var textWrap = document.getElementById('whispersTextWrap');
         var textEl = document.getElementById('whispersText');
