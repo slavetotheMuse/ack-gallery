@@ -2602,6 +2602,116 @@
       transition: opacity 0.4s ease;
     }
 
+    /* ── Clown Party decoration nodes ── */
+    .cp-deco-node {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transform: scale(0.3) rotate(8deg);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    .cp-deco-node.visible {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+      animation: cpDecoFloat var(--float-dur, 7s) ease-in-out var(--float-delay, 0s) infinite;
+    }
+    @keyframes cpDecoFloat {
+      0%, 100% { transform: scale(1) rotate(0deg) translateY(0); }
+      20% { transform: scale(1.02) rotate(1.5deg) translateY(-3px); }
+      50% { transform: scale(0.98) rotate(-1deg) translateY(2px); }
+      80% { transform: scale(1.01) rotate(0.5deg) translateY(-1px); }
+    }
+    .cp-deco-node img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 4px;
+      filter: saturate(0.85) brightness(0.9);
+    }
+    .node-graph-inner.focus-mode .cp-deco-node {
+      opacity: 0 !important;
+      transition: opacity 0.4s ease;
+    }
+
+    /* ── My Bags: complete-set crown badge ── */
+    .bags-set-crown {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      pointer-events: none;
+      font-size: 16px;
+      filter: drop-shadow(0 0 6px rgba(255,200,50,0.6)) drop-shadow(0 0 12px rgba(255,180,30,0.3));
+      animation: crownPulse 3s ease-in-out infinite;
+    }
+    @keyframes crownPulse {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(255,200,50,0.6)) drop-shadow(0 0 12px rgba(255,180,30,0.3)); transform: translateX(-50%) scale(1); }
+      50% { filter: drop-shadow(0 0 10px rgba(255,200,50,0.9)) drop-shadow(0 0 20px rgba(255,180,30,0.5)); transform: translateX(-50%) scale(1.1); }
+    }
+    .bags-set-badge {
+      position: absolute;
+      top: -24px;
+      right: -8px;
+      z-index: 10;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,200,50,0.15), rgba(255,160,30,0.08));
+      border: 1px solid rgba(255,200,50,0.25);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,200,50,0.8);
+      text-transform: uppercase;
+      white-space: nowrap;
+      animation: badgeGlow 4s ease-in-out infinite;
+    }
+    @keyframes badgeGlow {
+      0%, 100% { border-color: rgba(255,200,50,0.25); box-shadow: 0 0 4px rgba(255,200,50,0.1); }
+      50% { border-color: rgba(255,200,50,0.5); box-shadow: 0 0 12px rgba(255,200,50,0.25); }
+    }
+    /* ── My Bags: VIP aura on complete-set nodes ── */
+    .bags-vip-aura {
+      box-shadow: 0 0 15px rgba(255,200,50,0.12), 0 0 30px rgba(255,180,30,0.06), inset 0 0 20px rgba(255,200,50,0.03);
+      animation: vipAuraPulse 5s ease-in-out infinite;
+    }
+    @keyframes vipAuraPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(255,200,50,0.12), 0 0 30px rgba(255,180,30,0.06); }
+      50% { box-shadow: 0 0 25px rgba(255,200,50,0.2), 0 0 50px rgba(255,180,30,0.1); }
+    }
+    /* ── My Bags bonus node (for complete-set rewards) ── */
+    .bags-bonus-node {
+      position: absolute;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transform: scale(0.2);
+      transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.23,1,0.32,1);
+    }
+    .bags-bonus-node.visible {
+      opacity: 1;
+      transform: scale(1);
+      animation: bonusNodeFloat 8s ease-in-out infinite;
+    }
+    @keyframes bonusNodeFloat {
+      0%, 100% { transform: scale(1) translateY(0); }
+      50% { transform: scale(1.03) translateY(-4px); }
+    }
+    .bags-bonus-node img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 6px;
+      filter: saturate(1.1) contrast(1.05);
+      box-shadow: 0 0 20px rgba(255,200,50,0.2), 0 0 40px rgba(255,180,30,0.08);
+    }
+    .node-graph-inner.focus-mode .bags-bonus-node {
+      opacity: 0 !important;
+      transition: opacity 0.4s ease;
+    }
+
     /* ── Servant frame (focus only) ── */
     .servant-frame-svg {
       position: absolute;
@@ -16183,6 +16293,97 @@
           });
         }
 
+        // ── CLOWN PARTY extra_nodes as floating decoration ──
+        var _cpDecoNodes = [];
+        if (collection.name === 'Clown Party') {
+          (function() {
+            var cpExtraSrcs = [
+              'clownparty/extra_nodes/web/clown_web.png',
+              'clownparty/extra_nodes/web/clownjdfk_web.png',
+              'clownparty/extra_nodes/web/clownpartyflyer_web.png',
+              'clownparty/extra_nodes/web/cp123_web.png',
+              'clownparty/extra_nodes/web/geometric_clown_web.png',
+              'clownparty/extra_nodes/web/clownLV_web.png',
+              'clownparty/extra_nodes/web/tinmanface_web.png',
+              'clownparty/extra_nodes/web/clownpartyroom_web.png',
+              'clownparty/extra_nodes/web/mat5_web.jpg',
+              'clownparty/extra_nodes/web/mybags_web.png'
+            ];
+            var cpDecoCount = cpExtraSrcs.length;
+            var cpDecoPositions = [];
+            var cpHeroX = nodePositions[0] ? nodePositions[0].x : vpW * 0.3;
+            var cpHeroY = nodePositions[0] ? nodePositions[0].y : vpH * 0.15;
+            var cpHeroW = nodePositions[0] ? (nodePositions[0].w || 400) : 400;
+            var cpHeroH = nodePositions[0] ? (nodePositions[0].h || 300) : 300;
+            var cpHeroCX = cpHeroX + cpHeroW / 2;
+            var cpHeroCY = cpHeroY + cpHeroH / 2;
+            var cpExclusionR = Math.max(cpHeroW, cpHeroH) * 0.6;
+
+            // Also exclude other card positions
+            var cpAllCards = inner.querySelectorAll('.node-card');
+            var cpCardRects = [];
+            cpAllCards.forEach(function(card) {
+              var cl = parseFloat(card.style.left) || 0;
+              var ct = parseFloat(card.style.top) || 0;
+              var cw = parseFloat(card.style.width) || 200;
+              var ch = card.offsetHeight || cw;
+              cpCardRects.push({ x: cl, y: ct, w: cw, h: ch });
+            });
+
+            var cpMargin = 50;
+            var cpMbY = outputY;
+            for (var cdi = 0; cdi < cpDecoCount; cdi++) {
+              var cdx, cdy, cdAtt = 0;
+              do {
+                cdx = cpMargin + Math.random() * (vpW - cpMargin * 2);
+                cdy = cpMargin + Math.random() * (cpMbY - cpMargin * 2 - 30);
+                var cddx = cdx - cpHeroCX;
+                var cddy = cdy - cpHeroCY;
+                var cdDist = Math.sqrt(cddx * cddx + cddy * cddy);
+                var cpTooClose = false;
+                // Check against other deco nodes
+                for (var cpd = 0; cpd < cpDecoPositions.length; cpd++) {
+                  var cpdx = cdx - cpDecoPositions[cpd].x;
+                  var cpdy = cdy - cpDecoPositions[cpd].y;
+                  if (Math.sqrt(cpdx * cpdx + cpdy * cpdy) < 65) { cpTooClose = true; break; }
+                }
+                // Check against artwork cards
+                if (!cpTooClose) {
+                  for (var cr = 0; cr < cpCardRects.length; cr++) {
+                    var rect = cpCardRects[cr];
+                    if (cdx > rect.x - 30 && cdx < rect.x + rect.w + 30 && cdy > rect.y - 30 && cdy < rect.y + rect.h + 30) {
+                      cpTooClose = true; break;
+                    }
+                  }
+                }
+                if (cdDist > cpExclusionR && !cpTooClose) break;
+                cdAtt++;
+              } while (cdAtt < 100);
+              var cdSize = 45 + Math.random() * 35; // 45-80px
+              cpDecoPositions.push({ x: cdx, y: cdy, size: cdSize });
+            }
+
+            cpDecoPositions.forEach(function(dp, di) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'cp-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--float-dur', (6 + Math.random() * 5).toFixed(1) + 's');
+              wrapper.style.setProperty('--float-delay', (-Math.random() * 8).toFixed(1) + 's');
+              var dImg = document.createElement('img');
+              dImg.src = cpExtraSrcs[di % cpExtraSrcs.length];
+              dImg.alt = 'clown party extra';
+              dImg.loading = 'lazy';
+              wrapper.appendChild(dImg);
+              inner.appendChild(wrapper);
+              _cpDecoNodes.push({ el: wrapper, x: dp.x, y: dp.y, size: dp.size });
+              setTimeout(function() { wrapper.classList.add('visible'); }, 500 + di * 80);
+            });
+          })();
+        }
+
         // ── CLOWN PARTY clown frames on each artwork node ──
         if (collection.name === 'Clown Party') {
           const allCPCards = inner.querySelectorAll('.node-card');
@@ -16735,6 +16936,302 @@
             };
             setTimeout(_applyBagFrame, 800 + bagIdx * 200);
           });
+
+          // ── MY BAGS: Complete-set detection & VIP treatment ──
+          (function() {
+            var bagsArts = collection.artworks;
+            if (!bagsArts || bagsArts.length === 0) return;
+
+            // Build ownership map: { collectionName: [artworkImages] }
+            var ownershipMap = {};
+            bagsArts.forEach(function(ba) {
+              if (!ba._sourceCollection) return;
+              if (!ownershipMap[ba._sourceCollection]) ownershipMap[ba._sourceCollection] = [];
+              ownershipMap[ba._sourceCollection].push(ba);
+            });
+
+            // ── COMPLETE SET DEFINITIONS ──
+            var completeSets = [
+              {
+                name: 'Elephant Trifecta',
+                collection: 'ACK Editions',
+                badge: 'ELEPHANT TRIFECTA',
+                required: ['pink_elephant', 'majestic_white_elephant', 'circus_elephant'],
+                matchField: 'image',
+                bonusImage: 'ackeditions_gallery/web/circus_elephant_web.gif',
+                bonusLabel: 'Parade Master'
+              },
+              {
+                name: 'Color Study Complete',
+                collection: 'The Great Color Study',
+                badge: 'FULL SPECTRUM',
+                // All 12 color studies (including pale blue death and max pain)
+                requiredCount: 12,
+                bonusImage: 'colorstudys/pbd.gif',
+                bonusLabel: 'Chromatic Deity'
+              },
+              {
+                name: 'Clown Party Full House',
+                collection: 'Clown Party',
+                badge: 'FULL HOUSE',
+                requiredCount: 10, // 12 pieces total (6 physical + 6 digital), 10+ = true collector
+                bonusImage: 'clownparty/extra_nodes/web/clownLV_web.png',
+                bonusLabel: 'Ringmaster'
+              },
+              {
+                name: 'Burn Pair',
+                collection: 'ACK Editions',
+                badge: 'BURN PAIR',
+                required: ['ngmi_bottle', 'wagmi_bottle'],
+                matchField: 'image',
+                bonusImage: 'ackeditions_gallery/web/burntoredeem_web.png',
+                bonusLabel: 'Fire Keeper'
+              }
+            ];
+
+            var allBagsCards = inner.querySelectorAll('.node-card');
+
+            completeSets.forEach(function(setDef) {
+              var owned = ownershipMap[setDef.collection];
+              if (!owned) return;
+
+              var isComplete = false;
+              if (setDef.required) {
+                // Check if all required image substrings are present
+                isComplete = setDef.required.every(function(req) {
+                  return owned.some(function(o) { return o[setDef.matchField] && o[setDef.matchField].indexOf(req) !== -1; });
+                });
+              } else if (setDef.requiredCount) {
+                isComplete = owned.length >= setDef.requiredCount;
+              }
+
+              if (!isComplete) return;
+
+              // ── VIP AURA: Apply golden glow to all nodes from this collection ──
+              bagsArts.forEach(function(ba, baIdx) {
+                if (ba._sourceCollection !== setDef.collection) return;
+                if (baIdx >= allBagsCards.length) return;
+                var card = allBagsCards[baIdx];
+                card.classList.add('bags-vip-aura');
+
+                // Crown badge on first node of this collection group
+                var isFirstInGroup = true;
+                for (var prev = baIdx - 1; prev >= 0; prev--) {
+                  if (bagsArts[prev]._sourceCollection === setDef.collection) { isFirstInGroup = false; break; }
+                }
+                if (isFirstInGroup) {
+                  // Crown emoji
+                  var crown = document.createElement('div');
+                  crown.className = 'bags-set-crown';
+                  crown.textContent = '\u{1F451}';
+                  card.style.position = 'relative';
+                  card.appendChild(crown);
+                  // Badge label
+                  var badge = document.createElement('div');
+                  badge.className = 'bags-set-badge';
+                  badge.textContent = setDef.badge;
+                  card.appendChild(badge);
+                }
+              });
+
+              // ── BONUS NODE: Hidden artwork unlocked by complete set ──
+              // Find the bounding box of this collection's cards to place bonus nearby
+              var groupCards = [];
+              bagsArts.forEach(function(ba, baIdx) {
+                if (ba._sourceCollection === setDef.collection && baIdx < allBagsCards.length) {
+                  var c = allBagsCards[baIdx];
+                  groupCards.push({
+                    x: parseFloat(c.style.left) || 0,
+                    y: parseFloat(c.style.top) || 0,
+                    w: parseFloat(c.style.width) || 200,
+                    h: c.offsetHeight || 200
+                  });
+                }
+              });
+
+              if (groupCards.length > 0) {
+                // Place bonus node to the right of the last card in the group, or below
+                var lastCard = groupCards[groupCards.length - 1];
+                var bonusX = lastCard.x + lastCard.w + 40;
+                var bonusY = lastCard.y + 10;
+                var bonusSize = 70;
+
+                // If it would go off screen, place below the group instead
+                if (bonusX + bonusSize > vpW - 30) {
+                  var groupMaxY = 0;
+                  groupCards.forEach(function(gc) { groupMaxY = Math.max(groupMaxY, gc.y + gc.h); });
+                  bonusX = groupCards[0].x + groupCards[0].w / 2 - bonusSize / 2;
+                  bonusY = groupMaxY + 25;
+                }
+
+                var bonusNode = document.createElement('div');
+                bonusNode.className = 'bags-bonus-node';
+                bonusNode.style.left = bonusX + 'px';
+                bonusNode.style.top = bonusY + 'px';
+                bonusNode.style.width = bonusSize + 'px';
+                bonusNode.style.height = bonusSize + 'px';
+
+                var bonusImg = document.createElement('img');
+                bonusImg.src = setDef.bonusImage;
+                bonusImg.alt = setDef.bonusLabel || 'Bonus';
+                bonusImg.loading = 'lazy';
+                bonusNode.appendChild(bonusImg);
+
+                // Label under bonus node
+                var bonusLabel = document.createElement('div');
+                bonusLabel.style.cssText = 'position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);' +
+                  'font-family:"JetBrains Mono",monospace;font-size:0.4rem;letter-spacing:0.1em;' +
+                  'color:rgba(255,200,50,0.6);white-space:nowrap;text-transform:uppercase;';
+                bonusLabel.textContent = setDef.bonusLabel;
+                bonusNode.appendChild(bonusLabel);
+
+                inner.appendChild(bonusNode);
+                setTimeout(function() { bonusNode.classList.add('visible'); }, 1800);
+              }
+            });
+
+            // ── MY BAGS: Collection-specific ambient treatment ──
+            // For each owned collection group, add subtle background elements
+            var _bagsAmbientNodes = [];
+            var ambientConfigs = {
+              'Last Orders': {
+                wireBase: 'rgba(210,120,40,0.10)',
+                wireFlow: 'rgba(240,80,60,0.07)',
+                decoCount: 3,
+                decoSrcs: ['bottle.png', 'lastorders/web/label_greentap.png', 'lastorders/web/breaking_bar.gif'],
+                decoClass: 'bar-deco-node'
+              },
+              'Made these for your girl': {
+                wireBase: 'rgba(80,180,100,0.10)',
+                wireFlow: 'rgba(80,200,110,0.07)',
+                decoCount: 3,
+                decoType: 'svg-flower',
+                decoClass: 'flower-deco-node'
+              },
+              'Tempted in the Garden': {
+                wireBase: 'rgba(80,140,60,0.10)',
+                wireFlow: 'rgba(195,155,55,0.07)',
+                decoCount: 2,
+                decoType: 'svg-garden',
+                decoClass: 'garden-deco-node'
+              },
+              'Clown Party': {
+                wireBase: 'rgba(200,80,100,0.10)',
+                wireFlow: 'rgba(255,180,60,0.07)',
+                decoCount: 2,
+                decoSrcs: ['clownparty/extra_nodes/web/clown_web.png', 'clownparty/extra_nodes/web/cp123_web.png'],
+                decoClass: 'cp-deco-node'
+              },
+              'Right Click Print': {
+                wireBase: 'rgba(60,180,220,0.10)',
+                wireFlow: 'rgba(100,60,180,0.07)',
+                decoCount: 2,
+                decoType: 'svg-rcp',
+                decoClass: 'rcp-deco-node'
+              }
+            };
+
+            Object.keys(ownershipMap).forEach(function(colName) {
+              var cfg = ambientConfigs[colName];
+              if (!cfg) return;
+
+              // Find bounding area of this collection's cards
+              var colCards = [];
+              bagsArts.forEach(function(ba, baIdx) {
+                if (ba._sourceCollection === colName && baIdx < allBagsCards.length) {
+                  var c = allBagsCards[baIdx];
+                  colCards.push({
+                    x: parseFloat(c.style.left) || 0,
+                    y: parseFloat(c.style.top) || 0,
+                    w: parseFloat(c.style.width) || 200,
+                    h: c.offsetHeight || 200
+                  });
+                }
+              });
+              if (colCards.length === 0) return;
+
+              // Compute bounding box of group
+              var gMinX = Infinity, gMinY = Infinity, gMaxX = 0, gMaxY = 0;
+              colCards.forEach(function(cc) {
+                gMinX = Math.min(gMinX, cc.x);
+                gMinY = Math.min(gMinY, cc.y);
+                gMaxX = Math.max(gMaxX, cc.x + cc.w);
+                gMaxY = Math.max(gMaxY, cc.y + cc.h);
+              });
+
+              // Spawn small ambient decos around the group
+              for (var ai = 0; ai < cfg.decoCount; ai++) {
+                var ax, ay, aAtt = 0;
+                do {
+                  // Scatter in the margins around the group
+                  ax = gMinX - 60 + Math.random() * (gMaxX - gMinX + 120);
+                  ay = gMinY - 40 + Math.random() * (gMaxY - gMinY + 80);
+                  var aTooClose = false;
+                  // Avoid overlapping cards directly
+                  for (var aci = 0; aci < colCards.length; aci++) {
+                    var r = colCards[aci];
+                    if (ax > r.x - 10 && ax < r.x + r.w + 10 && ay > r.y - 10 && ay < r.y + r.h + 10) {
+                      aTooClose = true; break;
+                    }
+                  }
+                  if (!aTooClose) break;
+                  aAtt++;
+                } while (aAtt < 40);
+
+                var aSize = 28 + Math.random() * 20;
+                var aWrapper = document.createElement('div');
+                aWrapper.className = cfg.decoClass;
+                aWrapper.style.left = (ax - aSize / 2) + 'px';
+                aWrapper.style.top = (ay - aSize / 2) + 'px';
+                aWrapper.style.width = aSize + 'px';
+                aWrapper.style.height = (aSize * 1.2) + 'px';
+                aWrapper.style.setProperty('--sway-dur', (6 + Math.random() * 5).toFixed(1) + 's');
+                aWrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+                aWrapper.style.setProperty('--float-dur', (6 + Math.random() * 5).toFixed(1) + 's');
+                aWrapper.style.setProperty('--float-delay', (-Math.random() * 7).toFixed(1) + 's');
+
+                if (cfg.decoSrcs) {
+                  var aImg = document.createElement('img');
+                  aImg.src = cfg.decoSrcs[ai % cfg.decoSrcs.length];
+                  aImg.alt = colName + ' ambient';
+                  aImg.loading = 'lazy';
+                  aWrapper.appendChild(aImg);
+                } else if (cfg.decoType === 'svg-flower' && typeof generateFlowerSVG === 'function') {
+                  var fTypes = ['rose', 'tulip', 'daisy'];
+                  aWrapper.appendChild(generateFlowerSVG(fTypes[ai % fTypes.length], aSize));
+                } else if (cfg.decoType === 'svg-garden') {
+                  var gTypes = ['snake', 'apple', 'leaf'];
+                  var gType = gTypes[ai % gTypes.length];
+                  if (gType === 'snake' && typeof generateGardenSnakeSVG === 'function') aWrapper.appendChild(generateGardenSnakeSVG(aSize));
+                  else if (gType === 'apple' && typeof generateGardenAppleSVG === 'function') aWrapper.appendChild(generateGardenAppleSVG(aSize));
+                  else if (typeof generateGardenLeafSVG === 'function') aWrapper.appendChild(generateGardenLeafSVG(aSize));
+                } else if (cfg.decoType === 'svg-rcp') {
+                  // Simple pixel-glitch placeholder
+                  var rcpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  rcpSvg.setAttribute('viewBox', '0 0 30 30');
+                  rcpSvg.style.cssText = 'width:100%;height:100%;';
+                  for (var pi = 0; pi < 6; pi++) {
+                    var pr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    pr.setAttribute('x', (Math.random()*20).toFixed(0));
+                    pr.setAttribute('y', (Math.random()*24).toFixed(0));
+                    pr.setAttribute('width', (3+Math.random()*8).toFixed(0));
+                    pr.setAttribute('height', (2+Math.random()*4).toFixed(0));
+                    pr.setAttribute('fill', 'rgba(60,180,220,' + (0.1+Math.random()*0.1).toFixed(2) + ')');
+                    rcpSvg.appendChild(pr);
+                  }
+                  aWrapper.appendChild(rcpSvg);
+                }
+
+                inner.appendChild(aWrapper);
+                _bagsAmbientNodes.push({ el: aWrapper, x: ax, y: ay, size: aSize, wireBase: cfg.wireBase, wireFlow: cfg.wireFlow });
+                var _aiDelay = ai;
+                setTimeout(function() { aWrapper.classList.add('visible'); }, 1200 + _aiDelay * 100);
+              }
+            });
+
+            // Store ambient nodes on inner for wire drawing access
+            inner._bagsAmbientNodes = _bagsAmbientNodes;
+          })();
         }
 
         // ── Live resize for custom layouts — recompute positions without rebuilding DOM ──
@@ -17066,6 +17563,56 @@
               flow.setAttribute('stroke-width', '1');
               flow.setAttribute('stroke-dasharray', '3 18');
               const dur = (3 + Math.random() * 3).toFixed(1);
+              flow.style.animation = `wireFlow ${dur}s linear infinite`;
+              wiresSvg.appendChild(flow);
+            });
+          }
+
+          // ── Clown Party deco wires — carnival pink/gold, playful style ──
+          if (_cpDecoNodes && _cpDecoNodes.length > 0) {
+            const cpWireBase = 'rgba(200,80,100,0.14)';
+            const cpWireFlow = 'rgba(255,180,60,0.1)';
+            _cpDecoNodes.forEach((cn, ci) => {
+              const stemY = cn.y + cn.size * 0.5;
+              const fromPt = { x: cn.x, y: stemY };
+              const d = _makeWirePath(fromPt, op);
+              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              path.setAttribute('d', d);
+              path.setAttribute('fill', 'none');
+              path.setAttribute('stroke', cpWireBase);
+              path.setAttribute('stroke-width', '0.8');
+              wiresSvg.appendChild(path);
+              const flow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              flow.setAttribute('d', d);
+              flow.setAttribute('fill', 'none');
+              flow.setAttribute('stroke', cpWireFlow);
+              flow.setAttribute('stroke-width', '1');
+              flow.setAttribute('stroke-dasharray', '3 18');
+              const dur = (3 + Math.random() * 3).toFixed(1);
+              flow.style.animation = `wireFlow ${dur}s linear infinite`;
+              wiresSvg.appendChild(flow);
+            });
+          }
+
+          // ── My Bags ambient deco wires — per-collection colors ──
+          if (inner._bagsAmbientNodes && inner._bagsAmbientNodes.length > 0) {
+            inner._bagsAmbientNodes.forEach((an) => {
+              const stemY = an.y + an.size * 0.5;
+              const fromPt = { x: an.x, y: stemY };
+              const d = _makeWirePath(fromPt, op);
+              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              path.setAttribute('d', d);
+              path.setAttribute('fill', 'none');
+              path.setAttribute('stroke', an.wireBase);
+              path.setAttribute('stroke-width', '0.7');
+              wiresSvg.appendChild(path);
+              const flow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              flow.setAttribute('d', d);
+              flow.setAttribute('fill', 'none');
+              flow.setAttribute('stroke', an.wireFlow);
+              flow.setAttribute('stroke-width', '0.9');
+              flow.setAttribute('stroke-dasharray', '3 18');
+              const dur = (3.5 + Math.random() * 3).toFixed(1);
               flow.style.animation = `wireFlow ${dur}s linear infinite`;
               wiresSvg.appendChild(flow);
             });
@@ -19401,46 +19948,29 @@
       }, 150);
 
       // ── TOUCH SWIPE: navigate between artworks in focus mode ──
-      if ('ontouchstart' in window) {
+      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
         let _swipeStartX = 0, _swipeStartY = 0, _swipeDelta = 0, _swipeDeltaY = 0;
         let _swipeTransitioning = false;
-        let _swipeTouchId = null; // track which touch we're following
         const _swipeThreshold = 40;
         const _isMobileSwipe = _isRealMobile;
         const onTouchStart = (evt) => {
           if (_swipeTransitioning) return;
-          if (_swipeTouchId !== null) return; // already tracking a touch
-          var t = evt.touches[0];
-          _swipeTouchId = t.identifier;
-          _swipeStartX = t.clientX;
-          _swipeStartY = t.clientY;
+          _swipeStartX = evt.touches[0].clientX;
+          _swipeStartY = evt.touches[0].clientY;
           _swipeDelta = 0;
           _swipeDeltaY = 0;
-          if (evt.cancelable) evt.preventDefault();
         };
         const onTouchMove = (evt) => {
           if (_swipeTransitioning) return;
-          // Find our tracked touch
-          var t = null;
-          for (var ti = 0; ti < evt.touches.length; ti++) {
-            if (evt.touches[ti].identifier === _swipeTouchId) { t = evt.touches[ti]; break; }
-          }
-          if (!t) return;
-          _swipeDelta = t.clientX - _swipeStartX;
-          _swipeDeltaY = t.clientY - _swipeStartY;
-          // Always prevent scroll in focus mode to avoid bounce/crash
+          _swipeDelta = evt.touches[0].clientX - _swipeStartX;
+          _swipeDeltaY = evt.touches[0].clientY - _swipeStartY;
+          // Prevent scroll in focus mode — CSS touch-action:none handles most of it,
+          // this catches any edge cases
           if (evt.cancelable) evt.preventDefault();
         };
-        let _swipeEndProcessed = false;
         const onTouchEnd = (evt) => {
-          if (_swipeTouchId === null && _swipeEndProcessed) return; // already processed by other listener
-          _swipeTouchId = null; // reset touch tracking
-          _swipeEndProcessed = true;
-          setTimeout(function() { _swipeEndProcessed = false; }, 50); // reset guard
           if (_swipeTransitioning) return;
-          if (!inner.classList.contains('focus-mode')) {
-            cleanupSwipe(); return;
-          }
+          if (!inner.classList.contains('focus-mode')) return;
           // Only register horizontal swipe (ignore vertical gestures)
           if (Math.abs(_swipeDelta) > _swipeThreshold && Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY) * 1.2) {
             const col = COLLECTIONS[focusedCollectionIndex];
@@ -19596,23 +20126,14 @@
           document.removeEventListener('touchstart', onTouchStart);
           document.removeEventListener('touchmove', onTouchMove);
           document.removeEventListener('touchend', onTouchEnd);
-          if (inner) {
-            inner.removeEventListener('touchstart', onTouchStart);
-            inner.removeEventListener('touchmove', onTouchMove);
-            inner.removeEventListener('touchend', onTouchEnd);
-          }
         };
         // Store cleanup so exitFocusMode can remove it
         node._swipeCleanup = cleanupSwipe;
-        // Bind on both document AND inner for maximum mobile compatibility
-        document.addEventListener('touchstart', onTouchStart, { passive: false });
+        // Document-only binding: touchstart passive (allows click synthesis),
+        // touchmove non-passive (allows preventDefault to block scroll)
+        document.addEventListener('touchstart', onTouchStart, { passive: true });
         document.addEventListener('touchmove', onTouchMove, { passive: false });
         document.addEventListener('touchend', onTouchEnd, { passive: true });
-        if (inner) {
-          inner.addEventListener('touchstart', onTouchStart, { passive: false });
-          inner.addEventListener('touchmove', onTouchMove, { passive: false });
-          inner.addEventListener('touchend', onTouchEnd, { passive: true });
-        }
       }
     }
 
