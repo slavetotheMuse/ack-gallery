@@ -14,19 +14,23 @@
 
   <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="a.c.k. art">
   <meta property="og:title" content="a.c.k. art">
   <meta property="og:description" content="chasing whispers from the deep">
-  <meta property="og:image" content="https://ack-gallery.vercel.app/og-preview.jpg?v=2">
+  <meta property="og:image" content="https://ack-gallery.vercel.app/og-preview.jpg">
+  <meta property="og:image:secure_url" content="https://ack-gallery.vercel.app/og-preview.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:alt" content="a.c.k. art — chasing whispers from the deep">
-  <meta property="og:url" content="https://ack-gallery.vercel.app">
+  <meta property="og:url" content="https://ack-gallery.vercel.app/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@alphacentaurikid">
   <meta name="twitter:title" content="a.c.k. art">
   <meta name="twitter:description" content="chasing whispers from the deep">
-  <meta name="twitter:image" content="https://ack-gallery.vercel.app/og-preview.jpg?v=2">
+  <meta name="twitter:image" content="https://ack-gallery.vercel.app/og-preview.jpg">
+  <!-- Apple-specific: explicit image link for iMessage preview -->
+  <link rel="image_src" href="https://ack-gallery.vercel.app/og-preview.jpg">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
@@ -19950,26 +19954,39 @@
       if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
         let _swipeStartX = 0, _swipeStartY = 0, _swipeDelta = 0, _swipeDeltaY = 0;
         let _swipeTransitioning = false;
-        const _swipeThreshold = 40;
+        let _swipeActive = false; // true once we detect horizontal movement
+        const _swipeThreshold = 30; // lowered from 40 for mobile responsiveness
         const _isMobileSwipe = _isRealMobile;
         const onTouchStart = (evt) => {
           if (_swipeTransitioning) return;
+          if (!evt.touches || !evt.touches[0]) return;
           _swipeStartX = evt.touches[0].clientX;
           _swipeStartY = evt.touches[0].clientY;
           _swipeDelta = 0;
           _swipeDeltaY = 0;
+          _swipeActive = false;
+          // NOTE: We do NOT call preventDefault() here — this preserves
+          // click synthesis for taps (tap-to-exit, tap-on-buttons, etc.)
+          // But touchstart is registered non-passive so the browser's
+          // compositor waits for our touchmove decision before scrolling.
         };
         const onTouchMove = (evt) => {
           if (_swipeTransitioning) return;
+          if (!evt.touches || !evt.touches[0]) return;
           _swipeDelta = evt.touches[0].clientX - _swipeStartX;
           _swipeDeltaY = evt.touches[0].clientY - _swipeStartY;
-          // Prevent scroll in focus mode — CSS touch-action:none handles most of it,
-          // this catches any edge cases
-          if (evt.cancelable) evt.preventDefault();
+          // Once horizontal movement exceeds vertical, claim the gesture
+          if (!_swipeActive && Math.abs(_swipeDelta) > 10 && Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY)) {
+            _swipeActive = true;
+          }
+          // Prevent scroll/navigation for horizontal swipes in focus mode
+          if (_swipeActive && inner.classList.contains('focus-mode') && evt.cancelable) {
+            evt.preventDefault();
+          }
         };
         const onTouchEnd = (evt) => {
           if (_swipeTransitioning) return;
-          if (!inner.classList.contains('focus-mode')) return;
+          if (!inner.classList.contains('focus-mode')) { _swipeActive = false; return; }
           // Only register horizontal swipe (ignore vertical gestures)
           if (Math.abs(_swipeDelta) > _swipeThreshold && Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY) * 1.2) {
             const col = COLLECTIONS[focusedCollectionIndex];
@@ -20128,9 +20145,11 @@
         };
         // Store cleanup so exitFocusMode can remove it
         node._swipeCleanup = cleanupSwipe;
-        // Document-only binding: touchstart passive (allows click synthesis),
-        // touchmove non-passive (allows preventDefault to block scroll)
-        document.addEventListener('touchstart', onTouchStart, { passive: true });
+        // CRITICAL: touchstart MUST be non-passive so iOS Safari's compositor
+        // waits for our touchmove decision before starting a scroll gesture.
+        // We don't call preventDefault in touchstart (preserving tap/click),
+        // but the non-passive flag prevents the compositor from pre-committing.
+        document.addEventListener('touchstart', onTouchStart, { passive: false });
         document.addEventListener('touchmove', onTouchMove, { passive: false });
         document.addEventListener('touchend', onTouchEnd, { passive: true });
       }
