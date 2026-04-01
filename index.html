@@ -4937,8 +4937,14 @@
       overscroll-behavior: none !important;
     }
     /* Override child touch-action so browser doesn't intercept swipe gestures */
-    body.mobile-focus-locked * {
+    body.mobile-focus-locked *,
+    body.mobile-focus-locked.is-real-mobile * {
       touch-action: none !important;
+    }
+    /* Kill scroll on the canvas container so compositor can't steal touches */
+    body.mobile-focus-locked .node-graph-canvas {
+      overflow: hidden !important;
+      -webkit-overflow-scrolling: auto !important;
     }
 
     /* ── Mobile: disable double-tap zoom (keeps pinch zoom) ── */
@@ -19376,23 +19382,39 @@
       if ('ontouchstart' in window) {
         let _swipeStartX = 0, _swipeStartY = 0, _swipeDelta = 0, _swipeDeltaY = 0;
         let _swipeTransitioning = false;
+        let _swipeTouchId = null; // track which touch we're following
         const _swipeThreshold = 40;
         const _isMobileSwipe = _isRealMobile;
         const onTouchStart = (evt) => {
           if (_swipeTransitioning) return;
-          _swipeStartX = evt.touches[0].clientX;
-          _swipeStartY = evt.touches[0].clientY;
+          if (_swipeTouchId !== null) return; // already tracking a touch
+          var t = evt.touches[0];
+          _swipeTouchId = t.identifier;
+          _swipeStartX = t.clientX;
+          _swipeStartY = t.clientY;
           _swipeDelta = 0;
           _swipeDeltaY = 0;
+          if (evt.cancelable) evt.preventDefault();
         };
         const onTouchMove = (evt) => {
           if (_swipeTransitioning) return;
-          _swipeDelta = evt.touches[0].clientX - _swipeStartX;
-          _swipeDeltaY = evt.touches[0].clientY - _swipeStartY;
+          // Find our tracked touch
+          var t = null;
+          for (var ti = 0; ti < evt.touches.length; ti++) {
+            if (evt.touches[ti].identifier === _swipeTouchId) { t = evt.touches[ti]; break; }
+          }
+          if (!t) return;
+          _swipeDelta = t.clientX - _swipeStartX;
+          _swipeDeltaY = t.clientY - _swipeStartY;
           // Always prevent scroll in focus mode to avoid bounce/crash
           if (evt.cancelable) evt.preventDefault();
         };
-        const onTouchEnd = () => {
+        let _swipeEndProcessed = false;
+        const onTouchEnd = (evt) => {
+          if (_swipeTouchId === null && _swipeEndProcessed) return; // already processed by other listener
+          _swipeTouchId = null; // reset touch tracking
+          _swipeEndProcessed = true;
+          setTimeout(function() { _swipeEndProcessed = false; }, 50); // reset guard
           if (_swipeTransitioning) return;
           if (!inner.classList.contains('focus-mode')) {
             cleanupSwipe(); return;
@@ -19552,12 +19574,23 @@
           document.removeEventListener('touchstart', onTouchStart);
           document.removeEventListener('touchmove', onTouchMove);
           document.removeEventListener('touchend', onTouchEnd);
+          if (inner) {
+            inner.removeEventListener('touchstart', onTouchStart);
+            inner.removeEventListener('touchmove', onTouchMove);
+            inner.removeEventListener('touchend', onTouchEnd);
+          }
         };
         // Store cleanup so exitFocusMode can remove it
         node._swipeCleanup = cleanupSwipe;
-        document.addEventListener('touchstart', onTouchStart, { passive: true });
+        // Bind on both document AND inner for maximum mobile compatibility
+        document.addEventListener('touchstart', onTouchStart, { passive: false });
         document.addEventListener('touchmove', onTouchMove, { passive: false });
         document.addEventListener('touchend', onTouchEnd, { passive: true });
+        if (inner) {
+          inner.addEventListener('touchstart', onTouchStart, { passive: false });
+          inner.addEventListener('touchmove', onTouchMove, { passive: false });
+          inner.addEventListener('touchend', onTouchEnd, { passive: true });
+        }
       }
     }
 
