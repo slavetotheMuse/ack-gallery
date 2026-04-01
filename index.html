@@ -21481,22 +21481,7 @@
               ]).then(function(results) {
                 var aw = results[0];
                 var sections = [];
-                if (aw.liveOwner) {
-                  var ownerDisplay = aw.liveOwnerENS || ACK_CHAIN.shortAddr(aw.liveOwner);
-                  var ownerLink = (aw.liveOwnerENS || aw.liveOwner.endsWith('.eth'))
-                    ? 'https://etherscan.io/name-lookup-search?id=' + (aw.liveOwnerENS || aw.liveOwner)
-                    : 'https://etherscan.io/address/' + aw.liveOwner;
-                  sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(80,200,120,0.6);">Owner</div><div class="node-info-value"><a id="rcpOwnerLink" href="' + ownerLink + '" target="_blank" rel="noopener" style="color:rgba(200,190,170,0.85);text-decoration:none;border-bottom:1px dotted rgba(220,150,50,0.3);">' + ownerDisplay + '</a></div></div>');
-                  // Async ENS update
-                  if (!aw.liveOwnerENS && !aw.liveOwner.endsWith('.eth')) {
-                    ACK_CHAIN.resolveENS(aw.liveOwner).then(function(ens) {
-                      if (ens) {
-                        var el = document.getElementById('rcpOwnerLink');
-                        if (el) { el.textContent = ens; el.href = 'https://etherscan.io/name-lookup-search?id=' + ens; }
-                      }
-                    });
-                  }
-                }
+                // Owner removed — redundant with Collector tab/popup
                 if (aw.isListed && aw.listingPriceEth) {
                   sections.push('<div style="border-top:1px solid rgba(80,80,75,0.25);margin:5px 0;"></div>');
                   sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(50,205,50,0.7);">Listing</div><div class="node-info-value" style="color:rgba(50,205,50,0.85);">' + aw.listingPriceEth + ' ETH</div></div>');
@@ -21663,23 +21648,7 @@
             ]).then(function(results) {
               var aw = results[0];
               var sections = [];
-              // ── Owner section (skip for ERC-1155 editions — use COLLECTORS popup instead) ──
-              if (aw.liveOwner && !_isEdition) {
-                var ownerDisplay = aw.liveOwnerENS || ACK_CHAIN.shortAddr(aw.liveOwner);
-                var ownerLink = (aw.liveOwnerENS || aw.liveOwner.endsWith('.eth'))
-                  ? 'https://etherscan.io/name-lookup-search?id=' + (aw.liveOwnerENS || aw.liveOwner)
-                  : 'https://etherscan.io/address/' + aw.liveOwner;
-                sections.push('<div class="node-info-line"><div class="node-info-label" style="color:rgba(80,200,120,0.6);">Owner</div><div class="node-info-value"><a id="mainOwnerLink" href="' + ownerLink + '" target="_blank" rel="noopener" style="color:rgba(200,190,170,0.85);text-decoration:none;border-bottom:1px dotted rgba(220,150,50,0.3);" onmouseover="this.style.color=\'rgba(220,150,50,0.95)\'" onmouseout="this.style.color=\'rgba(200,190,170,0.85)\'">' + ownerDisplay + '</a></div></div>');
-                // Async ENS update
-                if (!aw.liveOwnerENS && !aw.liveOwner.endsWith('.eth')) {
-                  ACK_CHAIN.resolveENS(aw.liveOwner).then(function(ens) {
-                    if (ens) {
-                      var el = document.getElementById('mainOwnerLink');
-                      if (el) { el.textContent = ens; el.href = 'https://etherscan.io/name-lookup-search?id=' + ens; }
-                    }
-                  });
-                }
-              }
+              // Owner removed — redundant with Collector tab/popup
               // ── Divider + Listing (per-token, not collection floor) ──
               if (aw.isListed && aw.listingPriceEth) {
                 sections.push('<div style="border-top:1px solid rgba(80,80,75,0.25);margin:5px 0;"></div>');
@@ -22477,7 +22446,7 @@
           <span class="cp-header-title">COLLECTORS</span>
           <div class="cp-close" id="collectorsPopupClose">&times;</div>
         </div>
-        <div class="cp-loading">FETCHING OWNERS...</div>
+        <div class="cp-loading">FETCHING COLLECTORS...</div>
       `;
       document.body.appendChild(popup);
 
@@ -22556,7 +22525,7 @@
           const totalOwners = ownerBalances.length;
           const totalSupply = ownerBalances.reduce(function(sum, o) { return sum + o.balance; }, 0);
 
-          let listHTML = '<div class="cp-summary">' + totalOwners + ' unique owner' + (totalOwners !== 1 ? 's' : '') + ' \u00B7 ' + totalSupply + ' total</div><div class="cp-list">';
+          let listHTML = '<div class="cp-summary">' + totalOwners + ' unique collector' + (totalOwners !== 1 ? 's' : '') + ' \u00B7 ' + totalSupply + ' total</div><div class="cp-list">';
           ownerBalances.forEach(function(owner, idx) {
             const addr = owner.address;
             const isEns = addr.endsWith('.eth');
