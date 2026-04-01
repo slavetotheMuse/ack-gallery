@@ -16,14 +16,16 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="a.c.k. art">
   <meta property="og:description" content="chasing whispers from the deep">
-  <meta property="og:image" id="ogImage" content="https://ack.art/broken-keys-web/there_is_no_piano.jpg">
+  <meta property="og:image" id="ogImage" content="https://ack.art/but_wait_thumb.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
   <meta property="og:url" content="https://ack.art">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@alphacentaurikid">
   <meta name="twitter:title" content="a.c.k. art">
   <meta name="twitter:description" content="chasing whispers from the deep">
-  <meta name="twitter:image" id="twImage" content="https://ack.art/broken-keys-web/there_is_no_piano.jpg">
+  <meta name="twitter:image" id="twImage" content="https://ack.art/but_wait_thumb.jpg">
   <script>
     (function(){
       var base = 'https://ack.art/';
@@ -842,27 +844,29 @@
     /* Nav esc hint — appears below logo when in collection/focus view */
     .nav-esc-hint {
       position: absolute;
-      bottom: -18px;
+      bottom: -22px;
       left: 0;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.38rem;
-      letter-spacing: 0.1em;
+      font-size: 0.52rem;
+      letter-spacing: 0.12em;
       color: rgba(200,180,150,0.0);
       white-space: nowrap;
       pointer-events: none;
-      transition: color 0.5s ease;
+      transition: opacity 0.5s ease, color 0.5s ease;
+      opacity: 0;
     }
     .nav-esc-hint.visible {
-      color: rgba(200,180,150,0.35);
+      color: rgba(200,180,150,0.4);
+      opacity: 1;
     }
     .nav-esc-hint kbd {
       display: inline-block;
-      padding: 0px 4px;
-      border: 1px solid rgba(200,180,150,0.2);
-      border-radius: 2px;
-      font-size: 0.36rem;
+      padding: 1px 5px;
+      border: 1px solid rgba(200,180,150,0.25);
+      border-radius: 3px;
+      font-size: 0.48rem;
       margin-right: 3px;
-      background: rgba(200,180,150,0.04);
+      background: rgba(200,180,150,0.05);
     }
 
     /* Flying logo spinner */
@@ -2773,6 +2777,12 @@
     }
     .node-card.has-heartyou-frame:not(.focused):hover .node-title-tag,
     .node-card.has-heartyou-frame:not(.focused):hover .node-collab-tag { opacity: 1; }
+
+    .superrare-frame-svg {
+      position: absolute; pointer-events: none; z-index: 5;
+      overflow: visible; opacity: 0; transition: opacity 1s ease 0.3s;
+    }
+    .node-card.focused .superrare-frame-svg { opacity: 1; }
 
     .node-preview {
       padding: 0;
@@ -7753,7 +7763,7 @@
             {title:"shady bunch",image:"superrare/shadybunch/shadybunch_master.gif",
              tokenId:33270,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"6942",image:"superrare/6942/6942_web.jpg",
-             fullRes:"superrare/6942/asset%2F9d185818285c1409b9b8986b6108ce042f654eab5f8825424588837e816b6137.png",
+             fullRes:"superrare/6942/6942_fullres.png",
              tokenId:32650,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"she loves me not",image:"superrare/she_loves_me_not/shelovesmenot.gif",
              tokenId:32516,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
@@ -18580,6 +18590,22 @@
         }, 900);
       }
 
+      // ── SuperRare frame in focus view ──
+      if (_focusColName === 'SuperRare') {
+        setTimeout(() => {
+          if (node.querySelector('.superrare-frame-svg')) return;
+          const preview = node.querySelector('.node-preview');
+          const img = preview ? preview.querySelector('img') : null;
+          if (preview && img) {
+            const localW = parseFloat(node.style.width) || preview.offsetWidth;
+            const localH = img.offsetHeight || preview.offsetHeight || localW;
+            const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['SuperRare'];
+            const frameSvg = generateSuperRareFrame(localW, localH, pal, artworkData.title, true);
+            node.appendChild(frameSvg);
+          }
+        }, 900);
+      }
+
       // ── Opepen frame in focus view ──
       if (_focusColName === 'Opepen Set 030: a.c.k.') {
         setTimeout(() => {
@@ -19336,7 +19362,7 @@
         '.colorstudy-frame-svg', '.opepen-frame-svg', '.heartyou-frame-svg',
         '.starry-frame-svg', '.pfp-frame-svg', '.brokenkeys-frame-svg',
         '.warothy-frame-svg', '.botanical-frame-svg', '.servant-frame-svg',
-        '.tempted-frame-svg', '.bar-frame-svg'
+        '.tempted-frame-svg', '.bar-frame-svg', '.superrare-frame-svg'
       ];
       frameSelectors.forEach(function(sel) {
         var frames = node.querySelectorAll(sel);
@@ -19419,6 +19445,9 @@
         frameSvg = generateTemptedFrame(localW, localH, true);
       } else if (colName === 'Servant Coin Spin') {
         frameSvg = generateServantFrame(localW, localH);
+      } else if (colName === 'SuperRare') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['SuperRare'];
+        frameSvg = generateSuperRareFrame(localW, localH, pal, artworkData.title, true);
       } else if (artworkData.masterwork) {
         frameSvg = generateOrnateFrame(localW, localH);
       }
@@ -19725,6 +19754,16 @@
       'opepen/web/musetv_web.jpg': {body:'rgb(24,12,16)',border:'rgba(48,24,32,0.85)',header:'rgba(90,44,58,0.92)',accent:'rgb(200,40,70)',accentDim:'rgba(220,60,90,0.75)',accentGlow:'rgba(200,40,70,0.06)',headerText:'#e0e0de'},
       'opepen/web/tiptoe_web.jpg': {body:'rgb(10,16,22)',border:'rgba(20,34,48,0.85)',header:'rgba(40,66,92,0.92)',accent:'rgb(60,150,210)',accentDim:'rgba(80,170,230,0.75)',accentGlow:'rgba(60,150,210,0.06)',headerText:'#e0e0de'},
       'opepen/web/davinci_vangogh_web.jpg': {body:'rgb(12,20,22)',border:'rgba(26,42,46,0.85)',header:'rgba(50,80,86,0.92)',accent:'rgb(80,160,140)',accentDim:'rgba(100,180,160,0.75)',accentGlow:'rgba(80,160,140,0.06)',headerText:'#e0e0de'},
+      // SuperRare
+      'superrare/butwait/but_wait_small.gif': {body:'rgb(58,38,50)',border:'rgba(88,60,78,0.85)',header:'rgba(140,110,128,0.92)',accent:'rgb(180,50,70)',accentDim:'rgba(220,90,110,0.75)',accentGlow:'rgba(180,50,70,0.06)',headerText:'#e0e0de'},
+      'https://arweave.net/1Sas2deHRkHZ9ZigvldnbOiC94naLD29j8f4LHD6j5M': {body:'rgb(30,18,18)',border:'rgba(60,30,30,0.85)',header:'rgba(100,60,60,0.92)',accent:'rgb(160,40,40)',accentDim:'rgba(200,80,80,0.75)',accentGlow:'rgba(160,40,40,0.06)',headerText:'#e0e0de'},
+      'superrare/love_is_in_the_air/loveisintheair.gif': {body:'rgb(28,22,48)',border:'rgba(48,40,78,0.85)',header:'rgba(90,82,130,0.92)',accent:'rgb(80,200,210)',accentDim:'rgba(120,230,240,0.75)',accentGlow:'rgba(80,200,210,0.06)',headerText:'#e0e0de'},
+      'superrare/cryptoart/cryptoartmuse_resized.gif': {body:'rgb(28,18,20)',border:'rgba(55,30,35,0.85)',header:'rgba(100,60,68,0.92)',accent:'rgb(200,30,50)',accentDim:'rgba(240,70,90,0.75)',accentGlow:'rgba(200,30,50,0.06)',headerText:'#e0e0de'},
+      'superrare/shadybunch/shadybunch_master.gif': {body:'rgb(18,18,30)',border:'rgba(35,35,58,0.85)',header:'rgba(70,70,110,0.92)',accent:'rgb(60,200,240)',accentDim:'rgba(100,230,255,0.75)',accentGlow:'rgba(60,200,240,0.06)',headerText:'#e0e0de'},
+      'superrare/6942/6942_web.jpg': {body:'rgb(38,42,48)',border:'rgba(60,68,78,0.85)',header:'rgba(110,118,130,0.92)',accent:'rgb(60,180,100)',accentDim:'rgba(100,220,140,0.75)',accentGlow:'rgba(60,180,100,0.06)',headerText:'#e0e0de'},
+      'superrare/she_loves_me_not/shelovesmenot.gif': {body:'rgb(22,14,18)',border:'rgba(42,28,35,0.85)',header:'rgba(80,55,65,0.92)',accent:'rgb(50,220,80)',accentDim:'rgba(90,255,120,0.75)',accentGlow:'rgba(50,220,80,0.06)',headerText:'#e0e0de'},
+      'superrare/alltimehigh/alltimehigh_web.jpg': {body:'rgb(50,12,14)',border:'rgba(80,24,28,0.85)',header:'rgba(130,60,65,0.92)',accent:'rgb(170,20,30)',accentDim:'rgba(210,60,70,0.75)',accentGlow:'rgba(170,20,30,0.06)',headerText:'#e0e0de'},
+      'superrare/ctrlaltgen/ctrlaltgen_web.jpg': {body:'rgb(18,16,28)',border:'rgba(35,32,55,0.85)',header:'rgba(70,65,100,0.92)',accent:'rgb(50,80,180)',accentDim:'rgba(90,120,220,0.75)',accentGlow:'rgba(50,80,180,0.06)',headerText:'#e0e0de'},
     };
 
     // Collection-level fallback palettes for when dynamic extraction fails
@@ -27448,6 +27487,333 @@
       return svg;
     }
 
+    // ── SuperRare collection frame ──
+    // Premium gallery frame: thin diamond-cut borders, SR diamond motifs at corners,
+    // per-artwork thematic embellishments that reflect each work's soul.
+    function generateSuperRareFrame(imgW, imgH, palette, title, focusMode) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = focusMode ? 18 : 14;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + (imgW + pad * 2) + ' ' + (imgH + pad * 2));
+      svg.setAttribute('width', imgW + pad * 2);
+      svg.setAttribute('height', imgH + pad * 2);
+      svg.classList.add('superrare-frame-svg');
+      svg.style.cssText = 'position:absolute;top:' + (-pad) + 'px;left:' + (-pad) + 'px;pointer-events:none;z-index:5;overflow:visible;';
+
+      var ac = palette ? palette.accent : 'rgb(180,80,200)';
+      var m = ac.match(/(\d+),\s*(\d+),\s*(\d+)/);
+      var ar = m ? +m[1] : 180, ag = m ? +m[2] : 80, ab = m ? +m[3] : 200;
+      var L = pad, T = pad, R = imgW + pad, B = imgH + pad;
+      var W = R - L, H = B - T;
+      var tl = (title || '').toLowerCase();
+
+      var seed = (ar * 7 + ag * 13 + ab * 3 + imgW * 11 + imgH * 5) & 0xFFFF;
+      var rand = function() { seed = (seed * 16807 + 11) % 2147483647; return (seed & 0xFFFF) / 0xFFFF; };
+      var ac_ = function(a) { return 'rgba(' + ar + ',' + ag + ',' + ab + ',' + a + ')'; };
+      // SuperRare signature purple
+      var srP = function(a) { return 'rgba(180,80,200,' + a + ')'; };
+
+      var els = '';
+
+      // ══ DEFS: glow filter + diamond gradient ══
+      var uid = 'sr' + Math.floor(rand() * 99999);
+      els += '<defs>';
+      els += '<filter id="srGlow' + uid + '" x="-30%" y="-30%" width="160%" height="160%">';
+      els += '<feGaussianBlur stdDeviation="' + (focusMode ? 2.5 : 1.5) + '" result="g"/>';
+      els += '</filter>';
+      els += '<linearGradient id="srGrad' + uid + '" x1="0%" y1="0%" x2="100%" y2="100%">';
+      els += '<stop offset="0%" stop-color="' + ac_(0.4) + '"/>';
+      els += '<stop offset="50%" stop-color="' + srP(0.3) + '"/>';
+      els += '<stop offset="100%" stop-color="' + ac_(0.4) + '"/>';
+      els += '</linearGradient>';
+      els += '</defs>';
+
+      // ══ BASE: double border with accent glow ══
+      // Inner crisp border
+      els += '<rect x="' + L + '" y="' + T + '" width="' + W + '" height="' + H + '" fill="none" stroke="' + ac_(focusMode ? 0.4 : 0.28) + '" stroke-width="' + (focusMode ? 0.9 : 0.7) + '"/>';
+      // Outer thin border
+      els += '<rect x="' + (L - 3) + '" y="' + (T - 3) + '" width="' + (W + 6) + '" height="' + (H + 6) + '" fill="none" stroke="' + ac_(focusMode ? 0.15 : 0.1) + '" stroke-width="0.35" rx="1"/>';
+      // Glow halo on inner border
+      els += '<rect x="' + L + '" y="' + T + '" width="' + W + '" height="' + H + '" fill="none" stroke="' + ac_(focusMode ? 0.12 : 0.06) + '" stroke-width="2" filter="url(#srGlow' + uid + ')"/>';
+
+      // ══ CORNER DIAMONDS — SuperRare signature ══
+      // Small diamond shapes at each corner (the SR brand motif)
+      var dSize = focusMode ? 4.5 : 3.5;
+      var corners = [[L, T], [R, T], [L, B], [R, B]];
+      for (var ci = 0; ci < 4; ci++) {
+        var cx = corners[ci][0], cy = corners[ci][1];
+        els += '<polygon points="' + cx + ',' + (cy - dSize) + ' ' + (cx + dSize * 0.6) + ',' + cy + ' ' + cx + ',' + (cy + dSize) + ' ' + (cx - dSize * 0.6) + ',' + cy + '" fill="' + ac_(focusMode ? 0.15 : 0.08) + '" stroke="' + ac_(focusMode ? 0.35 : 0.2) + '" stroke-width="0.4"/>';
+        // Tiny inner facet line
+        els += '<line x1="' + cx + '" y1="' + (cy - dSize * 0.4) + '" x2="' + cx + '" y2="' + (cy + dSize * 0.4) + '" stroke="' + ac_(0.15) + '" stroke-width="0.25"/>';
+      }
+
+      // ══ EDGE ACCENT LINES — subtle gem facet lines along edges ══
+      // Top and bottom midpoint accent dashes
+      var midX = L + W * 0.5;
+      var midY = T + H * 0.5;
+      var dashLen = focusMode ? 20 : 14;
+      els += '<line x1="' + (midX - dashLen) + '" y1="' + (T - 1) + '" x2="' + (midX + dashLen) + '" y2="' + (T - 1) + '" stroke="url(#srGrad' + uid + ')" stroke-width="0.5"/>';
+      els += '<line x1="' + (midX - dashLen) + '" y1="' + (B + 1) + '" x2="' + (midX + dashLen) + '" y2="' + (B + 1) + '" stroke="url(#srGrad' + uid + ')" stroke-width="0.5"/>';
+      // Left and right midpoint accents
+      els += '<line x1="' + (L - 1) + '" y1="' + (midY - dashLen * 0.8) + '" x2="' + (L - 1) + '" y2="' + (midY + dashLen * 0.8) + '" stroke="url(#srGrad' + uid + ')" stroke-width="0.5"/>';
+      els += '<line x1="' + (R + 1) + '" y1="' + (midY - dashLen * 0.8) + '" x2="' + (R + 1) + '" y2="' + (midY + dashLen * 0.8) + '" stroke="url(#srGrad' + uid + ')" stroke-width="0.5"/>';
+
+      // ══ PER-ARTWORK THEMATIC ELEMENTS ══
+
+      if (tl.indexOf('but wait') !== -1) {
+        // ── "but wait...my bags!" — luxury bag silhouettes + scattered dots (pointillist sand) ──
+        // Tiny bag icon bottom-right
+        var bx = R + 4, by = B - 8;
+        els += '<rect x="' + bx + '" y="' + by + '" width="6" height="5" rx="0.5" fill="none" stroke="' + ac_(0.2) + '" stroke-width="0.4"/>';
+        els += '<path d="M' + (bx + 1.5) + ',' + by + ' Q' + (bx + 3) + ',' + (by - 2.5) + ' ' + (bx + 4.5) + ',' + by + '" fill="none" stroke="' + ac_(0.2) + '" stroke-width="0.35"/>';
+        // Second smaller bag
+        var bx2 = R + 5, by2 = B - 2;
+        els += '<rect x="' + bx2 + '" y="' + by2 + '" width="4.5" height="3.5" rx="0.4" fill="none" stroke="' + ac_(0.15) + '" stroke-width="0.35"/>';
+        els += '<path d="M' + (bx2 + 1) + ',' + by2 + ' Q' + (bx2 + 2.25) + ',' + (by2 - 2) + ' ' + (bx2 + 3.5) + ',' + by2 + '" fill="none" stroke="' + ac_(0.15) + '" stroke-width="0.3"/>';
+        // 👜 emoji text near top-left
+        els += '<text x="' + (L - 8) + '" y="' + (T + 14) + '" font-size="5" fill="' + ac_(0.12) + '" font-family="serif">👜</text>';
+        // Pointillist scatter along bottom
+        for (var i = 0; i < 20; i++) {
+          var px = L + rand() * W;
+          var py = B + 2 + rand() * 6;
+          var ps = 0.4 + rand() * 0.8;
+          els += '<circle cx="' + px + '" cy="' + py + '" r="' + ps + '" fill="' + ac_(0.06 + rand() * 0.08) + '"/>';
+        }
+        // Red robe accent — tiny drape line at top
+        var rx = L - 4;
+        els += '<path d="M' + rx + ',' + (T - 2) + ' Q' + (rx - 2) + ',' + (T + 8) + ' ' + (rx + 1) + ',' + (T + 16) + '" fill="none" stroke="rgba(160,30,50,0.15)" stroke-width="0.5" stroke-linecap="round"/>';
+
+      } else if (tl.indexOf('promise') !== -1) {
+        // ── "I promise I can change" — concentric void rings, rose petal scatter, truth/lies duality ──
+        // Concentric rings emanating from center (the dark vortex of the artwork)
+        for (var ri = 0; ri < 3; ri++) {
+          var ringR = 6 + ri * 4;
+          var ringOp = (0.08 - ri * 0.02).toFixed(2);
+          // Top-left corner rings
+          els += '<circle cx="' + (L - 4) + '" cy="' + (T - 4) + '" r="' + ringR + '" fill="none" stroke="' + ac_(ringOp) + '" stroke-width="0.3"/>';
+        }
+        // Rose petals scattered (the red flower field)
+        for (var pi = 0; pi < 8; pi++) {
+          var side = rand() > 0.5;
+          var px = side ? (L - 3 - rand() * 7) : (R + 3 + rand() * 7);
+          var py = T + rand() * H;
+          var ps = 1.5 + rand() * 1.5;
+          var pa = rand() * Math.PI * 2;
+          els += '<ellipse cx="' + px + '" cy="' + py + '" rx="' + (ps * 0.4) + '" ry="' + ps + '" fill="none" stroke="rgba(160,30,30,' + (0.1 + rand() * 0.08) + ')" stroke-width="0.3" transform="rotate(' + (pa * 180 / Math.PI) + ',' + px + ',' + py + ')"/>';
+        }
+        // Skull hint: tiny circle with eye dots at bottom-right
+        var sx = R + 6, sy = B - 5;
+        els += '<circle cx="' + sx + '" cy="' + sy + '" r="3" fill="none" stroke="rgba(200,170,80,0.1)" stroke-width="0.3"/>';
+        els += '<circle cx="' + (sx - 1) + '" cy="' + (sy - 0.5) + '" r="0.4" fill="rgba(200,170,80,0.12)"/>';
+        els += '<circle cx="' + (sx + 1) + '" cy="' + (sy - 0.5) + '" r="0.4" fill="rgba(200,170,80,0.12)"/>';
+
+      } else if (tl.indexOf('love is in the air') !== -1) {
+        // ── "love is in the air" (collab with Seerlight) — pixel art city, stars, crescent moon, floating piano ──
+        // Tiny stars scattered in frame margins
+        for (var si = 0; si < 12; si++) {
+          var starX = (rand() > 0.5) ? (L - 3 - rand() * 10) : (R + 3 + rand() * 10);
+          var starY = T + rand() * H * 0.7;
+          var starS = 0.5 + rand() * 1.2;
+          // 4-pointed star
+          els += '<polygon points="' + starX + ',' + (starY - starS) + ' ' + (starX + starS * 0.3) + ',' + starY + ' ' + starX + ',' + (starY + starS) + ' ' + (starX - starS * 0.3) + ',' + starY + '" fill="' + ac_(0.15 + rand() * 0.1) + '"/>';
+        }
+        // Crescent moon top-right
+        var mx = R + 6, my = T - 4;
+        els += '<circle cx="' + mx + '" cy="' + my + '" r="3" fill="none" stroke="rgba(240,210,120,0.2)" stroke-width="0.5"/>';
+        els += '<circle cx="' + (mx + 1.2) + '" cy="' + (my - 0.8) + '" r="2.5" fill="rgba(50,40,70,0.8)"/>';
+        // Tiny piano silhouette floating mid-left
+        var pianoX = L - 8, pianoY = T + H * 0.35;
+        els += '<rect x="' + pianoX + '" y="' + pianoY + '" width="4" height="2.5" rx="0.3" fill="none" stroke="rgba(180,60,70,0.18)" stroke-width="0.35"/>';
+        els += '<line x1="' + pianoX + '" y1="' + (pianoY + 2.5) + '" x2="' + pianoX + '" y2="' + (pianoY + 4) + '" stroke="rgba(180,60,70,0.12)" stroke-width="0.3"/>';
+        els += '<line x1="' + (pianoX + 4) + '" y1="' + (pianoY + 2.5) + '" x2="' + (pianoX + 4) + '" y2="' + (pianoY + 4) + '" stroke="rgba(180,60,70,0.12)" stroke-width="0.3"/>';
+        // Pixel-style building blocks along bottom (city skyline)
+        for (var bi = 0; bi < 8; bi++) {
+          var bbx = L + bi * (W / 8) + rand() * 4;
+          var bby = B + 3;
+          var bbw = 3 + rand() * 4;
+          var bbh = 2 + rand() * 5;
+          els += '<rect x="' + bbx + '" y="' + bby + '" width="' + bbw + '" height="' + bbh + '" fill="' + ac_(0.04 + rand() * 0.04) + '" stroke="' + ac_(0.08) + '" stroke-width="0.2"/>';
+          // Tiny lit window
+          if (rand() > 0.4) {
+            els += '<rect x="' + (bbx + 1 + rand() * (bbw - 2)) + '" y="' + (bby + 1 + rand() * (bbh - 2)) + '" width="0.8" height="0.8" fill="rgba(240,220,100,0.15)"/>';
+          }
+        }
+        // ── Collab credit: ACK (left) × Seerlight (right) ──
+        if (focusMode) {
+          els += '<text x="' + (L + 2) + '" y="' + (B + pad - 2) + '" font-family="\'JetBrains Mono\',monospace" font-size="' + (focusMode ? 4 : 3) + '" letter-spacing="0.08em" fill="' + ac_(0.3) + '" text-anchor="start">ACK</text>';
+          els += '<text x="' + (R - 2) + '" y="' + (B + pad - 2) + '" font-family="\'JetBrains Mono\',monospace" font-size="' + (focusMode ? 4 : 3) + '" letter-spacing="0.08em" fill="' + ac_(0.3) + '" text-anchor="end">Seerlight</text>';
+          els += '<text x="' + midX + '" y="' + (B + pad - 2) + '" font-family="\'JetBrains Mono\',monospace" font-size="3" fill="' + ac_(0.2) + '" text-anchor="middle">×</text>';
+        }
+
+      } else if (tl.indexOf('crypto art') !== -1) {
+        // ── "crypto art" — glitch data, trading charts, chromatic aberration ──
+        // Glitch scan lines across top and bottom
+        for (var gi = 0; gi < 6; gi++) {
+          var gy = (gi < 3) ? (T - 2 - gi * 1.5) : (B + 2 + (gi - 3) * 1.5);
+          var gx = L + rand() * W * 0.3;
+          var gw = W * 0.2 + rand() * W * 0.5;
+          var gcol = ['rgba(200,30,50,', 'rgba(30,200,80,', 'rgba(30,80,200,'][Math.floor(rand() * 3)];
+          els += '<rect x="' + gx + '" y="' + gy + '" width="' + gw + '" height="' + (0.5 + rand() * 1) + '" fill="' + gcol + (0.08 + rand() * 0.1) + ')"/>';
+        }
+        // Candlestick chart fragments along right margin
+        for (var ci = 0; ci < 5; ci++) {
+          var ccx = R + 3 + ci * 3;
+          var ccy = T + H * 0.2 + rand() * H * 0.6;
+          var cch = 4 + rand() * 8;
+          var isGreen = rand() > 0.5;
+          var ccol = isGreen ? 'rgba(30,180,80,' : 'rgba(200,30,50,';
+          // Wick
+          els += '<line x1="' + ccx + '" y1="' + (ccy - cch * 0.3) + '" x2="' + ccx + '" y2="' + (ccy + cch * 0.3) + '" stroke="' + ccol + '0.15)" stroke-width="0.3"/>';
+          // Body
+          els += '<rect x="' + (ccx - 1) + '" y="' + (ccy - cch * 0.15) + '" width="2" height="' + (cch * 0.3) + '" fill="' + ccol + '0.1)" stroke="' + ccol + '0.15)" stroke-width="0.2"/>';
+        }
+        // Data corruption: offset pixel blocks
+        for (var di = 0; di < 4; di++) {
+          var dx = (rand() > 0.5) ? (L - 2 - rand() * 6) : (R + 2 + rand() * 6);
+          var dy = T + rand() * H;
+          els += '<rect x="' + dx + '" y="' + dy + '" width="' + (2 + rand() * 4) + '" height="' + (0.5 + rand() * 1) + '" fill="' + ac_(0.1 + rand() * 0.08) + '"/>';
+        }
+
+      } else if (tl.indexOf('shady bunch') !== -1) {
+        // ── "shady bunch" — UV blacklight grid, neon character silhouettes ──
+        // Grid lines extending from frame (the 3x3 character grid)
+        // Horizontal dividers
+        for (var hi = 1; hi < 3; hi++) {
+          var hy = T + (H / 3) * hi;
+          els += '<line x1="' + (L - 5) + '" y1="' + hy + '" x2="' + (L - 1) + '" y2="' + hy + '" stroke="' + ac_(0.2) + '" stroke-width="0.4"/>';
+          els += '<line x1="' + (R + 1) + '" y1="' + hy + '" x2="' + (R + 5) + '" y2="' + hy + '" stroke="' + ac_(0.2) + '" stroke-width="0.4"/>';
+        }
+        // Vertical dividers
+        for (var vi = 1; vi < 3; vi++) {
+          var vx = L + (W / 3) * vi;
+          els += '<line x1="' + vx + '" y1="' + (T - 5) + '" x2="' + vx + '" y2="' + (T - 1) + '" stroke="' + ac_(0.2) + '" stroke-width="0.4"/>';
+          els += '<line x1="' + vx + '" y1="' + (B + 1) + '" x2="' + vx + '" y2="' + (B + 5) + '" stroke="' + ac_(0.2) + '" stroke-width="0.4"/>';
+        }
+        // UV glow spots at corners
+        for (var ui = 0; ui < 4; ui++) {
+          var ux = corners[ui][0], uy = corners[ui][1];
+          var ucol = ['rgba(255,0,200,', 'rgba(0,255,200,', 'rgba(200,0,255,', 'rgba(0,200,255,'][ui];
+          els += '<circle cx="' + ux + '" cy="' + uy + '" r="' + (focusMode ? 6 : 4) + '" fill="' + ucol + '0.04)" filter="url(#srGlow' + uid + ')"/>';
+        }
+        // Neon character eye dots
+        for (var ei = 0; ei < 6; ei++) {
+          var ex = (rand() > 0.5) ? (L - 4 - rand() * 5) : (R + 4 + rand() * 5);
+          var ey = T + H * 0.1 + rand() * H * 0.8;
+          els += '<circle cx="' + ex + '" cy="' + ey + '" r="0.7" fill="rgba(0,255,180,0.15)"/>';
+          els += '<circle cx="' + (ex + 2.5) + '" cy="' + ey + '" r="0.7" fill="rgba(0,255,180,0.12)"/>';
+        }
+
+      } else if (tl === '6942') {
+        // ── "6942" — cosmic portal, Earth, grand piano in white void ──
+        // Portal ring at top-left (the circular window to space)
+        var portalCx = L - 6, portalCy = T + H * 0.4;
+        els += '<circle cx="' + portalCx + '" cy="' + portalCy + '" r="7" fill="none" stroke="rgba(180,200,220,0.12)" stroke-width="0.5"/>';
+        els += '<circle cx="' + portalCx + '" cy="' + portalCy + '" r="5" fill="none" stroke="rgba(180,200,220,0.08)" stroke-width="0.4"/>';
+        // Earth (tiny globe dot inside portal)
+        els += '<circle cx="' + (portalCx + 1) + '" cy="' + portalCy + '" r="2" fill="rgba(20,40,80,0.1)" stroke="rgba(80,160,200,0.15)" stroke-width="0.3"/>';
+        // Piano silhouette at bottom-left
+        var pkx = L - 6, pky = B + 4;
+        els += '<rect x="' + pkx + '" y="' + pky + '" width="5" height="3" rx="0.3" fill="none" stroke="rgba(40,80,50,0.15)" stroke-width="0.35"/>';
+        els += '<line x1="' + pkx + '" y1="' + (pky + 3) + '" x2="' + pkx + '" y2="' + (pky + 5) + '" stroke="rgba(40,80,50,0.1)" stroke-width="0.3"/>';
+        els += '<line x1="' + (pkx + 5) + '" y1="' + (pky + 3) + '" x2="' + (pkx + 5) + '" y2="' + (pky + 5) + '" stroke="rgba(40,80,50,0.1)" stroke-width="0.3"/>';
+        // White void gradient — subtle reflective floor line
+        els += '<line x1="' + L + '" y1="' + (B + 2) + '" x2="' + R + '" y2="' + (B + 2) + '" stroke="rgba(200,210,220,0.08)" stroke-width="0.3"/>';
+        // Orbit path near right side
+        els += '<ellipse cx="' + (R + 6) + '" cy="' + (T + H * 0.3) + '" rx="8" ry="3" fill="none" stroke="rgba(60,120,180,0.08)" stroke-width="0.3" transform="rotate(-15,' + (R + 6) + ',' + (T + H * 0.3) + ')"/>';
+
+      } else if (tl.indexOf('she loves me not') !== -1) {
+        // ── "she loves me not" — neon outlines, reaper drinking, hearts dripping ──
+        // Neon outline glow on left edge
+        els += '<line x1="' + (L - 2) + '" y1="' + (T + H * 0.1) + '" x2="' + (L - 2) + '" y2="' + (T + H * 0.7) + '" stroke="rgba(50,220,80,0.15)" stroke-width="1" filter="url(#srGlow' + uid + ')"/>';
+        // Tiny heart outlines dripping down right side
+        for (var hi = 0; hi < 5; hi++) {
+          var hx = R + 3 + rand() * 5;
+          var hy = T + H * 0.2 + hi * H * 0.15;
+          var hs = 1.5 + rand() * 1;
+          els += '<path d="M' + hx + ',' + (hy + hs * 0.3) + ' C' + (hx - hs) + ',' + (hy - hs * 0.5) + ' ' + (hx - hs) + ',' + (hy + hs * 0.2) + ' ' + hx + ',' + (hy + hs) + ' C' + (hx + hs) + ',' + (hy + hs * 0.2) + ' ' + (hx + hs) + ',' + (hy - hs * 0.5) + ' ' + hx + ',' + (hy + hs * 0.3) + '" fill="none" stroke="rgba(200,40,80,' + (0.12 + rand() * 0.08) + ')" stroke-width="0.35"/>';
+          // Drip line below heart
+          if (rand() > 0.5) {
+            els += '<line x1="' + hx + '" y1="' + (hy + hs + 0.5) + '" x2="' + hx + '" y2="' + (hy + hs + 2 + rand() * 3) + '" stroke="rgba(200,40,80,0.08)" stroke-width="0.3" stroke-linecap="round"/>';
+          }
+        }
+        // Bottle silhouette near top-left
+        var btx = L - 7, bty = T - 2;
+        els += '<rect x="' + btx + '" y="' + bty + '" width="2.5" height="5" rx="0.3" fill="none" stroke="rgba(200,160,50,0.12)" stroke-width="0.3"/>';
+        els += '<rect x="' + (btx + 0.6) + '" y="' + (bty - 2) + '" width="1.3" height="2.2" rx="0.2" fill="none" stroke="rgba(200,160,50,0.1)" stroke-width="0.25"/>';
+
+      } else if (tl.indexOf('all time high') !== -1) {
+        // ── "all time high on centauri" — blood red sea, two figures in boat, apocalyptic skyline ──
+        // Horizon line across bottom
+        els += '<line x1="' + (L - 8) + '" y1="' + (B - H * 0.35) + '" x2="' + (R + 8) + '" y2="' + (B - H * 0.35) + '" stroke="rgba(120,15,20,0.1)" stroke-width="0.3"/>';
+        // Water ripple lines below horizon
+        for (var wi = 0; wi < 4; wi++) {
+          var wy = B + 2 + wi * 2.5;
+          var wavePath = 'M' + (L - 3) + ',' + wy;
+          for (var wx = 0; wx < W + 6; wx += 8) {
+            wavePath += ' Q' + (L - 3 + wx + 4) + ',' + (wy + (rand() - 0.5) * 1.5) + ' ' + (L - 3 + wx + 8) + ',' + wy;
+          }
+          els += '<path d="' + wavePath + '" fill="none" stroke="rgba(120,15,20,' + (0.08 - wi * 0.015) + ')" stroke-width="0.3"/>';
+        }
+        // City skyline silhouette at top
+        var skyY = T - 4;
+        for (var bi = 0; bi < 10; bi++) {
+          var bxx = L + bi * (W / 10) + rand() * 5;
+          var bww = 2 + rand() * 4;
+          var bhh = 2 + rand() * 6;
+          els += '<rect x="' + bxx + '" y="' + (skyY - bhh) + '" width="' + bww + '" height="' + bhh + '" fill="rgba(60,10,15,' + (0.06 + rand() * 0.05) + ')"/>';
+        }
+        // Boat silhouette at right
+        var boatX = R + 4, boatY = T + H * 0.65;
+        els += '<path d="M' + boatX + ',' + boatY + ' Q' + (boatX + 4) + ',' + (boatY + 2) + ' ' + (boatX + 8) + ',' + boatY + '" fill="none" stroke="rgba(80,15,20,0.15)" stroke-width="0.5" stroke-linecap="round"/>';
+        // Centauri star — bright point top-right
+        els += '<circle cx="' + (R + 8) + '" cy="' + (T - 6) + '" r="1" fill="rgba(200,40,50,0.15)"/>';
+        els += '<line x1="' + (R + 8) + '" y1="' + (T - 9) + '" x2="' + (R + 8) + '" y2="' + (T - 3) + '" stroke="rgba(200,40,50,0.1)" stroke-width="0.3"/>';
+        els += '<line x1="' + (R + 5) + '" y1="' + (T - 6) + '" x2="' + (R + 11) + '" y2="' + (T - 6) + '" stroke="rgba(200,40,50,0.1)" stroke-width="0.3"/>';
+
+      } else if (tl.indexOf('ctrl') !== -1) {
+        // ── "ctrl + alt + generate" — studio lab, monitors, keyboard, sculptural objects ──
+        // Keyboard keys along bottom
+        for (var ki = 0; ki < 12; ki++) {
+          var kx = L + 2 + ki * ((W - 4) / 12);
+          var ky = B + 3;
+          var kw = (W - 4) / 12 - 1;
+          els += '<rect x="' + kx + '" y="' + ky + '" width="' + kw + '" height="' + (kw * 0.7) + '" rx="0.3" fill="' + ac_(0.04) + '" stroke="' + ac_(0.1) + '" stroke-width="0.2"/>';
+        }
+        // Monitor screens on left margin
+        for (var mi = 0; mi < 2; mi++) {
+          var mmx = L - 10 - mi * 2;
+          var mmy = T + H * 0.2 + mi * H * 0.35;
+          els += '<rect x="' + mmx + '" y="' + mmy + '" width="6" height="4" rx="0.3" fill="rgba(20,30,60,0.06)" stroke="' + ac_(0.12) + '" stroke-width="0.3"/>';
+          // Screen glow line
+          els += '<line x1="' + (mmx + 1) + '" y1="' + (mmy + 1.5) + '" x2="' + (mmx + 5) + '" y2="' + (mmy + 1.5) + '" stroke="' + ac_(0.08) + '" stroke-width="0.25"/>';
+          els += '<line x1="' + (mmx + 1) + '" y1="' + (mmy + 2.5) + '" x2="' + (mmx + 4) + '" y2="' + (mmy + 2.5) + '" stroke="' + ac_(0.06) + '" stroke-width="0.2"/>';
+        }
+        // Hanging sculptural forms at top (like the artwork's pendulum objects)
+        for (var pi = 0; pi < 3; pi++) {
+          var ppx = R + 3 + pi * 4;
+          var chainLen = 3 + rand() * 5;
+          // Chain
+          els += '<line x1="' + ppx + '" y1="' + (T - 2) + '" x2="' + ppx + '" y2="' + (T - 2 - chainLen) + '" stroke="rgba(160,150,130,0.1)" stroke-width="0.25"/>';
+          // Teardrop shape
+          els += '<ellipse cx="' + ppx + '" cy="' + (T - 2 - chainLen - 2) + '" rx="1.5" ry="2" fill="none" stroke="rgba(200,180,140,0.12)" stroke-width="0.3"/>';
+        }
+      }
+
+      // ══ FOCUS ONLY: SR monogram + rarity sparkles ══
+      if (focusMode) {
+        // Subtle diamond sparkle scatter
+        for (var sp = 0; sp < 6; sp++) {
+          var spx = (rand() > 0.5) ? (L - 5 - rand() * 8) : (R + 5 + rand() * 8);
+          var spy = T + rand() * H;
+          var spSize = 1 + rand() * 1.5;
+          els += '<polygon points="' + spx + ',' + (spy - spSize) + ' ' + (spx + spSize * 0.35) + ',' + spy + ' ' + spx + ',' + (spy + spSize) + ' ' + (spx - spSize * 0.35) + ',' + spy + '" fill="' + srP(0.08 + rand() * 0.06) + '"/>';
+        }
+      }
+
+      svg.innerHTML = els;
+      return svg;
+    }
+
     // ── SVG decoration generators for Right Click Print ──
 
     function generateStolenFrameSVG(size) {
@@ -27826,7 +28192,7 @@
       cleanupMasterworkFrame(focusedNode);
 
       // Clean up focus-added frames, but preserve the collection-view ones
-      focusedNode.querySelectorAll('.botanical-frame-svg, .bar-frame-svg, .blossom-frame-svg, .clown-frame-svg, .editions-frame-svg, .starry-frame-svg, .lisan-frame-svg, .pfp-frame-svg, .warothy-frame-svg, .brokenkeys-frame-svg, .colorstudy-frame-svg, .opepen-frame-svg, .heartyou-frame-svg, .tempted-frame-svg, .servant-frame-svg').forEach(bf => {
+      focusedNode.querySelectorAll('.botanical-frame-svg, .bar-frame-svg, .blossom-frame-svg, .clown-frame-svg, .editions-frame-svg, .starry-frame-svg, .lisan-frame-svg, .pfp-frame-svg, .warothy-frame-svg, .brokenkeys-frame-svg, .colorstudy-frame-svg, .opepen-frame-svg, .heartyou-frame-svg, .tempted-frame-svg, .servant-frame-svg, .superrare-frame-svg').forEach(bf => {
         if (!bf.dataset.collectionFrame) bf.remove();
         else bf.style.display = ''; // unhide collection frames (Piano Blossoms hides them on focus)
       });
