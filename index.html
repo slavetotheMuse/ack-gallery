@@ -18727,10 +18727,8 @@
             if (artData && artData.focusImage) {
               _focusSrc = artData.focusImage;
             } else if (_isGifArtwork) {
-              // GIF artworks (Warothys, Editions, Color Study, etc.)
-              // Try focus JPG first (fast crisp still), GIF chains on top via _desktopGifSrc path below
-              var _gifFocusJpg = _deriveFocusPath(artData.fullRes);
-              _focusSrc = _gifFocusJpg || artData.fullRes;
+              // GIF artworks (Warothys, Editions, etc.) — use fullRes GIF directly, no JPG intermediary
+              _focusSrc = artData.fullRes;
             } else if (artData && artData.fullRes) {
               const _fr = artData.fullRes;
               // Skip mp4 fullRes — video playback is handled separately per-collection
@@ -18782,8 +18780,15 @@
                     nodeImg.onerror = null;
                   };
                 } else {
-                  nodeImg.src = thumbSrc;
-                  nodeImg.onerror = null;
+                  // fullRes GIF 404'd (e.g. on Vercel) — try derived focus JPG
+                  var _mbFocusJpg = _deriveFocusPath(artData ? (artData.fullRes || artData.image) : null);
+                  if (_mbFocusJpg && _mbFocusJpg !== _focusSrc) {
+                    nodeImg.src = _mbFocusJpg;
+                    nodeImg.onerror = function() { nodeImg.src = thumbSrc; nodeImg.onerror = null; };
+                  } else {
+                    nodeImg.src = thumbSrc;
+                    nodeImg.onerror = null;
+                  }
                 }
               };
             } else if (_focusSrc) {
@@ -18820,20 +18825,37 @@
                 }
               };
               preloader.onerror = () => {
-                // Fallback chain: try fullRes (might be GIF), then ?w=1400
+                // Fallback chain: try fullRes → derived focus JPG → ?w=1400 → give up
                 if (artData && artData.fullRes && _focusSrc !== artData.fullRes) {
                   const fb = new Image();
                   fb.onload = () => { nodeImg.src = artData.fullRes; _clearLoading(); };
                   fb.onerror = _clearLoading;
                   fb.src = artData.fullRes;
-                } else if (thumbSrc.includes('?w=')) {
-                  const fb2 = new Image();
-                  const fbSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
-                  fb2.onload = () => { nodeImg.src = fbSrc; _clearLoading(); };
-                  fb2.onerror = _clearLoading;
-                  fb2.src = fbSrc;
                 } else {
-                  _clearLoading();
+                  // fullRes was the src that failed (e.g. GIF 404 on Vercel) — try focus JPG
+                  var _fbFocusJpg = _deriveFocusPath(artData ? (artData.fullRes || artData.image) : null);
+                  if (_fbFocusJpg && _fbFocusJpg !== _focusSrc) {
+                    var fbJpg = new Image();
+                    fbJpg.onload = function() { nodeImg.src = _fbFocusJpg; _clearLoading(); };
+                    fbJpg.onerror = function() {
+                      if (thumbSrc.includes('?w=')) {
+                        var fb3 = new Image();
+                        var fb3Src = thumbSrc.replace(/\?w=\d+/, '?w=1400');
+                        fb3.onload = function() { nodeImg.src = fb3Src; _clearLoading(); };
+                        fb3.onerror = _clearLoading;
+                        fb3.src = fb3Src;
+                      } else { _clearLoading(); }
+                    };
+                    fbJpg.src = _fbFocusJpg;
+                  } else if (thumbSrc.includes('?w=')) {
+                    var fb2 = new Image();
+                    var fbSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
+                    fb2.onload = function() { nodeImg.src = fbSrc; _clearLoading(); };
+                    fb2.onerror = _clearLoading;
+                    fb2.src = fbSrc;
+                  } else {
+                    _clearLoading();
+                  }
                 }
               };
               preloader.src = _focusSrc;
