@@ -16089,6 +16089,183 @@
             };
             setTimeout(_applyClownFrame, 800 + cpIdx * 200);
           });
+
+          // ── Clown Party collection-view: floating balloons + bunting overlay ──
+          setTimeout(function() {
+            if (!inner || inner.querySelector('.cp-party-overlay')) return;
+            var cpOverlay = document.createElement('div');
+            cpOverlay.className = 'cp-party-overlay';
+            cpOverlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;';
+
+            var cpal = COLLECTION_PALETTES['Clown Party'] || {accent:'rgb(200,80,100)',bg:'rgb(30,28,26)'};
+            var _cpRGB = (cpal.accent || 'rgb(200,80,100)').match(/(\d+)/g) || [200,80,100];
+            var cpR = parseInt(_cpRGB[0]), cpG = parseInt(_cpRGB[1]), cpB = parseInt(_cpRGB[2]);
+
+            // Balloon colors — carnival palette
+            var balloonColors = [
+              'rgba(' + cpR + ',' + cpG + ',' + cpB + ',0.12)',
+              'rgba(' + Math.min(255,cpR+60) + ',' + Math.max(0,cpG-20) + ',' + Math.max(0,cpB-30) + ',0.10)',
+              'rgba(' + Math.max(0,cpR-40) + ',' + Math.min(255,cpG+40) + ',' + Math.min(255,cpB+50) + ',0.09)',
+              'rgba(195,160,100,0.08)',
+              'rgba(' + Math.min(255,cpR+80) + ',' + Math.min(255,cpG+70) + ',' + Math.min(255,cpB+60) + ',0.07)'
+            ];
+
+            var innerW = inner.scrollWidth || 2560;
+            var innerH = inner.scrollHeight || 1294;
+            var _cpSeed = 42;
+            function _cpRand() { _cpSeed = (_cpSeed * 9301 + 49297) % 233280; return _cpSeed / 233280; }
+
+            var cpSvgNs = 'http://www.w3.org/2000/svg';
+            var cpSvg = document.createElementNS(cpSvgNs, 'svg');
+            cpSvg.setAttribute('viewBox', '0 0 ' + innerW + ' ' + innerH);
+            cpSvg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+
+            // Add CSS animations for floating balloons
+            if (!document.getElementById('cpBalloonStyles')) {
+              var cpStyle = document.createElement('style');
+              cpStyle.id = 'cpBalloonStyles';
+              cpStyle.textContent =
+                '@keyframes cpBalloonFloat{0%{transform:translateY(0) rotate(0deg)}25%{transform:translateY(-8px) rotate(2deg)}50%{transform:translateY(-3px) rotate(-1deg)}75%{transform:translateY(-10px) rotate(1.5deg)}100%{transform:translateY(0) rotate(0deg)}}' +
+                '@keyframes cpConfettiFall{0%{transform:translateY(0) rotate(0deg);opacity:0.12}50%{opacity:0.08}100%{transform:translateY(40px) rotate(180deg);opacity:0}}' +
+                '.cp-balloon-group{animation:cpBalloonFloat 6s ease-in-out infinite;}' +
+                '.cp-confetti-bit{animation:cpConfettiFall 8s ease-in-out infinite;}';
+              document.head.appendChild(cpStyle);
+            }
+
+            // Draw bunting / pennant strings between artwork positions
+            var buntY1 = innerH * 0.22;
+            var buntY2 = innerH * 0.55;
+            for (var bRow = 0; bRow < 2; bRow++) {
+              var by = bRow === 0 ? buntY1 : buntY2;
+              var buntPath = '';
+              var flagCount = Math.floor(innerW / 80);
+              for (var bf = 0; bf < flagCount; bf++) {
+                var bx = (bf / flagCount) * innerW;
+                var bx2 = ((bf + 1) / flagCount) * innerW;
+                var sag = 15 + _cpRand() * 10;
+                if (bf === 0) buntPath += 'M ' + bx + ' ' + by;
+                buntPath += ' Q ' + ((bx + bx2) / 2) + ' ' + (by + sag) + ' ' + bx2 + ' ' + by;
+              }
+              var buntLine = document.createElementNS(cpSvgNs, 'path');
+              buntLine.setAttribute('d', buntPath);
+              buntLine.setAttribute('fill', 'none');
+              buntLine.setAttribute('stroke', 'rgba(' + cpR + ',' + cpG + ',' + cpB + ',0.06)');
+              buntLine.setAttribute('stroke-width', '0.8');
+              cpSvg.appendChild(buntLine);
+
+              // Pennant flags along the bunting
+              for (var pf = 0; pf < flagCount; pf++) {
+                if (_cpRand() < 0.3) continue;
+                var px = ((pf + 0.5) / flagCount) * innerW;
+                var py = by + 8 + _cpRand() * 6;
+                var flagH = 12 + _cpRand() * 6;
+                var flagW = 6 + _cpRand() * 4;
+                var fColor = balloonColors[Math.floor(_cpRand() * balloonColors.length)];
+                var flag = document.createElementNS(cpSvgNs, 'path');
+                flag.setAttribute('d', 'M ' + (px - flagW/2) + ' ' + py + ' L ' + px + ' ' + (py + flagH) + ' L ' + (px + flagW/2) + ' ' + py + ' Z');
+                flag.setAttribute('fill', fColor);
+                flag.setAttribute('stroke', 'none');
+                cpSvg.appendChild(flag);
+              }
+            }
+
+            // Floating balloons — scattered around the collection
+            var balloonCount = 18 + Math.floor(_cpRand() * 8);
+            for (var bi = 0; bi < balloonCount; bi++) {
+              var bx = 40 + _cpRand() * (innerW - 80);
+              var by = 20 + _cpRand() * (innerH - 60);
+              var bSize = 14 + _cpRand() * 12;
+              var bColor = balloonColors[Math.floor(_cpRand() * balloonColors.length)];
+              var bDelay = (_cpRand() * 6).toFixed(1);
+
+              var bGroup = document.createElementNS(cpSvgNs, 'g');
+              bGroup.classList.add('cp-balloon-group');
+              bGroup.style.animationDelay = bDelay + 's';
+              bGroup.style.animationDuration = (5 + _cpRand() * 4).toFixed(1) + 's';
+              bGroup.style.transformOrigin = bx + 'px ' + by + 'px';
+
+              // Balloon body — oval
+              var balloonEl = document.createElementNS(cpSvgNs, 'ellipse');
+              balloonEl.setAttribute('cx', bx);
+              balloonEl.setAttribute('cy', by);
+              balloonEl.setAttribute('rx', bSize * 0.42);
+              balloonEl.setAttribute('ry', bSize * 0.52);
+              balloonEl.setAttribute('fill', bColor);
+              bGroup.appendChild(balloonEl);
+
+              // Balloon knot
+              var knot = document.createElementNS(cpSvgNs, 'path');
+              knot.setAttribute('d', 'M ' + bx + ' ' + (by + bSize * 0.52) + ' l -1.5 3 l 3 0 Z');
+              knot.setAttribute('fill', bColor);
+              bGroup.appendChild(knot);
+
+              // Balloon string — wiggly line downward
+              var strLen = 20 + _cpRand() * 25;
+              var sx1 = bx + (_cpRand() - 0.5) * 6;
+              var sy1 = by + bSize * 0.52 + 3 + strLen * 0.33;
+              var sx2 = bx + (_cpRand() - 0.5) * 8;
+              var sy2 = by + bSize * 0.52 + 3 + strLen * 0.66;
+              var se = by + bSize * 0.52 + 3 + strLen;
+              var strEl = document.createElementNS(cpSvgNs, 'path');
+              strEl.setAttribute('d', 'M ' + bx + ' ' + (by + bSize * 0.52 + 3) + ' C ' + sx1 + ' ' + sy1 + ' ' + sx2 + ' ' + sy2 + ' ' + (bx + (_cpRand()-0.5)*4) + ' ' + se);
+              strEl.setAttribute('fill', 'none');
+              strEl.setAttribute('stroke', bColor);
+              strEl.setAttribute('stroke-width', '0.5');
+              bGroup.appendChild(strEl);
+
+              // Highlight shimmer on balloon
+              var shimmer = document.createElementNS(cpSvgNs, 'ellipse');
+              shimmer.setAttribute('cx', bx - bSize * 0.12);
+              shimmer.setAttribute('cy', by - bSize * 0.15);
+              shimmer.setAttribute('rx', bSize * 0.12);
+              shimmer.setAttribute('ry', bSize * 0.18);
+              shimmer.setAttribute('fill', 'rgba(255,255,255,0.04)');
+              bGroup.appendChild(shimmer);
+
+              cpSvg.appendChild(bGroup);
+            }
+
+            // Scattered confetti bits
+            var confCount = 30 + Math.floor(_cpRand() * 20);
+            for (var ci = 0; ci < confCount; ci++) {
+              var cx = _cpRand() * innerW;
+              var cy = _cpRand() * innerH;
+              var cSize = 2 + _cpRand() * 3;
+              var cColor = balloonColors[Math.floor(_cpRand() * balloonColors.length)];
+              var cDelay = (_cpRand() * 8).toFixed(1);
+              var confEl;
+              var cShape = Math.floor(_cpRand() * 3);
+              if (cShape === 0) {
+                confEl = document.createElementNS(cpSvgNs, 'circle');
+                confEl.setAttribute('cx', cx.toFixed(1));
+                confEl.setAttribute('cy', cy.toFixed(1));
+                confEl.setAttribute('r', (cSize * 0.4).toFixed(1));
+                confEl.setAttribute('fill', cColor);
+              } else if (cShape === 1) {
+                confEl = document.createElementNS(cpSvgNs, 'rect');
+                confEl.setAttribute('x', (cx - cSize/2).toFixed(1));
+                confEl.setAttribute('y', (cy - cSize/4).toFixed(1));
+                confEl.setAttribute('width', cSize.toFixed(1));
+                confEl.setAttribute('height', (cSize * 0.5).toFixed(1));
+                confEl.setAttribute('rx', '0.3');
+                confEl.setAttribute('transform', 'rotate(' + (_cpRand() * 360).toFixed(0) + ' ' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ')');
+                confEl.setAttribute('fill', cColor);
+              } else {
+                confEl = document.createElementNS(cpSvgNs, 'path');
+                var cs = cSize * 0.6;
+                confEl.setAttribute('d', 'M ' + cx.toFixed(1) + ' ' + (cy - cs).toFixed(1) + ' L ' + (cx + cs * 0.6).toFixed(1) + ' ' + cy.toFixed(1) + ' L ' + cx.toFixed(1) + ' ' + (cy + cs).toFixed(1) + ' L ' + (cx - cs * 0.6).toFixed(1) + ' ' + cy.toFixed(1) + ' Z');
+                confEl.setAttribute('fill', cColor);
+              }
+              confEl.classList.add('cp-confetti-bit');
+              confEl.style.animationDelay = cDelay + 's';
+              confEl.style.animationDuration = (6 + _cpRand() * 6).toFixed(1) + 's';
+              cpSvg.appendChild(confEl);
+            }
+
+            cpOverlay.appendChild(cpSvg);
+            inner.style.position = 'relative';
+            inner.insertBefore(cpOverlay, inner.firstChild);
+          }, 600);
         }
 
         // ── ACK EDITIONS holographic/glitch frames on each artwork node ──
@@ -18206,7 +18383,7 @@
             } else if (!hasCollectionFrame) {
               if (_colName === 'Clown Party') {
                 const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Clown Party'];
-                const frameSvg = generateClownFrame(localW, localH, pal);
+                const frameSvg = generateClownFrame(localW, localH, pal, artworkData.title, true);
                 node.appendChild(frameSvg);
               } else {
                 const frameSvg = generateOrnateFrame(localW, localH);
@@ -18254,7 +18431,7 @@
             const localW = parseFloat(node.style.width) || preview.offsetWidth;
             const localH = img.offsetHeight || preview.offsetHeight || localW;
             const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Clown Party'];
-            const frameSvg = generateClownFrame(localW, localH, pal);
+            const frameSvg = generateClownFrame(localW, localH, pal, artworkData.title, true);
             node.appendChild(frameSvg);
           }
         }, 900);
@@ -22733,7 +22910,7 @@
     // ══════════════════════════════════════════════════════════════════
     // ── CLOWN FRAME — circus/carnival themed per-piece frame for Clown Party ──
     // ══════════════════════════════════════════════════════════════════
-    function generateClownFrame(imgW, imgH, palette) {
+    function generateClownFrame(imgW, imgH, palette, title, focusMode) {
       const ns = 'http://www.w3.org/2000/svg';
       const pad = 18;
       const svg = document.createElementNS(ns, 'svg');
@@ -22917,6 +23094,315 @@
         // Bottom edge
         svg.appendChild(mkEl('path', {d:'M '+ddx.toFixed(1)+' '+(B-6-ds2).toFixed(1)+' L '+(ddx+ds2*0.7).toFixed(1)+' '+(B-6).toFixed(1)+' L '+ddx.toFixed(1)+' '+(B-6+ds2).toFixed(1)+' L '+(ddx-ds2*0.7).toFixed(1)+' '+(B-6).toFixed(1)+' Z',
           fill:rgba(goldR,goldG,goldB,0.06), stroke:rgba(goldR,goldG,goldB,0.12), 'stroke-width':'0.25'}));
+      }
+
+      // ══════════════════════════════════════════════════════════════
+      // ── FOCUS MODE: unique per-artwork balloon & party elements ──
+      // ══════════════════════════════════════════════════════════════
+      if (focusMode && title) {
+        var tl = title.toLowerCase();
+        var _fpad = focusMode ? 10 : 0; // extra breathing room in focus
+
+        // Helper: draw a balloon cluster at (cx, cy)
+        function drawBalloonCluster(cx, cy, count, baseSize, colors, opacity) {
+          for (var bi = 0; bi < count; bi++) {
+            var bAng = (bi / count) * Math.PI * 2 + sRand() * 0.5;
+            var bDist = baseSize * 0.4 + sRand() * baseSize * 0.3;
+            var bx = cx + Math.cos(bAng) * bDist;
+            var by = cy + Math.sin(bAng) * bDist * 0.7;
+            var bw = baseSize * (0.3 + sRand() * 0.15);
+            var bh = bw * 1.25;
+            var bCol = colors[Math.floor(sRand() * colors.length)];
+            // Balloon body
+            svg.appendChild(mkEl('ellipse', {cx:bx.toFixed(1), cy:by.toFixed(1), rx:bw.toFixed(1), ry:bh.toFixed(1), fill:bCol, opacity:String(opacity)}));
+            // Highlight
+            svg.appendChild(mkEl('ellipse', {cx:(bx-bw*0.25).toFixed(1), cy:(by-bh*0.3).toFixed(1), rx:(bw*0.25).toFixed(1), ry:(bh*0.3).toFixed(1), fill:'rgba(255,255,255,0.03)'}));
+            // Knot
+            svg.appendChild(mkPath('M '+bx.toFixed(1)+' '+(by+bh).toFixed(1)+' l -1 2 l 2 0 Z', 'none', '0', '1', bCol));
+            // String
+            var strEnd = by + bh + 2 + 15 + sRand() * 12;
+            var sCx = bx + (sRand()-0.5)*6;
+            svg.appendChild(mkPath('M '+bx.toFixed(1)+' '+(by+bh+2).toFixed(1)+' Q '+sCx.toFixed(1)+' '+((by+bh+2+strEnd)/2).toFixed(1)+' '+(bx+(sRand()-0.5)*3).toFixed(1)+' '+strEnd.toFixed(1), bCol, '0.4', String(opacity * 0.7)));
+          }
+        }
+
+        // Common balloon palette per artwork
+        var bColors = [
+          rgba(ar,ag,ab,0.15), rgba(warmR,warmG,warmB,0.12), rgba(coolR,coolG,coolB,0.10),
+          rgba(lightR,lightG,lightB,0.08), rgba(goldR,goldG,goldB,0.10)
+        ];
+
+        // ── SELF PORTRAIT - TIN MAN: oil-can drops, metallic rivets, heart symbol ──
+        if (tl.indexOf('tin man') !== -1) {
+          // Metallic rivets along frame edges
+          var rivetSpacing = W / 14;
+          for (var ri = 1; ri < 14; ri++) {
+            var rx = L + ri * rivetSpacing;
+            svg.appendChild(mkEl('circle', {cx:rx.toFixed(1), cy:(T+3).toFixed(1), r:'1.8', fill:rgba(180,180,190,0.12), stroke:rgba(150,150,160,0.08), 'stroke-width':'0.3'}));
+            svg.appendChild(mkEl('circle', {cx:rx.toFixed(1), cy:(B-3).toFixed(1), r:'1.8', fill:rgba(180,180,190,0.12), stroke:rgba(150,150,160,0.08), 'stroke-width':'0.3'}));
+            // Inner rivet highlight
+            svg.appendChild(mkEl('circle', {cx:(rx-0.5).toFixed(1), cy:(T+2.5).toFixed(1), r:'0.5', fill:'rgba(255,255,255,0.04)'}));
+            svg.appendChild(mkEl('circle', {cx:(rx-0.5).toFixed(1), cy:(B-3.5).toFixed(1), r:'0.5', fill:'rgba(255,255,255,0.04)'}));
+          }
+          // Side rivets
+          var rivetSpacingV = H / 10;
+          for (var rv = 1; rv < 10; rv++) {
+            var ry = T + rv * rivetSpacingV;
+            svg.appendChild(mkEl('circle', {cx:(L+3).toFixed(1), cy:ry.toFixed(1), r:'1.8', fill:rgba(180,180,190,0.12), stroke:rgba(150,150,160,0.08), 'stroke-width':'0.3'}));
+            svg.appendChild(mkEl('circle', {cx:(R-3).toFixed(1), cy:ry.toFixed(1), r:'1.8', fill:rgba(180,180,190,0.12), stroke:rgba(150,150,160,0.08), 'stroke-width':'0.3'}));
+          }
+          // Oil drops dripping from top edge
+          for (var oi = 0; oi < 5; oi++) {
+            var ox = L + W * 0.15 + sRand() * W * 0.7;
+            var oLen = 8 + sRand() * 14;
+            svg.appendChild(mkPath('M '+ox.toFixed(1)+' '+(T+pad*0.3).toFixed(1)+' Q '+(ox+1).toFixed(1)+' '+(T+pad*0.3+oLen*0.5).toFixed(1)+' '+ox.toFixed(1)+' '+(T+pad*0.3+oLen).toFixed(1), rgba(80,75,70,0.15), '1.2', '1'));
+            svg.appendChild(mkEl('circle', {cx:ox.toFixed(1), cy:(T+pad*0.3+oLen+1.5).toFixed(1), r:'1.8', fill:rgba(80,75,70,0.12)}));
+          }
+          // Heart symbol in top-left corner (Tin Man wants a heart)
+          var hx = L + 14, hy = T + 14;
+          svg.appendChild(mkPath('M '+hx+' '+(hy+2)+' C '+(hx-4)+' '+(hy-3)+' '+(hx-7)+' '+(hy+3)+' '+hx+' '+(hy+7)+' C '+(hx+7)+' '+(hy+3)+' '+(hx+4)+' '+(hy-3)+' '+hx+' '+(hy+2)+' Z', rgba(ar,ag,ab,0.18), '0.5', '1', rgba(ar,ag,ab,0.06)));
+          // Balloon cluster top-right
+          drawBalloonCluster(R - 12, T + 12, 3, 10, bColors, 0.18);
+        }
+
+        // ── HEAVY METTLE: heavy chains, anvil weight, sparks ──
+        else if (tl.indexOf('heavy mettle') !== -1) {
+          // Chain links along left and right edges
+          var chainSize = 5;
+          for (var ci = 0; ci < Math.floor(H / (chainSize * 2.5)); ci++) {
+            var cy = T + 12 + ci * chainSize * 2.5;
+            // Left chain
+            svg.appendChild(mkEl('ellipse', {cx:(L+5).toFixed(1), cy:cy.toFixed(1), rx:(chainSize*0.4).toFixed(1), ry:(chainSize*0.65).toFixed(1), fill:'none', stroke:rgba(160,155,140,0.15), 'stroke-width':'0.8'}));
+            // Right chain
+            svg.appendChild(mkEl('ellipse', {cx:(R-5).toFixed(1), cy:cy.toFixed(1), rx:(chainSize*0.4).toFixed(1), ry:(chainSize*0.65).toFixed(1), fill:'none', stroke:rgba(160,155,140,0.15), 'stroke-width':'0.8'}));
+          }
+          // Anvil silhouette bottom-center
+          var ax = (L + R) / 2, ay = B - 8;
+          svg.appendChild(mkPath('M '+(ax-8)+' '+ay+' L '+(ax-5)+' '+(ay-6)+' L '+(ax+5)+' '+(ay-6)+' L '+(ax+8)+' '+ay+' Z', rgba(120,115,100,0.10), '0.5', '1', rgba(120,115,100,0.04)));
+          svg.appendChild(mkPath('M '+(ax-4)+' '+(ay-6)+' L '+(ax-3)+' '+(ay-10)+' L '+(ax+3)+' '+(ay-10)+' L '+(ax+4)+' '+(ay-6), rgba(120,115,100,0.08), '0.4', '1', rgba(120,115,100,0.03)));
+          // Sparks radiating from anvil
+          for (var si = 0; si < 8; si++) {
+            var sAng = -Math.PI * 0.8 + (si / 8) * Math.PI * 0.6 + (sRand()-0.5)*0.3;
+            var sLen = 6 + sRand() * 10;
+            var sx = ax + Math.cos(sAng) * 4;
+            var sy = ay - 10 + Math.sin(sAng) * 3;
+            var ex = sx + Math.cos(sAng) * sLen;
+            var ey = sy + Math.sin(sAng) * sLen;
+            svg.appendChild(mkPath('M '+sx.toFixed(1)+' '+sy.toFixed(1)+' L '+ex.toFixed(1)+' '+ey.toFixed(1), rgba(goldR,goldG,goldB,0.12+sRand()*0.08), '0.4', '1'));
+          }
+          // Weight balls hanging from corners
+          var weightCorners = [{x:L+8,y:T+8},{x:R-8,y:T+8}];
+          for (var wi = 0; wi < 2; wi++) {
+            var wc = weightCorners[wi];
+            svg.appendChild(mkPath('M '+wc.x+' '+wc.y+' L '+wc.x+' '+(wc.y+14), rgba(140,135,120,0.12), '0.6', '1'));
+            svg.appendChild(mkEl('circle', {cx:wc.x.toFixed(1), cy:(wc.y+16).toFixed(1), r:'3', fill:rgba(140,135,120,0.10), stroke:rgba(140,135,120,0.06), 'stroke-width':'0.4'}));
+          }
+          // Balloon cluster top-center
+          drawBalloonCluster((L+R)/2, T + 10, 4, 8, bColors, 0.15);
+        }
+
+        // ── SHOWTIME: spotlight beams, stage curtain drapes, marquee lights ──
+        else if (tl.indexOf('showtime') !== -1) {
+          // Spotlight beams from top corners
+          var spotL = {x: L+2, y: T+2};
+          var spotR = {x: R-2, y: T+2};
+          var spotTarget = {x: (L+R)/2, y: B * 0.7};
+          // Left spotlight cone
+          svg.appendChild(mkEl('path', {d:'M '+spotL.x+' '+spotL.y+' L '+(spotTarget.x-W*0.15)+' '+spotTarget.y+' L '+(spotTarget.x+W*0.05)+' '+spotTarget.y+' Z',
+            fill:rgba(goldR,goldG,goldB,0.025), stroke:'none'}));
+          // Right spotlight cone
+          svg.appendChild(mkEl('path', {d:'M '+spotR.x+' '+spotR.y+' L '+(spotTarget.x-W*0.05)+' '+spotTarget.y+' L '+(spotTarget.x+W*0.15)+' '+spotTarget.y+' Z',
+            fill:rgba(ar,ag,ab,0.02), stroke:'none'}));
+          // Marquee light dots along top
+          var marqueeCount = Math.floor(W / 8);
+          for (var mi = 0; mi < marqueeCount; mi++) {
+            var mx = L + 4 + (mi / marqueeCount) * (W - 8);
+            var mOn = (mi % 3 !== 0);
+            svg.appendChild(mkEl('circle', {cx:mx.toFixed(1), cy:(T+3).toFixed(1), r:'1.2',
+              fill: mOn ? rgba(goldR,goldG,goldB,0.15) : rgba(goldR,goldG,goldB,0.04),
+              stroke: rgba(goldR,goldG,goldB,0.06), 'stroke-width':'0.2'}));
+          }
+          // Bottom marquee too
+          for (var mb = 0; mb < marqueeCount; mb++) {
+            var mbx = L + 4 + (mb / marqueeCount) * (W - 8);
+            var mbOn = (mb % 3 !== 1);
+            svg.appendChild(mkEl('circle', {cx:mbx.toFixed(1), cy:(B-3).toFixed(1), r:'1.2',
+              fill: mbOn ? rgba(ar,ag,ab,0.12) : rgba(ar,ag,ab,0.03),
+              stroke: rgba(ar,ag,ab,0.06), 'stroke-width':'0.2'}));
+          }
+          // Stage curtain swags at top
+          for (var sc = 0; sc < 3; sc++) {
+            var scx1 = L + sc * (W/3) + 10;
+            var scx2 = L + (sc+1) * (W/3) - 10;
+            var scMid = (scx1 + scx2) / 2;
+            svg.appendChild(mkPath('M '+scx1.toFixed(1)+' '+(T+1)+' Q '+scMid.toFixed(1)+' '+(T+16)+' '+scx2.toFixed(1)+' '+(T+1), rgba(ar,ag,ab,0.08), '0.6', '1'));
+          }
+          // Balloons scattered along sides
+          drawBalloonCluster(L + 10, (T+B)/2, 3, 8, bColors, 0.14);
+          drawBalloonCluster(R - 10, (T+B)/2, 3, 8, bColors, 0.14);
+        }
+
+        // ── SPECTACULAR: starburst, fireworks, exclamation marks ──
+        else if (tl.indexOf('spectackular') !== -1 || tl.indexOf('spectacular') !== -1) {
+          // Starburst rays from center
+          var centerX = (L+R)/2, centerY = (T+B)/2;
+          var rayCount = 16;
+          for (var ri2 = 0; ri2 < rayCount; ri2++) {
+            var rAng = (ri2 / rayCount) * Math.PI * 2;
+            var rInner = Math.min(W, H) * 0.35;
+            var rOuter = Math.min(W, H) * 0.48 + sRand() * 10;
+            var rsx = centerX + Math.cos(rAng) * rInner;
+            var rsy = centerY + Math.sin(rAng) * rInner;
+            var rex = centerX + Math.cos(rAng) * rOuter;
+            var rey = centerY + Math.sin(rAng) * rOuter;
+            svg.appendChild(mkPath('M '+rsx.toFixed(1)+' '+rsy.toFixed(1)+' L '+rex.toFixed(1)+' '+rey.toFixed(1),
+              rgba(goldR,goldG,goldB, 0.04 + sRand()*0.04), (0.3+sRand()*0.4).toFixed(1), '1'));
+          }
+          // Firework bursts in corners
+          var fwCorners = [{x:L+15,y:T+15},{x:R-15,y:T+15},{x:L+15,y:B-15},{x:R-15,y:B-15}];
+          for (var fw = 0; fw < 4; fw++) {
+            var fc = fwCorners[fw];
+            var fwRays = 8 + Math.floor(sRand() * 5);
+            for (var fr = 0; fr < fwRays; fr++) {
+              var fAng = (fr / fwRays) * Math.PI * 2 + sRand() * 0.3;
+              var fLen = 4 + sRand() * 8;
+              var fCol = [rgba(ar,ag,ab,0.12), rgba(warmR,warmG,warmB,0.10), rgba(goldR,goldG,goldB,0.10)][Math.floor(sRand()*3)];
+              svg.appendChild(mkPath('M '+fc.x+' '+fc.y+' L '+(fc.x+Math.cos(fAng)*fLen).toFixed(1)+' '+(fc.y+Math.sin(fAng)*fLen).toFixed(1), fCol, '0.5', '1'));
+              // Dot at end of ray
+              svg.appendChild(mkEl('circle', {cx:(fc.x+Math.cos(fAng)*fLen).toFixed(1), cy:(fc.y+Math.sin(fAng)*fLen).toFixed(1), r:(0.5+sRand()*0.8).toFixed(1), fill:fCol}));
+            }
+          }
+          // Exclamation marks scattered
+          for (var ei = 0; ei < 4; ei++) {
+            var ex = L + W * 0.1 + sRand() * W * 0.8;
+            var ey = T + 4 + sRand() * 8;
+            svg.appendChild(mkPath('M '+ex.toFixed(1)+' '+ey.toFixed(1)+' L '+ex.toFixed(1)+' '+(ey+4).toFixed(1), rgba(ar,ag,ab,0.10), '0.8', '1'));
+            svg.appendChild(mkEl('circle', {cx:ex.toFixed(1), cy:(ey+5.5).toFixed(1), r:'0.5', fill:rgba(ar,ag,ab,0.10)}));
+          }
+          // Balloon arch across top
+          drawBalloonCluster((L+R)/2, T + 8, 6, 7, bColors, 0.16);
+        }
+
+        // ── PINK CAROUSEL: carousel horse silhouettes, music notes, spinning motion ──
+        else if (tl.indexOf('pink carousel') !== -1 || tl.indexOf('carousel') !== -1) {
+          // Carousel poles along sides
+          for (var cp = 0; cp < 4; cp++) {
+            var cpy = T + H * 0.2 + cp * (H * 0.6 / 3);
+            // Left pole
+            svg.appendChild(mkPath('M '+(L+4)+' '+cpy.toFixed(1)+' L '+(L+4)+' '+(cpy + H*0.12).toFixed(1), rgba(goldR,goldG,goldB,0.12), '0.8', '1'));
+            // Spiral wrap on pole
+            for (var sw = 0; sw < 3; sw++) {
+              var swy = cpy + sw * (H*0.04);
+              svg.appendChild(mkPath('M '+(L+2.5)+' '+swy.toFixed(1)+' Q '+(L+4)+' '+(swy+H*0.015).toFixed(1)+' '+(L+5.5)+' '+swy.toFixed(1), rgba(ar,ag,ab,0.08), '0.4', '1'));
+            }
+            // Right pole
+            svg.appendChild(mkPath('M '+(R-4)+' '+cpy.toFixed(1)+' L '+(R-4)+' '+(cpy + H*0.12).toFixed(1), rgba(goldR,goldG,goldB,0.12), '0.8', '1'));
+            for (var sw2 = 0; sw2 < 3; sw2++) {
+              var swy2 = cpy + sw2 * (H*0.04);
+              svg.appendChild(mkPath('M '+(R-5.5)+' '+swy2.toFixed(1)+' Q '+(R-4)+' '+(swy2+H*0.015).toFixed(1)+' '+(R-2.5)+' '+swy2.toFixed(1), rgba(ar,ag,ab,0.08), '0.4', '1'));
+            }
+          }
+          // Music notes floating around
+          var notePositions = [{x:L+8,y:T+H*0.3},{x:R-8,y:T+H*0.4},{x:L+8,y:B-H*0.3},{x:R-10,y:T+H*0.7},{x:L+12,y:T+10},{x:R-12,y:B-12}];
+          for (var ni = 0; ni < notePositions.length; ni++) {
+            var np = notePositions[ni];
+            // Note head (filled circle) + stem + flag
+            svg.appendChild(mkEl('ellipse', {cx:np.x.toFixed(1), cy:np.y.toFixed(1), rx:'1.5', ry:'1.2', fill:rgba(ar,ag,ab,0.10), transform:'rotate(-20 '+np.x+' '+np.y+')'}));
+            svg.appendChild(mkPath('M '+(np.x+1.3)+' '+np.y+' L '+(np.x+1.3)+' '+(np.y-6), rgba(ar,ag,ab,0.10), '0.4', '1'));
+            svg.appendChild(mkPath('M '+(np.x+1.3)+' '+(np.y-6)+' Q '+(np.x+4)+' '+(np.y-5)+' '+(np.x+3)+' '+(np.y-3), rgba(ar,ag,ab,0.08), '0.4', '1'));
+          }
+          // Circular motion arcs
+          var arcCx = (L+R)/2, arcCy = (T+B)/2;
+          for (var ai = 0; ai < 3; ai++) {
+            var arcR = Math.min(W,H) * (0.42 + ai * 0.04);
+            var arcStart = sRand() * Math.PI * 2;
+            var arcSpan = 0.4 + sRand() * 0.6;
+            var ax1 = arcCx + Math.cos(arcStart) * arcR;
+            var ay1 = arcCy + Math.sin(arcStart) * arcR * 0.5;
+            var ax2 = arcCx + Math.cos(arcStart + arcSpan) * arcR;
+            var ay2 = arcCy + Math.sin(arcStart + arcSpan) * arcR * 0.5;
+            svg.appendChild(mkEl('path', {d:'M '+ax1.toFixed(1)+' '+ay1.toFixed(1)+' A '+arcR.toFixed(1)+' '+(arcR*0.5).toFixed(1)+' 0 0 1 '+ax2.toFixed(1)+' '+ay2.toFixed(1),
+              fill:'none', stroke:rgba(ar,ag,ab,0.04), 'stroke-width':'0.4', 'stroke-dasharray':'3 4'}));
+          }
+          // Balloons
+          drawBalloonCluster(L + 12, T + 10, 3, 7, bColors, 0.15);
+          drawBalloonCluster(R - 12, B - 12, 3, 7, bColors, 0.15);
+        }
+
+        // ── GOODNIGHT CIRCUS: moon, tent silhouette, sleeping stars, farewell ──
+        else if (tl.indexOf('goodnight') !== -1 || tl.indexOf('circus') !== -1) {
+          // Crescent moon top-right
+          var mx = R - 16, my = T + 14;
+          svg.appendChild(mkEl('circle', {cx:mx.toFixed(1), cy:my.toFixed(1), r:'6', fill:rgba(goldR,goldG,goldB,0.08)}));
+          svg.appendChild(mkEl('circle', {cx:(mx+2.5).toFixed(1), cy:(my-1.5).toFixed(1), r:'5', fill:rgba(darkR+10,darkG+10,darkB+10,0.95)})); // knock out for crescent
+          // Sleeping stars (stars with "zzz")
+          var sleepStars = [{x:R-28,y:T+10},{x:L+10,y:T+18},{x:R-10,y:B-18},{x:L+16,y:B-10}];
+          for (var ssi = 0; ssi < sleepStars.length; ssi++) {
+            var ss = sleepStars[ssi];
+            drawStar(ss.x, ss.y, 3 + sRand()*2, ar, ag, ab, 0.12);
+            // Zzz emanating
+            var zx = ss.x + 4, zy = ss.y - 3;
+            for (var zi = 0; zi < 3; zi++) {
+              var zSize = 1.2 + zi * 0.5;
+              svg.appendChild(mkPath('M '+(zx+zi*2.5).toFixed(1)+' '+(zy-zi*3).toFixed(1)+' l '+zSize.toFixed(1)+' 0 l -'+zSize.toFixed(1)+' '+zSize.toFixed(1)+' l '+zSize.toFixed(1)+' 0',
+                rgba(ar,ag,ab, 0.06 + zi * 0.02), '0.35', '1'));
+            }
+          }
+          // Tent peak silhouette at top-center
+          var tx = (L+R)/2, ty = T + 2;
+          svg.appendChild(mkPath('M '+(tx-18)+' '+(ty+12)+' L '+tx+' '+ty+' L '+(tx+18)+' '+(ty+12), rgba(ar,ag,ab,0.06), '0.5', '1', rgba(ar,ag,ab,0.015)));
+          // Flag on top of tent
+          svg.appendChild(mkPath('M '+tx+' '+ty+' L '+tx+' '+(ty-3), rgba(goldR,goldG,goldB,0.12), '0.5', '1'));
+          svg.appendChild(mkPath('M '+tx+' '+(ty-3)+' L '+(tx+3)+' '+(ty-1.5)+' L '+tx+' '+ty, 'none', '0', '1', rgba(ar,ag,ab,0.08)));
+          // Balloons floating up and away (farewell)
+          drawBalloonCluster(L + W*0.25, T + 6, 2, 6, bColors, 0.12);
+          drawBalloonCluster(R - W*0.25, T + 8, 2, 6, bColors, 0.12);
+          // Scattered dim confetti — the party's over
+          for (var gc = 0; gc < 10; gc++) {
+            var gcx = L + 10 + sRand() * (W - 20);
+            var gcy = B - 4 - sRand() * 8;
+            svg.appendChild(mkEl('rect', {x:gcx.toFixed(1), y:gcy.toFixed(1), width:(1+sRand()*2).toFixed(1), height:(0.5+sRand()*0.5).toFixed(1), rx:'0.2',
+              transform:'rotate('+(sRand()*60-30).toFixed(0)+' '+gcx.toFixed(1)+' '+gcy.toFixed(1)+')',
+              fill: bColors[Math.floor(sRand()*bColors.length)].replace(/[\d.]+\)$/,(0.04+sRand()*0.03).toFixed(2)+')')}));
+          }
+        }
+
+        // ── DIGITAL COMPANIONS: mirror/reflection motif, pixel sparkle ──
+        else if (tl.indexOf('digital') !== -1) {
+          // Digital scan lines across frame
+          for (var dl = 0; dl < 6; dl++) {
+            var dly = T + 6 + sRand() * (H - 12);
+            var dlLen = W * (0.1 + sRand() * 0.3);
+            var dlx = L + 4 + sRand() * (W - dlLen - 8);
+            svg.appendChild(mkPath('M '+dlx.toFixed(1)+' '+dly.toFixed(1)+' L '+(dlx+dlLen).toFixed(1)+' '+dly.toFixed(1),
+              rgba(ar,ag,ab,0.04+sRand()*0.04), '0.3', '1'));
+          }
+          // Pixel sparkles in corners
+          var pxCorners = [{x:L+6,y:T+6},{x:R-6,y:T+6},{x:L+6,y:B-6},{x:R-6,y:B-6}];
+          for (var px = 0; px < 4; px++) {
+            var pc = pxCorners[px];
+            for (var pp = 0; pp < 5; pp++) {
+              var ppx = pc.x + (sRand()-0.5)*10;
+              var ppy = pc.y + (sRand()-0.5)*10;
+              var pps = 0.5 + sRand() * 1;
+              svg.appendChild(mkEl('rect', {x:ppx.toFixed(1), y:ppy.toFixed(1), width:pps.toFixed(1), height:pps.toFixed(1), fill:rgba(ar,ag,ab,0.06+sRand()*0.06)}));
+            }
+          }
+          // Mirror line down center of frame
+          svg.appendChild(mkPath('M '+((L+R)/2).toFixed(1)+' '+(T+2)+' L '+((L+R)/2).toFixed(1)+' '+(T+8), rgba(ar,ag,ab,0.06), '0.3', '1'));
+          svg.appendChild(mkPath('M '+((L+R)/2).toFixed(1)+' '+(B-8)+' L '+((L+R)/2).toFixed(1)+' '+(B-2), rgba(ar,ag,ab,0.06), '0.3', '1'));
+          // Small balloons — more minimal for digital pieces
+          drawBalloonCluster(L + 8, T + 8, 2, 5, bColors, 0.10);
+          drawBalloonCluster(R - 8, B - 8, 2, 5, bColors, 0.10);
+        }
+
+        // ── FALLBACK: generic party balloons for any unmatched title ──
+        else {
+          drawBalloonCluster(L + 10, T + 10, 3, 8, bColors, 0.15);
+          drawBalloonCluster(R - 10, T + 10, 3, 8, bColors, 0.15);
+          drawBalloonCluster(L + 10, B - 10, 2, 7, bColors, 0.12);
+          drawBalloonCluster(R - 10, B - 10, 2, 7, bColors, 0.12);
+        }
       }
 
       return svg;
