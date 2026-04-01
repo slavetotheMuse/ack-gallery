@@ -19112,8 +19112,8 @@
             }
 
             if (_isRealMobile) {
-              // Mobile: replace image with compressed web video (inline, not absolute)
-              img.style.display = 'none';
+              // Mobile: try video, fall back to PNG if playback fails
+              var _rcpVideoWorked = false;
               var mVid = document.createElement('video');
               mVid.id = 'rcpFocusVideo';
               mVid.src = 'right_click_print/rcp_web.mp4';
@@ -19124,8 +19124,29 @@
               mVid.setAttribute('playsinline', '');
               mVid.setAttribute('autoplay', '');
               mVid.style.cssText = 'width:100%;height:auto;object-fit:contain;display:block;';
+
+              // Fallback: if video errors or can't play, show PNG instead
+              function _rcpFallbackToPng() {
+                if (_rcpVideoWorked) return;
+                console.warn('[ACK] RCP video failed on mobile — falling back to PNG');
+                if (mVid.parentNode) mVid.remove();
+                var mSBtn = preview.querySelector('#rcpSoundBtn');
+                if (mSBtn) mSBtn.remove();
+                // Show the original image (which is rcp.png)
+                img.style.display = 'block';
+                img.src = 'right_click_print/rcp.png';
+              }
+              mVid.onerror = _rcpFallbackToPng;
+              mVid.addEventListener('stalled', function() { setTimeout(_rcpFallbackToPng, 3000); });
+
+              img.style.display = 'none';
               preview.appendChild(mVid);
-              mVid.play().catch(function(e){ console.warn('[ACK] RCP mobile play failed:', e); });
+              mVid.play().then(function() {
+                _rcpVideoWorked = true;
+              }).catch(function(e) {
+                console.warn('[ACK] RCP mobile play failed:', e);
+                _rcpFallbackToPng();
+              });
               // Sound toggle
               var _rcpMobileMuted = true;
               var mSoundBtn = document.createElement('div');
