@@ -8461,32 +8461,44 @@
             'object-fit:cover;z-index:10002;pointer-events:none;opacity:0;';
 
           // Artwork sources — curated sequence, no repeats
-          // Fixed: lisan (first), void engine, skelekart, exodus, aerial screw,
-          // then 2 random picks from pool, circus elephant (last before fade)
+          // Fixed anchors: lisan (first), key editions & broken keys mid-section,
+          // then random picks from broad pool, circus elephant (last before fade)
           var _fixedStart = [
             'ackeditions_gallery/web/lisan_web.gif',
             'ackeditions_gallery/web/void_engine_web.gif',
+            'broken-keys-web/god_of_shadows.jpg',
             'ackeditions_gallery/web/skelekart_web.gif',
+            'clownparty/web/showtime_physical_web.jpg',
             'ackeditions_gallery/web/exodus_web.gif',
+            'broken-keys-web/here_lies_the_king.jpg',
             'ackeditions_gallery/web/aerial_screw_web.gif'
           ];
           var _randomPool = [
-            'broken-keys-web/god_of_shadows.jpg',
-            'broken-keys-web/here_lies_the_king.jpg',
             'broken-keys-web/the_looming_unknown.jpg',
             'broken-keys-web/serendipity.jpg',
             'broken-keys-web/rage.jpg',
             'broken-keys-web/ackstract_concerto.jpg',
             'broken-keys-web/the_first_piano.jpg',
             'broken-keys-web/a_space_odyssey,_2023.jpg',
-            'broken-keys-web/the_void.jpg'
+            'broken-keys-web/the_void.jpg',
+            'broken-keys-web/an_ancient_place.jpg',
+            'broken-keys-web/center_of_the_universe.jpg',
+            'broken-keys-web/escaping_my_demons.jpg',
+            'clownparty/web/tinman_physical_web.jpg',
+            'clownparty/web/heavy_mettle_physical_web.jpg',
+            'clownparty/web/pink_carousel_physical_web.jpg',
+            'ackeditions_gallery/web/majestic_white_elephant_web.gif',
+            'ackeditions_gallery/web/ngmi_bottle_web.gif',
+            'ackeditions_gallery/web/maxpainv2_web.gif',
+            'ackeditions_gallery/web/pink_elephant_on_parade_web.gif',
+            'ackeditions_gallery/web/lanuit_web.gif'
           ];
-          // Shuffle pool and pick 2
+          // Shuffle pool and pick 6
           for (var _si = _randomPool.length - 1; _si > 0; _si--) {
             var _sj = Math.floor(Math.random() * (_si + 1));
             var _tmp = _randomPool[_si]; _randomPool[_si] = _randomPool[_sj]; _randomPool[_sj] = _tmp;
           }
-          var artSrcs = _fixedStart.concat(_randomPool.slice(0, 2), ['ackeditions_gallery/web/circus_elephant_web.gif']);
+          var artSrcs = _fixedStart.concat(_randomPool.slice(0, 6), ['ackeditions_gallery/web/circus_elephant_web.gif']);
 
           // Create all img elements and preload
           var imgs = artSrcs.map(function(src) {
@@ -8497,17 +8509,25 @@
             return img;
           });
 
-          // Marvel timing: rapid-fire accelerating cuts — starts fast, gets frantic
-          // Phase 1: hard cuts (~830ms). Phase 2: continued cycling with vortex suck-in
+          // Marvel timing: rapid-fire accelerating cuts — starts measured, gets frantic,
+          // then the final flashes dim progressively toward black
           var schedule = [
-            { idx: 0, showAt: 0, hideAt: 180, peak: 0.75 },
-            { idx: 1, showAt: 180, hideAt: 320, peak: 0.7 },
-            { idx: 2, showAt: 320, hideAt: 440, peak: 0.75 },
-            { idx: 3, showAt: 440, hideAt: 540, peak: 0.65 },
-            { idx: 4, showAt: 540, hideAt: 620, peak: 0.75 },
-            { idx: 5, showAt: 620, hideAt: 690, peak: 0.7 },
-            { idx: 6, showAt: 690, hideAt: 745, peak: 0.6 },
-            { idx: 7, showAt: 745, hideAt: 830, peak: 0.65 }
+            { idx: 0,  showAt: 0,    hideAt: 220,  peak: 0.8  },
+            { idx: 1,  showAt: 220,  hideAt: 400,  peak: 0.75 },
+            { idx: 2,  showAt: 400,  hideAt: 560,  peak: 0.8  },
+            { idx: 3,  showAt: 560,  hideAt: 700,  peak: 0.7  },
+            { idx: 4,  showAt: 700,  hideAt: 830,  peak: 0.75 },
+            { idx: 5,  showAt: 830,  hideAt: 940,  peak: 0.7  },
+            { idx: 6,  showAt: 940,  hideAt: 1040, peak: 0.75 },
+            { idx: 7,  showAt: 1040, hideAt: 1130, peak: 0.65 },
+            { idx: 8,  showAt: 1130, hideAt: 1210, peak: 0.7  },
+            { idx: 9,  showAt: 1210, hideAt: 1290, peak: 0.6  },
+            // Dimming phase — artworks fade toward black
+            { idx: 10, showAt: 1290, hideAt: 1380, peak: 0.5  },
+            { idx: 11, showAt: 1380, hideAt: 1470, peak: 0.4  },
+            { idx: 12, showAt: 1470, hideAt: 1580, peak: 0.3  },
+            { idx: 13, showAt: 1580, hideAt: 1720, peak: 0.18 },
+            { idx: 14, showAt: 1720, hideAt: 1900, peak: 0.1  }
           ];
 
           schedule.forEach(function(s) {
@@ -8524,18 +8544,18 @@
             }, s.hideAt);
           });
 
-          // After last flash, smooth dissolve to vortex (art stays zoomed in, just fades)
+          // After last flash dims out, hold on black briefly then dissolve to vortex
           setTimeout(function() {
-            preIntro.style.transition = 'opacity 1.4s ease-in-out';
+            preIntro.style.transition = 'opacity 2s ease-in-out';
             preIntro.style.opacity = '0';
-          }, 900);
+          }, 2100);
 
           // Remove and proceed
           setTimeout(function() {
             if (audio) { try { audio.pause(); } catch(e){} }
             preIntro.remove();
             if (onComplete) onComplete();
-          }, 2400);
+          }, 4200);
         }, 6000);
       });
     }
