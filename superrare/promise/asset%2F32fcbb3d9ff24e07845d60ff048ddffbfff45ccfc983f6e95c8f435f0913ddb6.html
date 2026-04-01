@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+      img {
+        display: block;
+        margin: auto;
+        max-width:100%;
+        max-height:100%;
+      }
+    </style>
+    <meta charset="utf-8" />
+    <script>
+      let base = 'https://arweave.net/'
+      let images = [
+        'CJWYm2hh9jJds8T0gB55eCFxWxZCrlkQX2IuLqQR_hA',
+        '1Sas2deHRkHZ9ZigvldnbOiC94naLD29j8f4LHD6j5M',
+        'DHOJoUj_55e8dZ6i9I9TXbyn_Vn_JCLQij_aRUsBmUU',
+        'nJ7Od4ALfuEPpbcRCFBMtrc-2nOc0oxCCQoiGlvLLoA',
+        'wMTxt1JxSgJgf8oEHpgIUMSzjNVJdlZAvgX5BmvMNDg',
+        'yVU6ymb2yhnh5D7X5fjXPCJX5mt96Znzu3coXhyZET4'
+      ]
+      let typedWord = []
+
+      const liar = [76,73,65,82]
+
+      window.onload = () => {
+        const liarImage = document.getElementById('liar')
+
+        document.body.onkeyup = function(e){
+          typedWord.push(e.keyCode)
+          if (typedWord.length >= 4) {
+            const sliced = typedWord.slice(-4)
+            if (JSON.stringify(sliced)==JSON.stringify(liar)) {
+              liarImage.src = base + images[Math.floor(Math.random() * images.length)]
+            }
+          }
+        }
+        liarImage.src = 'https://arweave.net/1Sas2deHRkHZ9ZigvldnbOiC94naLD29j8f4LHD6j5M'
+      }
+    </script>
+  </head>
+  <body>
+    <img id="liar">
+  </body>
+</html>

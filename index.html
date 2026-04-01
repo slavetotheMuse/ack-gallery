@@ -662,7 +662,7 @@
       filter: drop-shadow(0 4px 16px rgba(220,150,50,0.4));
     }
 
-    /* Guide sprite in viewport */
+    /* Guide sprite in viewport — DISABLED: sprite animations temporarily removed for mobile compat
     .guide-sprite {
       position: absolute;
       width: 160px;
@@ -670,41 +670,34 @@
       z-index: 90;
       pointer-events: none;
       opacity: 0;
-      /* Sprite sheet: 25 cols x 10 rows, each 200x250, sheet 5000x2500 */
       background: url('voidengine_sprite.png') no-repeat;
-      background-size: 4000px 2000px; /* scaled to 160/200 per frame */
+      background-size: 4000px 2000px;
       image-rendering: auto;
       filter: drop-shadow(0 0 20px rgba(220, 150, 50, 0.3));
       transition: opacity 0.6s ease;
     }
-    .guide-sprite.visible {
-      opacity: 1;
-    }
-    .guide-sprite.spawning {
-      animation: guideSpawn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
+    .guide-sprite.visible { opacity: 1; }
+    .guide-sprite.spawning { animation: guideSpawn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes guideSpawn {
       0% { transform: scale(0.1) rotate(-15deg); opacity: 0; filter: drop-shadow(0 0 40px rgba(255, 165, 0, 0.8)) brightness(2); }
       60% { transform: scale(1.1) rotate(3deg); opacity: 1; }
       100% { transform: scale(1) rotate(0deg); opacity: 1; filter: drop-shadow(0 0 20px rgba(220, 150, 50, 0.3)); }
     }
-    .guide-sprite.hovering {
-      animation: guideHover 3s ease-in-out infinite;
-    }
+    .guide-sprite.hovering { animation: guideHover 3s ease-in-out infinite; }
     @keyframes guideHover {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
       25% { transform: translateY(-8px) rotate(1deg); }
       50% { transform: translateY(0px) rotate(0deg); }
       75% { transform: translateY(-5px) rotate(-1deg); }
     }
-    /* Aerial Screw variant — different sprite sheet + blue-tinted glow */
     .guide-sprite.aerial-screw {
       width: 160px;
-      height: 171px; /* 200x214 scaled to 160 wide: 214*(160/200) = 171.2 */
+      height: 171px;
       background: url('aerialscrew_sprite.png') no-repeat;
-      background-size: 4000px 856px; /* 5000*(160/200) x 1070*(160/200) */
+      background-size: 4000px 856px;
       filter: none;
     }
+    END disabled sprite CSS */
     /* C4D bounding box flash on spawn */
     .guide-bbox {
       position: absolute;
@@ -2826,6 +2819,13 @@
       display: block;
       position: relative;
       z-index: 1;
+      border-radius: 0;
+    }
+    .node-preview iframe {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: none;
       border-radius: 0;
     }
     /* Right edge thickness */
@@ -5304,8 +5304,8 @@
         <!-- Collection rows will be populated by JS from COLLECTIONS array -->
       </div>
     </div>
-    <!-- Guide sprite element (hidden until spawned) -->
-    <div id="guideSprite" class="guide-sprite"></div>
+    <!-- Guide sprite element — DISABLED: sprite animations temporarily removed for mobile compat -->
+    <!-- <div id="guideSprite" class="guide-sprite"></div> -->
     <!-- Vortex click target at dead center -->
     <div class="vortex-target" id="vortexTarget"></div>
   </div>
@@ -7731,7 +7731,23 @@
           token: "ERC-721", chain: "Ethereum",
           artworks: (function(){var a=[];for(var t=0;t<111;t++){a.push({title:"Starry Night #"+(t+1),image:"starrynights/elephants_web.jpg",fullRes:"starrynights/elephants.jpg",tokenId:t+1})}return a})()
         },
-        { name: "SuperRare", image: "but_wait_thumb.jpg", artworks: [] },
+        { name: "SuperRare", image: "but_wait_thumb.jpg", artworks: [
+            {title:"but wait...my bags!",image:"superrare/butwait/but_wait_small.gif",fullRes:"superrare/butwait/butwait_fullres.gif",tokenId:47875,
+             chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0",
+             superRareUrl:"https://superrare.com/artwork/eth/0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0/47875"},
+            {title:"I promise I can change",image:"https://arweave.net/1Sas2deHRkHZ9ZigvldnbOiC94naLD29j8f4LHD6j5M",
+             isLiar:true,
+             liarImages:[
+               'https://arweave.net/CJWYm2hh9jJds8T0gB55eCFxWxZCrlkQX2IuLqQR_hA',
+               'https://arweave.net/1Sas2deHRkHZ9ZigvldnbOiC94naLD29j8f4LHD6j5M',
+               'https://arweave.net/DHOJoUj_55e8dZ6i9I9TXbyn_Vn_JCLQij_aRUsBmUU',
+               'https://arweave.net/nJ7Od4ALfuEPpbcRCFBMtrc-2nOc0oxCCQoiGlvLLoA',
+               'https://arweave.net/wMTxt1JxSgJgf8oEHpgIUMSzjNVJdlZAvgX5BmvMNDg',
+               'https://arweave.net/yVU6ymb2yhnh5D7X5fjXPCJX5mt96Znzu3coXhyZET4'
+             ],
+             chain:"Ethereum",token:"ERC-721",
+             description:"Type LIAR to reveal the truth."}
+        ]},
         { name: "Opepen", image: "supernatural_web.jpg", artworks: [] },
         { name: "notxcopy", image: "selfreflect_thumb.jpg", artworks: [] },
     ];
@@ -11399,9 +11415,9 @@
       // Broken Keys spawns piano.png
       // Others will use placeholder or future PNGs
       const COLLECTION_SPAWN_CONFIG = {
-        'ACK Editions': { type: 'guide', guides: ['void', 'aerial'] },
-        'Broken Keys': { type: 'png', src: 'piano.png', width: 160, height: 160 },
-        // Future collections will get PNGs here:
+        // Sprite animations temporarily disabled for mobile compatibility — re-enable later
+        // 'ACK Editions': { type: 'guide', guides: ['void', 'aerial'] },
+        // 'Broken Keys': { type: 'png', src: 'piano.png', width: 160, height: 160 },
         // 'Warothys': { type: 'png', src: 'ruby_slipper.png', width: 120, height: 160 },
       };
 
@@ -11495,7 +11511,7 @@
       });
 
       // ── GUIDE SYSTEM (used by ACK Editions collection) ──
-      const guideSprite = document.getElementById('guideSprite');
+      const guideSprite = document.getElementById('guideSprite') || document.createElement('div'); // fallback if sprite div removed
       let guideSpawned = false;
       let guideSpriteFrame = 0;
       let guideSpriteTimer = null;
@@ -18869,6 +18885,55 @@
             }
           }
         }, 600);
+      }
+
+      // ── "I promise I can change" (LIAR easter egg): type LIAR to cycle images ──
+      if (artData && artData.isLiar && artData.liarImages) {
+        const _liarImages = artData.liarImages;
+        const _liarCode = [76, 73, 65, 82]; // L-I-A-R keyCodes
+        let _liarTyped = [];
+        const _liarHandler = function(e) {
+          _liarTyped.push(e.keyCode);
+          if (_liarTyped.length > 4) _liarTyped = _liarTyped.slice(-4);
+          if (_liarTyped.length >= 4 && JSON.stringify(_liarTyped.slice(-4)) === JSON.stringify(_liarCode)) {
+            const nodeImg = node.querySelector('.node-preview img');
+            if (nodeImg) {
+              const newSrc = _liarImages[Math.floor(Math.random() * _liarImages.length)];
+              nodeImg.style.transition = 'opacity 0.3s ease';
+              nodeImg.style.opacity = '0.3';
+              const preloader = new Image();
+              preloader.onload = () => { nodeImg.src = newSrc; nodeImg.style.opacity = '1'; };
+              preloader.onerror = () => { nodeImg.style.opacity = '1'; };
+              preloader.src = newSrc;
+              // Flash effect
+              const preview = node.querySelector('.node-preview');
+              if (preview) {
+                preview.style.boxShadow = '0 0 40px rgba(180,80,200,0.6), 0 0 80px rgba(180,80,200,0.3)';
+                setTimeout(() => { preview.style.boxShadow = ''; }, 600);
+              }
+            }
+          }
+        };
+        document.addEventListener('keyup', _liarHandler);
+        // Store cleanup ref on node so exitFocusMode can remove it
+        node._liarCleanup = function() { document.removeEventListener('keyup', _liarHandler); };
+
+        // Show hint
+        setTimeout(() => {
+          const preview = node.querySelector('.node-preview');
+          if (preview) {
+            const hint = document.createElement('div');
+            hint.id = 'liarHint';
+            hint.style.cssText = 'position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:10;' +
+              'font-family:"JetBrains Mono",monospace;font-size:11px;color:rgba(180,80,200,0.6);' +
+              'letter-spacing:0.2em;text-transform:lowercase;pointer-events:none;text-align:center;' +
+              'background:rgba(0,0,0,0.5);padding:4px 12px;border-radius:4px;';
+            hint.textContent = 'type the truth';
+            preview.style.position = 'relative';
+            preview.appendChild(hint);
+            setTimeout(() => { if (hint.parentNode) { hint.style.transition = 'opacity 3s ease'; hint.style.opacity = '0'; }}, 5000);
+          }
+        }, 1200);
       }
 
       // Escape to exit
@@ -27596,6 +27661,11 @@
       if (_loTouchBtn) _loTouchBtn.remove();
       const _loSoundBtn = focusedNode.querySelector('#lastOrdersSoundBtn');
       if (_loSoundBtn) _loSoundBtn.remove();
+
+      // Clean up LIAR easter egg listener
+      if (focusedNode._liarCleanup) { focusedNode._liarCleanup(); delete focusedNode._liarCleanup; }
+      const _liarHint = focusedNode.querySelector('#liarHint');
+      if (_liarHint) _liarHint.remove();
 
       // Clean up Right Click Print focus video
       const _rcpVid = focusedNode.querySelector('#rcpFocusVideo');
