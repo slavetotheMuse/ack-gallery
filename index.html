@@ -16306,8 +16306,7 @@
               'clownparty/extra_nodes/web/clownLV_web.png',
               'clownparty/extra_nodes/web/tinmanface_web.png',
               'clownparty/extra_nodes/web/clownpartyroom_web.png',
-              'clownparty/extra_nodes/web/mat5_web.jpg',
-              'clownparty/extra_nodes/web/mybags_web.png'
+              'clownparty/extra_nodes/web/mat5_web.jpg'
             ];
             var cpDecoCount = cpExtraSrcs.length;
             var cpDecoPositions = [];
@@ -16345,21 +16344,21 @@
                 for (var cpd = 0; cpd < cpDecoPositions.length; cpd++) {
                   var cpdx = cdx - cpDecoPositions[cpd].x;
                   var cpdy = cdy - cpDecoPositions[cpd].y;
-                  if (Math.sqrt(cpdx * cpdx + cpdy * cpdy) < 65) { cpTooClose = true; break; }
+                  if (Math.sqrt(cpdx * cpdx + cpdy * cpdy) < 110) { cpTooClose = true; break; }
                 }
                 // Check against artwork cards
                 if (!cpTooClose) {
                   for (var cr = 0; cr < cpCardRects.length; cr++) {
                     var rect = cpCardRects[cr];
-                    if (cdx > rect.x - 30 && cdx < rect.x + rect.w + 30 && cdy > rect.y - 30 && cdy < rect.y + rect.h + 30) {
+                    if (cdx > rect.x - 40 && cdx < rect.x + rect.w + 40 && cdy > rect.y - 40 && cdy < rect.y + rect.h + 40) {
                       cpTooClose = true; break;
                     }
                   }
                 }
                 if (cdDist > cpExclusionR && !cpTooClose) break;
                 cdAtt++;
-              } while (cdAtt < 100);
-              var cdSize = 45 + Math.random() * 35; // 45-80px
+              } while (cdAtt < 120);
+              var cdSize = 22 + Math.random() * 18; // 22-40px — clownjdfk scale
               cpDecoPositions.push({ x: cdx, y: cdy, size: cdSize });
             }
 
