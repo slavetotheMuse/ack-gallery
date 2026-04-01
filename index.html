@@ -5239,14 +5239,12 @@
     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
   </div>
 
-  <!-- Main Content -->
-  <div id="main-content">
-    <!-- Top Navigation -->
-    <nav class="top-nav">
-      <div class="nav-left" onclick="toggleCatalogOM()" style="position:relative;">
-        <div class="nav-coin"><img src="ACK_gold_logo.png" alt="ACK" style="width:100%;height:100%;object-fit:contain;border-radius:0;"></div>
-        <div class="nav-title">AlphaCentauriKid</div>
-      </div>
+  <!-- Top Navigation — outside main-content so it's never trapped in stacking context -->
+  <nav class="top-nav">
+    <div class="nav-left" onclick="toggleCatalogOM()" style="position:relative;">
+      <div class="nav-coin"><img src="ACK_gold_logo.png" alt="ACK" style="width:100%;height:100%;object-fit:contain;border-radius:0;"></div>
+      <div class="nav-title">AlphaCentauriKid</div>
+    </div>
       <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()">
         <span></span><span></span><span></span>
       </button>
@@ -5296,10 +5294,12 @@
           </div>
         </div>
       </div>
-    </nav>
-    <div class="nav-esc-hint" id="navEscHint"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(220,150,50,0.35);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:14px;height:1px;background:rgba(220,150,50,0.25);vertical-align:middle;margin-right:10px;"></span>esc ←</div>
-    <div id="navFlyingLogo"><img src="ACK_gold_logo.png" alt=""></div>
+  </nav>
+  <div class="nav-esc-hint" id="navEscHint"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(220,150,50,0.35);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:14px;height:1px;background:rgba(220,150,50,0.25);vertical-align:middle;margin-right:10px;"></span>esc ←</div>
+  <div id="navFlyingLogo"><img src="ACK_gold_logo.png" alt=""></div>
 
+  <!-- Main Content -->
+  <div id="main-content">
     <!-- Catalog Object Manager Panel -->
     <div class="catalog-om" id="catalogOM">
       <div class="obj-header">
