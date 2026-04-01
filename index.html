@@ -4859,7 +4859,8 @@
       overflow: hidden !important;
       position: fixed !important;
       width: 100% !important;
-      touch-action: pan-x !important; /* allow horizontal swipe, block vertical */
+      touch-action: none !important; /* all touch handled in JS for swipe between works */
+      overscroll-behavior: none !important;
     }
 
     /* ── Mobile: disable double-tap zoom (keeps pinch zoom) ── */
@@ -7608,7 +7609,7 @@
             {title:"da Vinci van Gogh",image:"opepen/web/davinci_vangogh_web.jpg",fullRes:"opepen/Opepen da Vinci van Gogh (1).png",edition:"1 of 40",description:"Edition of 40. Two skulls bloom with Van Gogh's almond blossoms — masters merged in memento mori."}
           ]
         },
-        { name: "6529", image: "greatrestoration.jpg", artworks: [
+        { name: "6529", image: "greatrestoration.jpg", comingSoon: true, artworks: [
             {title:"DALL-E's Revenge",image:"https://i2c.seadn.io/ethereum/0x33fd426905f149f8376e227d0c9d3340aad17af1/78f902d939337f14035a754b371ce7/3278f902d939337f14035a754b371ce7.jpeg?w=500"},
             {title:"OMSeized",image:"https://i2c.seadn.io/ethereum/0x33fd426905f149f8376e227d0c9d3340aad17af1/2cb8274d3796a04227e78979b9e5a5/932cb8274d3796a04227e78979b9e5a5.png?w=500"}
         ]},
@@ -7621,8 +7622,8 @@
           artworks: [
             {title:"made these for your girl",image:"foryourgirl/web/foryourgirl_web.gif",fullRes:"foryourgirl.gif",edition:"Edition of 39",description:"PROOF Grails Season II. 39 owners. Highest sale: $16,079."}
         ]},
-        { name: "notxcopy", image: "selfreflect_thumb.jpg", artworks: [] },
-        { name: "ACKek", image: "https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/0bbf510c1386d63e21a473910f6f1efd.png?w=500", artworks: [
+        { name: "notxcopy", image: "selfreflect_thumb.jpg", comingSoon: true, artworks: [] },
+        { name: "ACKek", image: "https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/0bbf510c1386d63e21a473910f6f1efd.png?w=500", comingSoon: true, artworks: [
             {title:"William Shakespepe",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/857b5e4d57e7a2f8a13a7e859dff3236.png?w=500"},
             {title:"the social assassin",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/5edb04a6ecbaddec0209243c1ebbe54c.png?w=500"},
             {title:"Duchess of Pepuleme",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/362bc577a6442a71b48c2e008c818eeb.png?w=500"},
@@ -7664,19 +7665,11 @@
           artworks: [
             {title:"Tempted in the Garden",image:"piano_blossoms/web/tempted_physical_web.jpg",fullRes:"piano_blossoms/tempted/tempted_physical.png",edition:"Edition of 30",description:"Tempted in the Garden — an edition of 30 UV raised pigment prints. Part of the Piano Blossoms series by ACK & Avant Arte. Rendered with the same 31-layer UV texture technique as the 1-of-1 works.",additionalMedia:['piano_blossoms/web/tempted_hero_web.jpg','piano_blossoms/web/tempted_frame_walnut_web.jpg','piano_blossoms/web/tempted_detail_3_web.jpg','piano_blossoms/web/tempted_f6_web.jpg']}
         ]},
-        { name: "ROI", image: "https://i2c.seadn.io/ethereum/0x4d701b75dddb78007aff5758e1e73a2e9968280b/d81803faaac611c04ecce294b47b9e/27d81803faaac611c04ecce294b47b9e.png?w=500", artworks: [
+        { name: "ROI", image: "https://i2c.seadn.io/ethereum/0x4d701b75dddb78007aff5758e1e73a2e9968280b/d81803faaac611c04ecce294b47b9e/27d81803faaac611c04ecce294b47b9e.png?w=500", comingSoon: true, artworks: [
             {title:"ROI",image:"https://i2c.seadn.io/ethereum/0x4d701b75dddb78007aff5758e1e73a2e9968280b/d81803faaac611c04ecce294b47b9e/27d81803faaac611c04ecce294b47b9e.png?w=500"}
         ]},
-        { name: "Right Click Print", image: "https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/f5adfc40ece52adfc1f1ebd6b0630b/83f5adfc40ece52adfc1f1ebd6b0630b.png?w=500", artworks: [
-            {title:"Right Click Print #1",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/d8e3c91882651205d6257ebbf79dc4/d2d8e3c91882651205d6257ebbf79dc4.png?w=500"},
-            {title:"Right Click Print #5",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/967242c77c6d73a299948e2b7f05b6/f2967242c77c6d73a299948e2b7f05b6.png?w=500"},
-            {title:"Right Click Print #9",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/2ddcf9d18b561dfefbf8b5726b8e6a/052ddcf9d18b561dfefbf8b5726b8e6a.png?w=500"},
-            {title:"Right Click Print #13",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/63a1683fd883e9df7ce9a5103cb292/b063a1683fd883e9df7ce9a5103cb292.png?w=500"},
-            {title:"Right Click Print #2",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/08ba5aba4868091018f52e6295841a/4c08ba5aba4868091018f52e6295841a.png?w=500"},
-            {title:"Right Click Print #6",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/91e91472993389c7a1ccb9d3ad4a3c/7091e91472993389c7a1ccb9d3ad4a3c.png?w=500"},
-            {title:"Right Click Print #10",image:"https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/7229cb1f8522c7e137d4ae2e361fd7/6e7229cb1f8522c7e137d4ae2e361fd7.png?w=500"}
-        ]},
-        { name: "ACKFTW", image: "https://i2c.seadn.io/ethereum/0x38fb6b6205436082612aadeca74beb97717e0206/3be8a5c3e69e54fee4e7412a64101d7f.gif?w=500", artworks: [
+        /* Duplicate RCP removed — the proper edition-based Right Click Print collection is above */
+        { name: "ACKFTW", image: "https://i2c.seadn.io/ethereum/0x38fb6b6205436082612aadeca74beb97717e0206/3be8a5c3e69e54fee4e7412a64101d7f.gif?w=500", comingSoon: true, artworks: [
             {title:"simphony for the muse #blue #2/22",image:"https://i2c.seadn.io/ethereum/0x38fb6b6205436082612aadeca74beb97717e0206/3be8a5c3e69e54fee4e7412a64101d7f.gif?w=500"},
             {title:"simphony for the muse #blue #6/22",image:"https://i2c.seadn.io/ethereum/0x38fb6b6205436082612aadeca74beb97717e0206/3be8a5c3e69e54fee4e7412a64101d7f.gif?w=500"},
             {title:"simphony for the muse #blue #12/22",image:"https://i2c.seadn.io/ethereum/0x38fb6b6205436082612aadeca74beb97717e0206/3be8a5c3e69e54fee4e7412a64101d7f.gif?w=500"},
@@ -7685,11 +7678,11 @@
             {title:"simphony for the muse #red #10/22",image:"https://i2c.seadn.io/ethereum/0x38fb6b6205436082612aadeca74beb97717e0206/c34ed10fccb0c4152b795e0c214fce35.gif?w=500"},
             {title:"simphony for the muse #red #15/22",image:"https://i2c.seadn.io/ethereum/0x38fb6b6205436082612aadeca74beb97717e0206/c34ed10fccb0c4152b795e0c214fce35.gif?w=500"}
         ]},
-        { name: "Noble Gallery", image: "https://i2c.seadn.io/ethereum/0x7e9b9ba1a3b4873279857056279cef6a4fcdf340/168208f33e03debe885485a0c6b68e1c.gif?w=500", artworks: [
+        { name: "Noble Gallery", image: "https://i2c.seadn.io/ethereum/0x7e9b9ba1a3b4873279857056279cef6a4fcdf340/168208f33e03debe885485a0c6b68e1c.gif?w=500", comingSoon: true, artworks: [
             {title:"don't open it: ACK",image:"https://i2c.seadn.io/ethereum/0x7e9b9ba1a3b4873279857056279cef6a4fcdf340/874b8d4b630597f45071701bee8fad9d.gif?w=500"},
             {title:"oblivion: ACK",image:"https://i2c.seadn.io/ethereum/0x7e9b9ba1a3b4873279857056279cef6a4fcdf340/9f8d04bd45e0b2d8e070b47992c0dc/a19f8d04bd45e0b2d8e070b47992c0dc.gif?w=500"}
         ]},
-        { name: "Opepen", image: "supernatural_web.jpg", artworks: [] }
+        { name: "Opepen", image: "supernatural_web.jpg", comingSoon: true, artworks: [] }
     ];
     // ── CUSTOM COLLECTION LAYOUTS ──
     // Hand-positioned via layout editor, keyed by collection name.
@@ -8412,7 +8405,7 @@
           });
 
           // Marvel timing: rapid-fire accelerating cuts — starts fast, gets frantic
-          // Total montage ~1.1s, then smooth dissolve
+          // Phase 1: hard cuts (~830ms). Phase 2: continued cycling with vortex suck-in
           var schedule = [
             { idx: 0, showAt: 0, hideAt: 180, peak: 0.75 },
             { idx: 1, showAt: 180, hideAt: 320, peak: 0.7 },
@@ -8426,7 +8419,6 @@
 
           schedule.forEach(function(s) {
             setTimeout(function() {
-              // Hide all others instantly, show this one
               imgs.forEach(function(im, i) {
                 if (i !== s.idx) { im.style.transition = 'none'; im.style.opacity = '0'; }
               });
@@ -8439,18 +8431,62 @@
             }, s.hideAt);
           });
 
-          // After last flash, smooth dissolve to vortex
+          // Phase 2: keep cycling with suck-into-vortex effect
+          // Art keeps flashing but now shrinks toward center as vortex pulls it in
+          var _suckCycleIdx = 0;
+          var _suckStartTime = 900;
+          var _suckDuration = 1600; // total suck-in duration
+          var _suckInterval = 90; // time between flashes (gets faster)
+          var _suckTimer = null;
+
+          function _suckCycle() {
+            var elapsed = Date.now() - _suckPhaseStart;
+            var progress = Math.min(elapsed / _suckDuration, 1); // 0→1
+
+            // Progressive scale down + slight rotation as it gets sucked in
+            var scale = 1 - progress * 0.7; // 1.0 → 0.3
+            var opacity = 0.5 * (1 - progress * 0.8); // 0.5 → 0.1
+            var rotate = progress * 15; // 0 → 15 degrees
+
+            // Hide all, show current
+            imgs.forEach(function(im) { im.style.transition = 'none'; im.style.opacity = '0'; });
+            var curImg = imgs[_suckCycleIdx % imgs.length];
+            curImg.style.transition = 'none';
+            curImg.style.opacity = String(opacity);
+            curImg.style.transform = 'scale(' + scale + ') rotate(' + rotate + 'deg)';
+            curImg.style.transformOrigin = '50% 50%';
+
+            _suckCycleIdx++;
+
+            if (progress < 1) {
+              // Accelerating flash rate
+              var nextInterval = Math.max(30, _suckInterval * (1 - progress * 0.6));
+              _suckTimer = setTimeout(_suckCycle, nextInterval);
+            } else {
+              // Final: all images gone
+              imgs.forEach(function(im) { im.style.opacity = '0'; });
+            }
+          }
+
+          var _suckPhaseStart;
           setTimeout(function() {
-            preIntro.style.transition = 'opacity 1.4s ease-in-out';
+            _suckPhaseStart = Date.now();
+            _suckCycle();
+          }, _suckStartTime);
+
+          // Fade the preIntro overlay during suck-in
+          setTimeout(function() {
+            preIntro.style.transition = 'opacity 1.6s ease-in';
             preIntro.style.opacity = '0';
-          }, 900);
+          }, _suckStartTime + 200);
 
           // Remove and proceed
           setTimeout(function() {
+            if (_suckTimer) clearTimeout(_suckTimer);
             if (audio) { try { audio.pause(); } catch(e){} }
             preIntro.remove();
             if (onComplete) onComplete();
-          }, 2400);
+          }, _suckStartTime + _suckDuration + 400);
         }, 6000);
       });
     }
@@ -18162,8 +18198,9 @@
         }
         focusTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + _focusTitleText;
         const _titleLeft = node._focusLeftEdge || 24;
-        const _titleTop = (node._focusBottomEdge || (window.innerHeight * 0.85)) + 50;
-        focusTitleEl.style.cssText = 'position:fixed;z-index:2500;font-family:"JetBrains Mono",monospace;font-size:1.05rem;color:rgba(200,195,185,0.7);letter-spacing:0.06em;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.4s ease;left:' + _titleLeft + 'px;top:' + _titleTop + 'px;';
+        const _titleTop = (node._focusBottomEdge || (window.innerHeight * 0.85)) + 18;
+        const _titleMaxW = (node._focusRightEdge && node._focusLeftEdge) ? (node._focusRightEdge - node._focusLeftEdge) : 400;
+        focusTitleEl.style.cssText = 'position:fixed;z-index:2500;font-family:"JetBrains Mono",monospace;font-size:0.85rem;color:rgba(200,195,185,0.7);letter-spacing:0.06em;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.4s ease;left:' + _titleLeft + 'px;top:' + _titleTop + 'px;max-width:' + _titleMaxW + 'px;overflow:hidden;text-overflow:ellipsis;';
         document.body.appendChild(focusTitleEl);
         requestAnimationFrame(() => { focusTitleEl.style.opacity = '1'; });
       }, _scatterWait + 300);
@@ -19115,9 +19152,8 @@
         const onTouchMove = (evt) => {
           if (_swipeTransitioning) return;
           _swipeDelta = evt.touches[0].clientX - _swipeStartX;
-          // If mostly horizontal swipe, prevent scroll
-          const dy = Math.abs(evt.touches[0].clientY - _swipeStartY);
-          if (Math.abs(_swipeDelta) > dy + 10) evt.preventDefault();
+          // Always prevent scroll in focus mode to avoid bounce/crash
+          evt.preventDefault();
         };
         const onTouchEnd = () => {
           if (_swipeTransitioning) return;
@@ -20477,7 +20513,7 @@
       }
 
       let _pantoneSwatch = '';
-      if (_displayColName === 'The Great Color Study' && artwork.description) {
+      if (_displayColName === 'The Great Color Study' && artwork.description && artwork.title && artwork.title.toLowerCase() !== 'max pain v2') {
         const _pantoneMatch = artwork.description.match(/Pantone\s+([\w\s]+?)(?:\.|$)/i);
         if (_pantoneMatch) {
           const _pantoneCode = _pantoneMatch[1].trim();
@@ -23378,7 +23414,9 @@
     // ══════════════════════════════════════════════════════════════════
     function generateColorStudyFrame(imgW, imgH, palette, title, focusMode) {
       const ns = 'http://www.w3.org/2000/svg';
-      const pad = focusMode ? 16 : 10;
+      const tl = (title || '').toLowerCase();
+      const isMaxPainV2 = tl.indexOf('max pain') !== -1;
+      const pad = (focusMode && !isMaxPainV2) ? 16 : (focusMode && isMaxPainV2) ? 6 : 10;
       const svg = document.createElementNS(ns, 'svg');
       const FW = imgW + pad * 2, FH = imgH + pad * 2;
       svg.setAttribute('viewBox', '0 0 ' + FW + ' ' + FH);
@@ -23392,7 +23430,6 @@
       const ar = m ? +m[1] : 200, ag = m ? +m[2] : 80, ab = m ? +m[3] : 120;
       const L = pad, T = pad, R = imgW + pad, B = imgH + pad;
       const W = R - L, H = B - T;
-      const tl = (title || '').toLowerCase();
 
       let seed = (ar * 11 + ag * 7 + ab * 3 + imgW * 5) & 0xFFFF;
       const rand = () => { seed = (seed * 16807 + 11) % 2147483647; return (seed & 0xFFFF) / 0xFFFF; };
