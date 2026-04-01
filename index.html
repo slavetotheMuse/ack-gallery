@@ -2371,6 +2371,59 @@
       /* opacity set by JS based on distance */
     }
 
+    /* ── Focus view entry hint — crosshair overlay on hover ── */
+    .node-card:not(.info-card-node) .node-focus-hint {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .node-card:not(.info-card-node):hover .node-focus-hint {
+      opacity: 1;
+    }
+    .node-graph-inner.focus-mode .node-focus-hint {
+      display: none !important;
+    }
+    .node-focus-hint-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .node-focus-hint-crosshair {
+      width: 20px; height: 20px;
+      position: relative;
+    }
+    .node-focus-hint-crosshair::before,
+    .node-focus-hint-crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(200,180,140,0.5);
+    }
+    .node-focus-hint-crosshair::before {
+      width: 1px; height: 100%;
+      left: 50%; top: 0;
+      transform: translateX(-50%);
+    }
+    .node-focus-hint-crosshair::after {
+      width: 100%; height: 1px;
+      top: 50%; left: 0;
+      transform: translateY(-50%);
+    }
+    .node-focus-hint-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: 0.2em;
+      color: rgba(200,180,140,0.45);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
     /* ── Info card node (text-only, no artwork image) ── */
     .info-card-node { cursor: default; }
     .info-card-preview {
@@ -7531,7 +7584,7 @@
           token: "ERC-721", chain: "Ethereum", contract: "0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3",
           mintDate: "2021",
           artworks: [
-            {title:"Right Click Print",image:"right_click_print/rcp.png",fullRes:"right_click_print/rcp.mp4",edition:"Unique Edition of 15",tokenId:30,description:"Hide your jpegs… Each edition is unique — a different polaroid and sheet music on the piano.",
+            {title:"Right Click Print",image:"right_click_print/rcp.png",fullRes:"right_click_print/rcp_web.mp4",edition:"Unique Edition of 15",tokenId:30,description:"Hide your jpegs… Each edition is unique — a different polaroid and sheet music on the piano.",
               editions: [
                 {num:1, tokenId:30, polaroid:'ACK', music:'Beethoven — Sonata No.14 "Quasi una fantasia" Op.27', still:'right_click_print/final%20assets/%231ACK/ack.png', video:'right_click_print/final%20assets/%231ACK/rcpACK.mp4'},
                 {num:2, tokenId:31, polaroid:'Beeple', music:'Mozart — Lacrimosa', still:'right_click_print/final%20assets/%232.Beeple/beeple.png', video:'right_click_print/final%20assets/%232.Beeple/rcpbeeple.mp4'},
@@ -7557,7 +7610,7 @@
           mintDate: "2021",
           salesData: { totalVolume: "~$250,000", totalSales: "25", highestSale: "~$30,000" },
           artworks: [
-            {title:"Last Orders",image:"lastorders/lastorders.png",fullRes:"lastorders/lastorders2023.mp4",edition:"Edition of 25",tokenId:2,description:"ACK × XCOPY collaboration. A 3D bar scene at the end of the world. ERC-721 on Ethereum.",collabTag:"ACK & XCOPY collaboration — 2021"}
+            {title:"Last Orders",image:"lastorders/lastorders.png",fullRes:"lastorders/web/lastorders_web.mp4",edition:"Edition of 25",tokenId:2,description:"ACK × XCOPY collaboration. A 3D bar scene at the end of the world. ERC-721 on Ethereum.",collabTag:"ACK & XCOPY collaboration — 2021"}
         ]},
         { name: "ACK Editions", image: "ackeditions_gallery/web/void_engine_catalog.gif",
           wallLayout: true,
@@ -15325,6 +15378,14 @@
           preview.appendChild(ticks);
           node.appendChild(preview);
 
+          // Focus view entry hint — crosshair + "view" on hover
+          if (!_isInfoCard) {
+            const focusHint = document.createElement('div');
+            focusHint.className = 'node-focus-hint';
+            focusHint.innerHTML = '<div class="node-focus-hint-inner"><div class="node-focus-hint-crosshair"></div><div class="node-focus-hint-label">view</div></div>';
+            node.appendChild(focusHint);
+          }
+
           const titleTag = document.createElement('div');
           titleTag.className = 'node-title-tag';
           const thisNodeW = np.w || nodeW;
@@ -18816,7 +18877,7 @@
               // ── Dual-video crossfade for seamless looping ──
               // Two identical videos: when one nears its end, the other fades in
               // from the start, creating a smooth dissolve at the loop boundary.
-              var _loSrc = 'lastorders/lastorders2023.mp4';
+              var _loSrc = 'lastorders/web/lastorders_web.mp4';
               var _loFadeTime = 0.8; // seconds of crossfade overlap
 
               function _makeVid(id) {
@@ -18957,9 +19018,8 @@
             function _launchRCPVideo() {
               var _tBtn = preview.querySelector('.lo-touch-btn');
               if (_tBtn) _tBtn.remove();
-              // Use edition #1 video from editions data (rcp.mp4 may be LFS pointer)
-              var _artData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks ? COLLECTIONS[collectionIndex].artworks[artworkIndex] : null;
-              var _rcpSrc = (_artData && _artData.editions && _artData.editions[0] && _artData.editions[0].video) ? _artData.editions[0].video : 'right_click_print/rcp.mp4';
+              // Use web-optimized video (LFS full-res versions are too large for Vercel)
+              var _rcpSrc = 'right_click_print/rcp_web.mp4';
               var vid = document.createElement('video');
               vid.id = 'rcpFocusVideo';
               vid.src = _rcpSrc;
