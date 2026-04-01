@@ -792,23 +792,25 @@
       transform: translateY(0);
     }
 
-    /* Nav esc hint — below logo, visible in collection/focus views only */
+    /* Nav esc hint — below header, visible in collection/focus views only */
     .nav-esc-hint {
-      position: absolute;
-      bottom: -30px;
-      left: 0;
+      position: fixed;
+      top: 78px;
+      left: 40px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.14em;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
       color: rgba(200,180,150,0.0);
       white-space: nowrap;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.5s ease, color 0.5s ease;
+      transition: opacity 0.8s ease, color 0.8s ease;
+      z-index: 2999;
+      text-transform: lowercase;
     }
     .nav-esc-hint.visible {
-      color: rgba(200,180,150,0.45);
       opacity: 1;
+      color: rgba(200,180,150,0.4);
     }
 
     /* Flying logo spinner */
@@ -2275,7 +2277,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 10px 20px;
+      padding: 14px 28px;
       flex-shrink: 0;
       border-bottom: none;
       background: transparent;
@@ -2298,20 +2300,20 @@
 
     .detail-back-btn {
       position: absolute;
-      right: 20px;
+      right: 44px;
       top: 50%;
       transform: translateY(-50%);
-      width: 22px;
-      height: 22px;
-      border-radius: 3px;
+      width: 34px;
+      height: 34px;
+      border-radius: 4px;
       background: transparent;
-      border: 1px solid rgba(200,195,185,0.15);
+      border: 1px solid rgba(200,195,185,0.18);
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
-      color: rgba(200,195,185,0.4);
-      font-size: 0.7rem;
+      color: rgba(200,195,185,0.5);
+      font-size: 1rem;
       transition: all 0.25s ease;
     }
 
@@ -4796,36 +4798,7 @@
     }
 
 
-    /* ── ESC hint — subtle top-left indicator with periodic pulse ── */
-    .esc-hint {
-      position: fixed;
-      top: 18px;
-      left: 20px;
-      z-index: 2500;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.42rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(200,180,150,0.3);
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-    .esc-hint.visible { opacity: 1; animation: escPulse 4s ease-in-out infinite; }
-    @keyframes escPulse {
-      0%, 100% { opacity: 0.85; }
-      50% { opacity: 0.2; }
-    }
-    .esc-hint kbd {
-      display: inline-block;
-      padding: 1px 5px;
-      border: 1px solid rgba(200,180,150,0.2);
-      border-radius: 3px;
-      font-family: inherit;
-      font-size: inherit;
-      color: rgba(200,180,150,0.45);
-      margin-right: 4px;
-    }
+    /* Old .esc-hint overlay removed — using .nav-esc-hint instead */
 
     /* ── Mobile: motherboard always expanded as info machine (works with 1400px viewport) ── */
     #masterNode.mobile-expanded .master-node-pcb {
@@ -5274,7 +5247,6 @@
       <div class="nav-left" onclick="toggleCatalogOM()" style="position:relative;">
         <div class="nav-coin"><img src="ACK_gold_logo.png" alt="ACK" style="width:100%;height:100%;object-fit:contain;border-radius:0;"></div>
         <div class="nav-title">AlphaCentauriKid</div>
-        <div class="nav-esc-hint" id="navEscHint">press esc ←</div>
       </div>
       <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()">
         <span></span><span></span><span></span>
@@ -5326,6 +5298,7 @@
         </div>
       </div>
     </nav>
+    <div class="nav-esc-hint" id="navEscHint"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(220,150,50,0.35);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:14px;height:1px;background:rgba(220,150,50,0.25);vertical-align:middle;margin-right:10px;"></span>esc ←</div>
     <div id="navFlyingLogo"><img src="ACK_gold_logo.png" alt=""></div>
 
     <!-- Catalog Object Manager Panel -->
@@ -8221,7 +8194,7 @@
 
       preIntro.innerHTML =
         '<div id="whispersTapPrompt" style="font-family:' + _duneFontStack + ';font-weight:100;font-size:clamp(22px, 4vw, 32px);' +
-        'letter-spacing:0.45em;color:rgba(245,240,230,0.55);text-transform:lowercase;' +
+        'letter-spacing:0.45em;color:rgba(245,240,230,0.7);text-transform:lowercase;' +
         'animation:whisperPulse 2.5s ease-in-out infinite;">touch</div>' +
         '<div id="whispersTextWrap" style="position:absolute;top:0;left:0;width:100%;height:100%;' +
         'display:flex;align-items:center;justify-content:center;padding:40px;text-align:center;opacity:0;">' +
@@ -8239,7 +8212,7 @@
         var style = document.createElement('style');
         style.id = 'whispersStyles';
         style.textContent =
-          '@keyframes whisperPulse{0%,100%{opacity:0.35}50%{opacity:0.9}}' +
+          '@keyframes whisperPulse{0%,100%{opacity:0.5}50%{opacity:1}}' +
           '@keyframes whisperBreathe{0%,100%{text-shadow:0 0 20px rgba(245,240,230,0.03),0 0 60px rgba(220,180,120,0.02);letter-spacing:0.18em}50%{text-shadow:0 0 30px rgba(245,240,230,0.08),0 0 80px rgba(220,180,120,0.04);letter-spacing:0.2em}}' +
           '@keyframes morphGlitch{0%{opacity:1;transform:translateX(0)}15%{opacity:0.3;transform:translateX(2px)}30%{opacity:0.8;transform:translateX(-1px)}45%{opacity:0.2;transform:translateX(3px)}60%{opacity:0.7;transform:translateX(-2px)}75%{opacity:0.4;transform:translateX(1px)}100%{opacity:1;transform:translateX(0)}}' +
           '#whispersPreIntro, #whispersPreIntro * { cursor: crosshair !important; }' +
@@ -15396,7 +15369,9 @@
           // Left-side nodes: edition on left of title; Right-side: edition on right
           const isColorStudy = collection && collection.name === 'The Great Color Study';
           const isPbdOrMaxPain = artwork.title === 'pale blue death (a color study)' || artwork.title === 'max pain v2';
-          if (artwork.edition && isColorStudy && !isPbdOrMaxPain) {
+          const isAckEditions = collection && collection.name === 'ACK Editions';
+          const showEditionInNode = artwork.edition && !isAckEditions;
+          if (showEditionInNode && isColorStudy && !isPbdOrMaxPain) {
             const midX = vpW / 2;
             const nodeCenter = np.x + (np.w || nodeW) / 2;
             const isLeftSide = nodeCenter < midX;
@@ -15406,7 +15381,7 @@
               titleTag.innerHTML = '<span class="node-title-dot"></span>' + artwork.title + '<span class="node-edition-tag">' + artwork.edition + '</span>';
             }
           } else {
-            titleTag.innerHTML = '<span class="node-title-dot"></span>' + artwork.title + (artwork.edition ? '<span class="node-edition-tag">' + artwork.edition + '</span>' : '');
+            titleTag.innerHTML = '<span class="node-title-dot"></span>' + artwork.title + (showEditionInNode ? '<span class="node-edition-tag">' + artwork.edition + '</span>' : '');
           }
           node.appendChild(titleTag);
 
@@ -17366,7 +17341,7 @@
         }, 800);
 
         // Show ESC hint on collection detail entry
-        showEscHint('to go back');
+        showEscHint();
 
         // ── FLASH DETECTOR: monitor for unexpected DOM changes ──
         if (collection.wallLayout) {
@@ -17746,7 +17721,7 @@
         inner.classList.add('focus-mode');
         node.classList.add('focused');
         _showMobileBack('focus');
-        showEscHint('to exit focus');
+        showEscHint();
         // On mobile: pause all non-essential rendering to free memory
         if (_isRealMobile) {
           bgGridPaused = true;
@@ -20409,8 +20384,9 @@
         ? 'On-chain, Ethereum, ' + artwork.edition
         : 'On-chain, Ethereum, 1 of 1';
       const tokenStandard = collection.token || 'ERC-721';
-      const editionLine = artwork.edition
-        ? `<div class="node-info-line"><div class="node-info-label">Edition</div><div class="node-info-value">${artwork.edition}</div></div>`
+      const editionLine = '';
+      const _editionTagHtml = artwork.edition
+        ? `<span style="display:inline-block;margin-left:8px;padding:1px 6px;font-size:0.6rem;color:rgba(220,150,50,0.65);border:0.5px solid rgba(220,150,50,0.25);border-radius:2px;letter-spacing:0.04em;vertical-align:baseline;">${artwork.edition}</span>`
         : '';
       // Physical print / ChromaSculpt badge
       const _physicalPrintCollections = ['Warothys', 'Piano Blossoms', 'Clown Party', 'Tempted in the Garden'];
@@ -20510,7 +20486,7 @@
         ${tabBar}
         <div class="coa-info-tabpanel active" data-coa-panel="info">
           <div class="node-info-panel-body">
-            <div class="node-info-panel-title">${artwork.title}${_rcpBadgeHtml}${_pantoneSwatch}</div>
+            <div class="node-info-panel-title">${artwork.title}${_editionTagHtml}${_rcpBadgeHtml}${_pantoneSwatch}</div>
             ${_rcpDetailsHtml}
             ${editionLine}
             ${physicalPrintLine}
@@ -28975,9 +28951,11 @@
       }
     }
 
+    var _navLogoSweepDone = false;
     function runNavLogoSweep(nav, staticCoin) {
       const flyingLogo = document.getElementById('navFlyingLogo');
-      if (!flyingLogo) return;
+      if (!flyingLogo || _navLogoSweepDone) return;
+      _navLogoSweepDone = true;
 
       // Gather all revealable nav items in left-to-right order
       const navTitle = nav.querySelector('.nav-title');
@@ -29354,31 +29332,13 @@
       }
     });
 
-    // ── ESC hint — shows on detail/focus entry, fades out after a few seconds ──
-    var _escHintEl = null;
-    var _escHintTimer = null;
-    function showEscHint(text) {
-      if (_isRealMobile) return; // no hint on mobile
-      if (!_escHintEl) {
-        _escHintEl = document.createElement('div');
-        _escHintEl.className = 'esc-hint';
-        document.body.appendChild(_escHintEl);
-      }
-      _escHintEl.innerHTML = '<span style="margin-right:4px;">←</span> <kbd>esc</kbd> ' + (text || 'to go back');
-      _escHintEl.classList.remove('visible');
-      requestAnimationFrame(() => { _escHintEl.classList.add('visible'); });
-      clearTimeout(_escHintTimer);
-      _escHintTimer = setTimeout(() => {
-        if (_escHintEl) _escHintEl.classList.remove('visible');
-      }, 3500);
-      // Show the persistent nav esc hint below logo
+    // ── ESC hint — persistent below header in collection/focus views ──
+    function showEscHint() {
+      if (_isRealMobile) return;
       var _navHint = document.getElementById('navEscHint');
       if (_navHint) _navHint.classList.add('visible');
     }
     function hideEscHint() {
-      if (_escHintEl) _escHintEl.classList.remove('visible');
-      clearTimeout(_escHintTimer);
-      // Hide the nav esc hint (back to catalog)
       var _navHint = document.getElementById('navEscHint');
       if (_navHint) _navHint.classList.remove('visible');
     }
