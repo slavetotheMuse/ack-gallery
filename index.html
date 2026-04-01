@@ -291,9 +291,24 @@
       text-decoration: none;
       transition: color 0.2s;
       letter-spacing: 0.04em;
+      cursor: pointer;
     }
     .collectors-popup .cp-name:hover {
       color: rgba(220,150,50,0.9);
+    }
+    .collectors-popup .cp-etherscan {
+      font-size: 0.38rem;
+      color: rgba(160,158,150,0.35);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+      margin-left: 34px;
+      display: block;
+      margin-top: -2px;
+      margin-bottom: 2px;
+    }
+    .collectors-popup .cp-etherscan:hover {
+      color: rgba(160,158,150,0.65);
     }
     .collectors-popup .cp-count {
       font-size: 0.45rem;
@@ -5499,14 +5514,12 @@
   <div class="nav-esc-hint" id="navEscHint">esc <svg width="14" height="12" viewBox="0 0 14 12" style="vertical-align:middle;margin-left:5px;"><path d="M6 1L1 6L6 11" stroke="rgba(220,150,50,0.5)" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="1.5" y1="6" x2="13" y2="6" stroke="rgba(220,150,50,0.5)" stroke-width="1.2" stroke-linecap="round"/></svg></div>
   <div id="navFlyingLogo"><img src="ACK_gold_logo.png" alt=""></div>
 
-  <!-- Main Content -->
-  <div id="main-content">
-    <!-- Catalog Object Manager Panel -->
-    <div class="catalog-om" id="catalogOM">
-      <div class="obj-header">
-        <div class="obj-header-title">Objects</div>
-        <div class="obj-header-buttons">
-          <div class="obj-header-btn" onclick="toggleCatalogOM()">✕</div>
+  <!-- Catalog Object Manager — outside main-content to avoid stacking context trap -->
+  <div class="catalog-om" id="catalogOM">
+    <div class="obj-header">
+      <div class="obj-header-title">Objects</div>
+      <div class="obj-header-buttons">
+        <div class="obj-header-btn" onclick="toggleCatalogOM()">✕</div>
         </div>
       </div>
       <div class="catalog-om-list" id="catalogOMList">
@@ -5552,6 +5565,8 @@
       </div>
     </div>
 
+  <!-- Main Content -->
+  <div id="main-content">
     <!-- Gallery — Node Graph -->
     <div class="gallery-container" id="galleryContainer">
       <div class="collections-grid" id="collectionsGrid">
@@ -18712,8 +18727,10 @@
             if (artData && artData.focusImage) {
               _focusSrc = artData.focusImage;
             } else if (_isGifArtwork) {
-              // GIF artworks (Warothys, Editions, etc.) — use fullRes GIF directly, no JPG intermediary
-              _focusSrc = artData.fullRes;
+              // GIF artworks (Warothys, Editions, Color Study, etc.)
+              // Try focus JPG first (fast crisp still), GIF chains on top via _desktopGifSrc path below
+              var _gifFocusJpg = _deriveFocusPath(artData.fullRes);
+              _focusSrc = _gifFocusJpg || artData.fullRes;
             } else if (artData && artData.fullRes) {
               const _fr = artData.fullRes;
               // Skip mp4 fullRes — video playback is handled separately per-collection
@@ -22567,9 +22584,13 @@
               ? '<img class="cp-pfp" src="' + pfpUrl + '" onerror="this.style.display=\'none\'">'
               : '<div class="cp-pfp" id="cpPfp_' + idx + '" style="display:flex;align-items:center;justify-content:center;"><span style="font-size:0.5rem;color:rgba(160,158,150,0.4);">\u229E</span></div>';
             const countText = owner.balance + ' ITEM' + (owner.balance !== 1 ? 'S' : '');
+            // Store raw address for "view bags" click (always the original address)
             listHTML += '<div class="cp-row">' + pfpHtml +
-              '<a href="' + linkHref + '" target="_blank" class="cp-name" id="cpName_' + idx + '">' + displayName + '</a>' +
+              '<span class="cp-name" id="cpName_' + idx + '" data-wallet="' + addr + '" title="View collection">' + displayName + '</span>' +
               '<span class="cp-count">' + countText + '</span></div>';
+            if (linkHref) {
+              listHTML += '<a href="' + linkHref + '" target="_blank" class="cp-etherscan" id="cpEtherscan_' + idx + '">etherscan ↗</a>';
+            }
             // Async ENS resolve for 0x addresses that aren't cached yet
             if (is0x && !hasENSAlready) {
               (function(i, address) {
@@ -22578,7 +22599,10 @@
                   var nameEl = document.getElementById('cpName_' + i);
                   if (nameEl) {
                     nameEl.textContent = ens;
-                    nameEl.href = 'https://etherscan.io/name-lookup-search?id=' + ens;
+                  }
+                  var ethLink = document.getElementById('cpEtherscan_' + i);
+                  if (ethLink) {
+                    ethLink.href = 'https://etherscan.io/name-lookup-search?id=' + ens;
                   }
                   var pfpEl = document.getElementById('cpPfp_' + i);
                   if (pfpEl) {
@@ -22599,6 +22623,19 @@
           const loadingEl = popup.querySelector('.cp-loading');
           if (loadingEl) loadingEl.remove();
           popup.querySelector('.cp-header').insertAdjacentHTML('afterend', listHTML);
+
+          // ── "View bags" click on collector names ──
+          popup.querySelectorAll('.cp-name[data-wallet]').forEach(function(nameEl) {
+            var wallet = nameEl.dataset.wallet;
+            if (!wallet) return;
+            nameEl.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              _closeCollectorsPopup();
+              // Small delay so popup closes gracefully before heavy fetch
+              setTimeout(function() { openMyBags(wallet); }, 400);
+            });
+          });
 
           // Reposition if needed + redraw wire
           const pRect = popup.getBoundingClientRect();
@@ -30160,7 +30197,14 @@
       if (_myBagsLoading) return;
       _myBagsLoading = true;
 
+      // Close any open detail view first (e.g. when navigating from collectors popup)
+      if (document.getElementById('detailOverlay') && document.getElementById('detailOverlay').classList.contains('active')) {
+        closeDetail();
+      }
+
       var shortAddr = ACK_CHAIN.shortAddr(walletAddr);
+      var connectedAddr = ACK_CHAIN.getConnectedWallet();
+      var isOwnWallet = connectedAddr && walletAddr.toLowerCase() === connectedAddr.toLowerCase();
       var ackContracts = ACK_CHAIN.getAllACKContracts();
 
       // Fetch real on-chain holdings
@@ -30228,15 +30272,20 @@
         }
 
         // Inject as last collection
+        var bagsName = isOwnWallet ? 'My Bags' : shortAddr;
+        var bagsDesc = isOwnWallet
+          ? shortAddr + ' — your ACK collection'
+          : shortAddr + ' — ACK collection';
         var bagsCollection = {
-          name: 'My Bags',
+          name: bagsName,
           image: bagsArtworks[0].image,
-          description: shortAddr + ' — your ACK collection',
+          description: bagsDesc,
           token: 'Mixed',
           chain: 'Ethereum',
           wallLayout: false,
           artworks: bagsArtworks,
-          _isMyBags: true
+          _isMyBags: true,
+          _bagsWallet: walletAddr
         };
 
         _myBagsCollectionIndex = COLLECTIONS.length;
@@ -30244,6 +30293,18 @@
 
         // Open through the standard detail path
         openDetail(_myBagsCollectionIndex);
+
+        // Async ENS resolve — update collection name + header if ENS comes back
+        if (!isOwnWallet && walletAddr.startsWith('0x')) {
+          ACK_CHAIN.resolveENS(walletAddr).then(function(ens) {
+            if (!ens) return;
+            bagsCollection.name = ens;
+            bagsCollection.description = ens + ' — ACK collection';
+            // Update visible header if still viewing this bags collection
+            var _navCt = document.getElementById('navCenterTitle');
+            if (_navCt && _navCt.textContent === bagsName) _navCt.textContent = ens;
+          });
+        }
       }).catch(function(err) {
         _myBagsLoading = false;
         console.warn('[My Bags] Error fetching NFTs:', err);
