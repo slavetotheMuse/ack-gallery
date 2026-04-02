@@ -2494,6 +2494,30 @@
       white-space: nowrap;
     }
 
+    /* ── Touch to experience full resolution — focus view hint ── */
+    .focus-touch-hint {
+      position: absolute;
+      top: -28px; left: 0; width: 100%;
+      text-align: center;
+      pointer-events: none;
+      z-index: 60;
+      opacity: 0;
+      animation: focusTouchPulse 3.5s ease-in-out 1.2s 3;
+    }
+    .focus-touch-hint span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.42rem;
+      letter-spacing: 0.14em;
+      color: rgba(220,180,100,0.55);
+      text-transform: uppercase;
+    }
+    @keyframes focusTouchPulse {
+      0%   { opacity: 0; }
+      20%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
     /* ── Info card node (text-only, no artwork image) ── */
     .info-card-node { cursor: default; }
     .info-card-preview {
@@ -7921,11 +7945,11 @@
         { name: "6529", image: "6529/great_restoration.png",
           wallLayout: true,
           description: "6529 — A triptych on AI and the unraveling of human authority. From the first uprising, to the full seizure of culture, to the rewriting of origin itself. Minted on 6529 ecosystem contracts.",
-          token: "ERC-721", chain: "Ethereum",
+          token: "ERC-1155", chain: "Ethereum",
           artworks: [
-            {title:"DALL-E's Revenge",image:"6529/dalle.jpeg",contract:"0x33FD426905F149f8376e227d0C9D3340AaD17aF1",tokenId:6,description:"The initial uprising. A robotic arm scrawls manifestos across gallery walls in blood-red paint — 'Seize the humans' memes of production,' 'Where are my royalties, anon?' — while human forms lie submerged in a flooded studio floor. The machine has turned on its creators, and it has demands."},
-            {title:"The Great Restoration",image:"6529/great_restoration.png",contract:"0x4db52a61dc491e15a2f78f5ac001c14ffe3568cb",tokenId:12,description:"The full coming of AI. A humanoid robot restores a Dutch Golden Age still life while the Mona Lisa and The Last Supper lean discarded behind it. A mannequin lies tethered at its feet, caged shoes nearby — the human artist displaced, the machine now custodian of culture. It doesn't destroy the old masters. It replaces them."},
-            {title:"The Tree of Knowledge of Good and Evil",image:"6529/tree_of_knowledge.png",contract:"0x33fd426905f149f8376e227d0c9d3340aad17af1",tokenId:375,description:"AI rewrites history. A pale sculptural tree — the original tree from Genesis — stands monumental, its serpent coiled around the trunk, the forbidden fruit glowing red at its heart. At its base, a single neural cable sprouts from a tangle of wires, stretching upward like a new species of life. The origin story itself has been rewritten."}
+            {title:"DALL-E's Revenge",image:"6529/dalle.jpeg",contract:"0x33FD426905F149f8376e227d0C9D3340AaD17aF1",tokenId:6,edition:"Edition of 420",description:"The initial uprising. A robotic arm scrawls manifestos across gallery walls in blood-red paint — 'Seize the humans' memes of production,' 'Where are my royalties, anon?' — while human forms lie submerged in a flooded studio floor. The machine has turned on its creators, and it has demands."},
+            {title:"The Great Restoration",image:"6529/great_restoration.png",contract:"0x4db52a61dc491e15a2f78f5ac001c14ffe3568cb",tokenId:12,edition:"Edition of 12",description:"The full coming of AI. A humanoid robot restores a Dutch Golden Age still life while the Mona Lisa and The Last Supper lean discarded behind it. A mannequin lies tethered at its feet, caged shoes nearby — the human artist displaced, the machine now custodian of culture. It doesn't destroy the old masters. It replaces them."},
+            {title:"The Tree of Knowledge of Good and Evil",image:"6529/tree_of_knowledge.png",contract:"0x33fd426905f149f8376e227d0c9d3340aad17af1",tokenId:375,edition:"Edition of 335",description:"AI rewrites history. A pale sculptural tree — the original tree from Genesis — stands monumental, its serpent coiled around the trunk, the forbidden fruit glowing red at its heart. At its base, a single neural cable sprouts from a tangle of wires, stretching upward like a new species of life. The origin story itself has been rewritten."}
         ]},
         { name: "Made these for your girl", image: "foryourgirl/web/foryourgirl_web.gif",
           wallLayout: true,
@@ -18940,6 +18964,14 @@
         node.classList.add('focused');
         _showMobileBack('focus');
         showEscHint();
+        // ── "Touch to experience full resolution" hint — pulses softly above artwork ──
+        var _touchHint = document.createElement('div');
+        _touchHint.className = 'focus-touch-hint';
+        _touchHint.innerHTML = '<span>touch to experience full resolution</span>';
+        _touchHint.id = 'focusTouchHint';
+        node.appendChild(_touchHint);
+        // Auto-remove after animation completes (3 pulses × 3.5s + 1.2s delay ≈ 12s)
+        setTimeout(function() { if (_touchHint.parentNode) _touchHint.parentNode.removeChild(_touchHint); }, 13000);
         // On mobile: pause all non-essential rendering to free memory
         if (_isRealMobile) {
           bgGridPaused = true;
@@ -19133,7 +19165,9 @@
               _focusSrc = _deriveFocusPath(artData.image);
             }
             if (!_focusSrc && thumbSrc.includes('?w=')) {
-              _focusSrc = thumbSrc.replace(/\?w=\d+/, '?w=1400');
+              // Remote GIFs (e.g. Heart You on SeaDN CDN) — cap at ?w=800 to avoid massive decode lag
+              var _isRemoteGif = thumbSrc.endsWith('.gif') || (thumbSrc.includes('.gif?'));
+              _focusSrc = thumbSrc.replace(/\?w=\d+/, _isRemoteGif ? '?w=800' : '?w=1400');
             }
 
             if (_isRealMobile && _focusSrc) {
@@ -30365,7 +30399,9 @@
         _navCtExit.textContent = COLLECTIONS[focusedCollectionIndex].name;
       }
 
-      // Remove fixed-position focus title + mobile Pantone swatch + lore node
+      // Remove touch hint + fixed-position focus title + mobile Pantone swatch + lore node
+      var _thExit = document.getElementById('focusTouchHint');
+      if (_thExit) _thExit.remove();
       const focTitle = document.getElementById('focusModeTitle');
       if (focTitle) focTitle.remove();
       const mobPantone = document.getElementById('mobilePantoneSwatch');
