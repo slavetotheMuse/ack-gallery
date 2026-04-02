@@ -2335,26 +2335,26 @@
       transition: opacity 0.4s ease;
     }
 
-    /* ── Bags decoration nodes (proper node-cards with wires) ── */
+    /* ── Bags decoration nodes — floating bag images wired to motherboard ── */
     .bags-deco-node {
-      pointer-events: none;
+      pointer-events: none !important;
       z-index: 0;
       cursor: default;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
     }
-    .bags-deco-node .node-preview {
-      border: none;
-      background: transparent;
-      box-shadow: none;
-      padding: 0;
-      overflow: visible;
+    .bags-deco-node > img {
+      pointer-events: none;
     }
-    .bags-deco-node .node-preview img {
-      filter: sepia(0.3) brightness(0.7);
-    }
-    /* No title tag, focus hint, or other overlays on deco nodes */
+    /* Strip ALL child chrome from node-card base styles */
+    .bags-deco-node .node-preview,
     .bags-deco-node .node-title-tag,
     .bags-deco-node .node-focus-hint,
-    .bags-deco-node .bags-live-strip {
+    .bags-deco-node .bags-live-strip,
+    .bags-deco-node .node-frame-ticks,
+    .bags-deco-node .node-port {
       display: none !important;
     }
     /* Hide deco nodes during focus mode */
@@ -2724,6 +2724,254 @@
       opacity: 0 !important;
       transition: opacity 0.4s ease;
     }
+
+    /* ── Starry Nights decoration nodes ── */
+    .starry-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    .starry-deco-node.visible {
+      opacity: 1; transform: scale(1);
+      animation: starryTwinkle var(--sway-dur, 6s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .starry-deco-node svg { display: block; filter: drop-shadow(0 0 6px rgba(220,200,140,0.12)); }
+    @keyframes starryTwinkle {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      40% { transform: scale(1.08); opacity: 0.6; }
+      60% { transform: scale(0.95); opacity: 1; }
+    }
+    .node-graph-inner.focus-mode .starry-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── ACKPFP decoration nodes ── */
+    .pfp-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3) rotate(-10deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .pfp-deco-node.visible {
+      opacity: 1; transform: scale(1) rotate(0deg);
+      animation: pfpFloat var(--sway-dur, 7s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .pfp-deco-node svg { display: block; filter: drop-shadow(0 0 4px rgba(160,120,200,0.1)); }
+    @keyframes pfpFloat {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.02) rotate(1deg) translateY(-2px); }
+    }
+    .node-graph-inner.focus-mode .pfp-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── Piano Blossoms decoration nodes ── */
+    .blossom-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3) rotate(-20deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .blossom-deco-node.visible {
+      opacity: 1; transform: scale(1) rotate(0deg);
+      animation: blossomDrift var(--sway-dur, 8s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .blossom-deco-node svg { display: block; filter: drop-shadow(0 0 5px rgba(220,140,180,0.1)); }
+    @keyframes blossomDrift {
+      0%, 100% { transform: scale(1) rotate(0deg) translateY(0); }
+      25% { transform: scale(1.02) rotate(2deg) translateY(-2px); }
+      75% { transform: scale(0.98) rotate(-2deg) translateY(2px); }
+    }
+    .node-graph-inner.focus-mode .blossom-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── 1 of 1s decoration nodes ── */
+    .oneofone-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .oneofone-deco-node.visible {
+      opacity: 1; transform: scale(1);
+      animation: oneofoneGlow var(--sway-dur, 7s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .oneofone-deco-node svg { display: block; filter: drop-shadow(0 0 4px rgba(220,180,60,0.1)); }
+    @keyframes oneofoneGlow {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.03); opacity: 0.7; }
+    }
+    .node-graph-inner.focus-mode .oneofone-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── Servants decoration nodes ── */
+    .servant-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3) rotate(30deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .servant-deco-node.visible {
+      opacity: 1; transform: scale(1) rotate(0deg);
+      animation: servantSpin var(--sway-dur, 10s) linear var(--sway-delay, 0s) infinite;
+    }
+    .servant-deco-node svg { display: block; filter: drop-shadow(0 0 4px rgba(200,170,80,0.1)); }
+    @keyframes servantSpin {
+      0% { transform: scale(1) rotate(0deg); }
+      100% { transform: scale(1) rotate(360deg); }
+    }
+    .node-graph-inner.focus-mode .servant-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── Broken Keys decoration nodes ── */
+    .broken-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3) rotate(15deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .broken-deco-node.visible {
+      opacity: 1; transform: scale(1) rotate(0deg);
+      animation: brokenShudder var(--sway-dur, 6s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .broken-deco-node svg { display: block; filter: drop-shadow(0 0 3px rgba(100,80,120,0.1)); }
+    @keyframes brokenShudder {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      10% { transform: scale(1) rotate(0.5deg); }
+      20% { transform: scale(1) rotate(-0.5deg); }
+      30% { transform: scale(1) rotate(0deg); }
+    }
+    .node-graph-inner.focus-mode .broken-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── Warothys decoration nodes ── */
+    .warothy-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3) rotate(-15deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .warothy-deco-node.visible {
+      opacity: 1; transform: scale(1) rotate(0deg);
+      animation: warothySway var(--sway-dur, 7s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .warothy-deco-node svg { display: block; filter: drop-shadow(0 0 5px rgba(40,180,100,0.08)); }
+    @keyframes warothySway {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.01) rotate(2deg); }
+      75% { transform: scale(0.99) rotate(-2deg); }
+    }
+    .node-graph-inner.focus-mode .warothy-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── SuperRare decoration nodes ── */
+    .sr-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .sr-deco-node.visible {
+      opacity: 1; transform: scale(1);
+      animation: srShimmer var(--sway-dur, 6s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .sr-deco-node svg { display: block; filter: drop-shadow(0 0 4px rgba(80,160,240,0.08)); }
+    @keyframes srShimmer {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.02); opacity: 0.75; }
+    }
+    .node-graph-inner.focus-mode .sr-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── Heart You decoration nodes ── */
+    .heart-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .heart-deco-node.visible {
+      opacity: 1; transform: scale(1);
+      animation: heartPulse var(--sway-dur, 5s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .heart-deco-node svg { display: block; filter: drop-shadow(0 0 5px rgba(220,50,80,0.08)); }
+    @keyframes heartPulse {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.08); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.04); }
+      60% { transform: scale(1); }
+    }
+    .node-graph-inner.focus-mode .heart-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── Her Favorite Flowers decoration nodes ── */
+    .hff-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3) rotate(-25deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .hff-deco-node.visible {
+      opacity: 1; transform: scale(1) rotate(0deg);
+      animation: hffFloat var(--sway-dur, 7s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .hff-deco-node svg { display: block; filter: drop-shadow(0 0 5px rgba(220,80,140,0.1)); }
+    @keyframes hffFloat {
+      0%, 100% { transform: scale(1) rotate(0deg) translateY(0); }
+      50% { transform: scale(1.01) rotate(3deg) translateY(-3px); }
+    }
+    .node-graph-inner.focus-mode .hff-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── Ackstract decoration nodes ── */
+    .ackstract-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3) rotate(20deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .ackstract-deco-node.visible {
+      opacity: 1; transform: scale(1) rotate(0deg);
+      animation: ackstractDrift var(--sway-dur, 8s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .ackstract-deco-node svg { display: block; }
+    @keyframes ackstractDrift {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      33% { transform: scale(1.03) rotate(3deg); }
+      66% { transform: scale(0.97) rotate(-2deg); }
+    }
+    .node-graph-inner.focus-mode .ackstract-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── ACK Editions decoration nodes ── */
+    .editions-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .editions-deco-node.visible {
+      opacity: 1; transform: scale(1);
+      animation: editionsFloat var(--sway-dur, 7s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .editions-deco-node svg { display: block; filter: drop-shadow(0 0 3px rgba(160,150,140,0.08)); }
+    @keyframes editionsFloat {
+      0%, 100% { transform: scale(1) translateY(0); }
+      50% { transform: scale(1.01) translateY(-2px); }
+    }
+    .node-graph-inner.focus-mode .editions-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── The Great Color Study decoration nodes ── */
+    .color-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .color-deco-node.visible {
+      opacity: 1; transform: scale(1);
+      animation: colorPulse var(--sway-dur, 6s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .color-deco-node svg { display: block; }
+    @keyframes colorPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.02); opacity: 0.8; }
+    }
+    .node-graph-inner.focus-mode .color-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
+
+    /* ── Opepen Set 030 decoration nodes ── */
+    .opepen-deco-node {
+      position: absolute; pointer-events: none; z-index: 0;
+      opacity: 0; transform: scale(0.3) rotate(-5deg);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .opepen-deco-node.visible {
+      opacity: 1; transform: scale(1) rotate(0deg);
+      animation: opepenSway var(--sway-dur, 7s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    .opepen-deco-node svg { display: block; filter: drop-shadow(0 0 4px rgba(180,160,120,0.08)); }
+    @keyframes opepenSway {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.01) rotate(1deg); }
+      75% { transform: scale(0.99) rotate(-1deg); }
+    }
+    .node-graph-inner.focus-mode .opepen-deco-node { opacity: 0 !important; transition: opacity 0.4s ease; }
 
     /* ── Last Orders bar decoration nodes ── */
     .bar-deco-node {
@@ -8015,8 +8263,8 @@
           token: "ERC-721", chain: "Ethereum", contract: "0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3",
           artworks: [
             {title:"Heart You",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/b17eac188a54cba4f200a27867cf25/71b17eac188a54cba4f200a27867cf25.gif?w=500",tokenId:1},
-            {title:"Heart You #2",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/8552b43e4b7988b214a03ff5334267de.gif?w=500",tokenId:2},
-            {title:"Heart You #3",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/8931768c620bd48dd2c4a582a81b6dd8.gif?w=500",tokenId:3},
+            {title:"Heart You #2",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/8931768c620bd48dd2c4a582a81b6dd8.gif?w=500",tokenId:2},
+            {title:"Heart You #3",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/8552b43e4b7988b214a03ff5334267de.gif?w=500",tokenId:3},
             {title:"Heart You #4",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/9c6bee37e75d52ae8e002e644e1a5f01.gif?w=500",tokenId:4},
             {title:"Heart You #5",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/84b7299a08c63921761e0d278b3fd542.gif?w=500",tokenId:5},
             {title:"Heart You #6",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/54579136e2179ccf4f0457525233d791.gif?w=500",tokenId:6},
@@ -17074,6 +17322,693 @@
           })();
         }
 
+        // ══════════════════════════════════════════════════════════════
+        // ── STARRY NIGHTS decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'Starry Nights') {
+          (function() {
+            var decoCount = 18;
+            var decoTypes = ['star','constellation','shooting','crescent','star','constellation','star','shooting','constellation','star','crescent','star','constellation','shooting','star','constellation','star','crescent'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 70) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 50) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = decoTypes[di] === 'shooting' ? (30 + Math.random() * 20) :
+                          decoTypes[di] === 'constellation' ? (35 + Math.random() * 25) :
+                          (20 + Math.random() * 20);
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'starry-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (4 + Math.random() * 5).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 8).toFixed(1) + 's');
+              if (dp.type === 'star') wrapper.appendChild(generateStarSVG(dp.size));
+              else if (dp.type === 'constellation') wrapper.appendChild(generateConstellationSVG(dp.size));
+              else if (dp.type === 'shooting') wrapper.appendChild(generateShootingStarSVG(dp.size));
+              else wrapper.appendChild(generateCrescentMoonSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 80);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── ACKPFP decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'ACKPFP') {
+          (function() {
+            var decoCount = 12;
+            var decoTypes = ['avatar','frame','shard','avatar','frame','shard','avatar','frame','shard','avatar','frame','shard'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 55) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = 25 + Math.random() * 20;
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'pfp-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (5 + Math.random() * 4).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+              if (dp.type === 'avatar') wrapper.appendChild(generateAvatarSilhouetteSVG(dp.size));
+              else if (dp.type === 'frame') wrapper.appendChild(generateProfileFrameSVG(dp.size));
+              else wrapper.appendChild(generateIdentityShardSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 90);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── PIANO BLOSSOMS decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'Piano Blossoms') {
+          (function() {
+            var decoCount = 16;
+            var decoTypes = ['blossom','key','note','vine','blossom','key','blossom','note','vine','blossom','key','note','blossom','vine','key','blossom'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 50) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = decoTypes[di] === 'vine' ? (18 + Math.random() * 14) :
+                          decoTypes[di] === 'blossom' ? (25 + Math.random() * 20) :
+                          (22 + Math.random() * 18);
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'blossom-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = (dp.type === 'vine' ? dp.size * 1.5 : dp.size) + 'px';
+              wrapper.style.setProperty('--sway-dur', (6 + Math.random() * 5).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 8).toFixed(1) + 's');
+              if (dp.type === 'blossom') wrapper.appendChild(generateBlossomPetalSVG(dp.size));
+              else if (dp.type === 'key') wrapper.appendChild(generatePianoKeySVG(dp.size));
+              else if (dp.type === 'note') wrapper.appendChild(generateMusicalNoteSVG(dp.size));
+              else wrapper.appendChild(generateVineTendrilSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 80);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── 1 OF 1s decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === '1 of 1s') {
+          (function() {
+            var decoCount = 12;
+            var decoTypes = ['gem','crown','oneofone','gem','crown','gem','oneofone','gem','crown','gem','oneofone','gem'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 55) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = 24 + Math.random() * 22;
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'oneofone-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (5 + Math.random() * 4).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+              if (dp.type === 'gem') wrapper.appendChild(generateGemSVG(dp.size));
+              else if (dp.type === 'crown') wrapper.appendChild(generateCrownSVG(dp.size));
+              else wrapper.appendChild(generateOneOfOneSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 90);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── SERVANTS decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'servants') {
+          (function() {
+            var decoCount = 14;
+            var decoTypes = ['coin','gear','flame','chalice','coin','gear','flame','coin','chalice','gear','coin','flame','gear','coin'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 70) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 50) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = decoTypes[di] === 'flame' ? (20 + Math.random() * 15) :
+                          decoTypes[di] === 'chalice' ? (28 + Math.random() * 18) :
+                          (24 + Math.random() * 20);
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'servant-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = (dp.type === 'flame' || dp.type === 'chalice' ? dp.size * 1.17 : dp.size) + 'px';
+              wrapper.style.setProperty('--sway-dur', (8 + Math.random() * 6).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 8).toFixed(1) + 's');
+              if (dp.type === 'coin') wrapper.appendChild(generateServantCoinDecoSVG(dp.size));
+              else if (dp.type === 'gear') wrapper.appendChild(generateGearSVG(dp.size));
+              else if (dp.type === 'flame') wrapper.appendChild(generateCandleFlameSVG(dp.size));
+              else wrapper.appendChild(generateChaliceSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 80);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── BROKEN KEYS decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'Broken Keys') {
+          (function() {
+            var decoCount = 14;
+            var decoTypes = ['brokenkey','skull','swirl','brokenkey','skull','swirl','brokenkey','skull','brokenkey','swirl','skull','brokenkey','swirl','brokenkey'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 75) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 50) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = 25 + Math.random() * 22;
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'broken-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (4 + Math.random() * 4).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 6).toFixed(1) + 's');
+              if (dp.type === 'brokenkey') wrapper.appendChild(generateBrokenKeySVG(dp.size));
+              else if (dp.type === 'skull') wrapper.appendChild(generateSkullShardSVG(dp.size));
+              else wrapper.appendChild(generateDarkSwirlSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 85);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── WAROTHYS decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'Warothys') {
+          (function() {
+            var decoCount = 14;
+            var decoTypes = ['slipper','tornado','emerald','rainbow','slipper','tornado','emerald','slipper','rainbow','tornado','emerald','slipper','tornado','rainbow'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 75) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 50) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = 25 + Math.random() * 22;
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'warothy-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (5 + Math.random() * 5).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+              if (dp.type === 'slipper') wrapper.appendChild(generateRubySlipperSVG(dp.size));
+              else if (dp.type === 'tornado') wrapper.appendChild(generateTornadoSVG(dp.size));
+              else if (dp.type === 'emerald') wrapper.appendChild(generateEmeraldShardSVG(dp.size));
+              else wrapper.appendChild(generateRainbowArcSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 85);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── SUPERRARE decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'SuperRare') {
+          (function() {
+            var decoCount = 12;
+            var decoTypes = ['diamond','stamp','gavel','diamond','stamp','diamond','gavel','stamp','diamond','stamp','gavel','diamond'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 55) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = 26 + Math.random() * 22;
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'sr-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (5 + Math.random() * 4).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+              if (dp.type === 'diamond') wrapper.appendChild(generateDiamondGemSVG(dp.size));
+              else if (dp.type === 'stamp') wrapper.appendChild(generateRareStampSVG(dp.size));
+              else wrapper.appendChild(generateGavelSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 90);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── HEART YOU decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'Heart You') {
+          (function() {
+            var decoCount = 14;
+            var decoTypes = ['heart','arrow','beat','heart','heart','arrow','heart','beat','heart','arrow','heart','beat','heart','heart'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 75) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 50) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = decoTypes[di] === 'arrow' ? (35 + Math.random() * 20) :
+                          decoTypes[di] === 'beat' ? (40 + Math.random() * 25) :
+                          (22 + Math.random() * 22);
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'heart-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (4 + Math.random() * 3).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 6).toFixed(1) + 's');
+              if (dp.type === 'heart') wrapper.appendChild(generateHeartSVG(dp.size));
+              else if (dp.type === 'arrow') wrapper.appendChild(generateCupidArrowSVG(dp.size));
+              else wrapper.appendChild(generateHeartbeatSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 75);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── HER FAVORITE FLOWERS decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'Her Favorite Flowers') {
+          (function() {
+            var decoCount = 12;
+            var decoTypes = ['petal','leaf','stem','petal','leaf','petal','stem','petal','leaf','petal','stem','leaf'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 50) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = 24 + Math.random() * 22;
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'hff-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = (dp.type === 'stem' ? dp.size * 2 : dp.size) + 'px';
+              wrapper.style.setProperty('--sway-dur', (5 + Math.random() * 5).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+              if (dp.type === 'petal') wrapper.appendChild(generateHFFPetalSVG(dp.size));
+              else if (dp.type === 'leaf') wrapper.appendChild(generateHFFLeafSVG(dp.size));
+              else wrapper.appendChild(generateHFFStemSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 85);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── ACKSTRACT decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'Ackstract') {
+          (function() {
+            var decoCount = 10;
+            var decoTypes = ['geo','splatter','field','geo','splatter','geo','field','splatter','geo','field'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 55) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = 28 + Math.random() * 26;
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'ackstract-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (6 + Math.random() * 5).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 8).toFixed(1) + 's');
+              if (dp.type === 'geo') wrapper.appendChild(generateGeoFragmentSVG(dp.size));
+              else if (dp.type === 'splatter') wrapper.appendChild(generatePaintSplatterSVG(dp.size));
+              else wrapper.appendChild(generateColorFieldSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 100);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── ACK EDITIONS decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'ACK Editions') {
+          (function() {
+            var decoCount = 12;
+            var decoTypes = ['film','stamp','loop','film','stamp','film','loop','stamp','film','loop','stamp','film'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 55) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = decoTypes[di] === 'film' ? (22 + Math.random() * 18) :
+                          (26 + Math.random() * 20);
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'editions-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = (dp.type === 'film' ? dp.size * 1.33 : dp.size) + 'px';
+              wrapper.style.setProperty('--sway-dur', (5 + Math.random() * 4).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+              if (dp.type === 'film') wrapper.appendChild(generateFilmReelSVG(dp.size));
+              else if (dp.type === 'stamp') wrapper.appendChild(generateEditionStampSVG(dp.size));
+              else wrapper.appendChild(generateLoopSymbolSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 90);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── THE GREAT COLOR STUDY decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'The Great Color Study') {
+          (function() {
+            var decoCount = 14;
+            var decoTypes = ['pantone','droplet','spectrum','pantone','droplet','pantone','spectrum','pantone','droplet','spectrum','pantone','droplet','pantone','spectrum'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 70) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 48) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = decoTypes[di] === 'spectrum' ? (35 + Math.random() * 25) :
+                          decoTypes[di] === 'pantone' ? (24 + Math.random() * 18) :
+                          (22 + Math.random() * 16);
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'color-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (5 + Math.random() * 4).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+              if (dp.type === 'pantone') wrapper.appendChild(generatePantoneSVG(dp.size));
+              else if (dp.type === 'droplet') wrapper.appendChild(generatePaintDropletSVG(dp.size));
+              else wrapper.appendChild(generateSpectrumBarSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 80);
+            });
+          })();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── OPEPEN SET 030 decoration system ──
+        // ══════════════════════════════════════════════════════════════
+        if (collection.name === 'Opepen Set 030: a.c.k.') {
+          (function() {
+            var decoCount = 12;
+            var decoTypes = ['opepen','skull','blossom','opepen','skull','blossom','opepen','skull','opepen','blossom','skull','opepen'];
+            var decoPositions = [];
+            var margin = 30;
+            var mbY = outputY;
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x; var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 55) { tooClose = true; break; }
+                }
+                if (!tooClose) break; att++;
+              } while (att < 60);
+              var dSize = 28 + Math.random() * 22;
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'opepen-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = dp.size + 'px';
+              wrapper.style.setProperty('--sway-dur', (5 + Math.random() * 4).toFixed(1) + 's');
+              wrapper.style.setProperty('--sway-delay', (-Math.random() * 7).toFixed(1) + 's');
+              if (dp.type === 'opepen') wrapper.appendChild(generateOpepenSilhouetteSVG(dp.size));
+              else if (dp.type === 'skull') wrapper.appendChild(generateSkullMotifSVG(dp.size));
+              else wrapper.appendChild(generateAlmondBlossomSVG(dp.size));
+              inner.appendChild(wrapper);
+              setTimeout(function() { wrapper.classList.add('visible'); }, 300 + dIdx * 90);
+            });
+          })();
+        }
+
         // ── CLOWN PARTY clown frames on each artwork node ──
         if (collection.name === 'Clown Party') {
           const allCPCards = inner.querySelectorAll('.node-card');
@@ -17849,14 +18784,14 @@
                 globalMaxY = Math.max(globalMaxY, cy + ch);
               });
 
-              // Expand scatter zone well beyond cards — use full viewport margins
-              var sMinX = Math.max(30, globalMinX - 180);
-              var sMinY = Math.max(30, globalMinY - 120);
-              var sMaxX = Math.min(vpW - 30, globalMaxX + 180);
-              var sMaxY = Math.min(vpH - 180, globalMaxY + 100);
+              // Scatter zone covers the full viewport so bags spread everywhere
+              var sMinX = 40;
+              var sMinY = 40;
+              var sMaxX = vpW - 60;
+              var sMaxY = vpH - 200;
 
-              // Scale deco count with artwork count: 6-12 decoration nodes
-              var decoCount = Math.min(12, Math.max(6, Math.round(allCards.length * 0.6)));
+              // Generous deco count — fill the space
+              var decoCount = Math.min(22, Math.max(14, Math.round(allCards.length * 1.2 + 8)));
 
               // Track decoration nodes for wire drawing in drawNoodles
               var _bagsDecoNodes = [];
@@ -17880,8 +18815,9 @@
                   var tooClose = false;
                   for (var ci = 0; ci < cardRects.length; ci++) {
                     var r = cardRects[ci];
-                    // Keep some distance from artwork cards
-                    if (dx > r.x - 30 && dx < r.x + r.w + 30 && dy > r.y - 30 && dy < r.y + r.h + 30) {
+                    // Keep distance from artwork cards, less from other decos
+                    var _pad = (ci < allCards.length) ? 40 : 20;
+                    if (dx > r.x - _pad && dx < r.x + r.w + _pad && dy > r.y - _pad && dy < r.y + r.h + _pad) {
                       tooClose = true; break;
                     }
                   }
@@ -17895,7 +18831,11 @@
                   att++;
                 } while (att < 60);
 
-                var decoSize = 28 + Math.round(Math.random() * 24); // 28-52px
+                // Weighted sizes: ~30% chance of a big bag (60-100px), rest 28-55px
+                var _sizeRoll = Math.random();
+                var decoSize = _sizeRoll < 0.3
+                  ? 60 + Math.round(Math.random() * 40)   // 60-100px big bags
+                  : 28 + Math.round(Math.random() * 27);  // 28-55px normal bags
 
                 // Build as a proper node-card so noodle wires connect it
                 var decoNode = document.createElement('div');
@@ -17912,23 +18852,19 @@
                 decoNode.style.setProperty('--port-dur', (3.5 + Math.random() * 3).toFixed(1) + 's');
                 decoNode.style.setProperty('--port-delay', (Math.random() * -5).toFixed(1) + 's');
 
-                // Image preview
-                var decoPreview = document.createElement('div');
-                decoPreview.className = 'node-preview';
+                // Image — no node-preview wrapper, just the bag image directly
+                decoNode.style.height = decoSize + 'px';
+                decoNode.style.overflow = 'visible';
                 var dImg = document.createElement('img');
                 dImg.src = 'my_bags_decoration_web.png';
                 dImg.alt = '';
-                dImg.loading = 'lazy';
-                dImg.style.cssText = 'width:100%;height:auto;display:block;opacity:0.35;';
+                dImg.style.cssText = 'width:100%;height:100%;display:block;opacity:0.35;object-fit:contain;';
                 // Slight rotation for organic scatter
                 dImg.style.transform = 'rotate(' + (Math.random() * 30 - 15).toFixed(0) + 'deg)';
-                decoPreview.appendChild(dImg);
-                decoNode.appendChild(decoPreview);
+                dImg.style.filter = 'sepia(0.3) brightness(0.7)';
+                decoNode.appendChild(dImg);
 
-                // Port-out dot — this is what drawNoodles uses to wire to the motherboard
-                var decoPort = document.createElement('div');
-                decoPort.className = 'node-port port-out port-bottom';
-                decoNode.appendChild(decoPort);
+                // No port-out on deco bags — wires connect directly to the bag image
 
                 inner.appendChild(decoNode);
 
@@ -30790,6 +31726,1429 @@
         pxR.setAttribute('fill', colors[Math.floor(Math.random() * colors.length)]);
         svg.appendChild(pxR);
       }
+      return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // ── COLLECTION DECORATION SVG GENERATORS (batch) ──
+    // ══════════════════════════════════════════════════════════════════
+
+    // ── STARRY NIGHTS ──
+    function generateStarSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var cx = 30, cy = 30;
+      var points = 4 + Math.floor(Math.random() * 3); // 4-6 pointed star
+      var outer = 12 + Math.random() * 6;
+      var inner = outer * 0.38;
+      var d = '';
+      for (var i = 0; i < points * 2; i++) {
+        var a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+        var r = i % 2 === 0 ? outer : inner;
+        d += (i === 0 ? 'M' : 'L') + (cx + Math.cos(a) * r).toFixed(1) + ',' + (cy + Math.sin(a) * r).toFixed(1);
+      }
+      d += 'Z';
+      var star = document.createElementNS(ns, 'path');
+      star.setAttribute('d', d);
+      star.setAttribute('fill', 'rgba(220,200,140,' + (0.15 + Math.random() * 0.15) + ')');
+      star.setAttribute('stroke', 'rgba(240,220,160,' + (0.25 + Math.random() * 0.2) + ')');
+      star.setAttribute('stroke-width', '0.5');
+      svg.appendChild(star);
+      // Glow center
+      var glow = document.createElementNS(ns, 'circle');
+      glow.setAttribute('cx', cx); glow.setAttribute('cy', cy);
+      glow.setAttribute('r', inner * 0.6);
+      glow.setAttribute('fill', 'rgba(255,240,200,0.2)');
+      svg.appendChild(glow);
+      return svg;
+    }
+
+    function generateConstellationSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var nodeCount = 4 + Math.floor(Math.random() * 4);
+      var nodes = [];
+      for (var i = 0; i < nodeCount; i++) {
+        nodes.push({ x: 4 + Math.random() * (size - 8), y: 4 + Math.random() * (size - 8) });
+      }
+      // Connect sequential nodes with faint lines
+      for (var i = 0; i < nodes.length - 1; i++) {
+        var ln = document.createElementNS(ns, 'line');
+        ln.setAttribute('x1', nodes[i].x); ln.setAttribute('y1', nodes[i].y);
+        ln.setAttribute('x2', nodes[i + 1].x); ln.setAttribute('y2', nodes[i + 1].y);
+        ln.setAttribute('stroke', 'rgba(180,200,240,' + (0.08 + Math.random() * 0.1) + ')');
+        ln.setAttribute('stroke-width', '0.4');
+        svg.appendChild(ln);
+      }
+      // Star dots at each node
+      for (var i = 0; i < nodes.length; i++) {
+        var dot = document.createElementNS(ns, 'circle');
+        dot.setAttribute('cx', nodes[i].x); dot.setAttribute('cy', nodes[i].y);
+        dot.setAttribute('r', 1 + Math.random() * 1.5);
+        dot.setAttribute('fill', 'rgba(240,230,200,' + (0.25 + Math.random() * 0.2) + ')');
+        svg.appendChild(dot);
+      }
+      return svg;
+    }
+
+    function generateShootingStarSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + size + ' ' + (size * 0.4));
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.4);
+      svg.style.overflow = 'visible';
+      var startX = size * 0.9, startY = size * 0.05;
+      var endX = size * 0.1, endY = size * 0.35;
+      // Trail
+      var trail = document.createElementNS(ns, 'line');
+      trail.setAttribute('x1', startX); trail.setAttribute('y1', startY);
+      trail.setAttribute('x2', endX); trail.setAttribute('y2', endY);
+      trail.setAttribute('stroke', 'rgba(220,200,140,0.15)');
+      trail.setAttribute('stroke-width', '1');
+      trail.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(trail);
+      // Bright head
+      var head = document.createElementNS(ns, 'circle');
+      head.setAttribute('cx', endX); head.setAttribute('cy', endY);
+      head.setAttribute('r', 2);
+      head.setAttribute('fill', 'rgba(255,240,180,0.4)');
+      svg.appendChild(head);
+      return svg;
+    }
+
+    function generateCrescentMoonSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      // Outer circle and inner cutout to form crescent
+      var p = document.createElementNS(ns, 'path');
+      p.setAttribute('d', 'M30,8 A22,22 0 1,1 30,52 A16,16 0 1,0 30,8 Z');
+      p.setAttribute('fill', 'rgba(220,200,140,' + (0.12 + Math.random() * 0.1) + ')');
+      p.setAttribute('stroke', 'rgba(240,220,160,0.18)');
+      p.setAttribute('stroke-width', '0.5');
+      svg.appendChild(p);
+      return svg;
+    }
+
+    // ── ACKPFP ──
+    function generateAvatarSilhouetteSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(160,120,200,';
+      // Head circle
+      var head = document.createElementNS(ns, 'circle');
+      head.setAttribute('cx', 30); head.setAttribute('cy', 22);
+      head.setAttribute('r', 10);
+      head.setAttribute('fill', c + '0.12)'); head.setAttribute('stroke', c + '0.25)');
+      head.setAttribute('stroke-width', '0.6');
+      svg.appendChild(head);
+      // Body arc
+      var body = document.createElementNS(ns, 'path');
+      body.setAttribute('d', 'M15,55 Q15,38 30,35 Q45,38 45,55');
+      body.setAttribute('fill', c + '0.08)'); body.setAttribute('stroke', c + '0.2)');
+      body.setAttribute('stroke-width', '0.5');
+      svg.appendChild(body);
+      // Glitch slice
+      if (Math.random() > 0.5) {
+        var gl = document.createElementNS(ns, 'rect');
+        gl.setAttribute('x', 8 + Math.random() * 20); gl.setAttribute('y', 18 + Math.random() * 10);
+        gl.setAttribute('width', 15 + Math.random() * 15); gl.setAttribute('height', 1.5);
+        gl.setAttribute('fill', 'rgba(220,150,50,0.12)');
+        svg.appendChild(gl);
+      }
+      return svg;
+    }
+
+    function generateProfileFrameSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(140,160,200,';
+      // Square frame corners only
+      var paths = [
+        'M5,5 L5,18', 'M5,5 L18,5', // TL
+        'M55,5 L55,18', 'M55,5 L42,5', // TR
+        'M5,55 L5,42', 'M5,55 L18,55', // BL
+        'M55,55 L55,42', 'M55,55 L42,55'  // BR
+      ];
+      paths.forEach(function(d) {
+        var p = document.createElementNS(ns, 'path');
+        p.setAttribute('d', d); p.setAttribute('fill', 'none');
+        p.setAttribute('stroke', c + (0.15 + Math.random() * 0.1) + ')');
+        p.setAttribute('stroke-width', '0.8'); p.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(p);
+      });
+      // Corner dots
+      [[5,5],[55,5],[5,55],[55,55]].forEach(function(pt) {
+        var dot = document.createElementNS(ns, 'circle');
+        dot.setAttribute('cx', pt[0]); dot.setAttribute('cy', pt[1]);
+        dot.setAttribute('r', 1.2);
+        dot.setAttribute('fill', c + '0.25)');
+        svg.appendChild(dot);
+      });
+      return svg;
+    }
+
+    function generateIdentityShardSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = ['rgba(200,60,120,', 'rgba(60,180,220,', 'rgba(220,150,50,', 'rgba(160,120,200,'];
+      var col = colors[Math.floor(Math.random() * colors.length)];
+      // Irregular polygon shard
+      var pts = 4 + Math.floor(Math.random() * 3);
+      var d = '';
+      for (var i = 0; i < pts; i++) {
+        var a = (i / pts) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+        var r = 10 + Math.random() * 15;
+        d += (i === 0 ? 'M' : 'L') + (30 + Math.cos(a) * r).toFixed(1) + ',' + (30 + Math.sin(a) * r).toFixed(1);
+      }
+      d += 'Z';
+      var shard = document.createElementNS(ns, 'path');
+      shard.setAttribute('d', d);
+      shard.setAttribute('fill', col + '0.08)');
+      shard.setAttribute('stroke', col + '0.2)');
+      shard.setAttribute('stroke-width', '0.5');
+      svg.appendChild(shard);
+      // Crack line through it
+      var crack = document.createElementNS(ns, 'path');
+      crack.setAttribute('d', 'M' + (15 + Math.random() * 10) + ',' + (15 + Math.random() * 10) + ' L' + (40 + Math.random() * 10) + ',' + (40 + Math.random() * 10));
+      crack.setAttribute('stroke', col + '0.15)');
+      crack.setAttribute('stroke-width', '0.4');
+      crack.setAttribute('fill', 'none');
+      svg.appendChild(crack);
+      return svg;
+    }
+
+    // ── PIANO BLOSSOMS ──
+    function generatePianoKeySVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      // White key
+      var wk = document.createElementNS(ns, 'rect');
+      wk.setAttribute('x', 22); wk.setAttribute('y', 8);
+      wk.setAttribute('width', 16); wk.setAttribute('height', 44);
+      wk.setAttribute('rx', 1.5);
+      wk.setAttribute('fill', 'rgba(240,235,220,0.12)');
+      wk.setAttribute('stroke', 'rgba(200,180,140,0.2)');
+      wk.setAttribute('stroke-width', '0.5');
+      svg.appendChild(wk);
+      // Black key overlay
+      var bk = document.createElementNS(ns, 'rect');
+      bk.setAttribute('x', 24); bk.setAttribute('y', 8);
+      bk.setAttribute('width', 10); bk.setAttribute('height', 26);
+      bk.setAttribute('rx', 1);
+      bk.setAttribute('fill', 'rgba(40,35,30,0.15)');
+      bk.setAttribute('stroke', 'rgba(80,70,60,0.2)');
+      bk.setAttribute('stroke-width', '0.4');
+      svg.appendChild(bk);
+      return svg;
+    }
+
+    function generateBlossomPetalSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = [
+        ['rgba(220,140,180,', 'rgba(200,100,150,'],
+        ['rgba(255,200,200,', 'rgba(230,160,170,'],
+        ['rgba(180,140,200,', 'rgba(160,110,180,']
+      ];
+      var c = colors[Math.floor(Math.random() * colors.length)];
+      var petals = 5;
+      for (var i = 0; i < petals; i++) {
+        var a = (i / petals) * Math.PI * 2;
+        var px = 30 + Math.cos(a) * 8;
+        var py = 30 + Math.sin(a) * 8;
+        var el = document.createElementNS(ns, 'ellipse');
+        el.setAttribute('cx', px); el.setAttribute('cy', py);
+        el.setAttribute('rx', 9); el.setAttribute('ry', 5);
+        el.setAttribute('transform', 'rotate(' + (a * 180 / Math.PI) + ' ' + px + ' ' + py + ')');
+        el.setAttribute('fill', c[0] + '0.15)');
+        el.setAttribute('stroke', c[1] + '0.25)');
+        el.setAttribute('stroke-width', '0.4');
+        svg.appendChild(el);
+      }
+      var center = document.createElementNS(ns, 'circle');
+      center.setAttribute('cx', 30); center.setAttribute('cy', 30); center.setAttribute('r', 3.5);
+      center.setAttribute('fill', 'rgba(240,200,100,0.3)');
+      svg.appendChild(center);
+      return svg;
+    }
+
+    function generateMusicalNoteSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(200,180,140,';
+      if (Math.random() > 0.5) {
+        // Single eighth note
+        var stem = document.createElementNS(ns, 'line');
+        stem.setAttribute('x1', 34); stem.setAttribute('y1', 42);
+        stem.setAttribute('x2', 34); stem.setAttribute('y2', 14);
+        stem.setAttribute('stroke', c + '0.2)'); stem.setAttribute('stroke-width', '1');
+        svg.appendChild(stem);
+        var head = document.createElementNS(ns, 'ellipse');
+        head.setAttribute('cx', 28); head.setAttribute('cy', 42);
+        head.setAttribute('rx', 7); head.setAttribute('ry', 5);
+        head.setAttribute('transform', 'rotate(-20 28 42)');
+        head.setAttribute('fill', c + '0.2)');
+        svg.appendChild(head);
+        // Flag
+        var flag = document.createElementNS(ns, 'path');
+        flag.setAttribute('d', 'M34,14 Q42,22 36,30');
+        flag.setAttribute('fill', 'none'); flag.setAttribute('stroke', c + '0.2)');
+        flag.setAttribute('stroke-width', '0.8');
+        svg.appendChild(flag);
+      } else {
+        // Double beam notes
+        [[24,42],[36,38]].forEach(function(pos, idx) {
+          var h = document.createElementNS(ns, 'ellipse');
+          h.setAttribute('cx', pos[0]); h.setAttribute('cy', pos[1]);
+          h.setAttribute('rx', 6); h.setAttribute('ry', 4);
+          h.setAttribute('transform', 'rotate(-20 ' + pos[0] + ' ' + pos[1] + ')');
+          h.setAttribute('fill', c + '0.18)');
+          svg.appendChild(h);
+          var s = document.createElementNS(ns, 'line');
+          s.setAttribute('x1', pos[0] + 5); s.setAttribute('y1', pos[1] - 2);
+          s.setAttribute('x2', pos[0] + 5); s.setAttribute('y2', 14 + idx * 2);
+          s.setAttribute('stroke', c + '0.18)'); s.setAttribute('stroke-width', '0.8');
+          svg.appendChild(s);
+        });
+        // Beams
+        [16, 20].forEach(function(by) {
+          var beam = document.createElementNS(ns, 'line');
+          beam.setAttribute('x1', 29); beam.setAttribute('y1', by);
+          beam.setAttribute('x2', 41); beam.setAttribute('y2', by - 2);
+          beam.setAttribute('stroke', c + '0.2)'); beam.setAttribute('stroke-width', '1.5');
+          svg.appendChild(beam);
+        });
+      }
+      return svg;
+    }
+
+    function generateVineTendrilSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      var h = size * 1.5;
+      svg.setAttribute('viewBox', '0 0 ' + size + ' ' + h);
+      svg.setAttribute('width', size); svg.setAttribute('height', h);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(80,140,80,';
+      var cx = size / 2;
+      var segs = 4 + Math.floor(Math.random() * 3);
+      var d = 'M' + cx + ',0';
+      for (var i = 1; i <= segs; i++) {
+        var sx = cx + (i % 2 === 0 ? 1 : -1) * (5 + Math.random() * 8);
+        var sy = (i / segs) * h;
+        d += ' Q' + sx + ',' + (sy - h / segs * 0.5) + ' ' + cx + ',' + sy;
+      }
+      var vine = document.createElementNS(ns, 'path');
+      vine.setAttribute('d', d);
+      vine.setAttribute('fill', 'none');
+      vine.setAttribute('stroke', c + '0.15)');
+      vine.setAttribute('stroke-width', '0.8');
+      svg.appendChild(vine);
+      // Small leaves along vine
+      for (var i = 1; i < segs; i++) {
+        var ly = (i / segs) * h;
+        var side = i % 2 === 0 ? 1 : -1;
+        var leaf = document.createElementNS(ns, 'path');
+        leaf.setAttribute('d', 'M' + cx + ',' + ly + ' Q' + (cx + side * 8) + ',' + (ly - 4) + ' ' + (cx + side * 3) + ',' + (ly - 8));
+        leaf.setAttribute('fill', c + '0.1)');
+        leaf.setAttribute('stroke', c + '0.15)');
+        leaf.setAttribute('stroke-width', '0.3');
+        svg.appendChild(leaf);
+      }
+      return svg;
+    }
+
+    // ── 1 OF 1s ──
+    function generateGemSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = [
+        'rgba(100,180,240,', // sapphire
+        'rgba(220,60,80,',   // ruby
+        'rgba(80,200,120,',  // emerald
+        'rgba(200,160,240,'  // amethyst
+      ];
+      var c = colors[Math.floor(Math.random() * colors.length)];
+      // Diamond shape
+      var diamond = document.createElementNS(ns, 'path');
+      diamond.setAttribute('d', 'M30,8 L48,24 L30,52 L12,24 Z');
+      diamond.setAttribute('fill', c + '0.1)');
+      diamond.setAttribute('stroke', c + '0.25)');
+      diamond.setAttribute('stroke-width', '0.5');
+      svg.appendChild(diamond);
+      // Crown line across top
+      var crown = document.createElementNS(ns, 'path');
+      crown.setAttribute('d', 'M12,24 L30,8 L48,24');
+      crown.setAttribute('fill', 'none');
+      crown.setAttribute('stroke', c + '0.15)');
+      crown.setAttribute('stroke-width', '0.4');
+      svg.appendChild(crown);
+      // Internal facet lines
+      var f1 = document.createElementNS(ns, 'line');
+      f1.setAttribute('x1', 22); f1.setAttribute('y1', 24);
+      f1.setAttribute('x2', 30); f1.setAttribute('y2', 52);
+      f1.setAttribute('stroke', c + '0.1)'); f1.setAttribute('stroke-width', '0.3');
+      svg.appendChild(f1);
+      var f2 = document.createElementNS(ns, 'line');
+      f2.setAttribute('x1', 38); f2.setAttribute('y1', 24);
+      f2.setAttribute('x2', 30); f2.setAttribute('y2', 52);
+      f2.setAttribute('stroke', c + '0.1)'); f2.setAttribute('stroke-width', '0.3');
+      svg.appendChild(f2);
+      return svg;
+    }
+
+    function generateCrownSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 40');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.67);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(220,180,60,';
+      var crown = document.createElementNS(ns, 'path');
+      crown.setAttribute('d', 'M8,32 L8,16 L18,24 L30,8 L42,24 L52,16 L52,32 Z');
+      crown.setAttribute('fill', c + '0.1)');
+      crown.setAttribute('stroke', c + '0.25)');
+      crown.setAttribute('stroke-width', '0.6');
+      svg.appendChild(crown);
+      // Jewel dots at peaks
+      [[30,8],[18,24],[42,24]].forEach(function(pt) {
+        var dot = document.createElementNS(ns, 'circle');
+        dot.setAttribute('cx', pt[0]); dot.setAttribute('cy', pt[1]);
+        dot.setAttribute('r', 2);
+        dot.setAttribute('fill', 'rgba(200,60,80,0.25)');
+        svg.appendChild(dot);
+      });
+      return svg;
+    }
+
+    function generateOneOfOneSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 30');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.5);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(220,180,60,';
+      // Badge outline
+      var badge = document.createElementNS(ns, 'rect');
+      badge.setAttribute('x', 4); badge.setAttribute('y', 2);
+      badge.setAttribute('width', 52); badge.setAttribute('height', 26);
+      badge.setAttribute('rx', 3);
+      badge.setAttribute('fill', c + '0.06)');
+      badge.setAttribute('stroke', c + '0.18)');
+      badge.setAttribute('stroke-width', '0.5');
+      svg.appendChild(badge);
+      // "1/1" text
+      var txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', 30); txt.setAttribute('y', 20);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('fill', c + '0.3)');
+      txt.setAttribute('font-size', '11');
+      txt.setAttribute('font-family', 'monospace');
+      txt.setAttribute('letter-spacing', '2');
+      txt.textContent = '1/1';
+      svg.appendChild(txt);
+      return svg;
+    }
+
+    // ── SERVANTS ──
+    function generateServantCoinDecoSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(200,170,80,';
+      // Outer ring
+      var ring = document.createElementNS(ns, 'circle');
+      ring.setAttribute('cx', 30); ring.setAttribute('cy', 30); ring.setAttribute('r', 22);
+      ring.setAttribute('fill', 'none');
+      ring.setAttribute('stroke', c + '0.2)');
+      ring.setAttribute('stroke-width', '1');
+      svg.appendChild(ring);
+      // Inner ring
+      var inner = document.createElementNS(ns, 'circle');
+      inner.setAttribute('cx', 30); inner.setAttribute('cy', 30); inner.setAttribute('r', 16);
+      inner.setAttribute('fill', c + '0.06)');
+      inner.setAttribute('stroke', c + '0.12)');
+      inner.setAttribute('stroke-width', '0.5');
+      svg.appendChild(inner);
+      // Muse symbol — simple M
+      var m = document.createElementNS(ns, 'text');
+      m.setAttribute('x', 30); m.setAttribute('y', 35);
+      m.setAttribute('text-anchor', 'middle');
+      m.setAttribute('fill', c + '0.25)');
+      m.setAttribute('font-size', '14');
+      m.setAttribute('font-family', 'serif');
+      m.textContent = 'M';
+      svg.appendChild(m);
+      return svg;
+    }
+
+    function generateGearSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(160,150,130,';
+      var teeth = 8;
+      var outerR = 20, innerR = 14;
+      var d = '';
+      for (var i = 0; i < teeth; i++) {
+        var a1 = (i / teeth) * Math.PI * 2;
+        var a2 = ((i + 0.3) / teeth) * Math.PI * 2;
+        var a3 = ((i + 0.5) / teeth) * Math.PI * 2;
+        var a4 = ((i + 0.8) / teeth) * Math.PI * 2;
+        d += (i === 0 ? 'M' : 'L') + (30 + Math.cos(a1) * innerR).toFixed(1) + ',' + (30 + Math.sin(a1) * innerR).toFixed(1);
+        d += ' L' + (30 + Math.cos(a2) * outerR).toFixed(1) + ',' + (30 + Math.sin(a2) * outerR).toFixed(1);
+        d += ' L' + (30 + Math.cos(a3) * outerR).toFixed(1) + ',' + (30 + Math.sin(a3) * outerR).toFixed(1);
+        d += ' L' + (30 + Math.cos(a4) * innerR).toFixed(1) + ',' + (30 + Math.sin(a4) * innerR).toFixed(1);
+      }
+      d += 'Z';
+      var gear = document.createElementNS(ns, 'path');
+      gear.setAttribute('d', d);
+      gear.setAttribute('fill', c + '0.08)');
+      gear.setAttribute('stroke', c + '0.2)');
+      gear.setAttribute('stroke-width', '0.5');
+      svg.appendChild(gear);
+      // Center hole
+      var hole = document.createElementNS(ns, 'circle');
+      hole.setAttribute('cx', 30); hole.setAttribute('cy', 30); hole.setAttribute('r', 5);
+      hole.setAttribute('fill', 'rgba(20,20,20,0.15)');
+      hole.setAttribute('stroke', c + '0.15)');
+      hole.setAttribute('stroke-width', '0.4');
+      svg.appendChild(hole);
+      return svg;
+    }
+
+    function generateCandleFlameSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 40 70');
+      svg.setAttribute('width', size * 0.67); svg.setAttribute('height', size * 1.17);
+      svg.style.overflow = 'visible';
+      // Candle body
+      var body = document.createElementNS(ns, 'rect');
+      body.setAttribute('x', 14); body.setAttribute('y', 35);
+      body.setAttribute('width', 12); body.setAttribute('height', 30);
+      body.setAttribute('rx', 1);
+      body.setAttribute('fill', 'rgba(220,210,190,0.1)');
+      body.setAttribute('stroke', 'rgba(200,190,170,0.15)');
+      body.setAttribute('stroke-width', '0.4');
+      svg.appendChild(body);
+      // Wick
+      var wick = document.createElementNS(ns, 'line');
+      wick.setAttribute('x1', 20); wick.setAttribute('y1', 35);
+      wick.setAttribute('x2', 20); wick.setAttribute('y2', 26);
+      wick.setAttribute('stroke', 'rgba(80,70,60,0.2)');
+      wick.setAttribute('stroke-width', '0.5');
+      svg.appendChild(wick);
+      // Flame
+      var flame = document.createElementNS(ns, 'path');
+      flame.setAttribute('d', 'M20,8 Q24,16 22,24 Q20,26 18,24 Q16,16 20,8');
+      flame.setAttribute('fill', 'rgba(240,180,60,0.15)');
+      flame.setAttribute('stroke', 'rgba(240,160,40,0.25)');
+      flame.setAttribute('stroke-width', '0.4');
+      svg.appendChild(flame);
+      // Inner flame
+      var innerFlame = document.createElementNS(ns, 'path');
+      innerFlame.setAttribute('d', 'M20,14 Q22,18 21,22 Q20,23 19,22 Q18,18 20,14');
+      innerFlame.setAttribute('fill', 'rgba(255,220,100,0.2)');
+      svg.appendChild(innerFlame);
+      return svg;
+    }
+
+    function generateChaliceSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 70');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 1.17);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(200,170,80,';
+      // Cup
+      var cup = document.createElementNS(ns, 'path');
+      cup.setAttribute('d', 'M16,10 Q14,30 22,38 L38,38 Q46,30 44,10 Z');
+      cup.setAttribute('fill', c + '0.07)');
+      cup.setAttribute('stroke', c + '0.2)');
+      cup.setAttribute('stroke-width', '0.5');
+      svg.appendChild(cup);
+      // Stem
+      var stem = document.createElementNS(ns, 'line');
+      stem.setAttribute('x1', 30); stem.setAttribute('y1', 38);
+      stem.setAttribute('x2', 30); stem.setAttribute('y2', 54);
+      stem.setAttribute('stroke', c + '0.18)');
+      stem.setAttribute('stroke-width', '0.8');
+      svg.appendChild(stem);
+      // Base
+      var base = document.createElementNS(ns, 'ellipse');
+      base.setAttribute('cx', 30); base.setAttribute('cy', 56);
+      base.setAttribute('rx', 12); base.setAttribute('ry', 4);
+      base.setAttribute('fill', c + '0.06)');
+      base.setAttribute('stroke', c + '0.15)');
+      base.setAttribute('stroke-width', '0.4');
+      svg.appendChild(base);
+      return svg;
+    }
+
+    // ── BROKEN KEYS ──
+    function generateBrokenKeySVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      // Broken white key — jagged crack
+      var key = document.createElementNS(ns, 'path');
+      key.setAttribute('d', 'M20,8 L40,8 L40,35 L36,32 L38,38 L34,36 L36,42 L20,42 Z');
+      key.setAttribute('fill', 'rgba(220,215,200,0.1)');
+      key.setAttribute('stroke', 'rgba(180,170,150,0.2)');
+      key.setAttribute('stroke-width', '0.5');
+      svg.appendChild(key);
+      // Detached fragment
+      var frag = document.createElementNS(ns, 'path');
+      frag.setAttribute('d', 'M38,38 L42,36 L44,44 L40,46 L36,42 Z');
+      frag.setAttribute('fill', 'rgba(200,195,180,0.08)');
+      frag.setAttribute('stroke', 'rgba(160,150,140,0.15)');
+      frag.setAttribute('stroke-width', '0.4');
+      frag.setAttribute('transform', 'translate(3,4) rotate(12 40 40)');
+      svg.appendChild(frag);
+      return svg;
+    }
+
+    function generateSkullShardSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(180,175,165,';
+      // Skull outline — simplified
+      var skull = document.createElementNS(ns, 'path');
+      skull.setAttribute('d', 'M30,8 Q48,12 48,28 Q48,40 40,46 L36,52 L24,52 L20,46 Q12,40 12,28 Q12,12 30,8');
+      skull.setAttribute('fill', c + '0.06)');
+      skull.setAttribute('stroke', c + '0.18)');
+      skull.setAttribute('stroke-width', '0.5');
+      svg.appendChild(skull);
+      // Eye sockets
+      [[22,26],[38,26]].forEach(function(e) {
+        var eye = document.createElementNS(ns, 'ellipse');
+        eye.setAttribute('cx', e[0]); eye.setAttribute('cy', e[1]);
+        eye.setAttribute('rx', 5); eye.setAttribute('ry', 4);
+        eye.setAttribute('fill', 'rgba(30,25,20,0.12)');
+        svg.appendChild(eye);
+      });
+      // Nose
+      var nose = document.createElementNS(ns, 'path');
+      nose.setAttribute('d', 'M28,34 L30,38 L32,34');
+      nose.setAttribute('fill', 'rgba(30,25,20,0.1)');
+      svg.appendChild(nose);
+      // Crack
+      var crack = document.createElementNS(ns, 'path');
+      crack.setAttribute('d', 'M30,8 L28,16 L32,22 L29,28');
+      crack.setAttribute('fill', 'none');
+      crack.setAttribute('stroke', c + '0.15)');
+      crack.setAttribute('stroke-width', '0.4');
+      svg.appendChild(crack);
+      return svg;
+    }
+
+    function generateDarkSwirlSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var cx = 30, cy = 30;
+      var d = 'M' + cx + ',' + cy;
+      var turns = 2 + Math.random();
+      var steps = 40;
+      for (var i = 1; i <= steps; i++) {
+        var a = (i / steps) * turns * Math.PI * 2;
+        var r = (i / steps) * 22;
+        d += ' L' + (cx + Math.cos(a) * r).toFixed(1) + ',' + (cy + Math.sin(a) * r).toFixed(1);
+      }
+      var swirl = document.createElementNS(ns, 'path');
+      swirl.setAttribute('d', d);
+      swirl.setAttribute('fill', 'none');
+      swirl.setAttribute('stroke', 'rgba(100,80,120,' + (0.1 + Math.random() * 0.08) + ')');
+      swirl.setAttribute('stroke-width', '0.6');
+      svg.appendChild(swirl);
+      return svg;
+    }
+
+    // ── WAROTHYS ──
+    function generateRubySlipperSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 40');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.67);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(200,40,60,';
+      // Shoe body
+      var shoe = document.createElementNS(ns, 'path');
+      shoe.setAttribute('d', 'M8,28 Q8,18 20,16 L42,16 Q52,16 54,24 L54,28 Q54,32 48,32 L12,32 Q8,32 8,28');
+      shoe.setAttribute('fill', c + '0.12)');
+      shoe.setAttribute('stroke', c + '0.25)');
+      shoe.setAttribute('stroke-width', '0.5');
+      svg.appendChild(shoe);
+      // Heel
+      var heel = document.createElementNS(ns, 'path');
+      heel.setAttribute('d', 'M12,32 L10,38 L16,38 L14,32');
+      heel.setAttribute('fill', c + '0.1)');
+      heel.setAttribute('stroke', c + '0.2)');
+      heel.setAttribute('stroke-width', '0.4');
+      svg.appendChild(heel);
+      // Sparkle dots
+      for (var i = 0; i < 5; i++) {
+        var dot = document.createElementNS(ns, 'circle');
+        dot.setAttribute('cx', 18 + Math.random() * 28); dot.setAttribute('cy', 18 + Math.random() * 12);
+        dot.setAttribute('r', 0.8 + Math.random() * 0.8);
+        dot.setAttribute('fill', 'rgba(255,100,120,0.25)');
+        svg.appendChild(dot);
+      }
+      return svg;
+    }
+
+    function generateTornadoSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 80');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 1.33);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(140,150,160,';
+      // Funnel lines narrowing downward
+      var widths = [28, 22, 16, 11, 7, 4];
+      widths.forEach(function(w, i) {
+        var y = 6 + i * 12;
+        var el = document.createElementNS(ns, 'ellipse');
+        el.setAttribute('cx', 30); el.setAttribute('cy', y);
+        el.setAttribute('rx', w); el.setAttribute('ry', 2.5);
+        el.setAttribute('fill', 'none');
+        el.setAttribute('stroke', c + (0.1 + i * 0.02) + ')');
+        el.setAttribute('stroke-width', '0.5');
+        svg.appendChild(el);
+      });
+      return svg;
+    }
+
+    function generateEmeraldShardSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(40,180,100,';
+      // Hexagonal emerald
+      var d = '';
+      for (var i = 0; i < 6; i++) {
+        var a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+        var r = 16 + Math.random() * 4;
+        d += (i === 0 ? 'M' : 'L') + (30 + Math.cos(a) * r).toFixed(1) + ',' + (30 + Math.sin(a) * r).toFixed(1);
+      }
+      d += 'Z';
+      var gem = document.createElementNS(ns, 'path');
+      gem.setAttribute('d', d);
+      gem.setAttribute('fill', c + '0.1)');
+      gem.setAttribute('stroke', c + '0.25)');
+      gem.setAttribute('stroke-width', '0.5');
+      svg.appendChild(gem);
+      // Inner facets
+      var f = document.createElementNS(ns, 'path');
+      f.setAttribute('d', 'M30,14 L30,46 M18,22 L42,38 M42,22 L18,38');
+      f.setAttribute('fill', 'none');
+      f.setAttribute('stroke', c + '0.1)');
+      f.setAttribute('stroke-width', '0.3');
+      svg.appendChild(f);
+      return svg;
+    }
+
+    function generateRainbowArcSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 35');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.58);
+      svg.style.overflow = 'visible';
+      var colors = [
+        'rgba(200,40,60,0.12)', 'rgba(220,140,40,0.12)', 'rgba(220,200,60,0.12)',
+        'rgba(60,180,80,0.12)', 'rgba(60,120,220,0.12)', 'rgba(120,60,180,0.12)'
+      ];
+      colors.forEach(function(col, i) {
+        var arc = document.createElementNS(ns, 'path');
+        var r = 24 - i * 3;
+        arc.setAttribute('d', 'M' + (30 - r) + ',32 A' + r + ',' + r + ' 0 0,1 ' + (30 + r) + ',32');
+        arc.setAttribute('fill', 'none');
+        arc.setAttribute('stroke', col);
+        arc.setAttribute('stroke-width', '2');
+        svg.appendChild(arc);
+      });
+      return svg;
+    }
+
+    // ── SUPERRARE ──
+    function generateDiamondGemSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(80,160,240,';
+      // Classic diamond profile
+      var d = document.createElementNS(ns, 'path');
+      d.setAttribute('d', 'M10,22 L22,10 L38,10 L50,22 L30,54 Z');
+      d.setAttribute('fill', c + '0.08)');
+      d.setAttribute('stroke', c + '0.22)');
+      d.setAttribute('stroke-width', '0.5');
+      svg.appendChild(d);
+      // Top facets
+      var f = document.createElementNS(ns, 'path');
+      f.setAttribute('d', 'M10,22 L50,22 M22,10 L20,22 M38,10 L40,22 M30,10 L30,22');
+      f.setAttribute('fill', 'none');
+      f.setAttribute('stroke', c + '0.12)');
+      f.setAttribute('stroke-width', '0.3');
+      svg.appendChild(f);
+      // Lower facets
+      var f2 = document.createElementNS(ns, 'path');
+      f2.setAttribute('d', 'M20,22 L30,54 M40,22 L30,54 M30,22 L30,54');
+      f2.setAttribute('fill', 'none');
+      f2.setAttribute('stroke', c + '0.08)');
+      f2.setAttribute('stroke-width', '0.3');
+      svg.appendChild(f2);
+      return svg;
+    }
+
+    function generateRareStampSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(220,60,80,';
+      // Circular stamp border with notches
+      var circ = document.createElementNS(ns, 'circle');
+      circ.setAttribute('cx', 30); circ.setAttribute('cy', 30); circ.setAttribute('r', 22);
+      circ.setAttribute('fill', 'none');
+      circ.setAttribute('stroke', c + '0.2)');
+      circ.setAttribute('stroke-width', '1.5');
+      circ.setAttribute('stroke-dasharray', '4 2');
+      svg.appendChild(circ);
+      // Inner circle
+      var inner = document.createElementNS(ns, 'circle');
+      inner.setAttribute('cx', 30); inner.setAttribute('cy', 30); inner.setAttribute('r', 17);
+      inner.setAttribute('fill', c + '0.04)');
+      inner.setAttribute('stroke', c + '0.12)');
+      inner.setAttribute('stroke-width', '0.5');
+      svg.appendChild(inner);
+      // "SR" text
+      var txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', 30); txt.setAttribute('y', 35);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('fill', c + '0.2)');
+      txt.setAttribute('font-size', '12');
+      txt.setAttribute('font-family', 'monospace');
+      txt.textContent = 'SR';
+      svg.appendChild(txt);
+      return svg;
+    }
+
+    function generateGavelSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(160,130,80,';
+      // Handle
+      var handle = document.createElementNS(ns, 'line');
+      handle.setAttribute('x1', 18); handle.setAttribute('y1', 46);
+      handle.setAttribute('x2', 42); handle.setAttribute('y2', 22);
+      handle.setAttribute('stroke', c + '0.2)');
+      handle.setAttribute('stroke-width', '2');
+      handle.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(handle);
+      // Head
+      var head = document.createElementNS(ns, 'rect');
+      head.setAttribute('x', 35); head.setAttribute('y', 12);
+      head.setAttribute('width', 18); head.setAttribute('height', 10);
+      head.setAttribute('rx', 2);
+      head.setAttribute('transform', 'rotate(-45 44 17)');
+      head.setAttribute('fill', c + '0.12)');
+      head.setAttribute('stroke', c + '0.22)');
+      head.setAttribute('stroke-width', '0.5');
+      svg.appendChild(head);
+      // Sound block
+      var block = document.createElementNS(ns, 'ellipse');
+      block.setAttribute('cx', 14); block.setAttribute('cy', 50);
+      block.setAttribute('rx', 10); block.setAttribute('ry', 4);
+      block.setAttribute('fill', c + '0.08)');
+      block.setAttribute('stroke', c + '0.15)');
+      block.setAttribute('stroke-width', '0.4');
+      svg.appendChild(block);
+      return svg;
+    }
+
+    // ── HEART YOU ──
+    function generateHeartSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = [
+        'rgba(220,50,80,', 'rgba(240,100,120,', 'rgba(200,60,100,', 'rgba(180,40,80,'
+      ];
+      var c = colors[Math.floor(Math.random() * colors.length)];
+      var heart = document.createElementNS(ns, 'path');
+      heart.setAttribute('d', 'M30,52 L10,30 Q6,18 16,14 Q24,10 30,20 Q36,10 44,14 Q54,18 50,30 Z');
+      heart.setAttribute('fill', c + (0.08 + Math.random() * 0.1) + ')');
+      heart.setAttribute('stroke', c + '0.25)');
+      heart.setAttribute('stroke-width', '0.5');
+      svg.appendChild(heart);
+      return svg;
+    }
+
+    function generateCupidArrowSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 80 20');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.25);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(220,50,80,';
+      // Shaft
+      var shaft = document.createElementNS(ns, 'line');
+      shaft.setAttribute('x1', 6); shaft.setAttribute('y1', 10);
+      shaft.setAttribute('x2', 70); shaft.setAttribute('y2', 10);
+      shaft.setAttribute('stroke', c + '0.15)');
+      shaft.setAttribute('stroke-width', '0.6');
+      svg.appendChild(shaft);
+      // Arrowhead
+      var head = document.createElementNS(ns, 'path');
+      head.setAttribute('d', 'M70,10 L76,6 L74,10 L76,14 Z');
+      head.setAttribute('fill', c + '0.25)');
+      svg.appendChild(head);
+      // Heart tip
+      var heartTip = document.createElementNS(ns, 'path');
+      heartTip.setAttribute('d', 'M76,10 Q78,6 80,8 Q82,10 80,12 Q78,14 76,10');
+      heartTip.setAttribute('fill', c + '0.2)');
+      svg.appendChild(heartTip);
+      // Feather tail
+      var feather = document.createElementNS(ns, 'path');
+      feather.setAttribute('d', 'M6,10 L2,6 M6,10 L2,14');
+      feather.setAttribute('stroke', c + '0.15)'); feather.setAttribute('stroke-width', '0.5');
+      feather.setAttribute('fill', 'none');
+      svg.appendChild(feather);
+      return svg;
+    }
+
+    function generateHeartbeatSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 80 30');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.375);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(220,50,80,';
+      var p = document.createElementNS(ns, 'path');
+      p.setAttribute('d', 'M0,15 L20,15 L26,4 L32,26 L38,8 L42,20 L48,15 L80,15');
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', c + '0.2)');
+      p.setAttribute('stroke-width', '0.8');
+      p.setAttribute('stroke-linecap', 'round');
+      p.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(p);
+      return svg;
+    }
+
+    // ── HER FAVORITE FLOWERS ──
+    function generateHFFPetalSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = [
+        ['rgba(220,80,140,', 'rgba(200,60,120,'],
+        ['rgba(240,140,180,', 'rgba(220,100,150,'],
+        ['rgba(200,100,180,', 'rgba(180,80,160,']
+      ];
+      var c = colors[Math.floor(Math.random() * colors.length)];
+      // Single falling petal
+      var petal = document.createElementNS(ns, 'path');
+      petal.setAttribute('d', 'M30,10 Q42,20 38,38 Q30,46 22,38 Q18,20 30,10');
+      petal.setAttribute('fill', c[0] + '0.12)');
+      petal.setAttribute('stroke', c[1] + '0.2)');
+      petal.setAttribute('stroke-width', '0.4');
+      svg.appendChild(petal);
+      // Vein line
+      var vein = document.createElementNS(ns, 'path');
+      vein.setAttribute('d', 'M30,12 Q31,28 30,42');
+      vein.setAttribute('fill', 'none');
+      vein.setAttribute('stroke', c[1] + '0.12)');
+      vein.setAttribute('stroke-width', '0.3');
+      svg.appendChild(vein);
+      return svg;
+    }
+
+    function generateHFFLeafSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(80,150,80,';
+      var leaf = document.createElementNS(ns, 'path');
+      leaf.setAttribute('d', 'M30,8 Q50,20 42,40 Q30,52 18,40 Q10,20 30,8');
+      leaf.setAttribute('fill', c + '0.1)');
+      leaf.setAttribute('stroke', c + '0.18)');
+      leaf.setAttribute('stroke-width', '0.4');
+      svg.appendChild(leaf);
+      // Midvein and side veins
+      var mv = document.createElementNS(ns, 'path');
+      mv.setAttribute('d', 'M30,10 L30,46 M30,22 L40,28 M30,30 L20,36');
+      mv.setAttribute('fill', 'none');
+      mv.setAttribute('stroke', c + '0.12)');
+      mv.setAttribute('stroke-width', '0.3');
+      svg.appendChild(mv);
+      return svg;
+    }
+
+    function generateHFFStemSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var h = size * 2;
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 20 ' + h);
+      svg.setAttribute('width', 20); svg.setAttribute('height', h);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(80,140,80,';
+      var stem = document.createElementNS(ns, 'path');
+      var cx = 10;
+      stem.setAttribute('d', 'M' + cx + ',0 Q' + (cx + 3) + ',' + (h * 0.3) + ' ' + (cx - 2) + ',' + (h * 0.6) + ' Q' + (cx + 2) + ',' + (h * 0.8) + ' ' + cx + ',' + h);
+      stem.setAttribute('fill', 'none');
+      stem.setAttribute('stroke', c + '0.15)');
+      stem.setAttribute('stroke-width', '0.8');
+      svg.appendChild(stem);
+      // Small thorns
+      var thorn = document.createElementNS(ns, 'path');
+      thorn.setAttribute('d', 'M' + cx + ',' + (h * 0.4) + ' L' + (cx + 4) + ',' + (h * 0.37));
+      thorn.setAttribute('stroke', c + '0.12)');
+      thorn.setAttribute('stroke-width', '0.4');
+      thorn.setAttribute('fill', 'none');
+      svg.appendChild(thorn);
+      return svg;
+    }
+
+    // ── ACKSTRACT ──
+    function generateGeoFragmentSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = [
+        'rgba(220,60,60,', 'rgba(60,120,220,', 'rgba(220,180,40,',
+        'rgba(40,180,120,', 'rgba(180,60,200,'
+      ];
+      // Random polygon
+      var sides = 3 + Math.floor(Math.random() * 4);
+      var col = colors[Math.floor(Math.random() * colors.length)];
+      var d = '';
+      for (var i = 0; i < sides; i++) {
+        var a = (i / sides) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
+        var r = 10 + Math.random() * 14;
+        d += (i === 0 ? 'M' : 'L') + (30 + Math.cos(a) * r).toFixed(1) + ',' + (30 + Math.sin(a) * r).toFixed(1);
+      }
+      d += 'Z';
+      var shape = document.createElementNS(ns, 'path');
+      shape.setAttribute('d', d);
+      shape.setAttribute('fill', col + '0.08)');
+      shape.setAttribute('stroke', col + '0.2)');
+      shape.setAttribute('stroke-width', '0.5');
+      svg.appendChild(shape);
+      return svg;
+    }
+
+    function generatePaintSplatterSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = [
+        'rgba(220,60,60,', 'rgba(60,120,220,', 'rgba(220,180,40,',
+        'rgba(40,180,120,', 'rgba(180,60,200,', 'rgba(240,120,40,'
+      ];
+      var col = colors[Math.floor(Math.random() * colors.length)];
+      // Central blob
+      var blob = document.createElementNS(ns, 'circle');
+      blob.setAttribute('cx', 30); blob.setAttribute('cy', 30);
+      blob.setAttribute('r', 6 + Math.random() * 6);
+      blob.setAttribute('fill', col + '0.12)');
+      svg.appendChild(blob);
+      // Splatter droplets
+      var count = 4 + Math.floor(Math.random() * 5);
+      for (var i = 0; i < count; i++) {
+        var a = Math.random() * Math.PI * 2;
+        var dist = 10 + Math.random() * 16;
+        var dot = document.createElementNS(ns, 'circle');
+        dot.setAttribute('cx', 30 + Math.cos(a) * dist);
+        dot.setAttribute('cy', 30 + Math.sin(a) * dist);
+        dot.setAttribute('r', 1 + Math.random() * 3);
+        dot.setAttribute('fill', col + (0.08 + Math.random() * 0.08) + ')');
+        svg.appendChild(dot);
+      }
+      return svg;
+    }
+
+    function generateColorFieldSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = [
+        'rgba(220,60,60,0.08)', 'rgba(60,120,220,0.08)', 'rgba(220,180,40,0.08)',
+        'rgba(40,180,120,0.08)', 'rgba(180,60,200,0.08)'
+      ];
+      // Overlapping color rectangles
+      var count = 2 + Math.floor(Math.random() * 2);
+      for (var i = 0; i < count; i++) {
+        var r = document.createElementNS(ns, 'rect');
+        r.setAttribute('x', 5 + Math.random() * 20);
+        r.setAttribute('y', 5 + Math.random() * 20);
+        r.setAttribute('width', 15 + Math.random() * 25);
+        r.setAttribute('height', 15 + Math.random() * 25);
+        r.setAttribute('fill', colors[Math.floor(Math.random() * colors.length)]);
+        r.setAttribute('stroke', 'none');
+        svg.appendChild(r);
+      }
+      return svg;
+    }
+
+    // ── ACK EDITIONS ──
+    function generateFilmReelSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 80');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 1.33);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(160,150,140,';
+      // Film strip
+      var strip = document.createElementNS(ns, 'rect');
+      strip.setAttribute('x', 10); strip.setAttribute('y', 0);
+      strip.setAttribute('width', 40); strip.setAttribute('height', 80);
+      strip.setAttribute('rx', 2);
+      strip.setAttribute('fill', c + '0.05)');
+      strip.setAttribute('stroke', c + '0.15)');
+      strip.setAttribute('stroke-width', '0.5');
+      svg.appendChild(strip);
+      // Sprocket holes
+      for (var y = 6; y < 78; y += 12) {
+        [14, 46].forEach(function(x) {
+          var hole = document.createElementNS(ns, 'rect');
+          hole.setAttribute('x', x - 2); hole.setAttribute('y', y);
+          hole.setAttribute('width', 4); hole.setAttribute('height', 6);
+          hole.setAttribute('rx', 1);
+          hole.setAttribute('fill', 'rgba(20,20,20,0.1)');
+          svg.appendChild(hole);
+        });
+      }
+      // Frame windows
+      for (var y = 4; y < 74; y += 24) {
+        var frame = document.createElementNS(ns, 'rect');
+        frame.setAttribute('x', 20); frame.setAttribute('y', y);
+        frame.setAttribute('width', 20); frame.setAttribute('height', 16);
+        frame.setAttribute('rx', 1);
+        frame.setAttribute('fill', 'rgba(40,35,30,0.08)');
+        frame.setAttribute('stroke', c + '0.1)');
+        frame.setAttribute('stroke-width', '0.3');
+        svg.appendChild(frame);
+      }
+      return svg;
+    }
+
+    function generateEditionStampSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 40');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.67);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(200,170,80,';
+      var editions = ['6', '10', '48', '300', '13', '5'];
+      var ed = editions[Math.floor(Math.random() * editions.length)];
+      // Stamp border
+      var border = document.createElementNS(ns, 'rect');
+      border.setAttribute('x', 4); border.setAttribute('y', 4);
+      border.setAttribute('width', 52); border.setAttribute('height', 32);
+      border.setAttribute('rx', 2);
+      border.setAttribute('fill', c + '0.04)');
+      border.setAttribute('stroke', c + '0.15)');
+      border.setAttribute('stroke-width', '0.5');
+      border.setAttribute('stroke-dasharray', '3 1.5');
+      svg.appendChild(border);
+      // Edition number
+      var txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', 30); txt.setAttribute('y', 25);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('fill', c + '0.25)');
+      txt.setAttribute('font-size', '10');
+      txt.setAttribute('font-family', 'monospace');
+      txt.textContent = 'ED/' + ed;
+      svg.appendChild(txt);
+      return svg;
+    }
+
+    function generateLoopSymbolSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 40');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.67);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(120,160,200,';
+      // Infinity/loop symbol
+      var loop = document.createElementNS(ns, 'path');
+      loop.setAttribute('d', 'M30,20 C30,8 10,8 10,20 C10,32 30,32 30,20 C30,8 50,8 50,20 C50,32 30,32 30,20');
+      loop.setAttribute('fill', 'none');
+      loop.setAttribute('stroke', c + '0.2)');
+      loop.setAttribute('stroke-width', '0.8');
+      svg.appendChild(loop);
+      return svg;
+    }
+
+    // ── THE GREAT COLOR STUDY ──
+    function generatePantoneSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 40 60');
+      svg.setAttribute('width', size * 0.67); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var pantoneColors = [
+        { fill: 'rgba(200,180,60,0.15)', name: '104 C' },
+        { fill: 'rgba(40,120,80,0.15)', name: '3302 C' },
+        { fill: 'rgba(100,110,120,0.15)', name: '431 C' },
+        { fill: 'rgba(40,80,200,0.12)', name: '2728 C' },
+        { fill: 'rgba(160,60,60,0.15)', name: '7623 C' },
+        { fill: 'rgba(220,120,50,0.15)', name: '1595 C' },
+        { fill: 'rgba(140,40,40,0.15)', name: '7621 C' },
+        { fill: 'rgba(140,140,140,0.12)', name: 'Gray 8' },
+        { fill: 'rgba(100,40,180,0.15)', name: 'Violet' },
+        { fill: 'rgba(40,50,60,0.15)', name: 'Black 6' },
+        { fill: 'rgba(100,180,220,0.12)', name: '297 C' }
+      ];
+      var pc = pantoneColors[Math.floor(Math.random() * pantoneColors.length)];
+      // Swatch card
+      var card = document.createElementNS(ns, 'rect');
+      card.setAttribute('x', 2); card.setAttribute('y', 2);
+      card.setAttribute('width', 36); card.setAttribute('height', 56);
+      card.setAttribute('rx', 1);
+      card.setAttribute('fill', 'rgba(30,28,26,0.06)');
+      card.setAttribute('stroke', 'rgba(100,90,80,0.12)');
+      card.setAttribute('stroke-width', '0.4');
+      svg.appendChild(card);
+      // Color swatch area
+      var swatch = document.createElementNS(ns, 'rect');
+      swatch.setAttribute('x', 4); swatch.setAttribute('y', 4);
+      swatch.setAttribute('width', 32); swatch.setAttribute('height', 36);
+      swatch.setAttribute('fill', pc.fill);
+      svg.appendChild(swatch);
+      // Label text
+      var txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', 20); txt.setAttribute('y', 52);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('fill', 'rgba(160,150,140,0.25)');
+      txt.setAttribute('font-size', '5');
+      txt.setAttribute('font-family', 'monospace');
+      txt.textContent = pc.name;
+      svg.appendChild(txt);
+      return svg;
+    }
+
+    function generatePaintDropletSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 40 60');
+      svg.setAttribute('width', size * 0.67); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var colors = [
+        'rgba(200,180,60,', 'rgba(40,120,80,', 'rgba(40,80,200,',
+        'rgba(160,60,60,', 'rgba(100,40,180,', 'rgba(100,180,220,'
+      ];
+      var c = colors[Math.floor(Math.random() * colors.length)];
+      // Teardrop shape
+      var drop = document.createElementNS(ns, 'path');
+      drop.setAttribute('d', 'M20,6 Q28,20 28,34 A8,8 0 1,1 12,34 Q12,20 20,6');
+      drop.setAttribute('fill', c + '0.1)');
+      drop.setAttribute('stroke', c + '0.2)');
+      drop.setAttribute('stroke-width', '0.4');
+      svg.appendChild(drop);
+      // Highlight
+      var hl = document.createElementNS(ns, 'ellipse');
+      hl.setAttribute('cx', 17); hl.setAttribute('cy', 30);
+      hl.setAttribute('rx', 2); hl.setAttribute('ry', 4);
+      hl.setAttribute('fill', 'rgba(255,255,255,0.08)');
+      svg.appendChild(hl);
+      return svg;
+    }
+
+    function generateSpectrumBarSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 12');
+      svg.setAttribute('width', size); svg.setAttribute('height', size * 0.2);
+      svg.style.overflow = 'visible';
+      var colors = [
+        'rgba(200,40,40,0.12)', 'rgba(220,140,40,0.12)', 'rgba(220,200,60,0.12)',
+        'rgba(40,160,80,0.12)', 'rgba(40,100,200,0.12)', 'rgba(100,40,180,0.12)'
+      ];
+      var barW = 60 / colors.length;
+      colors.forEach(function(col, i) {
+        var bar = document.createElementNS(ns, 'rect');
+        bar.setAttribute('x', i * barW); bar.setAttribute('y', 0);
+        bar.setAttribute('width', barW + 0.5); bar.setAttribute('height', 12);
+        bar.setAttribute('fill', col);
+        svg.appendChild(bar);
+      });
+      return svg;
+    }
+
+    // ── OPEPEN SET 030 ──
+    function generateOpepenSilhouetteSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(180,160,120,';
+      // Opepen-style rounded square silhouette with face cutouts
+      var outer = document.createElementNS(ns, 'rect');
+      outer.setAttribute('x', 8); outer.setAttribute('y', 8);
+      outer.setAttribute('width', 44); outer.setAttribute('height', 44);
+      outer.setAttribute('rx', 10);
+      outer.setAttribute('fill', c + '0.08)');
+      outer.setAttribute('stroke', c + '0.18)');
+      outer.setAttribute('stroke-width', '0.5');
+      svg.appendChild(outer);
+      // Eyes (two dark slots)
+      [[20,24],[40,24]].forEach(function(e) {
+        var eye = document.createElementNS(ns, 'rect');
+        eye.setAttribute('x', e[0] - 5); eye.setAttribute('y', e[1] - 3);
+        eye.setAttribute('width', 10); eye.setAttribute('height', 6);
+        eye.setAttribute('rx', 2);
+        eye.setAttribute('fill', 'rgba(30,25,20,0.1)');
+        svg.appendChild(eye);
+      });
+      // Mouth
+      var mouth = document.createElementNS(ns, 'rect');
+      mouth.setAttribute('x', 18); mouth.setAttribute('y', 36);
+      mouth.setAttribute('width', 24); mouth.setAttribute('height', 6);
+      mouth.setAttribute('rx', 2);
+      mouth.setAttribute('fill', 'rgba(30,25,20,0.08)');
+      svg.appendChild(mouth);
+      return svg;
+    }
+
+    function generateSkullMotifSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      var c = 'rgba(200,190,170,';
+      // Simplified skull with almond blossom growing from it
+      var skull = document.createElementNS(ns, 'path');
+      skull.setAttribute('d', 'M30,12 Q44,14 44,28 Q44,38 38,42 L34,48 L26,48 L22,42 Q16,38 16,28 Q16,14 30,12');
+      skull.setAttribute('fill', c + '0.06)');
+      skull.setAttribute('stroke', c + '0.15)');
+      skull.setAttribute('stroke-width', '0.4');
+      svg.appendChild(skull);
+      // Eyes
+      [[24,26],[36,26]].forEach(function(e) {
+        var eye = document.createElementNS(ns, 'circle');
+        eye.setAttribute('cx', e[0]); eye.setAttribute('cy', e[1]);
+        eye.setAttribute('r', 4);
+        eye.setAttribute('fill', 'rgba(30,25,20,0.1)');
+        svg.appendChild(eye);
+      });
+      // Branch growing from top
+      var branch = document.createElementNS(ns, 'path');
+      branch.setAttribute('d', 'M30,12 Q32,6 36,2');
+      branch.setAttribute('fill', 'none');
+      branch.setAttribute('stroke', 'rgba(100,80,60,0.15)');
+      branch.setAttribute('stroke-width', '0.5');
+      svg.appendChild(branch);
+      // Small blossom at branch end
+      for (var i = 0; i < 4; i++) {
+        var a = (i / 4) * Math.PI * 2;
+        var p = document.createElementNS(ns, 'ellipse');
+        p.setAttribute('cx', 36 + Math.cos(a) * 3); p.setAttribute('cy', 2 + Math.sin(a) * 3);
+        p.setAttribute('rx', 3); p.setAttribute('ry', 1.5);
+        p.setAttribute('transform', 'rotate(' + (a * 180 / Math.PI) + ' ' + (36 + Math.cos(a) * 3) + ' ' + (2 + Math.sin(a) * 3) + ')');
+        p.setAttribute('fill', 'rgba(240,220,220,0.15)');
+        svg.appendChild(p);
+      }
+      return svg;
+    }
+
+    function generateAlmondBlossomSVG(size) {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 60');
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      // Branch with almond blossoms (Van Gogh reference)
+      var branch = document.createElementNS(ns, 'path');
+      branch.setAttribute('d', 'M10,50 Q20,35 30,30 Q40,25 50,12');
+      branch.setAttribute('fill', 'none');
+      branch.setAttribute('stroke', 'rgba(100,80,60,0.15)');
+      branch.setAttribute('stroke-width', '1');
+      svg.appendChild(branch);
+      // Blossoms along branch
+      var blossomPts = [[22,36],[32,28],[42,18]];
+      blossomPts.forEach(function(bp) {
+        for (var i = 0; i < 5; i++) {
+          var a = (i / 5) * Math.PI * 2;
+          var p = document.createElementNS(ns, 'ellipse');
+          p.setAttribute('cx', bp[0] + Math.cos(a) * 4);
+          p.setAttribute('cy', bp[1] + Math.sin(a) * 4);
+          p.setAttribute('rx', 4); p.setAttribute('ry', 2);
+          p.setAttribute('transform', 'rotate(' + (a * 180 / Math.PI) + ' ' + (bp[0] + Math.cos(a) * 4) + ' ' + (bp[1] + Math.sin(a) * 4) + ')');
+          p.setAttribute('fill', 'rgba(240,230,240,' + (0.1 + Math.random() * 0.08) + ')');
+          svg.appendChild(p);
+        }
+        // Center dot
+        var center = document.createElementNS(ns, 'circle');
+        center.setAttribute('cx', bp[0]); center.setAttribute('cy', bp[1]);
+        center.setAttribute('r', 1.5);
+        center.setAttribute('fill', 'rgba(220,180,80,0.25)');
+        svg.appendChild(center);
+      });
       return svg;
     }
 
