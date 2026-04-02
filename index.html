@@ -3055,6 +3055,13 @@
       letter-spacing: 0.06em;
       white-space: nowrap;
       pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    /* Show title on hover in collection view */
+    .node-card:hover .node-title-tag,
+    .node-card.hovered .node-title-tag {
+      opacity: 1;
     }
     .node-title-tag::before {
       content: '';
@@ -3107,20 +3114,13 @@
     .node-card.hovered .node-collab-tag {
       color: rgba(220,210,195,0.6);
     }
+    .node-card:hover .node-title-tag,
     .node-card.hovered .node-title-tag {
       color: rgba(220,210,195,0.85);
     }
+    .node-card:hover .node-title-tag::before,
     .node-card.hovered .node-title-tag::before {
       background: rgba(220,150,50,0.6);
-    }
-    /* My Bags / collector pages: titles hidden by default, show on hover */
-    .node-graph-inner.is-my-bags .node-card .node-title-tag {
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
-    .node-graph-inner.is-my-bags .node-card:hover .node-title-tag,
-    .node-graph-inner.is-my-bags .node-card.hovered .node-title-tag {
-      opacity: 1;
     }
 
     /* Focus view loading shimmer */
@@ -8542,7 +8542,7 @@
             // file:// — skip Web Audio entirely, just play plain Audio
             audio.volume = 0.06;
             audio.play().then(function() {
-              console.log('[ACK] Whisper audio playing (plain, file://)');
+
             }).catch(function(err) {
               console.warn('[ACK] Whisper audio failed on file://:', err);
             });
@@ -8587,7 +8587,7 @@
             }
           }
           audio.play().then(function() {
-            console.log('[ACK] Whisper audio playing via Web Audio');
+
           }).catch(function(err) {
             console.warn('[ACK] Web Audio play failed:', err, '— trying plain fallback');
             var fallbackAudio = new Audio('dreamsarewhispers.wav');
@@ -14757,7 +14757,7 @@
         return;
       }
       if (!skipTransition) ACK_SFX.click();
-      console.log('[openDetail] called index=', index, 'skipTransition=', skipTransition, '_openDetailBusy=', _openDetailBusy, new Error().stack.split('\n').slice(1,3).join(' <- '));
+
       // If we're already building a detail view (e.g. resize fired during construction),
       // skip this call to prevent the entire overlay from being torn down and rebuilt
       if (_openDetailBusy && skipTransition) return;
@@ -17699,10 +17699,19 @@
             }
           }, 5000);
         }
+        // Debounced drawNoodles — coalesces rapid successive calls into one RAF
+        var _noodleRAF = 0;
         function drawNoodles() {
+          if (_noodleRAF) return; // already scheduled
+          _noodleRAF = requestAnimationFrame(function() {
+            _noodleRAF = 0;
+            _drawNoodlesImpl();
+          });
+        }
+        function _drawNoodlesImpl() {
           // For custom layouts, skip redundant redraws once palettes are applied
           if (_usingCustomLayout && _noodlesDrawn && _noodlePalettesDone && !_collEditorActive) return;
-          console.log('[drawNoodles] REDRAW at', Date.now(), '_noodlesDrawn=', _noodlesDrawn, '_noodlePalettesDone=', _noodlePalettesDone, new Error().stack.split('\n').slice(1,4).join(' <- '));
+
           wiresSvg.innerHTML = '';
           const op = getOutPort();
           const allCardEls = inner.querySelectorAll('.node-card');
