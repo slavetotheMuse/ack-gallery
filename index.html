@@ -18975,8 +18975,8 @@
       }
 
       // Per-artwork focusScale override (e.g. 1.3 = 30% bigger in focus view)
-      if (!_isMobileFocus && artData && artData.focusScale) {
-        scaleFactor *= artData.focusScale;
+      if (!_isMobileFocus && _earlyArt && _earlyArt.focusScale) {
+        scaleFactor *= _earlyArt.focusScale;
       }
 
       // Clamp so artwork doesn't overlap the left candle (desktop only)
