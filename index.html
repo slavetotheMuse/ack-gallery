@@ -7926,7 +7926,7 @@
             {title:"Electric Gray",image:"colorstudys/electricgray.gif",tokenId:1,edition:"Edition of 238",description:"Pantone Cool Gray 8 C"},
             {title:"Royalty",image:"colorstudys/royalty.gif",tokenId:4,edition:"Edition of 255",description:"Pantone Violet C"},
             {title:"Stardust",image:"colorstudys/stardust.gif",tokenId:8,edition:"Edition of 398",description:"Pantone Black 6 C"},
-            {title:"pale blue death (a color study)",image:"colorstudys/pbd.gif",fullRes:"https://arweave.net/dhZbwF62HFGf_RVxl82xFnpdmWEcibauT788TT8Muqk",webGif:"colorstudys/thumbs/pbd_anim.gif",tokenId:13,edition:"Edition of 55",description:"Pantone 297 C. Released free to ACK badge holders on Sep 6, 2022. Edition of 55, limited until the release of ACK's piano collection.",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"},
+            {title:"pale blue death (a color study)",image:"colorstudys/thumbs/pbd_anim.gif",fullRes:"https://arweave.net/dhZbwF62HFGf_RVxl82xFnpdmWEcibauT788TT8Muqk",webGif:"colorstudys/thumbs/pbd_anim.gif",tokenId:13,edition:"Edition of 55",description:"Pantone 297 C. Released free to ACK badge holders on Sep 6, 2022. Edition of 55, limited until the release of ACK's piano collection.",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"},
             {title:"max pain v2",image:"colorstudys/maxpainv2.gif",tokenId:14,edition:"Edition of 613",description:"oh the agony",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"}
         ]},
         { name: "Opepen Set 030: a.c.k.", image: "opepen/web/opepen_catalog.jpg",
@@ -19229,14 +19229,19 @@
                 }
               };
             } else if (_focusSrc) {
-              // ── DESKTOP: Preloader pattern with shimmer ──
-              nodeImg.style.transition = 'opacity 0.4s ease';
-              nodeImg.style.opacity = '0.6';
+              // ── DESKTOP: Preloader — silent swap for images, shimmer only for video ──
+              const _isVideoFullRes = artData && artData.fullRes && artData.fullRes.endsWith('.mp4');
+              if (_isVideoFullRes) {
+                nodeImg.style.transition = 'opacity 0.4s ease';
+                nodeImg.style.opacity = '0.6';
+              }
               const loadingShimmer = document.createElement('div');
               loadingShimmer.className = 'focus-loading-shimmer';
               loadingShimmer.innerHTML = '<div class="shimmer-bar"></div>';
-              const preview = node.querySelector('.node-preview');
-              if (preview) preview.appendChild(loadingShimmer);
+              if (_isVideoFullRes) {
+                const preview = node.querySelector('.node-preview');
+                if (preview) preview.appendChild(loadingShimmer);
+              }
               const _clearLoading = () => {
                 nodeImg.style.opacity = '1';
                 if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
