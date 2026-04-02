@@ -8126,7 +8126,7 @@
           description: "servants of the Muse — 69 unique 1-of-1 servant coins by AlphaCentauriKid. Each coin is a token of devotion to the Muse, minted on Ethereum.",
           token: "ERC-721", chain: "Ethereum", contract: "0xd3f9551e9bc926cc180ac8d3e27364f4081df624",
           coinFace: "servant_face_web.png", coinBack: "servant_back_web.png",
-          artworks: (function(){var a=[];for(var t=0;t<69;t++){a.push({title:"servant of the Muse #"+(t+1),image:"servant_face_web.png",backImage:"servant_back_web.png",fullRes:"servant_muse.mp4",tokenId:t+1,spinCoin:true})}return a})()
+          artworks: (function(){var a=[];for(var t=0;t<69;t++){a.push({title:"servant of the Muse #"+(t+1),image:"servant_face_web.png",backImage:"servant_back_web.png",fullRes:"https://arweave.net/Qf42dsHtzXDqLHiiW07vCz89qt2CEPCBjglUnjJNRys",tokenId:t+1,spinCoin:true})}return a})()
         },
         { name: "Broken Keys", image: "there_is_no_piano_web.jpg",
           wallLayout: true,
@@ -20305,7 +20305,7 @@
                   var existingImg = faceEl.querySelector('img');
                   if (existingImg) existingImg.style.display = 'none';
                   var vid = document.createElement('video');
-                  vid.src = (artData && artData.fullRes) ? artData.fullRes : 'servant_muse.mp4';
+                  vid.src = (artData && artData.fullRes) ? artData.fullRes : 'https://arweave.net/Qf42dsHtzXDqLHiiW07vCz89qt2CEPCBjglUnjJNRys';
                   vid.loop = true;
                   vid.muted = false; // sound on
                   vid.playsInline = true;
@@ -20314,8 +20314,21 @@
                   vid.setAttribute('playsinline', '');
                   vid.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;';
                   vid.className = 'servant-coin-video';
+                  // If video fails to load, restore the coin image
+                  vid.onerror = function() {
+                    if (existingImg) existingImg.style.display = '';
+                    vid.remove();
+                    _spBtn.classList.remove('playing');
+                    _spBtn.title = 'Play video';
+                  };
                   faceEl.appendChild(vid);
-                  vid.play().catch(function(){});
+                  vid.play().catch(function(){
+                    // Autoplay blocked or load failed — restore image
+                    if (existingImg) existingImg.style.display = '';
+                    vid.remove();
+                    _spBtn.classList.remove('playing');
+                    _spBtn.title = 'Play video';
+                  });
                   _spBtn.classList.add('playing');
                   _spBtn.title = 'Stop video';
                 } else {
