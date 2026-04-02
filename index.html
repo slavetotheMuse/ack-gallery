@@ -17281,7 +17281,7 @@
         }
 
         // ── Decoration count scaler: reduce decorations on artwork-heavy pages ──
-        var _artworkCount = allCards.length;
+        var _artworkCount = artworks.length;
         function _scaleDecoCount(baseCount) {
           if (_artworkCount <= 25) return baseCount;
           if (_artworkCount <= 40) return Math.max(6, Math.round(baseCount * 0.65));
