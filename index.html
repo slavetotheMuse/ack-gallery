@@ -8587,7 +8587,7 @@
         // On file:// Chrome CORS-mutes the media stream, so Web Audio graph gets silence.
         var audio; // declared in outer scope so audio.pause() works later
         function _playWhisperAudio() {
-          audio = new Audio('dreamsarewhispers.wav');
+          audio = new Audio('intro_sequence_audio.mp3');
           var _isLocal = window.location.protocol === 'file:';
 
           if (_isLocal) {
@@ -8642,7 +8642,7 @@
 
           }).catch(function(err) {
             console.warn('[ACK] Web Audio play failed:', err, '— trying plain fallback');
-            var fallbackAudio = new Audio('dreamsarewhispers.wav');
+            var fallbackAudio = new Audio('intro_sequence_audio.mp3');
             fallbackAudio.volume = 0.06;
             fallbackAudio.play().catch(function(err2) {
               console.warn('[ACK] Fallback audio also failed:', err2);
