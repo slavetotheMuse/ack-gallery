@@ -20848,6 +20848,9 @@
                   ? generateClownWireframe(localW, localH, pal)
                   : generateClownFrame(localW, localH, pal, artworkData.title, true);
                 node.appendChild(frameSvg);
+              } else if (_colName === '1 of 1s') {
+                const frameSvg = generate1of1Frame(localW, localH, artworkData.title);
+                node.appendChild(frameSvg);
               } else {
                 const frameSvg = generateOrnateFrame(localW, localH);
                 node.appendChild(frameSvg);
@@ -22038,6 +22041,8 @@
         frameSvg = generateSuperRareFrame(localW, localH, pal, artworkData.title, true);
       } else if (colName === '6529') {
         frameSvg = generate6529Frame(localW, localH, artworkData.title, true);
+      } else if (colName === '1 of 1s') {
+        frameSvg = generate1of1Frame(localW, localH, artworkData.title);
       } else if (artworkData.masterwork) {
         frameSvg = generateOrnateFrame(localW, localH);
       }
@@ -25100,6 +25105,432 @@
             gold + '0.22)', '0.5', '1'
           ));
         }
+      }
+
+      return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // ── 1-OF-1 THEMATIC FRAMES — unique per-artwork SVG frames ──
+    // ══════════════════════════════════════════════════════════════════
+    function generate1of1Frame(imgW, imgH, title) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 18;
+      const W = imgW + pad * 2, H = imgH + pad * 2;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.classList.add('ornate-frame-svg');
+      svg.style.left = -pad + 'px';
+      svg.style.top = -pad + 'px';
+      svg.style.width = W + 'px';
+      svg.style.height = H + 'px';
+
+      const L = 2, T = 2, R = W - 2, B = H - 2;
+      const cx = W / 2, cy = H / 2;
+
+      function el(tag, attrs) {
+        const e = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        return e;
+      }
+      function path(d, stroke, sw, opacity, fill) {
+        return el('path', { d: d, stroke: stroke || 'none', 'stroke-width': sw || '1', fill: fill || 'none', opacity: opacity || '1', 'stroke-linecap': 'round' });
+      }
+      function addDefs(svgEl, html) {
+        const defs = document.createElementNS(ns, 'defs');
+        defs.innerHTML = html;
+        svgEl.insertBefore(defs, svgEl.firstChild);
+      }
+
+      const t = (title || '').toLowerCase();
+
+      // ═══════════════════════════════════════════
+      // RIDDIKULUS! — Black ornate frame with circus tent drapes, stars, boggart swirls
+      // ═══════════════════════════════════════════
+      if (t.indexOf('riddikulus') !== -1) {
+        const blk = 'rgba(20,18,16,';
+        const red = 'rgba(140,30,25,';
+        const gold = 'rgba(200,170,90,';
+        const ghostW = 'rgba(200,200,210,';
+        // Thick black ornate outer border
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', blk+'0.9)', '3', '1'));
+        svg.appendChild(path('M '+(L+5)+' '+(T+5)+' L '+(R-5)+' '+(T+5)+' L '+(R-5)+' '+(B-5)+' L '+(L+5)+' '+(B-5)+' Z', blk+'0.6)', '1.2', '1'));
+        // Red and gold pinstripe between borders
+        svg.appendChild(path('M '+(L+8)+' '+(T+8)+' L '+(R-8)+' '+(T+8)+' L '+(R-8)+' '+(B-8)+' L '+(L+8)+' '+(B-8)+' Z', red+'0.5)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+10)+' '+(T+10)+' L '+(R-10)+' '+(T+10)+' L '+(R-10)+' '+(B-10)+' L '+(L+10)+' '+(B-10)+' Z', gold+'0.3)', '0.5', '1'));
+
+        // Corner flourishes — ornate black curls
+        var cLen = Math.min(60, Math.min(imgW, imgH) * 0.18);
+        [{x:L,y:T,dx:1,dy:1},{x:R,y:T,dx:-1,dy:1},{x:L,y:B,dx:1,dy:-1},{x:R,y:B,dx:-1,dy:-1}].forEach(function(c) {
+          // Large scroll curl
+          svg.appendChild(path(
+            'M '+c.x+' '+c.y+' C '+(c.x+c.dx*cLen*0.5)+' '+c.y+' '+(c.x+c.dx*cLen)+' '+(c.y+c.dy*cLen*0.3)+' '+(c.x+c.dx*cLen*0.8)+' '+(c.y+c.dy*cLen*0.8)+
+            ' S '+(c.x+c.dx*cLen*0.2)+' '+(c.y+c.dy*cLen*0.6)+' '+(c.x+c.dx*cLen*0.15)+' '+(c.y+c.dy*cLen*1.2),
+            blk+'0.85)', '2', '1'
+          ));
+          // Inner spiral
+          svg.appendChild(path(
+            'M '+(c.x+c.dx*12)+' '+(c.y+c.dy*12)+' Q '+(c.x+c.dx*25)+' '+(c.y+c.dy*5)+' '+(c.x+c.dx*30)+' '+(c.y+c.dy*20)+
+            ' T '+(c.x+c.dx*18)+' '+(c.y+c.dy*28),
+            blk+'0.55)', '1', '1'
+          ));
+          // Gold corner accent dot
+          svg.appendChild(el('circle', {cx:c.x+c.dx*4, cy:c.y+c.dy*4, r:'3', fill:gold+'0.5)', stroke:blk+'0.7)', 'stroke-width':'0.8'}));
+        });
+
+        // ── Circus tent drape scallops along top ──
+        var scW = Math.max(20, imgW / 12);
+        for (var sx = L + cLen; sx < R - cLen; sx += scW) {
+          svg.appendChild(path(
+            'M '+sx+' '+(T+1)+' Q '+(sx+scW/2)+' '+(T+14)+' '+(sx+scW)+' '+(T+1),
+            red+'0.45)', '1.2', '1'
+          ));
+          // Gold tassel at drape bottom
+          svg.appendChild(el('circle', {cx:(sx+scW/2), cy:(T+14), r:'1.5', fill:gold+'0.4)'}));
+        }
+
+        // ── Small stars scattered in frame margins ──
+        function star5(sx, sy, sr, opacity) {
+          var pts = '';
+          for (var i = 0; i < 10; i++) {
+            var a = (i / 10) * Math.PI * 2 - Math.PI/2;
+            var r2 = i % 2 === 0 ? sr : sr * 0.4;
+            pts += (sx + Math.cos(a) * r2).toFixed(1) + ',' + (sy + Math.sin(a) * r2).toFixed(1) + ' ';
+          }
+          return el('polygon', {points: pts.trim(), fill: gold + opacity + ')', stroke: 'none'});
+        }
+        // Scatter stars in corners and edges
+        svg.appendChild(star5(L+22, T+22, 4, '0.35'));
+        svg.appendChild(star5(R-22, T+22, 3.5, '0.3'));
+        svg.appendChild(star5(L+22, B-22, 3, '0.28'));
+        svg.appendChild(star5(R-22, B-22, 4, '0.32'));
+        svg.appendChild(star5(cx, T+8, 5, '0.25'));
+        svg.appendChild(star5(cx-40, T+12, 2.5, '0.2'));
+        svg.appendChild(star5(cx+40, T+12, 2.5, '0.2'));
+
+        // ── Ghostly boggart swirl wisps ──
+        svg.appendChild(path(
+          'M '+(L+6)+' '+(cy-30)+' Q '+(L+20)+' '+(cy-50)+' '+(L+8)+' '+(cy-70),
+          ghostW+'0.12)', '1.5', '1'
+        ));
+        svg.appendChild(path(
+          'M '+(R-6)+' '+(cy+30)+' Q '+(R-20)+' '+(cy+50)+' '+(R-8)+' '+(cy+70),
+          ghostW+'0.12)', '1.5', '1'
+        ));
+      }
+
+      // ═══════════════════════════════════════════
+      // PALE BLUE DEATH — Ethereal blue frame with subtle death motifs
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('pale blue death') !== -1) {
+        var blue = 'rgba(80,120,170,';
+        var paleB = 'rgba(140,170,210,';
+        var dkBlue = 'rgba(30,50,80,';
+        // Double line frame — pale blue wash
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', blue+'0.6)', '2.5', '1'));
+        svg.appendChild(path('M '+(L+6)+' '+(T+6)+' L '+(R-6)+' '+(T+6)+' L '+(R-6)+' '+(B-6)+' L '+(L+6)+' '+(B-6)+' Z', paleB+'0.25)', '0.8', '1'));
+        // Ethereal glow corners
+        [{x:L,y:T},{x:R,y:T},{x:L,y:B},{x:R,y:B}].forEach(function(c) {
+          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'12', fill: 'none', stroke: paleB+'0.15)', 'stroke-width':'8'}));
+          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'3', fill: blue+'0.45)'}));
+        });
+        // Subtle cross motifs (resurrection) along bottom
+        for (var bx = L+40; bx < R-40; bx += 60) {
+          svg.appendChild(path('M '+bx+' '+(B-3)+' L '+bx+' '+(B-12)', dkBlue+'0.2)', '0.8', '1'));
+          svg.appendChild(path('M '+(bx-3)+' '+(B-8)+' L '+(bx+3)+' '+(B-8)', dkBlue+'0.2)', '0.8', '1'));
+        }
+      }
+
+      // ═══════════════════════════════════════════
+      // THE EXPULSION FROM HEAVEN — Biblical/Renaissance gilt frame with divine rays
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('expulsion') !== -1) {
+        var gldE = 'rgba(185,155,80,';
+        var dkG = 'rgba(120,100,50,';
+        // Heavy gilt double border
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', gldE+'0.7)', '3.5', '1'));
+        svg.appendChild(path('M '+(L+7)+' '+(T+7)+' L '+(R-7)+' '+(T+7)+' L '+(R-7)+' '+(B-7)+' L '+(L+7)+' '+(B-7)+' Z', dkG+'0.45)', '1.5', '1'));
+        svg.appendChild(path('M '+(L+10)+' '+(T+10)+' L '+(R-10)+' '+(T+10)+' L '+(R-10)+' '+(B-10)+' L '+(L+10)+' '+(B-10)+' Z', gldE+'0.3)', '0.6', '1'));
+        // Divine rays emanating from top center
+        for (var ra = -40; ra <= 40; ra += 8) {
+          var angle = (ra * Math.PI / 180);
+          var rx1 = cx + Math.sin(angle) * 15;
+          var ry1 = T + 4;
+          var rx2 = cx + Math.sin(angle) * 90;
+          var ry2 = T + 4 - Math.cos(angle) * 20;
+          svg.appendChild(path('M '+rx1+' '+ry1+' L '+rx2+' '+Math.max(T-8, ry2), gldE+'0.15)', '0.6', '1'));
+        }
+        // Ornate corner filigree
+        [{x:L,y:T,dx:1,dy:1},{x:R,y:T,dx:-1,dy:1},{x:L,y:B,dx:1,dy:-1},{x:R,y:B,dx:-1,dy:-1}].forEach(function(c) {
+          var fl = Math.min(45, imgW * 0.12);
+          svg.appendChild(path(
+            'M '+c.x+' '+c.y+' Q '+(c.x+c.dx*fl)+' '+c.y+' '+(c.x+c.dx*fl*0.7)+' '+(c.y+c.dy*fl*0.7)+
+            ' T '+(c.x)+' '+(c.y+c.dy*fl),
+            gldE+'0.55)', '1.8', '1'
+          ));
+          svg.appendChild(el('circle', {cx:c.x+c.dx*3, cy:c.y+c.dy*3, r:'2.5', fill:gldE+'0.5)'}));
+        });
+      }
+
+      // ═══════════════════════════════════════════
+      // MIND CONTROL — Glitchy neon/digital frame with signal interference
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('mind control') !== -1) {
+        var neonG = 'rgba(0,255,120,';
+        var neonR = 'rgba(255,40,60,';
+        var dkMC = 'rgba(15,15,20,';
+        // Dark base border with neon accents
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', dkMC+'0.9)', '2.5', '1'));
+        // Glitchy offset lines — signal interference
+        svg.appendChild(path('M '+(L+3)+' '+(T+3)+' L '+(R-4)+' '+(T+3)', neonG+'0.4)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(T+5)+' L '+(R-3)+' '+(T+5)', neonR+'0.25)', '0.5', '1'));
+        svg.appendChild(path('M '+(L+3)+' '+(B-3)+' L '+(R-4)+' '+(B-3)', neonG+'0.35)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(B-5)+' L '+(R-3)+' '+(B-5)', neonR+'0.2)', '0.5', '1'));
+        // Vertical scan lines on sides
+        svg.appendChild(path('M '+(L+3)+' '+(T+10)+' L '+(L+3)+' '+(B-10)', neonG+'0.3)', '0.8', '1'));
+        svg.appendChild(path('M '+(R-3)+' '+(T+10)+' L '+(R-3)+' '+(B-10)', neonG+'0.3)', '0.8', '1'));
+        // Interference hash marks
+        for (var hy = T+20; hy < B-20; hy += 25) {
+          var hOff = (Math.sin(hy * 0.3) * 4).toFixed(1);
+          svg.appendChild(path('M '+(L+2)+' '+hy+' L '+(L+8+parseFloat(hOff))+' '+hy, neonG+'0.2)', '0.5', '1'));
+          svg.appendChild(path('M '+(R-2)+' '+(hy+3)+' L '+(R-7+parseFloat(hOff))+' '+(hy+3), neonR+'0.15)', '0.5', '1'));
+        }
+        // Corner targeting brackets
+        [{x:L,y:T,dx:1,dy:1},{x:R,y:T,dx:-1,dy:1},{x:L,y:B,dx:1,dy:-1},{x:R,y:B,dx:-1,dy:-1}].forEach(function(c) {
+          svg.appendChild(path('M '+(c.x+c.dx*20)+' '+c.y+' L '+c.x+' '+c.y+' L '+c.x+' '+(c.y+c.dy*20), neonG+'0.55)', '1.5', '1'));
+        });
+      }
+
+      // ═══════════════════════════════════════════
+      // NAH — Minimal punk frame with $nah coin motifs
+      // ═══════════════════════════════════════════
+      else if (t === 'nah') {
+        var teal = 'rgba(0,180,160,';
+        var dkN = 'rgba(20,25,30,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', dkN+'0.85)', '2', '1'));
+        svg.appendChild(path('M '+(L+5)+' '+(T+5)+' L '+(R-5)+' '+(T+5)+' L '+(R-5)+' '+(B-5)+' L '+(L+5)+' '+(B-5)+' Z', teal+'0.35)', '0.8', '1'));
+        // Diagonal slash marks — punk energy
+        for (var si = 0; si < 4; si++) {
+          var sx = L + 12 + si * 8;
+          svg.appendChild(path('M '+sx+' '+(T+2)+' L '+(sx+5)+' '+(T+12), teal+'0.25)', '0.7', '1'));
+        }
+        for (var si2 = 0; si2 < 4; si2++) {
+          var sx2 = R - 12 - si2 * 8;
+          svg.appendChild(path('M '+sx2+' '+(B-2)+' L '+(sx2-5)+' '+(B-12), teal+'0.25)', '0.7', '1'));
+        }
+      }
+
+      // ═══════════════════════════════════════════
+      // WHISPER OF THE MUSE — Soft warm Renaissance self-portrait frame
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('whisper') !== -1) {
+        var warmG = 'rgba(190,165,100,';
+        var softW = 'rgba(220,210,190,';
+        var deepG = 'rgba(140,120,70,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', warmG+'0.6)', '2.8', '1'));
+        svg.appendChild(path('M '+(L+6)+' '+(T+6)+' L '+(R-6)+' '+(T+6)+' L '+(R-6)+' '+(B-6)+' L '+(L+6)+' '+(B-6)+' Z', deepG+'0.35)', '1', '1'));
+        svg.appendChild(path('M '+(L+9)+' '+(T+9)+' L '+(R-9)+' '+(T+9)+' L '+(R-9)+' '+(B-9)+' L '+(L+9)+' '+(B-9)+' Z', softW+'0.15)', '0.5', '1'));
+        // Muse whisper swirls on sides
+        svg.appendChild(path('M '+(L+4)+' '+(cy-20)+' Q '+(L+15)+' '+cy+' '+(L+4)+' '+(cy+20), softW+'0.12)', '1.2', '1'));
+        svg.appendChild(path('M '+(R-4)+' '+(cy-20)+' Q '+(R-15)+' '+cy+' '+(R-4)+' '+(cy+20), softW+'0.12)', '1.2', '1'));
+        // Gentle corner curls
+        [{x:L,y:T,dx:1,dy:1},{x:R,y:T,dx:-1,dy:1},{x:L,y:B,dx:1,dy:-1},{x:R,y:B,dx:-1,dy:-1}].forEach(function(c) {
+          svg.appendChild(path(
+            'M '+c.x+' '+(c.y+c.dy*18)+' Q '+(c.x+c.dx*12)+' '+(c.y+c.dy*6)+' '+(c.x+c.dx*18)+' '+c.y,
+            warmG+'0.45)', '1.5', '1'
+          ));
+          svg.appendChild(el('circle', {cx:c.x+c.dx*2, cy:c.y+c.dy*2, r:'2', fill:warmG+'0.4)'}));
+        });
+      }
+
+      // ═══════════════════════════════════════════
+      // YOUR FAV CRYPTO INFLUENCER — Meme/social media style frame
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('crypto influencer') !== -1) {
+        var pink = 'rgba(220,60,120,';
+        var cyan = 'rgba(60,200,230,';
+        var dkCI = 'rgba(25,20,30,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', dkCI+'0.85)', '2.5', '1'));
+        // Gradient-like dual lines (pink + cyan = social media aesthetic)
+        svg.appendChild(path('M '+(L+4)+' '+(T+4)+' L '+(R-4)+' '+(T+4)', pink+'0.45)', '1.2', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(T+7)+' L '+(R-4)+' '+(T+7)', cyan+'0.35)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(B-4)+' L '+(R-4)+' '+(B-4)', cyan+'0.45)', '1.2', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(B-7)+' L '+(R-4)+' '+(B-7)', pink+'0.35)', '0.8', '1'));
+        // Side accents
+        svg.appendChild(path('M '+(L+4)+' '+(T+12)+' L '+(L+4)+' '+(B-12)', pink+'0.2)', '0.6', '1'));
+        svg.appendChild(path('M '+(R-4)+' '+(T+12)+' L '+(R-4)+' '+(B-12)', cyan+'0.2)', '0.6', '1'));
+      }
+
+      // ═══════════════════════════════════════════
+      // I'MA FUCK UP MY LIFE — Raw, distressed frame
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('fuck up') !== -1) {
+        var rawR = 'rgba(160,40,40,';
+        var rawBk = 'rgba(30,25,25,';
+        var rawW = 'rgba(200,190,180,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', rawBk+'0.9)', '3', '1'));
+        // Rough scratched inner border — uneven, raw
+        svg.appendChild(path('M '+(L+4)+' '+(T+6)+' L '+(R-6)+' '+(T+4)+' L '+(R-4)+' '+(B-5)+' L '+(L+6)+' '+(B-4)+' Z', rawR+'0.4)', '1', '1'));
+        // Drip marks from top
+        for (var di = 0; di < 5; di++) {
+          var dx = L + 30 + di * (imgW / 5);
+          var dLen = 8 + Math.sin(di * 2.7) * 6;
+          svg.appendChild(path('M '+dx+' '+(T+2)+' L '+(dx+1)+' '+(T+2+dLen), rawR+'0.25)', '0.8', '1'));
+        }
+      }
+
+      // ═══════════════════════════════════════════
+      // SCARE CITY — Cinematic noir frame with urban isolation
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('scare city') !== -1) {
+        var scDk = 'rgba(20,30,35,';
+        var scTeal = 'rgba(60,140,130,';
+        var scFog = 'rgba(120,140,140,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', scDk+'0.9)', '2.5', '1'));
+        svg.appendChild(path('M '+(L+5)+' '+(T+5)+' L '+(R-5)+' '+(T+5)+' L '+(R-5)+' '+(B-5)+' L '+(L+5)+' '+(B-5)+' Z', scTeal+'0.25)', '0.7', '1'));
+        // Road line dashes along bottom (isolation highway motif)
+        for (var ri = L+30; ri < R-30; ri += 18) {
+          svg.appendChild(path('M '+ri+' '+(B-3)+' L '+(ri+8)+' '+(B-3), scFog+'0.25)', '1.2', '1'));
+        }
+      }
+
+      // ═══════════════════════════════════════════
+      // THE CONTEMPLATION — Minimal somber frame (color and death)
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('contemplation') !== -1) {
+        var contDk = 'rgba(40,35,45,';
+        var contP = 'rgba(120,80,140,';
+        var contG = 'rgba(170,155,120,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', contDk+'0.75)', '2', '1'));
+        svg.appendChild(path('M '+(L+8)+' '+(T+8)+' L '+(R-8)+' '+(T+8)+' L '+(R-8)+' '+(B-8)+' L '+(L+8)+' '+(B-8)+' Z', contP+'0.2)', '0.6', '1'));
+        // Single contemplative vertical line — centered gravity
+        svg.appendChild(path('M '+cx+' '+(T+3)+' L '+cx+' '+(T+14), contG+'0.2)', '0.5', '1'));
+        svg.appendChild(path('M '+cx+' '+(B-3)+' L '+cx+' '+(B-14), contG+'0.2)', '0.5', '1'));
+      }
+
+      // ═══════════════════════════════════════════
+      // PEPE WITH A BALLOON — Playful meme frame with balloon string
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('pepe') !== -1) {
+        var pepeG = 'rgba(50,140,60,';
+        var pepeY = 'rgba(200,180,60,';
+        var pepeBk = 'rgba(25,30,25,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', pepeBk+'0.85)', '2', '1'));
+        svg.appendChild(path('M '+(L+5)+' '+(T+5)+' L '+(R-5)+' '+(T+5)+' L '+(R-5)+' '+(B-5)+' L '+(L+5)+' '+(B-5)+' Z', pepeG+'0.3)', '0.8', '1'));
+        // Balloon string floating from top right corner
+        svg.appendChild(path(
+          'M '+(R-15)+' '+(T+2)+' Q '+(R-25)+' '+(T+35)+' '+(R-18)+' '+(T+50),
+          pepeY+'0.3)', '0.8', '1'
+        ));
+        // Small balloon circle
+        svg.appendChild(el('circle', {cx:(R-15), cy:(T-2), r:'5', fill:'none', stroke:pepeY+'0.3)', 'stroke-width':'0.8'}));
+      }
+
+      // ═══════════════════════════════════════════
+      // THE ETHEREAL ROSE — Delicate botanical frame with thorn accents
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('ethereal rose') !== -1) {
+        var roseP = 'rgba(180,80,120,';
+        var roseG = 'rgba(80,120,70,';
+        var roseGld = 'rgba(200,180,120,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', roseGld+'0.5)', '2', '1'));
+        svg.appendChild(path('M '+(L+6)+' '+(T+6)+' L '+(R-6)+' '+(T+6)+' L '+(R-6)+' '+(B-6)+' L '+(L+6)+' '+(B-6)+' Z', roseP+'0.2)', '0.6', '1'));
+        // Vine curves along sides
+        svg.appendChild(path('M '+(L+3)+' '+(T+30)+' Q '+(L+12)+' '+(cy-20)+' '+(L+3)+' '+cy+' Q '+(L+10)+' '+(cy+20)+' '+(L+3)+' '+(B-30), roseG+'0.25)', '1', '1'));
+        svg.appendChild(path('M '+(R-3)+' '+(T+30)+' Q '+(R-12)+' '+(cy-20)+' '+(R-3)+' '+cy+' Q '+(R-10)+' '+(cy+20)+' '+(R-3)+' '+(B-30), roseG+'0.25)', '1', '1'));
+        // Thorn accents
+        for (var ti = 0; ti < 3; ti++) {
+          var ty = T + 50 + ti * 40;
+          svg.appendChild(path('M '+(L+5)+' '+ty+' L '+(L+10)+' '+(ty-4)+' L '+(L+5)+' '+(ty-2), roseG+'0.2)', '0.5', '1'));
+        }
+        // Rose petal accent corners
+        [{x:L+3,y:T+3},{x:R-3,y:B-3}].forEach(function(c) {
+          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'4', fill:'none', stroke:roseP+'0.25)', 'stroke-width':'0.8'}));
+          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'1.5', fill:roseP+'0.3)'}));
+        });
+      }
+
+      // ═══════════════════════════════════════════
+      // RELATIVITY — Impossible geometry frame (Escher-inspired)
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('relativity') !== -1) {
+        var relBk = 'rgba(30,30,35,';
+        var relW = 'rgba(180,180,190,';
+        var relGy = 'rgba(100,100,110,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', relBk+'0.85)', '2', '1'));
+        // Impossible staircase motif along edges
+        var stepW = 12, stepH = 6;
+        // Top edge — ascending stairs left to right
+        for (var sx3 = L+15; sx3 < R-30; sx3 += stepW) {
+          var iy = T + 4 + ((sx3 - L) % (stepH * 4));
+          svg.appendChild(path('M '+sx3+' '+(T+4)+' L '+sx3+' '+(T+4+stepH)+' L '+(sx3+stepW)+' '+(T+4+stepH), relW+'0.15)', '0.7', '1'));
+        }
+        // Perspective vanishing lines from corners
+        svg.appendChild(path('M '+L+' '+T+' L '+cx+' '+cy, relGy+'0.06)', '0.5', '1'));
+        svg.appendChild(path('M '+R+' '+T+' L '+cx+' '+cy, relGy+'0.06)', '0.5', '1'));
+        svg.appendChild(path('M '+L+' '+B+' L '+cx+' '+cy, relGy+'0.06)', '0.5', '1'));
+        svg.appendChild(path('M '+R+' '+B+' L '+cx+' '+cy, relGy+'0.06)', '0.5', '1'));
+        // Corner cubes (wireframe)
+        [{x:L+6,y:T+6},{x:R-6,y:T+6},{x:L+6,y:B-6},{x:R-6,y:B-6}].forEach(function(c) {
+          svg.appendChild(path('M '+c.x+' '+c.y+' L '+(c.x+6)+' '+(c.y-3)+' L '+(c.x+12)+' '+c.y+' L '+(c.x+6)+' '+(c.y+3)+' Z', relW+'0.2)', '0.6', '1'));
+        });
+      }
+
+      // ═══════════════════════════════════════════
+      // TIL DEATH DO US PART — Evolution frame with life/death duality
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('til death') !== -1) {
+        var tdBk = 'rgba(25,20,20,';
+        var tdGld = 'rgba(190,170,110,';
+        var tdBone = 'rgba(200,190,170,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', tdBk+'0.9)', '2.5', '1'));
+        svg.appendChild(path('M '+(L+6)+' '+(T+6)+' L '+(R-6)+' '+(T+6)+' L '+(R-6)+' '+(B-6)+' L '+(L+6)+' '+(B-6)+' Z', tdGld+'0.3)', '1', '1'));
+        // Life/death duality — left side warm, right side cold
+        svg.appendChild(path('M '+(L+3)+' '+(T+15)+' L '+(L+3)+' '+(B-15)', 'rgba(180,120,60,0.2)', '1.5', '1'));
+        svg.appendChild(path('M '+(R-3)+' '+(T+15)+' L '+(R-3)+' '+(B-15)', 'rgba(80,90,110,0.2)', '1.5', '1'));
+        // Time marker ticks along bottom (evolution timeline)
+        var ticks = 37; // number of arweave updates
+        var tickSp = (R - L - 30) / ticks;
+        for (var ti2 = 0; ti2 < ticks; ti2++) {
+          var tx = L + 15 + ti2 * tickSp;
+          svg.appendChild(path('M '+tx+' '+(B-2)+' L '+tx+' '+(B-6), tdGld+((ti2 === ticks-1) ? '0.5' : '0.15')+')', '0.5', '1'));
+        }
+        // Ring motifs in corners (wedding/commitment)
+        [{x:L+10,y:T+10},{x:R-10,y:B-10}].forEach(function(c) {
+          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'6', fill:'none', stroke:tdGld+'0.25)', 'stroke-width':'0.8'}));
+          svg.appendChild(el('circle', {cx:c.x+4, cy:c.y, r:'6', fill:'none', stroke:tdGld+'0.2)', 'stroke-width':'0.6'}));
+        });
+      }
+
+      // ═══════════════════════════════════════════
+      // GAS OPTIMIZED (L2) — Digital/tech frame with blockchain motifs
+      // ═══════════════════════════════════════════
+      else if (t.indexOf('gas optimized') !== -1) {
+        var goBlue = 'rgba(50,100,220,';
+        var goOrg = 'rgba(220,120,40,';
+        var goBk = 'rgba(15,18,25,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', goBk+'0.9)', '2', '1'));
+        // Circuit trace lines
+        svg.appendChild(path('M '+(L+4)+' '+(T+4)+' L '+(L+20)+' '+(T+4)+' L '+(L+24)+' '+(T+8)+' L '+(R-24)+' '+(T+8)+' L '+(R-20)+' '+(T+4)+' L '+(R-4)+' '+(T+4), goBlue+'0.35)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(B-4)+' L '+(L+20)+' '+(B-4)+' L '+(L+24)+' '+(B-8)+' L '+(R-24)+' '+(B-8)+' L '+(R-20)+' '+(B-4)+' L '+(R-4)+' '+(B-4), goBlue+'0.35)', '0.8', '1'));
+        // Block nodes at junctions
+        [{x:L+24,y:T+8},{x:R-24,y:T+8},{x:L+24,y:B-8},{x:R-24,y:B-8}].forEach(function(c) {
+          svg.appendChild(el('rect', {x:c.x-2, y:c.y-2, width:'4', height:'4', fill:goBlue+'0.3)', rx:'0.5'}));
+        });
+        // Flame/burn accent (gas)
+        svg.appendChild(path('M '+cx+' '+(B-3)+' Q '+(cx-6)+' '+(B-14)+' '+cx+' '+(B-18)+' Q '+(cx+6)+' '+(B-14)+' '+cx+' '+(B-3), goOrg+'0.2)', '0.7', '1'));
+      }
+
+      // ═══════════════════════════════════════════
+      // DEFAULT FALLBACK — Elegant minimal frame
+      // ═══════════════════════════════════════════
+      else {
+        var defG = 'rgba(180,160,110,';
+        svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', defG+'0.5)', '2', '1'));
+        svg.appendChild(path('M '+(L+6)+' '+(T+6)+' L '+(R-6)+' '+(T+6)+' L '+(R-6)+' '+(B-6)+' L '+(L+6)+' '+(B-6)+' Z', defG+'0.2)', '0.6', '1'));
+        [{x:L,y:T},{x:R,y:T},{x:L,y:B},{x:R,y:B}].forEach(function(c) {
+          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'2.5', fill:defG+'0.4)'}));
+        });
       }
 
       return svg;
