@@ -20213,7 +20213,7 @@
         // ── "Touch to experience full resolution" hint — pulses softly above artwork ──
         var _touchHint = document.createElement('div');
         _touchHint.className = 'focus-touch-hint';
-        _touchHint.innerHTML = '<span style="font-size:5px;opacity:0.5;line-height:1;">▸</span><span>full resolution</span>';
+        _touchHint.innerHTML = '<span style="font-size:5px;opacity:0.5;line-height:1;">▸</span><span>touch for full resolution</span>';
         _touchHint.id = 'focusTouchHint';
         node.appendChild(_touchHint);
         // On mobile: pause all non-essential rendering to free memory
@@ -20668,6 +20668,12 @@
             if (preview) {
               const borderW = 0.5 / scaleFactor;
               preview.style.boxShadow = `inset 0 0 0 ${borderW}px rgba(220,150,50,0.35), 0 4px 12px rgba(0,0,0,0.5), 0 12px 28px rgba(0,0,0,0.25)`;
+            }
+            // Counter-scale the "touch for full resolution" hint so it stays small
+            const _focusHint = node.querySelector('.focus-touch-hint');
+            if (_focusHint) {
+              _focusHint.style.transform = `scale(${invScale})`;
+              _focusHint.style.transformOrigin = 'left bottom';
             }
           }
         });
@@ -33723,12 +33729,40 @@
       if (_myBagsLoading) return;
       _myBagsLoading = true;
 
-      // Close any open detail view first (e.g. when navigating from collectors popup)
-      // Track whether we need to wait for close animation to complete
+      // If a detail view is already open (e.g. navigating from collector popup in focus view),
+      // do a lightweight teardown instead of the full closeDetail() which flashes the home catalog.
       var _needsCloseWait = false;
-      if (document.getElementById('detailOverlay') && document.getElementById('detailOverlay').classList.contains('active')) {
-        closeDetail();
+      var _overlayEl = document.getElementById('detailOverlay');
+      if (_overlayEl && _overlayEl.classList.contains('active')) {
+        // Lightweight close: tear down focus mode and clear content without scatter-to-home
+        exitFocusMode();
+        clearDetailConnectionWires();
+        _hideMobileBack();
+        hideEscHint();
+        _stopServantMusic();
+        _removeLoreNode();
+        var _navCtBags = document.getElementById('navCenterTitle');
+        if (_navCtBags) { _navCtBags.textContent = ''; _navCtBags.classList.remove('visible'); }
+        updateMotherboardTickers(null, null);
+        // Fade out current content quickly
+        var _contentEl = document.getElementById('detailContent');
+        if (_contentEl) {
+          _contentEl.style.transition = 'opacity 0.25s ease';
+          _contentEl.style.opacity = '0';
+        }
+        // Clean up candle wires
+        var _cwSvg = document.getElementById('candleWires');
+        var _detCanvas = document.querySelector('.node-graph-canvas');
+        if (_detCanvas && _detCanvas._candleWireCleanup) _detCanvas._candleWireCleanup();
+        if (_cwSvg) _cwSvg.remove();
+        // Remove the overlay content after fade, but keep overlay element active
+        // so openDetail can reuse it without flashing the catalog
         _needsCloseWait = true;
+        // Mark overlay as ready for reuse (openDetail will clear and rebuild content)
+        setTimeout(function() {
+          if (_contentEl) _contentEl.innerHTML = '';
+          _overlayEl.classList.remove('active');
+        }, 280);
       }
 
       var shortAddr = ACK_CHAIN.shortAddr(walletAddr);
@@ -33873,9 +33907,8 @@
         COLLECTIONS.push(bagsCollection);
 
         // Open through the standard detail path
-        // If we called closeDetail(), wait for its 550ms animation + buffer before opening
-        // Otherwise the closeDetail timeout fires AFTER openDetail and removes the overlay
-        var _openBagsDelay = _needsCloseWait ? 650 : 0;
+        // Lightweight close only needs ~300ms (fade out + cleanup), not the full 650ms scatter
+        var _openBagsDelay = _needsCloseWait ? 320 : 0;
         setTimeout(function() {
           openDetail(_myBagsCollectionIndex);
         }, _openBagsDelay);
