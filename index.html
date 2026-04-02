@@ -2247,6 +2247,32 @@
       transition: opacity 0.4s ease;
     }
 
+    /* ── Global bags decoration nodes ── */
+    .bags-global-deco {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes bagsDecoFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      33% { transform: translateY(-4px) rotate(1.5deg); }
+      66% { transform: translateY(2px) rotate(-1deg); }
+    }
+    @keyframes bagsDecoSway {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(5px); }
+    }
+    .bags-global-deco {
+      animation:
+        bagsDecoFloat var(--float-dur, 9s) ease-in-out var(--float-delay, 0s) infinite,
+        bagsDecoSway var(--sway-dur, 11s) ease-in-out var(--sway-delay, 0s) infinite;
+    }
+    /* Hide global decos during focus mode */
+    .node-graph-inner.focus-mode .bags-global-deco {
+      opacity: 0 !important;
+      transition: opacity 0.4s ease;
+    }
+
     /* Masterwork focus mode: pan/zoom on the preview */
     .node-card.focused.masterwork-node .node-preview {
       cursor: grab;
@@ -15082,7 +15108,7 @@
                   'Warothys':                 { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.85 },
                   'servants':                 { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.75 },
                   'Starry Nights':            { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.75 },
-                  'Broken Keys':              { baseSF: 0.55, maxPerRow: 8, tier: 'medium', fewSF: 1.20 },
+                  'Broken Keys':              { baseSF: 0.65, maxPerRow: 8, tier: 'medium', fewSF: 1.35 },
                   'ACKPFP':                   { baseSF: 0.75, maxPerRow: 5, tier: 'medium', fewSF: 1.0 },
                   'Heart You':                { baseSF: 0.70, maxPerRow: 4, tier: 'medium', fewSF: 1.0 },
                   'ACK Editions':             { baseSF: 0.90, maxPerRow: 4, tier: 'medium', fewSF: 1.10 },
@@ -15106,8 +15132,8 @@
                   const t = (grpCount - 3) / 7; // 0 at 3, 1 at 10
                   sf = r.fewSF * (1 - t) + r.baseSF * t;
                 }
-                // Broken Keys special: "always pretty big" per user — min sizeFactor 1.0 when ≤ 6 pieces
-                if (colName === 'Broken Keys' && grpCount <= 6) sf = Math.max(sf, 1.0);
+                // Broken Keys special: "always pretty big" per user — always at least 1.1x
+                if (colName === 'Broken Keys') sf = Math.max(sf, 1.10);
                 return { sizeFactor: sf, maxPerRow: r.maxPerRow, tier: r.tier };
               }
 
@@ -15136,11 +15162,11 @@
               });
 
               // Determine base card width from available space and total count
-              // Use a tighter horizontal target (~65% of viewport width) to avoid spreading too wide
+              // Use generous sizing — fill more of the viewport, cards should feel substantial
               const _totalPieces = count;
-              const _targetW = _bagsAvailW * 0.72; // don't use full width — keep it pulled in
-              const _densityFactor = _totalPieces <= 4 ? 0.42 : _totalPieces <= 8 ? 0.34 : _totalPieces <= 16 ? 0.26 : _totalPieces <= 30 ? 0.20 : 0.15;
-              const _baseCardW = Math.min(340, Math.max(90, Math.sqrt((_targetW * _bagsAvailH * _densityFactor) / _totalPieces)));
+              const _targetW = _bagsAvailW * 0.82; // use most of the width
+              const _densityFactor = _totalPieces <= 4 ? 0.52 : _totalPieces <= 8 ? 0.42 : _totalPieces <= 16 ? 0.32 : _totalPieces <= 30 ? 0.24 : 0.18;
+              const _baseCardW = Math.min(400, Math.max(100, Math.sqrt((_targetW * _bagsAvailH * _densityFactor) / _totalPieces)));
 
               // ── Layout each group, placing groups in a flowing arrangement ──
               // We use a "zone" approach: divide viewport into regions and assign groups
@@ -15215,8 +15241,8 @@
               const _interGroupGap = Math.round(_bagsGap * 1.5);
 
               _groupBoxes.forEach((gb, gi) => {
-                // Check if group fits on current shelf (use tighter target width)
-                const _shelfMaxW = _targetW + _bagsPad;
+                // Check if group fits on current shelf
+                const _shelfMaxW = vpW - _bagsPad;
                 if (_shelfX + gb.grpW > _shelfMaxW && _shelfX > _bagsPad + 10) {
                   // Move to next shelf
                   _shelfY += _shelfMaxH + _interGroupGap;
@@ -17383,6 +17409,134 @@
 
             // Store ambient nodes on inner for wire drawing access
             inner._bagsAmbientNodes = _bagsAmbientNodes;
+
+            // ── MY BAGS: Global decoration scatter — my_bags_decoration.png + subtle SVG accents ──
+            // Spread small decoration nodes across the entire bags page (not tied to a specific collection)
+            (function() {
+              var allCards = inner.querySelectorAll('.node-card');
+              if (allCards.length === 0) return;
+
+              // Compute bounding box of ALL artwork cards
+              var globalMinX = Infinity, globalMinY = Infinity, globalMaxX = 0, globalMaxY = 0;
+              allCards.forEach(function(c) {
+                var cx = parseFloat(c.style.left) || 0;
+                var cy = parseFloat(c.style.top) || 0;
+                var cw = parseFloat(c.style.width) || 200;
+                var ch = c.offsetHeight || 200;
+                globalMinX = Math.min(globalMinX, cx);
+                globalMinY = Math.min(globalMinY, cy);
+                globalMaxX = Math.max(globalMaxX, cx + cw);
+                globalMaxY = Math.max(globalMaxY, cy + ch);
+              });
+
+              // Expand scatter zone beyond cards into margins
+              var scatterPad = 100;
+              var sMinX = Math.max(20, globalMinX - scatterPad);
+              var sMinY = Math.max(20, globalMinY - scatterPad);
+              var sMaxX = Math.min(vpW - 20, globalMaxX + scatterPad);
+              var sMaxY = Math.min(vpH - 160, globalMaxY + scatterPad);
+
+              // Number of decos scales with artwork count — more pieces = more scattered decos
+              var decoCount = Math.min(14, Math.max(5, Math.round(allCards.length * 0.5)));
+
+              // Collect card rects for collision avoidance
+              var cardRects = [];
+              allCards.forEach(function(c) {
+                cardRects.push({
+                  x: parseFloat(c.style.left) || 0,
+                  y: parseFloat(c.style.top) || 0,
+                  w: parseFloat(c.style.width) || 200,
+                  h: c.offsetHeight || 200
+                });
+              });
+
+              for (var di = 0; di < decoCount; di++) {
+                var dx, dy, att = 0;
+                do {
+                  dx = sMinX + Math.random() * (sMaxX - sMinX);
+                  dy = sMinY + Math.random() * (sMaxY - sMinY);
+                  var tooClose = false;
+                  for (var ci = 0; ci < cardRects.length; ci++) {
+                    var r = cardRects[ci];
+                    if (dx > r.x - 20 && dx < r.x + r.w + 20 && dy > r.y - 20 && dy < r.y + r.h + 20) {
+                      tooClose = true; break;
+                    }
+                  }
+                  if (!tooClose) break;
+                  att++;
+                } while (att < 50);
+
+                var decoSize = 18 + Math.random() * 22; // 18-40px — small and subtle
+                var decoEl = document.createElement('div');
+                decoEl.className = 'bags-global-deco';
+                decoEl.style.position = 'absolute';
+                decoEl.style.left = (dx - decoSize / 2) + 'px';
+                decoEl.style.top = (dy - decoSize / 2) + 'px';
+                decoEl.style.width = decoSize + 'px';
+                decoEl.style.height = decoSize + 'px';
+                decoEl.style.opacity = '0';
+                decoEl.style.transition = 'opacity 1.2s ease';
+                decoEl.style.pointerEvents = 'none';
+                decoEl.style.zIndex = '0';
+
+                // Alternate between my_bags_decoration.png and subtle SVG accent shapes
+                if (di % 3 === 0 || di % 3 === 1) {
+                  // Use my_bags_decoration.png
+                  var dImg = document.createElement('img');
+                  dImg.src = 'my_bags_decoration.png';
+                  dImg.alt = '';
+                  dImg.loading = 'lazy';
+                  dImg.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:0.25;filter:grayscale(0.3);';
+                  // Slight rotation for organic feel
+                  dImg.style.transform = 'rotate(' + (Math.random() * 40 - 20).toFixed(0) + 'deg)';
+                  decoEl.appendChild(dImg);
+                } else {
+                  // SVG accent — small diamond/dot/cross shapes for visual texture
+                  var accSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  accSvg.setAttribute('viewBox', '0 0 24 24');
+                  accSvg.style.cssText = 'width:100%;height:100%;opacity:0.12;';
+                  var shapes = ['diamond', 'cross', 'circle'];
+                  var shapeType = shapes[di % shapes.length];
+                  if (shapeType === 'diamond') {
+                    var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                    poly.setAttribute('points', '12,2 22,12 12,22 2,12');
+                    poly.setAttribute('fill', 'none');
+                    poly.setAttribute('stroke', 'rgba(180,160,120,0.6)');
+                    poly.setAttribute('stroke-width', '1');
+                    accSvg.appendChild(poly);
+                  } else if (shapeType === 'cross') {
+                    var l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    l1.setAttribute('x1', '4'); l1.setAttribute('y1', '12');
+                    l1.setAttribute('x2', '20'); l1.setAttribute('y2', '12');
+                    l1.setAttribute('stroke', 'rgba(180,160,120,0.5)'); l1.setAttribute('stroke-width', '1');
+                    var l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    l2.setAttribute('x1', '12'); l2.setAttribute('y1', '4');
+                    l2.setAttribute('x2', '12'); l2.setAttribute('y2', '20');
+                    l2.setAttribute('stroke', 'rgba(180,160,120,0.5)'); l2.setAttribute('stroke-width', '1');
+                    accSvg.appendChild(l1); accSvg.appendChild(l2);
+                  } else {
+                    var circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circ.setAttribute('cx', '12'); circ.setAttribute('cy', '12'); circ.setAttribute('r', '6');
+                    circ.setAttribute('fill', 'none');
+                    circ.setAttribute('stroke', 'rgba(180,160,120,0.4)');
+                    circ.setAttribute('stroke-width', '1');
+                    accSvg.appendChild(circ);
+                  }
+                  decoEl.appendChild(accSvg);
+                }
+
+                // Gentle floating animation via CSS custom properties
+                decoEl.style.setProperty('--sway-dur', (8 + Math.random() * 6).toFixed(1) + 's');
+                decoEl.style.setProperty('--sway-delay', (-Math.random() * 10).toFixed(1) + 's');
+                decoEl.style.setProperty('--float-dur', (8 + Math.random() * 6).toFixed(1) + 's');
+                decoEl.style.setProperty('--float-delay', (-Math.random() * 10).toFixed(1) + 's');
+
+                inner.appendChild(decoEl);
+                var _diDelay = di;
+                setTimeout(function() { decoEl.style.opacity = '1'; }, 1500 + _diDelay * 150);
+              }
+            })();
+
           })();
         }
 
