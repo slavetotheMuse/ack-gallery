@@ -7434,6 +7434,48 @@
         });
       }
 
+      // ── Get owners for MULTIPLE token IDs (editions) and aggregate ──
+      // Returns array of { address, balance } sorted by balance desc
+      function getOwnersForTokenIds(contract, tokenIds) {
+        if (!tokenIds || tokenIds.length === 0) return Promise.resolve([]);
+        if (tokenIds.length === 1) return getOwnersWithBalances(contract, tokenIds[0]);
+        var cacheKey = contract.toLowerCase() + ':multiOwners:' + tokenIds.join(',');
+        if (_cache[cacheKey]) return Promise.resolve(_cache[cacheKey]);
+        // Query owners for each token ID in parallel (batched in groups of 10)
+        var batches = [];
+        for (var i = 0; i < tokenIds.length; i += 10) {
+          batches.push(tokenIds.slice(i, i + 10));
+        }
+        function processBatch(batch) {
+          return Promise.all(batch.map(function(tid) {
+            return getOwners(contract, tid).then(function(data) {
+              return (data && data.owners) ? data.owners : [];
+            }).catch(function() { return []; });
+          }));
+        }
+        // Process batches sequentially to avoid rate limits
+        var allOwners = {};
+        function nextBatch(idx) {
+          if (idx >= batches.length) {
+            var result = Object.keys(allOwners).map(function(addr) {
+              return { address: addr, balance: allOwners[addr] };
+            }).sort(function(a, b) { return b.balance - a.balance; });
+            _cache[cacheKey] = result;
+            return Promise.resolve(result);
+          }
+          return processBatch(batches[idx]).then(function(batchResults) {
+            batchResults.forEach(function(owners) {
+              owners.forEach(function(addr) {
+                var lc = addr.toLowerCase();
+                allOwners[lc] = (allOwners[lc] || 0) + 1;
+              });
+            });
+            return nextBatch(idx + 1);
+          });
+        }
+        return nextBatch(0);
+      }
+
       // ── Public API ──
       return {
         ALCHEMY_API_KEY: ALCHEMY_API_KEY,
@@ -7441,6 +7483,7 @@
         getNFTMetadata: getNFTMetadata,
         getOwners: getOwners,
         getOwnersWithBalances: getOwnersWithBalances,
+        getOwnersForTokenIds: getOwnersForTokenIds,
         getFloorPrice: getFloorPrice,
         getNFTSales: getNFTSales,
         getCollection: getCollection,
@@ -7816,12 +7859,12 @@
           description: "Opepen Set 030: a.c.k. — AlphaCentauriKid's contribution to Jack Butcher's Opepen Edition. Six artworks across edition tiers, each reimagining the Opepen silhouette through ACK's signature collage of classical art, skulls, and Muse mythology.",
           token: "ERC-721", chain: "Ethereum", contract: "0x6339e5e072086621540d0362c4e3cea0d643e114",
           artworks: [
-            {title:"supernatural",image:"opepen/web/supernatural_web.jpg",fullRes:"opepen/Opepen supernatural.png",edition:"1 of 1",description:"The 1/1. Classical figures entwined in supernatural ascension — the rarest tier of Set 030."},
-            {title:"the servant",image:"opepen/web/the_servant_web.jpg",fullRes:"opepen/Opepen the servant.png",edition:"1 of 4",description:"Edition of 4. The servant coin reimagined as an Opepen — clockwork devotion to the Muse."},
-            {title:"romeopepen",image:"opepen/web/romeopepen_web.jpg",fullRes:"opepen/Opepen romeopepen (1).png",edition:"1 of 5",description:"Edition of 5. Romeo and Juliet retold through moonlit balcony and wisteria — a nocturnal love letter."},
-            {title:"Muse T.V.",image:"opepen/web/musetv_web.jpg",fullRes:"opepen/Opepen Muse T.V. (1).png",edition:"1 of 10",description:"Edition of 10. The Muse broadcasts through static and skeleton — a memento mori for the screen age."},
-            {title:"tiptoe",image:"opepen/web/tiptoe_web.jpg",fullRes:"opepen/Opepen tiptoe (1).png",edition:"1 of 20",description:"Edition of 20. A piano skeleton dances on water's edge — music and mortality in delicate balance."},
-            {title:"da Vinci van Gogh",image:"opepen/web/davinci_vangogh_web.jpg",fullRes:"opepen/Opepen da Vinci van Gogh (1).png",edition:"1 of 40",description:"Edition of 40. Two skulls bloom with Van Gogh's almond blossoms — masters merged in memento mori."}
+            {title:"supernatural",image:"opepen/web/supernatural_web.jpg",fullRes:"opepen/Opepen supernatural.png",edition:"1 of 1",tokenId:10633,tokenIds:[10633],description:"The 1/1. Classical figures entwined in supernatural ascension — the rarest tier of Set 030."},
+            {title:"the servant",image:"opepen/web/the_servant_web.jpg",fullRes:"opepen/Opepen the servant.png",edition:"1 of 4",tokenId:6171,tokenIds:[6171,12317,13256,13647],description:"Edition of 4. The servant coin reimagined as an Opepen — clockwork devotion to the Muse."},
+            {title:"romeopepen",image:"opepen/web/romeopepen_web.jpg",fullRes:"opepen/Opepen romeopepen (1).png",edition:"1 of 5",tokenId:1275,tokenIds:[1275,7367,9583,13125,15236],description:"Edition of 5. Romeo and Juliet retold through moonlit balcony and wisteria — a nocturnal love letter."},
+            {title:"Muse T.V.",image:"opepen/web/musetv_web.jpg",fullRes:"opepen/Opepen Muse T.V. (1).png",edition:"1 of 10",tokenId:4584,tokenIds:[4584,4645,6466,6601,8517,8932,9854,12244,13740,15516],description:"Edition of 10. The Muse broadcasts through static and skeleton — a memento mori for the screen age."},
+            {title:"tiptoe",image:"opepen/web/tiptoe_web.jpg",fullRes:"opepen/Opepen tiptoe (1).png",edition:"1 of 20",tokenId:216,tokenIds:[216,1553,2383,3252,3692,4202,5501,6192,6669,7282,7858,8026,8132,8942,12149,12386,12910,13139,14008,15324],description:"Edition of 20. A piano skeleton dances on water's edge — music and mortality in delicate balance."},
+            {title:"da Vinci van Gogh",image:"opepen/web/davinci_vangogh_web.jpg",fullRes:"opepen/Opepen da Vinci van Gogh (1).png",edition:"1 of 40",tokenId:7,tokenIds:[7,785,1485,1834,2499,2647,3242,4124,4875,5313,5314,6089,6574,6592,6735,6765,6999,7484,7969,8065,8818,9333,9399,9870,10307,10485,10755,10856,11023,12080,12219,12699,13084,13281,13352,13653,14710,14743,15364,15527],description:"Edition of 40. Two skulls bloom with Van Gogh's almond blossoms — masters merged in memento mori."}
           ]
         },
         { name: "6529", image: "greatrestoration.jpg", omDisabled: true, artworks: [
@@ -21367,7 +21410,7 @@
         ? `<div class="node-info-line" style="margin-top:8px;border-top:1px solid rgba(220,150,50,0.12);padding-top:8px;"><a href="${artwork.fullRes}" target="_blank" class="master-digital-link" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(220,150,50,0.65);text-decoration:none;letter-spacing:0.08em;cursor:pointer;transition:color 0.3s;" onmouseover="this.style.color='rgba(220,150,50,0.95)'" onmouseout="this.style.color='rgba(220,150,50,0.65)'">&gt; VIEW MASTER DIGITAL</a></div>`
         : '';
       const _collectorName = artwork.collector || artwork.buyer || '';
-      const _isEdition = artwork.edition && artwork.edition.toLowerCase().indexOf('edition of') !== -1;
+      const _isEdition = (artwork.edition && artwork.edition.toLowerCase().indexOf('edition of') !== -1) || (artwork.tokenIds && artwork.tokenIds.length > 1);
       // For editions (ERC-1155): show "COLLECTORS" (plural) with popup trigger
       // For 1-of-1: show "COLLECTOR" (singular) with existing single-collector popup
       const collectorLine = (collection.contract && artwork.tokenId !== undefined) || _collectorName
@@ -21804,7 +21847,7 @@
           ACK_SFX.micro();
           // Check if this is an ERC-1155 edition — use multi-collector popup
           if (_collectorLink.dataset.edition === 'true') {
-            _buildCollectorsPopupGlobal(collection.contract, artwork.tokenId, infoPanel);
+            _buildCollectorsPopupGlobal(collection.contract, artwork.tokenId, infoPanel, artwork.tokenIds);
             return;
           }
           // Toggle — if already showing, remove it
@@ -22058,7 +22101,7 @@
 
           // ── ERC-1155: Multi-collector popup — delegates to global function ──
           const _buildCollectorsPopup = () => {
-            _buildCollectorsPopupGlobal(collection.contract, artwork.tokenId, infoPanel);
+            _buildCollectorsPopupGlobal(collection.contract, artwork.tokenId, infoPanel, artwork.tokenIds);
           };
 
           // ── Resolve owner: for editions just show COLLECTORS link, for 1-of-1 resolve single owner ──
@@ -22517,7 +22560,7 @@
 
     // ── Global ERC-1155 multi-collector popup (C4D node style with wire) ──
     // Extracted to global scope so both COA info panel AND Provenance overlay can call it
-    function _buildCollectorsPopupGlobal(contractAddr, tokenId, anchorEl) {
+    function _buildCollectorsPopupGlobal(contractAddr, tokenId, anchorEl, tokenIds) {
       // Remove any existing popup + wire (toggle behavior)
       const existingPopup = document.getElementById('collectorsPopup');
       const existingWire = document.getElementById('collectorsWireSvg');
@@ -22613,9 +22656,12 @@
         _closeCollectorsPopup();
       });
 
-      // Fetch owners with balances
+      // Fetch owners with balances (use tokenIds array if provided for editions)
       if (ACK_CHAIN.hasKey() && contractAddr && tokenId !== undefined) {
-        ACK_CHAIN.getOwnersWithBalances(contractAddr, tokenId).then(function(ownerBalances) {
+        var _ownerPromise = (tokenIds && tokenIds.length > 1)
+          ? ACK_CHAIN.getOwnersForTokenIds(contractAddr, tokenIds)
+          : ACK_CHAIN.getOwnersWithBalances(contractAddr, tokenId);
+        _ownerPromise.then(function(ownerBalances) {
           if (!document.getElementById('collectorsPopup')) return;
           if (!ownerBalances || ownerBalances.length === 0) {
             popup.querySelector('.cp-loading').innerHTML = 'No owners found';
