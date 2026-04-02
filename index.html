@@ -7864,7 +7864,9 @@
           mintDate: "2021",
           salesData: { totalVolume: "~$250,000", totalSales: "25", highestSale: "~$30,000" },
           artworks: [
-            {title:"Last Orders",image:"lastorders/lastorders.png",fullRes:"lastorders/web/lastorders_web.mp4",edition:"Edition of 25",tokenId:2,description:"ACK × XCOPY collaboration. A 3D bar scene at the end of the world. ERC-721 on Ethereum.",collabTag:"ACK & XCOPY collaboration — 2021"}
+            {title:"Last Orders",image:"lastorders/lastorders.png",fullRes:"lastorders/web/lastorders_web.mp4",edition:"Edition of 25",tokenId:2,description:"ACK × XCOPY collaboration. A 3D bar scene at the end of the world. ERC-721 on Ethereum.",collabTag:"ACK & XCOPY collaboration — 2021",
+              editions: (function(){ var eds=[]; for(var i=1;i<=25;i++){ eds.push({num:i, tokenId:i+1}); } return eds; })()
+            }
         ]},
         { name: "ACK Editions", image: "ackeditions_gallery/web/void_engine_catalog.gif",
           wallLayout: true,
@@ -21766,11 +21768,19 @@
 
       const _showMediaTab = hasMedia || _alwaysTabs;
       const _showExhibTab = hasExhibition || _alwaysTabs;
-      const _editionInfoIcon = (_displayColName === 'Right Click Print' && artwork.editions && artwork.editions.length > 0) ?
+      const _hasEditionPicker = artwork.editions && artwork.editions.length > 0;
+      const _isRCPStyle = _displayColName === 'Right Click Print' && _hasEditionPicker;
+      const _isLOStyle = _displayColName === 'Last Orders' && _hasEditionPicker;
+      const _editionInfoIcon = _isRCPStyle ?
         `<span class="rcp-info-icon">i<span class="rcp-info-tooltip">` +
           `<div class="rcp-info-tooltip-title">Unique Edition</div>` +
           `<div class="rcp-info-tooltip-text">Each of the 15 editions is unique — a different polaroid and sheet music on the piano. Click the token # next to the title to browse editions.</div>` +
-        `</span></span>` : '';
+        `</span></span>` :
+        (_isLOStyle ?
+        `<span class="rcp-info-icon">i<span class="rcp-info-tooltip">` +
+          `<div class="rcp-info-tooltip-title">Edition of 25</div>` +
+          `<div class="rcp-info-tooltip-text">25 identical editions on the same contract. Click the <span style="color:rgba(80,160,240,0.9);">token #</span> to browse editions and view on-chain data.</div>` +
+        `</span></span>` : '');
       const _isServant = _displayColName === 'servants' || (collection && collection.name === 'servants');
       const _servantPlayIcon = _isServant ? '<span class="servant-play-btn" id="servantPlayBtn" title="Play video"><span class="sp-icon"></span></span>' : '';
       const tabBar = showTabs ? `
@@ -21781,8 +21791,8 @@
         </div>` : '';
 
       // ── Pantone swatch for Color Study collection ──
-      // ── RCP Edition Picker badge + details ──
-      const _isRCP = _displayColName === 'Right Click Print' && artwork.editions && artwork.editions.length > 0;
+      // ── Edition Picker badge + details (RCP + Last Orders) ──
+      const _isRCP = _hasEditionPicker; // works for both RCP and Last Orders
       let _rcpBadgeHtml = '';
       let _rcpDetailsHtml = '';
       if (_isRCP) {
@@ -21791,10 +21801,13 @@
           `<span class="rcp-edition-num" id="rcpEditionNumLabel">#1</span>` +
           `<span class="rcp-edition-arrow">▾</span>` +
         `</span>`;
-        _rcpDetailsHtml = `<div class="rcp-edition-details" id="rcpEditionDetails">` +
-          `<div class="rcp-detail-line"><span class="rcp-detail-label">POLAROID</span><span id="rcpPolaroidVal">${_ed1.polaroid}</span></div>` +
-          `<div class="rcp-detail-line"><span class="rcp-detail-label">SHEET MUSIC</span><span id="rcpMusicVal">${_ed1.music}</span></div>` +
-        `</div>`;
+        // RCP shows polaroid + music details; Last Orders has no per-edition metadata
+        if (_isRCPStyle) {
+          _rcpDetailsHtml = `<div class="rcp-edition-details" id="rcpEditionDetails">` +
+            `<div class="rcp-detail-line"><span class="rcp-detail-label">POLAROID</span><span id="rcpPolaroidVal">${_ed1.polaroid}</span></div>` +
+            `<div class="rcp-detail-line"><span class="rcp-detail-label">SHEET MUSIC</span><span id="rcpMusicVal">${_ed1.music}</span></div>` +
+          `</div>`;
+        }
       }
 
       let _pantoneSwatch = '';
@@ -21889,7 +21902,7 @@
                 item.className = 'rcp-picker-item' + (ed.num === 1 ? ' active' : '');
                 item.dataset.num = ed.num;
                 item.innerHTML = '<span class="rcp-picker-item-num">#' + ed.num + '</span>' +
-                  '<span class="rcp-picker-item-label">' + ed.polaroid + '</span>';
+                  (ed.polaroid ? '<span class="rcp-picker-item-label">' + ed.polaroid + '</span>' : '');
                 item.addEventListener('click', function(ev) {
                   ev.stopPropagation();
                   ACK_SFX.micro();
@@ -21917,11 +21930,13 @@
             // Update badge label
             var numLabel = document.getElementById('rcpEditionNumLabel');
             if (numLabel) numLabel.textContent = '#' + num;
-            // Update polaroid + music details
-            var polVal = document.getElementById('rcpPolaroidVal');
-            var musVal = document.getElementById('rcpMusicVal');
-            if (polVal) polVal.textContent = ed.polaroid;
-            if (musVal) musVal.textContent = ed.music;
+            // Update polaroid + music details (RCP only — Last Orders has no per-edition metadata)
+            if (_isRCPStyle) {
+              var polVal = document.getElementById('rcpPolaroidVal');
+              var musVal = document.getElementById('rcpMusicVal');
+              if (polVal) polVal.textContent = ed.polaroid;
+              if (musVal) musVal.textContent = ed.music;
+            }
             // Update active state in dropdown
             if (_rcpDropdown) {
               _rcpDropdown.querySelectorAll('.rcp-picker-item').forEach(function(it) {
@@ -21938,8 +21953,8 @@
             if (_fEdSpan) {
               _fEdSpan.textContent = '#' + num;
             }
-            // Swap image + video
-            _rcpSwapMedia(ed);
+            // Swap image + video (RCP only — Last Orders shares same media across all editions)
+            if (_isRCPStyle) _rcpSwapMedia(ed);
             // Fetch live chain data for this token
             var _liveDiv = document.getElementById('liveChainData');
             if (_liveDiv && ACK_CHAIN.hasKey() && collection.contract) {
