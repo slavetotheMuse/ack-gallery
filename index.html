@@ -21761,17 +21761,18 @@
           // Only register horizontal swipe (ignore vertical gestures)
           if (Math.abs(_swipeDelta) > _swipeThreshold && Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY) * 1.2) {
             const col = COLLECTIONS[focusedCollectionIndex];
+            if (!col || !col.artworks) { _swipeActive = false; return; }
             const dir = _swipeDelta < 0 ? 1 : -1; // swipe left = next, right = prev
             const nextIdx = focusedArtworkIndex + dir;
             if (nextIdx >= 0 && nextIdx < col.artworks.length) {
               if (_isMobileSwipe) {
                 // ── MOBILE: lightweight fade swap (no pixel scatter — too heavy on mobile) ──
                 _swipeTransitioning = true;
-                ACK_SFX.micro();
+                try { ACK_SFX.micro(); } catch(_e) {}
                 const nextArt = col.artworks[nextIdx];
                 const curNode = focusedNode;
-                const curImg = curNode ? curNode.querySelector('.node-preview img') : null;
-                const curPreview = curNode ? curNode.querySelector('.node-preview') : null;
+                const curImg = curNode ? (curNode.querySelector('.node-preview img') || curNode.querySelector('.servant-coin-face img')) : null;
+                const curPreview = curNode ? (curNode.querySelector('.node-preview') || curNode.querySelector('.servant-coin-face')) : null;
 
                 // Safety: unlock after 3s no matter what
                 const _swipeSafety = setTimeout(function() { _swipeTransitioning = false; }, 3000);
