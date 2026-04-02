@@ -3113,6 +3113,15 @@
     .node-card.hovered .node-title-tag::before {
       background: rgba(220,150,50,0.6);
     }
+    /* My Bags / collector pages: titles hidden by default, show on hover */
+    .node-graph-inner.is-my-bags .node-card .node-title-tag {
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .node-graph-inner.is-my-bags .node-card:hover .node-title-tag,
+    .node-graph-inner.is-my-bags .node-card.hovered .node-title-tag {
+      opacity: 1;
+    }
 
     /* Focus view loading shimmer */
     .focus-loading-shimmer {
@@ -15101,6 +15110,7 @@
             }
 
             // ── Smart auto-layout for My Bags / collector pages ──
+            if (collection._isMyBags) inner.classList.add('is-my-bags');
             if (collection._isMyBags && !isMobile && count > 0) {
               const _bagsPad = 60;
               const _bagsOutputReserve = 140;
@@ -15601,14 +15611,6 @@
           });
         }
 
-        // Helper: build small marketplace link pills for bags live strip
-        function _buildBagsLinks(contract, tokenId) {
-          var osUrl = ACK_CHAIN.openSeaUrl(contract, tokenId);
-          var esUrl = ACK_CHAIN.etherscanUrl(contract, tokenId);
-          return '<a href="' + osUrl + '" target="_blank" rel="noopener" style="color:rgba(80,130,200,0.55);text-decoration:none;font-size:0.35rem;letter-spacing:0.04em;" onmouseover="this.style.color=\'rgba(80,130,200,1)\'" onmouseout="this.style.color=\'rgba(80,130,200,0.55)\'" onclick="event.stopPropagation()">OS</a>' +
-            '<a href="' + esUrl + '" target="_blank" rel="noopener" style="color:rgba(100,180,100,0.55);text-decoration:none;font-size:0.35rem;letter-spacing:0.04em;margin-left:3px;" onmouseover="this.style.color=\'rgba(100,180,100,1)\'" onmouseout="this.style.color=\'rgba(100,180,100,0.55)\'" onclick="event.stopPropagation()">ES</a>';
-        }
-
         // ── Build DOM for all nodes ──
         artworks.forEach((artwork, i) => { try {
           const np = nodePositions[i];
@@ -15951,21 +15953,7 @@
           }
           node.appendChild(titleTag);
 
-          // ── MY BAGS: Marketplace link strip below each card (OS/ES only, NO offers/prices) ──
-          if (collection._isMyBags && artwork._sourceCollection) {
-            const _srcCol = COLLECTIONS.find(c => c.name === artwork._sourceCollection);
-            // Use artwork-level contract override (e.g. pale blue death) or fall back to collection contract
-            const _srcContract = artwork.contract || (_srcCol ? _srcCol.contract : null);
-            const _srcTokenId = artwork.tokenId;
-            if (_srcContract && _srcTokenId !== undefined) {
-              const liveStrip = document.createElement('div');
-              liveStrip.className = 'bags-live-strip';
-              liveStrip.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.38rem;color:rgba(200,190,170,0.4);letter-spacing:0.06em;margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;';
-              // Show marketplace links only — no offers/listings on bags pages
-              liveStrip.innerHTML = _buildBagsLinks(_srcContract, _srcTokenId);
-              node.appendChild(liveStrip);
-            }
-          }
+          // OS/ES links for bags cards are shown in the Detail/focus card only, not on the grid cards
 
           // Collaboration credit tag — bottom right of artwork
           if (artwork.collabTag) {
