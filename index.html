@@ -20818,7 +20818,7 @@
       const artworkData = COLLECTIONS[collectionIndex].artworks[artworkIndex];
       // Resolve effective collection name — for My Bags, use the source collection
       const _focusColName = (artworkData && artworkData._sourceCollection) ? artworkData._sourceCollection : (COLLECTIONS[collectionIndex] ? COLLECTIONS[collectionIndex].name : '');
-      if (artworkData && artworkData.masterwork) {
+      if (artworkData && (artworkData.masterwork || _focusColName === '1 of 1s')) {
         node.classList.add('masterwork-node');
 
         // Wait for scale transition and image load to settle
