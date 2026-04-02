@@ -1012,6 +1012,94 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
+    /* About panel tabs */
+    .about-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--bg-light);
+      margin-bottom: 16px;
+    }
+    .about-tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      color: rgba(200,195,185,0.4);
+      background: none;
+      border: none;
+      padding: 8px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .about-tab:hover {
+      color: rgba(200,195,185,0.6);
+    }
+    .about-tab.active {
+      color: rgba(220,200,170,0.85);
+      border-bottom-color: rgba(220,200,170,0.5);
+    }
+    .about-tab-content {
+      display: none;
+    }
+    .about-tab-content.active {
+      display: block;
+    }
+    /* Making Of section */
+    .making-of-entry {
+      margin-bottom: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(200,195,185,0.06);
+    }
+    .making-of-entry:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .making-of-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      color: rgba(220,200,170,0.5);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .making-of-quote {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: rgba(200,195,185,0.7);
+      line-height: 1.65;
+      font-style: italic;
+      padding-left: 10px;
+      border-left: 2px solid rgba(220,200,170,0.15);
+    }
+    .making-of-detail {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: rgba(200,195,185,0.4);
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+    .making-of-intro {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: rgba(200,195,185,0.55);
+      line-height: 1.7;
+      margin-bottom: 22px;
+    }
+    .making-of-stat {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      color: rgba(220,200,170,0.45);
+      background: rgba(220,200,170,0.04);
+      border: 1px solid rgba(220,200,170,0.08);
+      border-radius: 3px;
+      padding: 3px 8px;
+      margin: 3px 4px 3px 0;
+    }
+
     /* CHANGE 4: C4D Settings Panel */
     .c4d-settings-dropdown {
       position: relative;
@@ -5532,14 +5620,72 @@
         <div class="about-dropdown" id="aboutDropdown">
           <button class="nav-link" onclick="toggleAbout()">About</button>
           <div class="about-panel">
-            <div class="about-panel-title">Alpha Centauri Kid</div>
-            <div class="about-panel-text">
-              <p>Alpha Centauri Kid (A.C.K.) is an artist driven not by medium, market, or movement but by pursuit. His work emerges from what he calls "the whispers of the Muse," a continuous stream of lived experience, music, emotion, memory, and tension, translated into visual and mechanical form. Each piece is not simply created, but discovered through iteration, where experimentation continues until the feeling matches the vision.</p>
-              <p style="margin-top:10px;">While his work has reached levels of success and sales far beyond what he once imagined, A.C.K. remains unmoved by outcome, anchored instead in a singular devotion to the whispers of the Muse, which continue to guide every decision, every risk, and every creation.</p>
-              <p style="margin-top:10px;">Working across digital, physical, and hybrid forms, A.C.K. constructs worlds that feel both ancient and futuristic, where classical composition meets surreal machinery, and myth collides with code. His practice spans ultra-high-resolution digital works, sculptural installations, and ambitious inventions like the Grand Skull Piano, projects that blur the boundary between artwork and entity, object and experience.</p>
-              <p style="margin-top:10px;">Central to his philosophy is a refusal to compete with anything except time. The work is the priority, always. This has led to a body of art that is uncompromising in both execution and intent — pieces that are not optimized for consumption, but for impact, for resonance, for permanence.</p>
-              <p style="margin-top:10px;">A.C.K.'s process is one of obsession and return. He revisits, reworks, and refines until the work speaks back with clarity. When it does, it is finished. When it doesn't, the pursuit continues, by any means necessary.</p>
-              <p style="margin-top:10px;font-style:italic;color:rgba(220,200,170,0.7);">His creations are not answers. They are transmissions from the deep.</p>
+            <div class="about-tabs">
+              <button class="about-tab active" onclick="switchAboutTab('about')">About</button>
+              <button class="about-tab" onclick="switchAboutTab('making-of')">Making Of</button>
+            </div>
+            <div class="about-tab-content active" id="aboutTabContent">
+              <div class="about-panel-title">Alpha Centauri Kid</div>
+              <div class="about-panel-text">
+                <p>Alpha Centauri Kid (A.C.K.) is an artist driven not by medium, market, or movement but by pursuit. His work emerges from what he calls "the whispers of the Muse," a continuous stream of lived experience, music, emotion, memory, and tension, translated into visual and mechanical form. Each piece is not simply created, but discovered through iteration, where experimentation continues until the feeling matches the vision.</p>
+                <p style="margin-top:10px;">While his work has reached levels of success and sales far beyond what he once imagined, A.C.K. remains unmoved by outcome, anchored instead in a singular devotion to the whispers of the Muse, which continue to guide every decision, every risk, and every creation.</p>
+                <p style="margin-top:10px;">Working across digital, physical, and hybrid forms, A.C.K. constructs worlds that feel both ancient and futuristic, where classical composition meets surreal machinery, and myth collides with code. His practice spans ultra-high-resolution digital works, sculptural installations, and ambitious inventions like the Grand Skull Piano, projects that blur the boundary between artwork and entity, object and experience.</p>
+                <p style="margin-top:10px;">Central to his philosophy is a refusal to compete with anything except time. The work is the priority, always. This has led to a body of art that is uncompromising in both execution and intent — pieces that are not optimized for consumption, but for impact, for resonance, for permanence.</p>
+                <p style="margin-top:10px;">A.C.K.'s process is one of obsession and return. He revisits, reworks, and refines until the work speaks back with clarity. When it does, it is finished. When it doesn't, the pursuit continues, by any means necessary.</p>
+                <p style="margin-top:10px;font-style:italic;color:rgba(220,200,170,0.7);">His creations are not answers. They are transmissions from the deep.</p>
+              </div>
+            </div>
+            <div class="about-tab-content" id="makingOfTabContent">
+              <div class="about-panel-title">Making Of</div>
+              <div class="making-of-intro">This gallery was vibe coded — built entirely through conversation between A.C.K. and Claude, an AI. No templates, no frameworks, no design files. Just direction, iteration, and refusal to settle.</div>
+
+              <div style="margin-bottom:18px;">
+                <span class="making-of-stat">31,000+ lines</span>
+                <span class="making-of-stat">single index.html</span>
+                <span class="making-of-stat">200+ iterations</span>
+                <span class="making-of-stat">0 frameworks</span>
+              </div>
+
+              <div class="making-of-entry">
+                <div class="making-of-label">The Vision</div>
+                <div class="making-of-detail">The brief was a feeling: build an art gallery that looks like Cinema 4D's node editor. No mockup. No wireframe. Just a reference screenshot and the words "make it feel like this." Every collection is a node. Every artwork is a connection. The wires are alive.</div>
+              </div>
+
+              <div class="making-of-entry">
+                <div class="making-of-label">Creative Direction</div>
+                <div class="making-of-quote">"wayyyyyy too big and basic, needs to be more elegant like the other things we've designed."</div>
+                <div class="making-of-detail">A.C.K. directed every visual decision — rejecting, refining, and pushing until each element matched the aesthetic standard. The AI proposed; the artist decided. Nothing shipped without approval.</div>
+              </div>
+
+              <div class="making-of-entry">
+                <div class="making-of-label">The Intro Sequence</div>
+                <div class="making-of-quote">"i dont like the bouncing whirling sounds, and the whispering needs to sound like several female voices and we want more absurd sounds or more mechanical and dungeony."</div>
+                <div class="making-of-detail">The intro audio was generated with Python — filtered noise shaped into whisper voices, mechanical grinding, chain rattles, and stone booms. V1 was rejected entirely. V2 was rebuilt from scratch. V3 was recorded by A.C.K. himself.</div>
+              </div>
+
+              <div class="making-of-entry">
+                <div class="making-of-label">On-Chain Provenance</div>
+                <div class="making-of-detail">Every full-resolution artwork URL was scraped directly from Ethereum contract metadata via Alchemy — Arweave permanent storage for Broken Keys, ACKPFP, ACK Editions, Clown Party, and Warothys. IPFS gateway URLs for SuperRare and Opepen. The gallery serves art from the same permanent addresses stored on-chain.</div>
+              </div>
+
+              <div class="making-of-entry">
+                <div class="making-of-label">The Architecture</div>
+                <div class="making-of-detail">One file. 31,000+ lines of hand-iterated HTML, CSS, and JavaScript. No React. No build step. No dependencies. The entire gallery — node graph, focus views, wallet connection, edition pickers, mobile swipe, lore sequences, candle animations, and intro sequence — lives in a single index.html deployed to Vercel.</div>
+              </div>
+
+              <div class="making-of-entry">
+                <div class="making-of-label">Collector Integration</div>
+                <div class="making-of-detail">Connect your wallet and the gallery reads your on-chain holdings via Alchemy's NFT API. Your collected works appear in a personal "bags" view — complete with floor prices, edition counts, and direct links to OpenSea and Etherscan. The same contracts used for provenance power the collector experience.</div>
+              </div>
+
+              <div class="making-of-entry">
+                <div class="making-of-label">The Process</div>
+                <div class="making-of-detail">Every feature started as a conversation. A.C.K. described what he wanted — sometimes precisely, sometimes as a feeling. Claude wrote the code, A.C.K. tested it live, and the cycle repeated. Hundreds of commits. Dozens of rejected approaches. The site is the artifact of a creative dialogue between human vision and machine execution.</div>
+              </div>
+
+              <div style="margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:rgba(220,200,170,0.4);font-style:italic;line-height:1.6;">
+                Built with Claude · Directed by A.C.K. · No designers were harmed in the making of this gallery.
+              </div>
             </div>
           </div>
         </div>
@@ -31456,6 +31602,19 @@
 
     function toggleAbout() {
       document.getElementById('aboutDropdown').classList.toggle('active');
+    }
+
+    function switchAboutTab(tab) {
+      document.querySelectorAll('.about-tab').forEach(function(btn) { btn.classList.remove('active'); });
+      document.getElementById('aboutTabContent').classList.remove('active');
+      document.getElementById('makingOfTabContent').classList.remove('active');
+      if (tab === 'making-of') {
+        document.querySelectorAll('.about-tab')[1].classList.add('active');
+        document.getElementById('makingOfTabContent').classList.add('active');
+      } else {
+        document.querySelectorAll('.about-tab')[0].classList.add('active');
+        document.getElementById('aboutTabContent').classList.add('active');
+      }
     }
 
     // C4D Settings: control ONLY the candle flame/glow brightness, not the candle body
