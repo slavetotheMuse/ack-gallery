@@ -15134,10 +15134,11 @@
               });
 
               // Determine base card width from available space and total count
-              // Aim for a balanced density that fills ~70-80% of viewport
+              // Use a tighter horizontal target (~65% of viewport width) to avoid spreading too wide
               const _totalPieces = count;
-              const _densityFactor = _totalPieces <= 4 ? 0.38 : _totalPieces <= 8 ? 0.30 : _totalPieces <= 16 ? 0.22 : _totalPieces <= 30 ? 0.16 : 0.12;
-              const _baseCardW = Math.min(320, Math.max(80, Math.sqrt((_bagsAvailW * _bagsAvailH * _densityFactor) / _totalPieces)));
+              const _targetW = _bagsAvailW * 0.72; // don't use full width — keep it pulled in
+              const _densityFactor = _totalPieces <= 4 ? 0.42 : _totalPieces <= 8 ? 0.34 : _totalPieces <= 16 ? 0.26 : _totalPieces <= 30 ? 0.20 : 0.15;
+              const _baseCardW = Math.min(340, Math.max(90, Math.sqrt((_targetW * _bagsAvailH * _densityFactor) / _totalPieces)));
 
               // ── Layout each group, placing groups in a flowing arrangement ──
               // We use a "zone" approach: divide viewport into regions and assign groups
@@ -15212,25 +15213,26 @@
               const _interGroupGap = Math.round(_bagsGap * 1.5);
 
               _groupBoxes.forEach((gb, gi) => {
-                // Check if group fits on current shelf
-                if (_shelfX + gb.grpW > vpW - _bagsPad && _shelfX > _bagsPad + 10) {
+                // Check if group fits on current shelf (use tighter target width)
+                const _shelfMaxW = _targetW + _bagsPad;
+                if (_shelfX + gb.grpW > _shelfMaxW && _shelfX > _bagsPad + 10) {
                   // Move to next shelf
                   _shelfY += _shelfMaxH + _interGroupGap;
                   _shelfX = _bagsPad;
                   _shelfMaxH = 0;
                 }
 
-                // Add subtle horizontal offset for organic feel (not perfectly left-aligned)
-                const _orgOffX = Math.round(Math.sin(gi * 4.3 + 1.7) * 12);
-                const _orgOffY = Math.round(Math.cos(gi * 3.1 + 0.9) * 8);
+                // Subtle organic offset — but clamped so groups never overlap
+                const _orgOffX = Math.round(Math.sin(gi * 4.3 + 1.7) * 8);
+                const _orgOffY = Math.abs(Math.round(Math.cos(gi * 3.1 + 0.9) * 6)); // always positive to avoid upward overlap
 
-                const gx = _shelfX + _orgOffX;
+                const gx = _shelfX + Math.max(0, _orgOffX); // no negative X offset
                 const gy = _shelfY + _orgOffY;
 
                 _placedGroups.push({ gx, gy, box: gb });
 
                 _shelfX += gb.grpW + _interGroupGap;
-                if (gb.grpH > _shelfMaxH) _shelfMaxH = gb.grpH;
+                if (gb.grpH + _orgOffY > _shelfMaxH) _shelfMaxH = gb.grpH + _orgOffY;
               });
 
               // Center everything vertically if there's space
@@ -17223,7 +17225,7 @@
             setTimeout(_applyBagFrame, 800 + bagIdx * 200);
           });
 
-          // ── MY BAGS: Complete-set detection & VIP treatment ──
+          // ── MY BAGS: Collection-specific ambient treatment ──
           (function() {
             var bagsArts = collection.artworks;
             if (!bagsArts || bagsArts.length === 0) return;
@@ -17236,145 +17238,7 @@
               ownershipMap[ba._sourceCollection].push(ba);
             });
 
-            // ── COMPLETE SET DEFINITIONS ──
-            var completeSets = [
-              {
-                name: 'Elephant Trifecta',
-                collection: 'ACK Editions',
-                badge: 'ELEPHANT TRIFECTA',
-                required: ['pink_elephant', 'majestic_white_elephant', 'circus_elephant'],
-                matchField: 'image',
-                bonusImage: 'ackeditions_gallery/web/circus_elephant_web.gif',
-                bonusLabel: 'Parade Master'
-              },
-              {
-                name: 'Color Study Complete',
-                collection: 'The Great Color Study',
-                badge: 'FULL SPECTRUM',
-                // All 12 color studies (including pale blue death and max pain)
-                requiredCount: 12,
-                bonusImage: 'colorstudys/pbd.gif',
-                bonusLabel: 'Chromatic Deity'
-              },
-              {
-                name: 'Clown Party Full House',
-                collection: 'Clown Party',
-                badge: 'FULL HOUSE',
-                requiredCount: 10, // 12 pieces total (6 physical + 6 digital), 10+ = true collector
-                bonusImage: 'clownparty/extra_nodes/web/clownLV_web.png',
-                bonusLabel: 'Ringmaster'
-              },
-              {
-                name: 'Burn Pair',
-                collection: 'ACK Editions',
-                badge: 'BURN PAIR',
-                required: ['ngmi_bottle', 'wagmi_bottle'],
-                matchField: 'image',
-                bonusImage: 'ackeditions_gallery/web/burntoredeem_web.png',
-                bonusLabel: 'Fire Keeper'
-              }
-            ];
-
             var allBagsCards = inner.querySelectorAll('.node-card');
-
-            completeSets.forEach(function(setDef) {
-              var owned = ownershipMap[setDef.collection];
-              if (!owned) return;
-
-              var isComplete = false;
-              if (setDef.required) {
-                // Check if all required image substrings are present
-                isComplete = setDef.required.every(function(req) {
-                  return owned.some(function(o) { return o[setDef.matchField] && o[setDef.matchField].indexOf(req) !== -1; });
-                });
-              } else if (setDef.requiredCount) {
-                isComplete = owned.length >= setDef.requiredCount;
-              }
-
-              if (!isComplete) return;
-
-              // ── VIP AURA: Apply golden glow to all nodes from this collection ──
-              bagsArts.forEach(function(ba, baIdx) {
-                if (ba._sourceCollection !== setDef.collection) return;
-                if (baIdx >= allBagsCards.length) return;
-                var card = allBagsCards[baIdx];
-                card.classList.add('bags-vip-aura');
-
-                // Crown badge on first node of this collection group
-                var isFirstInGroup = true;
-                for (var prev = baIdx - 1; prev >= 0; prev--) {
-                  if (bagsArts[prev]._sourceCollection === setDef.collection) { isFirstInGroup = false; break; }
-                }
-                if (isFirstInGroup) {
-                  // Crown emoji
-                  var crown = document.createElement('div');
-                  crown.className = 'bags-set-crown';
-                  crown.textContent = '\u{1F451}';
-                  card.style.position = 'relative';
-                  card.appendChild(crown);
-                  // Badge label
-                  var badge = document.createElement('div');
-                  badge.className = 'bags-set-badge';
-                  badge.textContent = setDef.badge;
-                  card.appendChild(badge);
-                }
-              });
-
-              // ── BONUS NODE: Hidden artwork unlocked by complete set ──
-              // Find the bounding box of this collection's cards to place bonus nearby
-              var groupCards = [];
-              bagsArts.forEach(function(ba, baIdx) {
-                if (ba._sourceCollection === setDef.collection && baIdx < allBagsCards.length) {
-                  var c = allBagsCards[baIdx];
-                  groupCards.push({
-                    x: parseFloat(c.style.left) || 0,
-                    y: parseFloat(c.style.top) || 0,
-                    w: parseFloat(c.style.width) || 200,
-                    h: c.offsetHeight || 200
-                  });
-                }
-              });
-
-              if (groupCards.length > 0) {
-                // Place bonus node to the right of the last card in the group, or below
-                var lastCard = groupCards[groupCards.length - 1];
-                var bonusX = lastCard.x + lastCard.w + 40;
-                var bonusY = lastCard.y + 10;
-                var bonusSize = 70;
-
-                // If it would go off screen, place below the group instead
-                if (bonusX + bonusSize > vpW - 30) {
-                  var groupMaxY = 0;
-                  groupCards.forEach(function(gc) { groupMaxY = Math.max(groupMaxY, gc.y + gc.h); });
-                  bonusX = groupCards[0].x + groupCards[0].w / 2 - bonusSize / 2;
-                  bonusY = groupMaxY + 25;
-                }
-
-                var bonusNode = document.createElement('div');
-                bonusNode.className = 'bags-bonus-node';
-                bonusNode.style.left = bonusX + 'px';
-                bonusNode.style.top = bonusY + 'px';
-                bonusNode.style.width = bonusSize + 'px';
-                bonusNode.style.height = bonusSize + 'px';
-
-                var bonusImg = document.createElement('img');
-                bonusImg.src = setDef.bonusImage;
-                bonusImg.alt = setDef.bonusLabel || 'Bonus';
-                bonusImg.loading = 'lazy';
-                bonusNode.appendChild(bonusImg);
-
-                // Label under bonus node
-                var bonusLabel = document.createElement('div');
-                bonusLabel.style.cssText = 'position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);' +
-                  'font-family:"JetBrains Mono",monospace;font-size:0.4rem;letter-spacing:0.1em;' +
-                  'color:rgba(255,200,50,0.6);white-space:nowrap;text-transform:uppercase;';
-                bonusLabel.textContent = setDef.bonusLabel;
-                bonusNode.appendChild(bonusLabel);
-
-                inner.appendChild(bonusNode);
-                setTimeout(function() { bonusNode.classList.add('visible'); }, 1800);
-              }
-            });
 
             // ── MY BAGS: Collection-specific ambient treatment ──
             // For each owned collection group, add subtle background elements
