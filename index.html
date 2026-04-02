@@ -2497,23 +2497,24 @@
     /* ── Touch to experience full resolution — hover hint in focus view ── */
     .focus-touch-hint {
       position: absolute;
-      top: -32px; left: 0; width: 100%;
+      top: -18px; left: 0;
       pointer-events: none;
       z-index: 60;
       opacity: 0;
-      transition: opacity 0.6s ease;
-      text-align: center;
+      transition: opacity 0.5s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
     .node-card.focused:hover .focus-touch-hint {
       opacity: 1;
     }
     .focus-touch-hint span {
-      font-family: 'Josefin Sans', 'Futura', 'Century Gothic', sans-serif;
-      font-weight: 100;
-      font-size: clamp(10px, 1.1vw, 15px);
-      letter-spacing: 0.4em;
-      color: rgba(245,240,230,0.35);
-      text-transform: lowercase;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 400;
+      font-size: 0.48rem;
+      letter-spacing: 0.08em;
+      color: rgba(200,195,185,0.4);
       white-space: nowrap;
     }
 
@@ -18979,7 +18980,7 @@
         // ── "Touch to experience full resolution" hint — pulses softly above artwork ──
         var _touchHint = document.createElement('div');
         _touchHint.className = 'focus-touch-hint';
-        _touchHint.innerHTML = '<span>touch to experience full resolution</span>';
+        _touchHint.innerHTML = '<span style="font-size:0.4rem;opacity:0.6;">◈</span><span>touch to experience full resolution</span>';
         _touchHint.id = 'focusTouchHint';
         node.appendChild(_touchHint);
         // On mobile: pause all non-essential rendering to free memory
@@ -19148,7 +19149,11 @@
 
             // ── Determine the best focus-res URL ──
             let _focusSrc = null;
-            const _isGifArtwork = artData && artData.fullRes && artData.fullRes.endsWith('.gif');
+            const _isGifArtwork = artData && (
+              (artData.fullRes && artData.fullRes.endsWith('.gif')) ||
+              (artData.webGif) ||
+              (artData.image && artData.image.endsWith('.gif'))
+            );
             // Priority 1: explicit focusImage (e.g. Piano Blossoms physical focus photos)
             if (artData && artData.focusImage) {
               _focusSrc = artData.focusImage;
