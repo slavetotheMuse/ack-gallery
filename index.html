@@ -20327,7 +20327,7 @@
                   var existingImg = faceEl.querySelector('img');
                   if (existingImg) existingImg.style.display = 'none';
                   var vid = document.createElement('video');
-                  vid.src = (artData && artData.fullRes) ? artData.fullRes : 'https://arweave.net/Qf42dsHtzXDqLHiiW07vCz89qt2CEPCBjglUnjJNRys';
+                  vid.src = (artData && artData.animation_url) ? artData.animation_url : 'servant_muse.mp4';
                   vid.loop = true;
                   vid.muted = false; // sound on
                   vid.playsInline = true;
