@@ -2494,28 +2494,24 @@
       white-space: nowrap;
     }
 
-    /* ── Touch to experience full resolution — focus view hint ── */
+    /* ── Touch to experience full resolution — hover hint in focus view ── */
     .focus-touch-hint {
       position: absolute;
-      top: -28px; left: 0; width: 100%;
-      text-align: center;
+      top: -22px; left: 0; width: 100%;
       pointer-events: none;
       z-index: 60;
       opacity: 0;
-      animation: focusTouchPulse 3.5s ease-in-out 1.2s 3;
+      transition: opacity 0.35s ease;
+    }
+    .node-card.focused:hover .focus-touch-hint {
+      opacity: 1;
     }
     .focus-touch-hint span {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.42rem;
-      letter-spacing: 0.14em;
-      color: rgba(220,180,100,0.55);
-      text-transform: uppercase;
-    }
-    @keyframes focusTouchPulse {
-      0%   { opacity: 0; }
-      20%  { opacity: 1; }
-      80%  { opacity: 1; }
-      100% { opacity: 0; }
+      font-size: 0.5rem;
+      letter-spacing: 0.06em;
+      color: rgba(200,195,185,0.45);
+      white-space: nowrap;
     }
 
     /* ── Info card node (text-only, no artwork image) ── */
@@ -7610,34 +7606,34 @@
           token: "ERC-721", chain: "Ethereum", contract: "0x4772fb1ed333777cf4a062ffcda2d25ce3e1029c",
           exhibitionMedia: [],
           artworks: [
-            {title:"self portrait - tin man",image:"clownparty/web/tinman_physical_web.jpg",fullRes:"clownparty/selfportrait_tinman.jpg",tokenId:5,description:"Physical original. Sold to punk8868 for $100,000 USD.",sale:"$100,000 USD",buyer:"punk8868"},
-            {title:"self portrait - tin man (digital)",image:"clownparty/web/tinman_digital_web.jpg",fullRes:"clownparty/selfportrait_tinman2.jpg",tokenId:5,companion:true,pairIndex:0,description:"Digital companion to self portrait - tin man."},
-            {title:"Heavy Mettle",image:"clownparty/web/heavy_mettle_physical_web.jpg",fullRes:"clownparty/Heavy_Mettle.jpg",tokenId:2,description:"Physical original. Sold to hittman_ for $75,000 USDC.",sale:"$75,000 USDC",buyer:"hittman_"},
-            {title:"Heavy Mettle (digital)",image:"clownparty/web/heavy_mettle_digital_web.jpg",fullRes:"clownparty/Heavy_mettle2.jpg",tokenId:2,companion:true,pairIndex:2,description:"Digital companion to Heavy Mettle."},
-            {title:"Showtime",image:"clownparty/web/showtime_physical_web.jpg",fullRes:"clownparty/Showtime.jpg",tokenId:4,description:"Physical original. Sold to foretwenty for $75,000 USD.",sale:"$75,000 USD",buyer:"foretwenty"},
-            {title:"Showtime (digital)",image:"clownparty/web/showtime_digital_web.jpg",fullRes:"clownparty/showtime2.jpg",tokenId:4,companion:true,pairIndex:4,description:"Digital companion to Showtime."},
-            {title:"spectACKular",image:"clownparty/web/spectackular_physical_web.jpg",fullRes:"clownparty/spectACKular.jpg",tokenId:3,description:"Physical original."},
-            {title:"spectACKular (digital)",image:"clownparty/web/spectackular_digital_web.jpg",fullRes:"clownparty/spectackular2.jpg",tokenId:3,companion:true,pairIndex:6,description:"Digital companion to spectACKular."},
-            {title:"Pink Carousel",image:"clownparty/web/pink_carousel_physical_web.jpg",fullRes:"clownparty/Pink_Carousel.png",tokenId:6,description:"Physical original."},
-            {title:"Pink Carousel (digital)",image:"clownparty/web/pink_carousel_digital_web.jpg",fullRes:"clownparty/pink_Carouselnew.png",tokenId:6,companion:true,pairIndex:8,description:"Digital companion to Pink Carousel."},
-            {title:"Goodnight Circus",image:"clownparty/web/goodnight_circus_physical_web.jpg",fullRes:"clownparty/Goodnight_Circus.png",tokenId:1,description:"Physical original."},
-            {title:"Goodnight Circus (digital)",image:"clownparty/web/goodnight_circus_digital_web.jpg",fullRes:"clownparty/goodnight_circus2.jpeg",tokenId:1,companion:true,pairIndex:10,description:"Digital companion to Goodnight Circus."}
+            {title:"self portrait - tin man",image:"clownparty/web/tinman_physical_web.jpg",fullRes:"https://arweave.net/bPVYlbj_IyQn3Rw2oIKm2PWyJTWTyYlfcgX3dfnFbnU",tokenId:5,description:"Physical original. Sold to punk8868 for $100,000 USD.",sale:"$100,000 USD",buyer:"punk8868"},
+            {title:"self portrait - tin man (digital)",image:"clownparty/web/tinman_digital_web.jpg",fullRes:"https://arweave.net/bPVYlbj_IyQn3Rw2oIKm2PWyJTWTyYlfcgX3dfnFbnU",tokenId:5,companion:true,pairIndex:0,description:"Digital companion to self portrait - tin man."},
+            {title:"Heavy Mettle",image:"clownparty/web/heavy_mettle_physical_web.jpg",fullRes:"https://arweave.net/lmfiRkcV8y0iOYzE_zDFabIR1yiphdK-OUF9SKpwp4c",tokenId:2,description:"Physical original. Sold to hittman_ for $75,000 USDC.",sale:"$75,000 USDC",buyer:"hittman_"},
+            {title:"Heavy Mettle (digital)",image:"clownparty/web/heavy_mettle_digital_web.jpg",fullRes:"https://arweave.net/lmfiRkcV8y0iOYzE_zDFabIR1yiphdK-OUF9SKpwp4c",tokenId:2,companion:true,pairIndex:2,description:"Digital companion to Heavy Mettle."},
+            {title:"Showtime",image:"clownparty/web/showtime_physical_web.jpg",fullRes:"https://arweave.net/54BzS3c7AJdtzQwKvobS6Nr7X0PxRFsDQO6hcZI98Nc",tokenId:4,description:"Physical original. Sold to foretwenty for $75,000 USD.",sale:"$75,000 USD",buyer:"foretwenty"},
+            {title:"Showtime (digital)",image:"clownparty/web/showtime_digital_web.jpg",fullRes:"https://arweave.net/54BzS3c7AJdtzQwKvobS6Nr7X0PxRFsDQO6hcZI98Nc",tokenId:4,companion:true,pairIndex:4,description:"Digital companion to Showtime."},
+            {title:"spectACKular",image:"clownparty/web/spectackular_physical_web.jpg",fullRes:"https://arweave.net/RaykHYiKi-2SJkq0Vas49M0AJinUexcUp4TJYTKaIu4",tokenId:3,description:"Physical original."},
+            {title:"spectACKular (digital)",image:"clownparty/web/spectackular_digital_web.jpg",fullRes:"https://arweave.net/RaykHYiKi-2SJkq0Vas49M0AJinUexcUp4TJYTKaIu4",tokenId:3,companion:true,pairIndex:6,description:"Digital companion to spectACKular."},
+            {title:"Pink Carousel",image:"clownparty/web/pink_carousel_physical_web.jpg",fullRes:"https://arweave.net/3sdRZ9bzZVNkGKVEC-rdCvSfkFr1AQdgu2x21yQfXqg",tokenId:6,description:"Physical original."},
+            {title:"Pink Carousel (digital)",image:"clownparty/web/pink_carousel_digital_web.jpg",fullRes:"https://arweave.net/3sdRZ9bzZVNkGKVEC-rdCvSfkFr1AQdgu2x21yQfXqg",tokenId:6,companion:true,pairIndex:8,description:"Digital companion to Pink Carousel."},
+            {title:"Goodnight Circus",image:"clownparty/web/goodnight_circus_physical_web.jpg",fullRes:"https://arweave.net/ATA8fFKjhLGyKw8uVkmGEI8AWMEcLd13U0Bh62BR_Yc",tokenId:1,description:"Physical original."},
+            {title:"Goodnight Circus (digital)",image:"clownparty/web/goodnight_circus_digital_web.jpg",fullRes:"https://arweave.net/ATA8fFKjhLGyKw8uVkmGEI8AWMEcLd13U0Bh62BR_Yc",tokenId:1,companion:true,pairIndex:10,description:"Digital companion to Goodnight Circus."}
         ]},
         { name: "ACKPFP", image: "ackpfp/morningstar.gif",
           wallLayout: true,
           description: "Profile picture collection by AlphaCentauriKid. Each ACKPFP holder can claim a signed physical print.",
           token: "ERC-721", chain: "Ethereum", contract: "0x7d0874f682c42f0fe907baf7785d9dcb5a0b1285",
           artworks: [
-            {title:"~timeReaper~",image:"ackpfp/timreaper.gif",fullRes:"ackpfp/timreaper.gif",tokenId:1},
-            {title:"serSingularity",image:"ackpfp/sersingularity.gif",fullRes:"ackpfp/sersingularity.gif",tokenId:5},
-            {title:"misterShady",image:"ackpfp/mistershady.gif",fullRes:"ackpfp/mistershady.gif",tokenId:3},
-            {title:"laserEyes",image:"ackpfp/lasereyes.gif",fullRes:"ackpfp/lasereyes.gif",tokenId:2},
-            {title:"morning star",image:"ackpfp/morningstar.gif",fullRes:"ackpfp/morningstar.gif",tokenId:9},
-            {title:"skullBoy",image:"ackpfp/skullboy.gif",fullRes:"ackpfp/skullboy.gif",tokenId:6},
-            {title:"no one",image:"ackpfp/noone.gif",fullRes:"ackpfp/noone.gif",tokenId:10},
-            {title:"cringe pepe",image:"ackpfp/web/cringepepe_web.jpg",fullRes:"ackpfp/cringepepe.png",tokenId:8,winningBid:"11.02 WETH",collector:"VincentVanDough"},
-            {title:"fireFace",image:"ackpfp/fireface.gif",fullRes:"ackpfp/fireface.gif",tokenId:4},
-            {title:"greg",image:"ackpfp/greg.gif",fullRes:"ackpfp/greg.gif",tokenId:7}
+            {title:"~timeReaper~",image:"ackpfp/timreaper.gif",fullRes:"https://arweave.net/hv5XUE9_hZqhjhGT3qbqBSvV-8eQ_yi3kOexAkhsz30",tokenId:1},
+            {title:"serSingularity",image:"ackpfp/sersingularity.gif",fullRes:"https://arweave.net/QTX3eFu7Y9peBIRAlq5L92dksjBw-Kw7rYt3bbyNGcc",tokenId:5},
+            {title:"misterShady",image:"ackpfp/mistershady.gif",fullRes:"https://arweave.net/Eal93gHFj44PiHPGYzlaz__fcRIp-r_NfQmIjVCl80g",tokenId:3},
+            {title:"laserEyes",image:"ackpfp/lasereyes.gif",fullRes:"https://arweave.net/b_4A7HyuwLaqxC00PoMsBLEBDPh9MhMh0JlXoNSsAR0",tokenId:2},
+            {title:"morning star",image:"ackpfp/morningstar.gif",fullRes:"https://arweave.net/Gh2dfHaGsNR5P33VClFwDzYVbxYmp6UuqixyPcNWA8o",tokenId:9},
+            {title:"skullBoy",image:"ackpfp/skullboy.gif",fullRes:"https://arweave.net/a48EQDKqsN20CrXNfw5w4Sags_Vhh3EoiWBGX9kumU0",tokenId:6},
+            {title:"no one",image:"ackpfp/noone.gif",fullRes:"https://arweave.net/dgNSgZHkO6pB4XxnuoHEo3B7J2hnRGvBVdflO4Sv0IU",tokenId:10},
+            {title:"cringe pepe",image:"ackpfp/web/cringepepe_web.jpg",fullRes:"https://arweave.net/T9TzoW3yqHi9ZBw3cmiXfGTVU8CzDJgdrJ30SdzMO0I",tokenId:8,winningBid:"11.02 WETH",collector:"VincentVanDough"},
+            {title:"fireFace",image:"ackpfp/fireface.gif",fullRes:"https://arweave.net/TgXQCUVtQn_UQ5r_6tsfZyac0Mau2YFmwFGqoy3SnNQ",tokenId:4},
+            {title:"greg",image:"ackpfp/greg.gif",fullRes:"https://arweave.net/iwe8737PCZcJsHj61jntF_MagWawadrOtFyWesoWok8",tokenId:7}
         ]},
         { name: "Piano Blossoms", image: "piano_blossoms/web/self_portrait_catalog.jpg",
           wallLayout: true,
@@ -7718,53 +7714,53 @@
           exhibitions: ["Grand Exhibition at Carnegie Hall, September 5, 2023", "OnCyber Virtual Gallery"],
           artworks: [
             {title:"The First Piano",image:"broken-keys-web/the_first_piano.jpg",fullRes:"https://arweave.net/7OFMeeKoyU-7Qvp-e8crjGWuoM057P3KUC9wz6_syL8",tokenId:1,description:"",winningBid:"20.42 ETH",collector:"stu.eth"},
-            {title:"There is no piano",image:"broken-keys-web/there_is_no_piano.jpg",fullRes:"broken-keys/there_is_no_piano.png",tokenId:2,description:"There is nothing at all",winningBid:"13.069 ETH",collector:"odi.eth"},
-            {title:"The Blue Forest",image:"broken-keys-web/the_blue_forest.jpg",fullRes:"broken-keys/the_blue_forest.png",tokenId:3,description:"The sound of the woods",winningBid:"16.0 ETH",collector:"soir.eth"},
-            {title:"Primordial Blue",image:"broken-keys-web/primordial_blue.jpg",fullRes:"broken-keys/primordial_blue.png",tokenId:4,description:"Everlasting",winningBid:"18.88 ETH",collector:"0x50f27cdb650879a41fb07038bf2b818845c20e17"},
-            {title:"The Collector",image:"broken-keys-web/the_collector.jpg",fullRes:"broken-keys/the_collector.png",tokenId:5,description:"He must consume the art he loves",winningBid:"19.6529 ETH",collector:"0x7ef4d2ed9d35b803ea3755dfa7fe686f17429b74"},
-            {title:"Rage",image:"broken-keys-web/rage.jpg",fullRes:"broken-keys/rage.png",tokenId:6,description:"...against the dying of the light",winningBid:"17.0 ETH",collector:"michaely.eth"},
-            {title:"Blue Birds",image:"broken-keys-web/blue_birds.jpg",fullRes:"broken-keys/blue_birds.png",tokenId:7,description:"Falling in love",winningBid:"14.0 ETH",collector:"antxx.eth"},
-            {title:"Vogue",image:"broken-keys-web/vogue.jpg",fullRes:"broken-keys/vogue.png",tokenId:46,description:"Secrets",winningBid:"14.4 ETH",collector:"gfunk.eth"},
-            {title:"Sojourn in the Centaurian Desert",image:"broken-keys-web/sojourn_in_the_centaurian_desert.jpg",fullRes:"broken-keys/sojourn_in_the_centaurian_desert.png",tokenId:9,description:"Temptation of a Saint",winningBid:"11.369 ETH",collector:"kutoa.eth"},
-            {title:"They Chose Violence",image:"broken-keys-web/they_chose_violence.jpg",fullRes:"broken-keys/they_chose_violence.png",tokenId:10,description:"",winningBid:"13.69 ETH",collector:"0x66d5527411d821cb513f2d214bbbc0ad73586b35"},
+            {title:"There is no piano",image:"broken-keys-web/there_is_no_piano.jpg",fullRes:"https://arweave.net/3VqFpPonZfq5QCFda5xZlu42Q2NdiPcSWdA0xeklcwQ",tokenId:2,description:"There is nothing at all",winningBid:"13.069 ETH",collector:"odi.eth"},
+            {title:"The Blue Forest",image:"broken-keys-web/the_blue_forest.jpg",fullRes:"https://arweave.net/eqDAqtqfuz_xOqCDUU7yGuOKyipZHrN2NjEnhxQ1k0M",tokenId:3,description:"The sound of the woods",winningBid:"16.0 ETH",collector:"soir.eth"},
+            {title:"Primordial Blue",image:"broken-keys-web/primordial_blue.jpg",fullRes:"https://arweave.net/yHUKrePVEpprOx5ZYLHzaGYHz3htvmXExDM3y17lHi8",tokenId:4,description:"Everlasting",winningBid:"18.88 ETH",collector:"0x50f27cdb650879a41fb07038bf2b818845c20e17"},
+            {title:"The Collector",image:"broken-keys-web/the_collector.jpg",fullRes:"https://arweave.net/XvWfzKCmAG6tOJUcfWQJr17MLcwSXrJkeaE0Zy92fhU",tokenId:5,description:"He must consume the art he loves",winningBid:"19.6529 ETH",collector:"0x7ef4d2ed9d35b803ea3755dfa7fe686f17429b74"},
+            {title:"Rage",image:"broken-keys-web/rage.jpg",fullRes:"https://arweave.net/qFVlEAE3kK3n1AL3wf_frxm9dlq13CofIrsWq5i1Zcg",tokenId:6,description:"...against the dying of the light",winningBid:"17.0 ETH",collector:"michaely.eth"},
+            {title:"Blue Birds",image:"broken-keys-web/blue_birds.jpg",fullRes:"https://arweave.net/Wlwy58G8CvOb2_6tz9DgBj3lLkvPpZaxNX-UB5ibqBA",tokenId:7,description:"Falling in love",winningBid:"14.0 ETH",collector:"antxx.eth"},
+            {title:"Vogue",image:"broken-keys-web/vogue.jpg",fullRes:"https://arweave.net/Dsbvw7qkfcVPjnLTiG7C8swZcgApL8cd5eIOjb45rho",tokenId:46,description:"Secrets",winningBid:"14.4 ETH",collector:"gfunk.eth"},
+            {title:"Sojourn in the Centaurian Desert",image:"broken-keys-web/sojourn_in_the_centaurian_desert.jpg",fullRes:"https://arweave.net/9CBBHBEchZOTwD0-sCFveH1YXqKRlyk8eB54QGgX8AI",tokenId:9,description:"Temptation of a Saint",winningBid:"11.369 ETH",collector:"kutoa.eth"},
+            {title:"They Chose Violence",image:"broken-keys-web/they_chose_violence.jpg",fullRes:"https://arweave.net/720JRCmJeKkwoOr90Vq_0A52eQEYfarAdTJUCfOBqVo",tokenId:10,description:"",winningBid:"13.69 ETH",collector:"0x66d5527411d821cb513f2d214bbbc0ad73586b35"},
             {title:"Center Of The Universe",image:"broken-keys-web/center_of_the_universe.jpg",fullRes:"https://arweave.net/FK5f2XY8rY-DN2TeC5JvrFEFCUqVcjBRfVI0drwcep0",tokenId:11,description:"The longer you stare, the more it consumes you",winningBid:"12.69 ETH",collector:"killianmoore.eth"},
-            {title:"The Unholy Grail",image:"broken-keys-web/the_unholy_grail.jpg",fullRes:"broken-keys/the_unholy_grail.png",tokenId:12,description:"a crypto native(ity) scene",winningBid:"10.69 ETH",collector:"apehammer.eth"},
-            {title:"Serendipity",image:"broken-keys-web/serendipity.jpg",fullRes:"broken-keys/serendipity.png",tokenId:13,description:"Her favorite color",winningBid:"26.9 ETH",collector:"batz.eth"},
-            {title:"Paradox",image:"broken-keys-web/paradox.jpg",fullRes:"broken-keys/paradox.png",tokenId:14,description:"",winningBid:"12.9 ETH",collector:"stu.eth"},
-            {title:"Feeding My Demons",image:"broken-keys-web/feeding_my_demons.jpg",fullRes:"broken-keys/feeding_my_demons.png",tokenId:15,description:"",winningBid:"9.69 ETH",collector:"0xe540a8d94bd379c4d9c0478c8fe9f7fe7f0b06e1"},
-            {title:"Escaping My Demons",image:"broken-keys-web/escaping_my_demons.jpg",fullRes:"broken-keys/escaping_my_demons.png",tokenId:16,description:"",winningBid:"12.0 ETH",collector:"darran.eth"},
-            {title:"god of shadows",image:"broken-keys-web/god_of_shadows.jpg",fullRes:"broken-keys/god_of_shadows.png",tokenId:36,description:"",winningBid:"12.6 ETH",collector:"josemaddoxo.eth"},
-            {title:"Fear Not, Behold I Bring Good Tidings",image:"broken-keys-web/fear_not__behold_i_bring_good_tidings.jpg",fullRes:"broken-keys/fear_not__behold_i_bring_good_tidings.png",tokenId:18,description:"You knew better",winningBid:"9.0 ETH",collector:"0x722e9468d7f8c2710b6dbfdf70f01b045aca1851"},
-            {title:"The Rose Labyrinth",image:"broken-keys-web/the_rose_labyrinth.jpg",fullRes:"broken-keys/the_rose_labyrinth.png",tokenId:19,description:"They say the heart of the Muse lies in the center",winningBid:"14.0 ETH",collector:"0x85c7199b5a36e87956cca466233de6710e849d6d"},
-            {title:"Happiest Place on Earth",image:"broken-keys-web/the_happiest_place_on_earth.jpg",fullRes:"broken-keys/the_happiest_place_on_earth.png",tokenId:20,description:"",winningBid:"12.9 ETH",collector:"stu.eth"},
-            {title:"God of Earth",image:"broken-keys-web/god_of_earth.jpg",fullRes:"broken-keys/god_of_earth.png",tokenId:21,description:"",winningBid:"13.0 ETH",collector:"chikai.eth"},
-            {title:"where the wicked things rest",image:"broken-keys-web/where_the_wicked_things_rest.jpg",fullRes:"broken-keys/where_the_wicked_things_rest.png",tokenId:22,description:"",winningBid:"13.69 ETH",collector:"johnastorv.eth"},
-            {title:"Retro 1969",image:"broken-keys-web/retro_1969.jpg",fullRes:"broken-keys/retro_1969.png",tokenId:23,description:"",winningBid:"12.0 ETH",collector:"0xbaea3cf94abd0d6e0f029ef5b0e54e9424a72985"},
-            {title:"god of light",image:"broken-keys-web/god_of_light.jpg",fullRes:"broken-keys/god_of_light.png",tokenId:37,description:"",winningBid:"16.9 ETH",collector:"1.curated.eth"},
-            {title:"here lies the king",image:"broken-keys-web/here_lies_the_king.jpg",fullRes:"broken-keys/here_lies_the_king.jpg",tokenId:25,description:"died for his Queen",winningBid:"16.0 ETH",collector:"0xe540a8d94bd379c4d9c0478c8fe9f7fe7f0b06e1"},
-            {title:"Pop Art",image:"broken-keys-web/pop_art.jpg",fullRes:"broken-keys/pop_art.png",tokenId:26,description:"Pretty red",winningBid:"11.6 ETH",collector:"rhymeten.eth"},
-            {title:"The Mad Pianist",image:"broken-keys-web/the_mad_pianist.jpg",fullRes:"broken-keys/the_mad_pianist.png",tokenId:27,description:"A self study",winningBid:"12.0 ETH",collector:"0x28b0ec2af8d6d30e02888b543652365180c6b3c9"},
-            {title:"Shattered Blue Piano with Red Keys",image:"broken-keys-web/shattered_blue_piano_with_red_keys.jpg",fullRes:"broken-keys/shattered_blue_piano_with_red_keys.png",tokenId:28,description:"",winningBid:"12.9 ETH",collector:"stu.eth"},
-            {title:"You Mustn't Pick the Purple Flowers",image:"broken-keys-web/you_mustn_t_pick_the_purple_flowers.jpg",fullRes:"broken-keys/you_mustn_t_pick_the_purple_flowers.png",tokenId:29,description:"Unless you wish to die. You mustn't pick them, dare i say, and mustn't ask me why.",winningBid:"10.69 ETH",collector:"0xdd1e6fee5428f89391963adc501d6a5fb9d9997e"},
-            {title:"Skullpture in Red Noise",image:"broken-keys-web/skullpture_in_red_noise.jpg",fullRes:"broken-keys/skullpture_in_red_noise.png",tokenId:30,description:"new york, 2023",winningBid:"14.6 ETH",collector:"tylerdurdeth.eth"},
-            {title:"Love Transcended",image:"broken-keys-web/love_transcended.jpg",fullRes:"broken-keys/love_transcended.png",tokenId:31,description:"",winningBid:"17.0 ETH",collector:"0x2df403262917752e9a7bb7420eef54b7a06b9e34"},
-            {title:"First Fruit of the Harvest",image:"broken-keys-web/first_fruit_of_the_harvest.jpg",fullRes:"broken-keys/first_fruit_of_the_harvest.png",tokenId:32,description:"",winningBid:"10.4269 ETH",collector:"budfoxnft.eth"},
-            {title:"I Wonder If She'll Care",image:"broken-keys-web/i_wonder_if_she_ll_care.jpg",fullRes:"broken-keys/i_wonder_if_she_ll_care.jpg",tokenId:33,description:"",winningBid:"12.81 ETH",collector:"misbehaving.eth"},
-            {title:"An Ancient Place",image:"broken-keys-web/an_ancient_place.jpg",fullRes:"broken-keys/an_ancient_place.png",tokenId:34,description:"It is said that Death himself lived here",winningBid:"11.2 ETH",collector:"0x85c7199b5a36e87956cca466233de6710e849d6d"},
-            {title:"In The Beginning",image:"broken-keys-web/in_the_beginning.jpg",fullRes:"broken-keys/in_the_beginning.png",tokenId:35,description:"",winningBid:"11.11 ETH",collector:"kutoa.eth"},
-            {title:"A Space Odyssey, 2023",image:"broken-keys-web/a_space_odyssey,_2023.jpg",fullRes:"broken-keys/a_space_odyssey,_2023.png",tokenId:17,description:"Journey to Alpha Centauri",winningBid:"24.659 ETH",collector:"genesis.punk6529.eth"},
-            {title:"Sunset",image:"broken-keys-web/sunset.jpg",fullRes:"broken-keys/sunset.png",tokenId:24,description:"",winningBid:"11.42 ETH",collector:"0xbf7dde433c85f7eb8fe734343101fbcc21548591"},
-            {title:"I Am My Own Suffering",image:"broken-keys-web/i_am_my_own_suffering.jpg",fullRes:"broken-keys/i_am_my_own_suffering.png",tokenId:38,description:"",winningBid:"9.9225 ETH",collector:"osf.eth"},
-            {title:"Untitled",image:"broken-keys-web/untitled.jpg",fullRes:"broken-keys/untitled.tif",tokenId:39,description:"forgotten",winningBid:"18.5769 ETH",collector:"0x28b8d4f7516a112e2e2fd462293a1c27cde327a7"},
-            {title:"The Looming Unknown",image:"broken-keys-web/the_looming_unknown.jpg",fullRes:"broken-keys/the_looming_unknown.png",tokenId:40,description:"",winningBid:"31.69 ETH",collector:"1.curated.eth"},
-            {title:"The Chosen One",image:"broken-keys-web/the_chosen_one.jpg",fullRes:"broken-keys/the_chosen_one.png",tokenId:47,description:"Dark forces seek to destroy the last piano in existence",winningBid:"15.5 ETH",collector:"0x30b25017ea50ca30b8ed8800c179878e23977ce7"},
-            {title:"ACKstract Concerto",image:"broken-keys-web/ackstract_concerto.jpg",fullRes:"broken-keys/ackstract_concerto.png",tokenId:42,description:"The God Theory",winningBid:"23.5 ETH",collector:"tagline.eth"},
-            {title:"Piano in a garden next to the Insane Asylum",image:"broken-keys-web/blue_piano_in_a_garden_next_to_the_insane_asylum.jpg",fullRes:"broken-keys/blue_piano_in_a_garden_next_to_the_insane_asylum.png",tokenId:43,description:"Cher Vincent, Vous êtes un grand et vrai serviteur de la Muse.",winningBid:"24.6 ETH",collector:"stu.eth"},
-            {title:"Chaos",image:"broken-keys-web/chaos.jpg",fullRes:"broken-keys/chaos.png",tokenId:44,description:"A colorful delight",winningBid:"21.0 ETH",collector:"0x28b8d4f7516a112e2e2fd462293a1c27cde327a7"},
-            {title:"The Manor",image:"broken-keys-web/the_manor.jpg",fullRes:"broken-keys/the_manor.jpg",tokenId:45,description:"",winningBid:"16.69 ETH",collector:"0xb29b1936c11b77cec6061a9daf765ee2666c8f77"},
-            {title:"The Void",image:"broken-keys-web/the_void.jpg",fullRes:"broken-keys/the_void.png",tokenId:8,description:"Sound not permitted",winningBid:"13.0 ETH",collector:"chikai.eth"},
-            {title:"self portrait",image:"broken-keys-web/self_portrait.jpg",fullRes:"broken-keys/self_portrait.gif",tokenId:41,description:"post mortem",winningBid:"30.0 ETH",collector:"drleenft.eth"},
-            {title:"I Dreamt of You Again Last Night",image:"broken-keys-web/i_dreamt_of_you_again_last_night.jpg",fullRes:"broken-keys/i_dreamt_of_you_again_last_night.png",tokenId:48,description:"",winningBid:"27.6 ETH",collector:"gfunk.eth"}
+            {title:"The Unholy Grail",image:"broken-keys-web/the_unholy_grail.jpg",fullRes:"https://arweave.net/oGBb0m7R9G21cczDvak1pvLiw5z1thIygVgKJELG2uE",tokenId:12,description:"a crypto native(ity) scene",winningBid:"10.69 ETH",collector:"apehammer.eth"},
+            {title:"Serendipity",image:"broken-keys-web/serendipity.jpg",fullRes:"https://arweave.net/8GqctRkDrGb8wyubWGmokRVS6b4UvThWD6jWDhXOiaA",tokenId:13,description:"Her favorite color",winningBid:"26.9 ETH",collector:"batz.eth"},
+            {title:"Paradox",image:"broken-keys-web/paradox.jpg",fullRes:"https://arweave.net/pUDQfdb6SvyBBQlZ0kXLfDLYVWMtUe993E52MV5pGUo",tokenId:14,description:"",winningBid:"12.9 ETH",collector:"stu.eth"},
+            {title:"Feeding My Demons",image:"broken-keys-web/feeding_my_demons.jpg",fullRes:"https://arweave.net/umAXyr1oq_oIgPczWcsUEEAi3tK6m0VPiCzo5DMjq_w",tokenId:15,description:"",winningBid:"9.69 ETH",collector:"0xe540a8d94bd379c4d9c0478c8fe9f7fe7f0b06e1"},
+            {title:"Escaping My Demons",image:"broken-keys-web/escaping_my_demons.jpg",fullRes:"https://arweave.net/Idj0_KXwlZ5Ixidad2u318Q4DWnN-vGIIA7MWE2JFUQ",tokenId:16,description:"",winningBid:"12.0 ETH",collector:"darran.eth"},
+            {title:"god of shadows",image:"broken-keys-web/god_of_shadows.jpg",fullRes:"https://arweave.net/61b1xG_Z7re8OpGhazlq6vpCp35QdzotA5lRW8jowj8",tokenId:36,description:"",winningBid:"12.6 ETH",collector:"josemaddoxo.eth"},
+            {title:"Fear Not, Behold I Bring Good Tidings",image:"broken-keys-web/fear_not__behold_i_bring_good_tidings.jpg",fullRes:"https://arweave.net/EbcLwcg6brugYzyuXq14BxqG_TXyGlb6GxSlLZiUVQg",tokenId:18,description:"You knew better",winningBid:"9.0 ETH",collector:"0x722e9468d7f8c2710b6dbfdf70f01b045aca1851"},
+            {title:"The Rose Labyrinth",image:"broken-keys-web/the_rose_labyrinth.jpg",fullRes:"https://arweave.net/juRq6E-5neYgObpuTyMcwvGItFSyBCHczJWB6R3Ky9M",tokenId:19,description:"They say the heart of the Muse lies in the center",winningBid:"14.0 ETH",collector:"0x85c7199b5a36e87956cca466233de6710e849d6d"},
+            {title:"Happiest Place on Earth",image:"broken-keys-web/the_happiest_place_on_earth.jpg",fullRes:"https://arweave.net/nuVsK5-fCzpKUP2wo_nWqSJyVZRufKixNqsmgqrAAhc",tokenId:20,description:"",winningBid:"12.9 ETH",collector:"stu.eth"},
+            {title:"God of Earth",image:"broken-keys-web/god_of_earth.jpg",fullRes:"https://arweave.net/RWses-sP4ToQ4oDXmhm8gVUZKO4Hoiqy2pDmffRNbtI",tokenId:21,description:"",winningBid:"13.0 ETH",collector:"chikai.eth"},
+            {title:"where the wicked things rest",image:"broken-keys-web/where_the_wicked_things_rest.jpg",fullRes:"https://arweave.net/F3AXF424TmE2Tfux5riA057gY7nhG1sHO3v2bnm04zU",tokenId:22,description:"",winningBid:"13.69 ETH",collector:"johnastorv.eth"},
+            {title:"Retro 1969",image:"broken-keys-web/retro_1969.jpg",fullRes:"https://arweave.net/ueLmh7EHZ86LPCIzJZvLfLMyYMdRgqL8MO5C-pwc62c",tokenId:23,description:"",winningBid:"12.0 ETH",collector:"0xbaea3cf94abd0d6e0f029ef5b0e54e9424a72985"},
+            {title:"god of light",image:"broken-keys-web/god_of_light.jpg",fullRes:"https://arweave.net/rQEEUI5dyNs8mGq2-eDzy3IUNWyGdhD9-Rlad0xCrwI",tokenId:37,description:"",winningBid:"16.9 ETH",collector:"1.curated.eth"},
+            {title:"here lies the king",image:"broken-keys-web/here_lies_the_king.jpg",fullRes:"https://arweave.net/FonMqlzcNzkzr-juDXWRVmlGZtLVgZVOs9L71Wyk3-Y",tokenId:25,description:"died for his Queen",winningBid:"16.0 ETH",collector:"0xe540a8d94bd379c4d9c0478c8fe9f7fe7f0b06e1"},
+            {title:"Pop Art",image:"broken-keys-web/pop_art.jpg",fullRes:"https://arweave.net/BiyncCk33kSX3pTwPVPZNWeUTX7TL17xtltqpGpGoeY",tokenId:26,description:"Pretty red",winningBid:"11.6 ETH",collector:"rhymeten.eth"},
+            {title:"The Mad Pianist",image:"broken-keys-web/the_mad_pianist.jpg",fullRes:"https://arweave.net/lIt6kTt23_5D436oY1JARq7erL8s1G7xusqpPctkCHo",tokenId:27,description:"A self study",winningBid:"12.0 ETH",collector:"0x28b0ec2af8d6d30e02888b543652365180c6b3c9"},
+            {title:"Shattered Blue Piano with Red Keys",image:"broken-keys-web/shattered_blue_piano_with_red_keys.jpg",fullRes:"https://arweave.net/JBgK8--O4KyxLzfQQsLqN2Amtkb7Y1n7ZAfIQ9R0hHA",tokenId:28,description:"",winningBid:"12.9 ETH",collector:"stu.eth"},
+            {title:"You Mustn't Pick the Purple Flowers",image:"broken-keys-web/you_mustn_t_pick_the_purple_flowers.jpg",fullRes:"https://arweave.net/7-oDTJY0wZHJYVCkD4vPOITvHxsk36vGnd9VgQG6-XM",tokenId:29,description:"Unless you wish to die. You mustn't pick them, dare i say, and mustn't ask me why.",winningBid:"10.69 ETH",collector:"0xdd1e6fee5428f89391963adc501d6a5fb9d9997e"},
+            {title:"Skullpture in Red Noise",image:"broken-keys-web/skullpture_in_red_noise.jpg",fullRes:"https://arweave.net/jjuRaTlJsGJ4UWW-Tq8Rh8s4BqaGRUGqxe2nCEBJrKo",tokenId:30,description:"new york, 2023",winningBid:"14.6 ETH",collector:"tylerdurdeth.eth"},
+            {title:"Love Transcended",image:"broken-keys-web/love_transcended.jpg",fullRes:"https://arweave.net/Zk8j1Z1XjA1lgJcmg2VoJGCm1BPNN0UFv8VyFbCvS2g",tokenId:31,description:"",winningBid:"17.0 ETH",collector:"0x2df403262917752e9a7bb7420eef54b7a06b9e34"},
+            {title:"First Fruit of the Harvest",image:"broken-keys-web/first_fruit_of_the_harvest.jpg",fullRes:"https://arweave.net/05cdVykmRBGNJ1tXvkcWv-fGiJ7EzF3VwIQP6fE-a8c",tokenId:32,description:"",winningBid:"10.4269 ETH",collector:"budfoxnft.eth"},
+            {title:"I Wonder If She'll Care",image:"broken-keys-web/i_wonder_if_she_ll_care.jpg",fullRes:"https://arweave.net/YndPYFNFU0-UJKkpxC8SURIqFM0nhUsuhRIYrcWUMN8",tokenId:33,description:"",winningBid:"12.81 ETH",collector:"misbehaving.eth"},
+            {title:"An Ancient Place",image:"broken-keys-web/an_ancient_place.jpg",fullRes:"https://arweave.net/tXrU6DYvfR6qix5MfdnEokA74IwY6Y_sTWbWgEp0zL4",tokenId:34,description:"It is said that Death himself lived here",winningBid:"11.2 ETH",collector:"0x85c7199b5a36e87956cca466233de6710e849d6d"},
+            {title:"In The Beginning",image:"broken-keys-web/in_the_beginning.jpg",fullRes:"https://arweave.net/7ncz8y7n8CS7dU4kzlSJIkYK2kbzuz-iv26UIvPFzI8",tokenId:35,description:"",winningBid:"11.11 ETH",collector:"kutoa.eth"},
+            {title:"A Space Odyssey, 2023",image:"broken-keys-web/a_space_odyssey,_2023.jpg",fullRes:"https://arweave.net/JY9CJk1bd2-RQIMTtcPaHpjrXFKdBfGB29JLyjPITDY",tokenId:17,description:"Journey to Alpha Centauri",winningBid:"24.659 ETH",collector:"genesis.punk6529.eth"},
+            {title:"Sunset",image:"broken-keys-web/sunset.jpg",fullRes:"https://arweave.net/JP1PXjNy-HJGVZN5PxRhsmAqW_cmad935axv_ZFLgOg",tokenId:24,description:"",winningBid:"11.42 ETH",collector:"0xbf7dde433c85f7eb8fe734343101fbcc21548591"},
+            {title:"I Am My Own Suffering",image:"broken-keys-web/i_am_my_own_suffering.jpg",fullRes:"https://arweave.net/9Nd2b7akyJv2Gf52W9KuT5fwPpq9jQFU9DvShrHvuDY",tokenId:38,description:"",winningBid:"9.9225 ETH",collector:"osf.eth"},
+            {title:"Untitled",image:"broken-keys-web/untitled.jpg",fullRes:"https://arweave.net/hK9nkFa2ffiimPGoP8TEEZ5UvRy7zb3UgmWMgP6gFHE",tokenId:39,description:"forgotten",winningBid:"18.5769 ETH",collector:"0x28b8d4f7516a112e2e2fd462293a1c27cde327a7"},
+            {title:"The Looming Unknown",image:"broken-keys-web/the_looming_unknown.jpg",fullRes:"https://arweave.net/pxBho955idTXQUhdM200U8W1ZoOSk49tzP7ArocjYb8",tokenId:40,description:"",winningBid:"31.69 ETH",collector:"1.curated.eth"},
+            {title:"The Chosen One",image:"broken-keys-web/the_chosen_one.jpg",fullRes:"https://arweave.net/G26w3y-PCHowhBtR36srwNV9DSBhX2zqCJbrN7HeJX4",tokenId:47,description:"Dark forces seek to destroy the last piano in existence",winningBid:"15.5 ETH",collector:"0x30b25017ea50ca30b8ed8800c179878e23977ce7"},
+            {title:"ACKstract Concerto",image:"broken-keys-web/ackstract_concerto.jpg",fullRes:"https://arweave.net/0vi9y1ESar4wZq_gt5VJEOiPSfkGNOUYV5vJ_jrz7SY",tokenId:42,description:"The God Theory",winningBid:"23.5 ETH",collector:"tagline.eth"},
+            {title:"Piano in a garden next to the Insane Asylum",image:"broken-keys-web/blue_piano_in_a_garden_next_to_the_insane_asylum.jpg",fullRes:"https://arweave.net/faBKj5I1S1-xF1aOCgjr7B7C70OlliDDpOCl1pTvKKw",tokenId:43,description:"Cher Vincent, Vous êtes un grand et vrai serviteur de la Muse.",winningBid:"24.6 ETH",collector:"stu.eth"},
+            {title:"Chaos",image:"broken-keys-web/chaos.jpg",fullRes:"https://arweave.net/QA_OWrljTtHgB5hpIxedHuLUla-RJ5JBi2PGSPDm8Co",tokenId:44,description:"A colorful delight",winningBid:"21.0 ETH",collector:"0x28b8d4f7516a112e2e2fd462293a1c27cde327a7"},
+            {title:"The Manor",image:"broken-keys-web/the_manor.jpg",fullRes:"https://arweave.net/umk4rOtxNWgBNfLKJr3i061PRqAbmOYHA5ehYMK6ZOU",tokenId:45,description:"",winningBid:"16.69 ETH",collector:"0xb29b1936c11b77cec6061a9daf765ee2666c8f77"},
+            {title:"The Void",image:"broken-keys-web/the_void.jpg",fullRes:"https://arweave.net/Dsbvw7qkfcVPjnLTiG7C8swZcgApL8cd5eIOjb45rho",tokenId:8,description:"Sound not permitted",winningBid:"13.0 ETH",collector:"chikai.eth"},
+            {title:"self portrait",image:"broken-keys-web/self_portrait.jpg",fullRes:"https://arweave.net/w0n76AvKMiIPWbcH3C6FB2HubxKYvISFDNnYmbJ6-L0",tokenId:41,description:"post mortem",winningBid:"30.0 ETH",collector:"drleenft.eth"},
+            {title:"I Dreamt of You Again Last Night",image:"broken-keys-web/i_dreamt_of_you_again_last_night.jpg",fullRes:"https://arweave.net/eJf5YxdzTM-jy_SJst60EyfGuETWUsH9LNTGARwYATM",tokenId:48,description:"",winningBid:"27.6 ETH",collector:"gfunk.eth"}
         ]},
         { name: "Warothys", image: "warothy/web/warothy_catalog.jpg",
           wallLayout: true,
@@ -7774,36 +7770,36 @@
           salesData: { totalVolume: "~€125,000", totalSales: "25", highestSale: "€5,000" },
           exhibitionMedia: [],
           artworks: [
-            {title:"Wicked",image:"warothy/web/wicked_web.gif",fullRes:"warothy/1.Wicked.gif",tokenId:1,description:"Digital companion #1. Lenticular print paired with unique digital artwork."},
-            {title:"Capulet",image:"warothy/web/capulet_web.gif",fullRes:"warothy/2.Capulet.gif",tokenId:2,description:"Digital companion #2."},
-            {title:"Devil",image:"warothy/web/devil_web.gif",fullRes:"warothy/3.Devil.gif",tokenId:3,description:"Digital companion #3."},
-            {title:"Ruby Red",image:"warothy/web/ruby_red_web.gif",fullRes:"warothy/4.Ruby_Red.gif",tokenId:4,description:"Digital companion #4."},
-            {title:"Songbird",image:"warothy/web/songbird_web.gif",fullRes:"warothy/5.Songbird.gif",tokenId:5,description:"Digital companion #5."},
-            {title:"Flowers",image:"warothy/web/flowers_web.gif",fullRes:"warothy/6.Flowers.gif",tokenId:6,description:"Digital companion #6."},
-            {title:"Tiger Lily",image:"warothy/web/tiger_lily_web.gif",fullRes:"warothy/7.Tiger_Lily.gif",tokenId:7,description:"Digital companion #7."},
-            {title:"Louvre",image:"warothy/web/louvre_web.gif",fullRes:"warothy/8.Louvre.gif",tokenId:8,description:"Digital companion #8."},
-            {title:"Tin Flames",image:"warothy/web/tin_flames_web.gif",fullRes:"warothy/9.Tin_Flames.gif",tokenId:9,description:"Digital companion #9."},
-            {title:"Lollipop",image:"warothy/web/lollipop_web.gif",fullRes:"warothy/10.Lollipop.gif",tokenId:10,description:"Digital companion #10."},
-            {title:"Sage Blue Dorothy",image:"warothy/web/sage_blue_dorothy_web.gif",fullRes:"warothy/Sage_Blue_Dorothy.gif",tokenId:11,description:"Digital companion #11."},
-            {title:"Emerald Conspiracy",image:"warothy/web/emerald_conspiracy_web.gif",fullRes:"warothy/Emerald_Conspiricy.gif",tokenId:12,description:"Digital companion #12."},
-            {title:"Witch Killer",image:"warothy/web/witch_killer_web.gif",fullRes:"warothy/Witch_Killer.gif",tokenId:13,description:"Digital companion #13."},
-            {title:"Pale Blue Dreamer",image:"warothy/web/pale_blue_dreamer_web.gif",fullRes:"warothy/Pale_Blue_Dreamer.gif",tokenId:14,description:"Digital companion #14."},
-            {title:"Montague",image:"warothy/web/montague_web.gif",fullRes:"warothy/Montague.gif",tokenId:15,description:"Digital companion #15."},
-            {title:"Star-Crossed",image:"warothy/web/star_crossed_web.gif",fullRes:"warothy/Star_Crossed.gif",tokenId:16,description:"Digital companion #16."},
-            {title:"No Place Like Home",image:"warothy/web/no_place_like_home_web.gif",fullRes:"warothy/No_Place_Like_Home.gif",tokenId:17,description:"Digital companion #17."},
-            {title:"ULTRA VIOLET",image:"warothy/web/ultra_violet_web.gif",fullRes:"warothy/18.Ultra_Violet.gif",tokenId:18,description:"Digital companion #18."},
-            {title:"MAX PINK",image:"warothy/web/maxpink_web.gif",fullRes:"warothy/19.MAXPINK.gif",tokenId:19,description:"Digital companion #19."},
-            {title:"Pastel Poppies",image:"warothy/web/pastel_poppies_web.gif",fullRes:"warothy/20.Pastel_Poppies.gif",tokenId:20,description:"Digital companion #20."},
-            {title:"Candy Land",image:"warothy/web/candy_land_web.gif",fullRes:"warothy/21.Candy-Land-final.gif",tokenId:21,description:"Digital companion #21."},
-            {title:"Sight For Sore Eyes",image:"warothy/web/sight_for_sore_eyes_web.gif",fullRes:"warothy/22.Sight_For_Sore_Eyes.gif",tokenId:22,description:"Digital companion #22."},
-            {title:"Technicolor Dreamcoat",image:"warothy/web/technicolor_dreamcoat_web.gif",fullRes:"warothy/24.Technicolor-Dreamcoatfinal.gif",tokenId:23,description:"Digital companion #23."},
-            {title:"Blush",image:"warothy/web/blush_web.gif",fullRes:"warothy/23.Blush.gif",tokenId:24,description:"Digital companion #24."},
-            {title:"Monochrome Magic",image:"warothy/web/monochrome_magic_web.gif",fullRes:"warothy/initial.gif",tokenId:25,description:"Digital companion #25."},
+            {title:"Wicked",image:"warothy/web/wicked_web.gif",fullRes:"https://arweave.net/Zj7U8RsqXxTX4Fcgdau3D5ZMoCTEW4iDM1X1j-oBng4",tokenId:1,description:"Digital companion #1. Lenticular print paired with unique digital artwork."},
+            {title:"Capulet",image:"warothy/web/capulet_web.gif",fullRes:"https://arweave.net/Lf8Yvbiiv6Kc3gUO0Dr5y2pSL6ml1G2lPV3c2fEr5EA",tokenId:2,description:"Digital companion #2."},
+            {title:"Devil",image:"warothy/web/devil_web.gif",fullRes:"https://arweave.net/8j_Wft3OQ4DHxT_ZUoVNuYjoM1Zm3xUMsqsBoHj-1dI",tokenId:3,description:"Digital companion #3."},
+            {title:"Ruby Red",image:"warothy/web/ruby_red_web.gif",fullRes:"https://arweave.net/wJMrHZEFtymgbQCMzPUuz5DZcbXYiFKrR9sW47JhOZM",tokenId:4,description:"Digital companion #4."},
+            {title:"Songbird",image:"warothy/web/songbird_web.gif",fullRes:"https://arweave.net/Y3dIvZPRTl5GFSs4VUVvvTcnAQjJl9J8pCulVMbm7zI",tokenId:5,description:"Digital companion #5."},
+            {title:"Flowers",image:"warothy/web/flowers_web.gif",fullRes:"https://arweave.net/6acdKRRTT9_nur_yQW0yF_s7UUDK--j7QTFgmQt5Vvo",tokenId:6,description:"Digital companion #6."},
+            {title:"Tiger Lily",image:"warothy/web/tiger_lily_web.gif",fullRes:"https://arweave.net/p0EBvlfXkuwRmc1S6g78lOrrNsNaG3yoHzlfcmZzuZ4",tokenId:7,description:"Digital companion #7."},
+            {title:"Louvre",image:"warothy/web/louvre_web.gif",fullRes:"https://arweave.net/kRYPuqumVDd5sI4X_s2_wdVdnmMZAZ2qqNL8lF0pn_M",tokenId:8,description:"Digital companion #8."},
+            {title:"Tin Flames",image:"warothy/web/tin_flames_web.gif",fullRes:"https://arweave.net/LFwY64cjU_vwGNPnHtuEODMgMjIYy2jIZDHpN68COD0",tokenId:9,description:"Digital companion #9."},
+            {title:"Lollipop",image:"warothy/web/lollipop_web.gif",fullRes:"https://arweave.net/IQvcOS88ydpFkN_T5eWZT3cHWeuYRK7KqRhka3NFJ5Y",tokenId:10,description:"Digital companion #10."},
+            {title:"Sage Blue Dorothy",image:"warothy/web/sage_blue_dorothy_web.gif",fullRes:"https://arweave.net/r6-O8iqcRmPYivjPVxJXuI1drvFzGhiD-1xrJPGI3m4",tokenId:11,description:"Digital companion #11."},
+            {title:"Emerald Conspiracy",image:"warothy/web/emerald_conspiracy_web.gif",fullRes:"https://arweave.net/6D5AD6ScOqDvWE52E4BfVz24VRz6ax0Od-S2VsAAK5w",tokenId:12,description:"Digital companion #12."},
+            {title:"Witch Killer",image:"warothy/web/witch_killer_web.gif",fullRes:"https://arweave.net/imlIBC2VsEFhKAEy6Wk6iwZQuXnQm7RlQUOURQTookQ",tokenId:13,description:"Digital companion #13."},
+            {title:"Pale Blue Dreamer",image:"warothy/web/pale_blue_dreamer_web.gif",fullRes:"https://arweave.net/eU8ksHtrGoKUtrW1ctqLC3wyDToFLsc0wkeMVOm0RGE",tokenId:14,description:"Digital companion #14."},
+            {title:"Montague",image:"warothy/web/montague_web.gif",fullRes:"https://arweave.net/tqELIBnxgALQkBGp1M5Yj7iAXzKmGLcgizTqt339F90",tokenId:15,description:"Digital companion #15."},
+            {title:"Star-Crossed",image:"warothy/web/star_crossed_web.gif",fullRes:"https://arweave.net/ySkCl7VkkmfO1L5z-Ej2Bwwzdl08SSwxafNT9i_WRVg",tokenId:16,description:"Digital companion #16."},
+            {title:"No Place Like Home",image:"warothy/web/no_place_like_home_web.gif",fullRes:"https://arweave.net/4xVQlS5UoCXQiUMMrTp0EvTe_bU8UiMTxxxVW3BnLSU",tokenId:17,description:"Digital companion #17."},
+            {title:"ULTRA VIOLET",image:"warothy/web/ultra_violet_web.gif",fullRes:"https://arweave.net/JcVRwFm7ChxMAJSuHIavIfIykzT7ONg2XrWuJerth9U",tokenId:18,description:"Digital companion #18."},
+            {title:"MAX PINK",image:"warothy/web/maxpink_web.gif",fullRes:"https://arweave.net/uZZ61BRl-xHd3iMF_We2lk0MCoZZSrfefvU_98OIWeA",tokenId:19,description:"Digital companion #19."},
+            {title:"Pastel Poppies",image:"warothy/web/pastel_poppies_web.gif",fullRes:"https://arweave.net/1OX1EUP3TUpZMwrMx-pXbICQFgm7aEm9Cjqv3HbtLgw",tokenId:20,description:"Digital companion #20."},
+            {title:"Candy Land",image:"warothy/web/candy_land_web.gif",fullRes:"https://arweave.net/zNvhNmk_bxL4trgbIXLQHrYk1sh1-XhA9v4sj7hmGx4",tokenId:21,description:"Digital companion #21."},
+            {title:"Sight For Sore Eyes",image:"warothy/web/sight_for_sore_eyes_web.gif",fullRes:"https://arweave.net/2x-cA5hyMulwKg_LRMhqxs35Ecvk_tf1C5G-IL4cpCI",tokenId:22,description:"Digital companion #22."},
+            {title:"Technicolor Dreamcoat",image:"warothy/web/technicolor_dreamcoat_web.gif",fullRes:"https://arweave.net/9iVUViD3Uv1BwkZ0m7D_jD9F_POnIX4FjKPQk7q08uc",tokenId:23,description:"Digital companion #23."},
+            {title:"Blush",image:"warothy/web/blush_web.gif",fullRes:"https://arweave.net/ASWEcJrGTHcS2MOwqNPwNxa7WTSLZqYrCgeugohnGdg",tokenId:24,description:"Digital companion #24."},
+            {title:"Monochrome Magic",image:"warothy/web/monochrome_magic_web.gif",fullRes:"https://arweave.net/dKYJYm_nilhAO67OQz75UBOZAfo70n59SdxOc3ynl2A",tokenId:25,description:"Digital companion #25."},
             {title:"Warothy (Physical)",image:"warothy/web/warothy_physical_web.gif",fullRes:"warothy/warothy4k.gif",edition:"Edition of 25",description:"Limited edition lenticular PETG print, 69×69×3cm. Collaboration with Avant Arte. €5,000 per edition.",isPhysical:true},
             {title:"ACK & Avant Arte Collaboration",image:"",isInfoCard:true,description:"25 limited edition lenticular PETG prints, each paired with a unique 1-of-1 digital companion. Warothy — a reimagining of Dorothy through the lens of digital art. Produced by Avant Arte, 69×69×3cm."}
         ]},
         { name: "SuperRare", image: "but_wait_thumb.jpg", contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0", artworks: [
-            {title:"but wait...my bags!",image:"superrare/butwait/but_wait_small.gif",fullRes:"superrare/butwait/butwait_fullres.gif",
+            {title:"but wait...my bags!",image:"superrare/butwait/but_wait_small.gif",fullRes:"https://ipfs.io/ipfs/Qme6uXtzKdp1TY1hSsdyU1pMxQCkYUumEsJ5jDnboVvsGx/originbags.gif",
              tokenId:47875,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"I promise I can change",image:"https://arweave.net/1Sas2deHRkHZ9ZigvldnbOiC94naLD29j8f4LHD6j5M",
              isLiar:true,
@@ -7817,22 +7813,22 @@
              ],
              tokenId:36334,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0",
              description:"Type LIAR to reveal the truth."},
-            {title:"love is in the air",image:"superrare/love_is_in_the_air/loveisintheair.gif",
+            {title:"love is in the air",image:"superrare/love_is_in_the_air/loveisintheair.gif",fullRes:"https://ipfs.io/ipfs/QmYXRWT26dAFbUQPaofv8fkHEHWN2JvjZk6K4wKGvvhtG2/ACK-COLLAB-Recovered.gif",
              tokenId:35800,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
-            {title:"crypto art",image:"superrare/cryptoart/cryptoartmuse_resized.gif",
+            {title:"crypto art",image:"superrare/cryptoart/cryptoartmuse_resized.gif",fullRes:"https://arweave.net/X6lCb0oI8XbwVQKtYYowZLwu57Uz9S1wsjd7DeI6mAw",
              tokenId:33858,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
-            {title:"shady bunch",image:"superrare/shadybunch/shadybunch_master.gif",
+            {title:"shady bunch",image:"superrare/shadybunch/shadybunch_master.gif",fullRes:"https://ipfs.io/ipfs/QmbgD6DoN5FGosEGS9p4eqNZyvBtoH58LufMM9w1UKQQUQ/shadybunch.gif",
              tokenId:33270,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"6942",image:"superrare/6942/6942_web.jpg",
-             fullRes:"superrare/6942/6942_fullres.png",
+             fullRes:"https://ipfs.io/ipfs/Qmanaszukj1TRS98v9LXcf5v218q4PeEvtnd2Af1yCgAEC/mother.png",
              tokenId:32650,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
-            {title:"she loves me not",image:"superrare/she_loves_me_not/shelovesmenot.gif",
+            {title:"she loves me not",image:"superrare/she_loves_me_not/shelovesmenot.gif",fullRes:"https://ipfs.io/ipfs/QmcSYUx693hVDyUTmuUqGjXd5RRXSyxhbRB2EqTbyyefq6/1grimmglitch.gif",
              tokenId:32516,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"all time high on centauri",image:"superrare/alltimehigh/alltimehigh_web.jpg",
-             fullRes:"superrare/alltimehigh/alltimehigh.mp4",
+             fullRes:"https://ipfs.io/ipfs/Qmb4UNqVy18qvtX9qJKR3C6jULCuhatPKVxJLHt7pg84RR/ATHmaster.png",
              tokenId:31322,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"ctrl + alt + generate",image:"superrare/ctrlaltgen/ctrlaltgen_web.jpg",
-             fullRes:"superrare/ctrlaltgen/1080rcp.mp4",
+             fullRes:"https://ipfs.io/ipfs/QmT7DDa7qFpEssLESuHvXbcSSjdnAvQ3RFsJ6TBVEhi8MR/IMG_7945.GIF",
              tokenId:29200,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"}
         ]},
         { name: "Heart You", image: "https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/b17eac188a54cba4f200a27867cf25/71b17eac188a54cba4f200a27867cf25.gif?w=500",
@@ -7897,19 +7893,19 @@
           description: "Limited edition animated works by AlphaCentauriKid. ERC-1155 on Ethereum.",
           token: "ERC-1155", chain: "Ethereum", contract: "0x232a68a51d6e07357ae025d2a459c16077327102",
           artworks: [
-            {title:"Void Engine",image:"ackeditions_gallery/web/void_engine_web.gif",fullRes:"ackeditions_gallery/void_engine.gif",edition:"Edition of 6",tokenId:17},
-            {title:"lisan al-gaib",image:"ackeditions_gallery/web/lisan_web.gif",fullRes:"ackeditions_gallery/lisan.gif",edition:"Edition of 10",tokenId:20},
-            {title:"Exodus",image:"ackeditions_gallery/web/exodus_web.gif",fullRes:"ackeditions_gallery/exodus.gif",edition:"Edition of 5",tokenId:16},
-            {title:"Aerial Screw",image:"ackeditions_gallery/web/aerial_screw_web.gif",fullRes:"ackeditions_gallery/aerial_screw.gif",hoverImage:"ackeditions_gallery/web/Specchio_Vortice_web.gif",edition:"Edition of 14",tokenId:19},
-            {title:"pink elephant on parade",image:"ackeditions_gallery/web/pink_elephant_on_parade_web.gif",fullRes:"ackeditions_gallery/pink_elephant_on_parade.gif",edition:"Edition of 48",tokenId:5},
-            {title:"majestic white elephant",image:"ackeditions_gallery/web/majestic_white_elephant_web.gif",fullRes:"ackeditions_gallery/majestic_white_elephant.gif",edition:"Edition of 47",tokenId:6},
-            {title:"circus elephant",image:"ackeditions_gallery/web/circus_elephant_web.gif",fullRes:"ackeditions_gallery/circus_elephant.gif",edition:"Edition of 9",tokenId:11},
-            {title:"Skelekart",image:"ackeditions_gallery/web/skelekart_web.gif",fullRes:"ackeditions_gallery/skelekart.gif",edition:"Edition of 13",tokenId:18},
-            {title:"la nuit étoilée",image:"ackeditions_gallery/web/lanuit_web.gif",fullRes:"ackeditions_gallery/lanuit.gif",edition:"Edition of 300",tokenId:8},
-            {title:"max pain v2",image:"ackeditions_gallery/web/maxpainv2_web.gif",fullRes:"ackeditions_gallery/maxpainv2.gif",edition:"Edition of 613",tokenId:14},
-            {title:"NGMI Burn Token",image:"ackeditions_gallery/web/ngmi_bottle_web.gif",fullRes:"ackeditions_gallery/ngmi_bottle.gif",edition:"Edition of 8",tokenId:3},
-            {title:"WAGMI Burn Token",image:"ackeditions_gallery/web/wagmi_bottle_web.gif",fullRes:"ackeditions_gallery/wagmi_bottle.gif",edition:"Edition of 7",tokenId:4},
-            {title:"burn to redeem",image:"ackeditions_gallery/web/burntoredeem_web.png",fullRes:"ackeditions_gallery/burntoredeem.png",edition:"Edition of 136",tokenId:15}
+            {title:"Void Engine",image:"ackeditions_gallery/web/void_engine_web.gif",fullRes:"https://arweave.net/8kkyEK4DpnQcYt0U3hhlWnxOHIJTV6IuRT1gZvhpNSs",edition:"Edition of 6",tokenId:17},
+            {title:"lisan al-gaib",image:"ackeditions_gallery/web/lisan_web.gif",fullRes:"https://arweave.net/WMsZKEGSnwbNib_Wh5CD7rYVV86aetz2xaUAhDla1JY",edition:"Edition of 10",tokenId:20},
+            {title:"Exodus",image:"ackeditions_gallery/web/exodus_web.gif",fullRes:"https://arweave.net/5d_X3b7o7_eHzwu6YtxO_Ut6B5bBzfpye88huFKgBVg",edition:"Edition of 5",tokenId:16},
+            {title:"Aerial Screw",image:"ackeditions_gallery/web/aerial_screw_web.gif",fullRes:"https://arweave.net/HjFxopgbKEw2BMq0m0Y5v66pNAjROwG3m0CrUpUwIgs",hoverImage:"ackeditions_gallery/web/Specchio_Vortice_web.gif",edition:"Edition of 14",tokenId:19},
+            {title:"pink elephant on parade",image:"ackeditions_gallery/web/pink_elephant_on_parade_web.gif",fullRes:"https://arweave.net/a9hPFmM_bLjJMiTbQJU8wzz5djzcHSKxU4-lIX0f8wE",edition:"Edition of 48",tokenId:5},
+            {title:"majestic white elephant",image:"ackeditions_gallery/web/majestic_white_elephant_web.gif",fullRes:"https://arweave.net/LGeabOluX7iO7XcHWx5CMz7HdLYkNqTvaqZMGZQff4I",edition:"Edition of 47",tokenId:6},
+            {title:"circus elephant",image:"ackeditions_gallery/web/circus_elephant_web.gif",fullRes:"https://arweave.net/ZcwEDRsy7Ie0fUT2jA4SgNcXUAFFMGidSoEui4tE4AI",edition:"Edition of 9",tokenId:11},
+            {title:"Skelekart",image:"ackeditions_gallery/web/skelekart_web.gif",fullRes:"https://arweave.net/OQTf6kIy53YT7x0lnJqFDT6JGFRHdLPYWrWRmu6Ts-M",edition:"Edition of 13",tokenId:18},
+            {title:"la nuit étoilée",image:"ackeditions_gallery/web/lanuit_web.gif",fullRes:"https://arweave.net/yGmovdTJKNtu91z9bK9xHPFCSIaeiu8mseac7rkyaRM",edition:"Edition of 300",tokenId:8},
+            {title:"max pain v2",image:"ackeditions_gallery/web/maxpainv2_web.gif",fullRes:"https://arweave.net/KaHGqy9BHdSlZ5LctCIbBQa15t2gmlcZyLlDI1BcKDI",edition:"Edition of 613",tokenId:14},
+            {title:"NGMI Burn Token",image:"ackeditions_gallery/web/ngmi_bottle_web.gif",fullRes:"https://arweave.net/mWxN-xqSsuijB7Q3r0xp14njv29knRddC5Dh8XK4exg",edition:"Edition of 8",tokenId:3},
+            {title:"WAGMI Burn Token",image:"ackeditions_gallery/web/wagmi_bottle_web.gif",fullRes:"https://arweave.net/NVHhw2YvC7HKEgg1l9uTle16DcY1IG8hElcXhUVZXjY",edition:"Edition of 7",tokenId:4},
+            {title:"burn to redeem",image:"ackeditions_gallery/web/burntoredeem_web.png",fullRes:"https://arweave.net/chanTsr8YqD_kcUhd4SFKQdBVbmKrRolEwQjlE2WNog",edition:"Edition of 136",tokenId:15}
         ]},
         { name: "The Great Color Study", image: "colorstudys/thumbs/pbd_anim.gif",
           wallLayout: true,
@@ -7926,7 +7922,7 @@
             {title:"Electric Gray",image:"colorstudys/electricgray.gif",tokenId:1,edition:"Edition of 238",description:"Pantone Cool Gray 8 C"},
             {title:"Royalty",image:"colorstudys/royalty.gif",tokenId:4,edition:"Edition of 255",description:"Pantone Violet C"},
             {title:"Stardust",image:"colorstudys/stardust.gif",tokenId:8,edition:"Edition of 398",description:"Pantone Black 6 C"},
-            {title:"pale blue death (a color study)",image:"colorstudys/pbd.gif",fullRes:"colorstudys/pbd.gif",webGif:"colorstudys/thumbs/pbd_anim.gif",tokenId:13,edition:"Edition of 55",description:"Pantone 297 C. Released free to ACK badge holders on Sep 6, 2022. Edition of 55, limited until the release of ACK's piano collection.",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"},
+            {title:"pale blue death (a color study)",image:"colorstudys/pbd.gif",fullRes:"https://arweave.net/dhZbwF62HFGf_RVxl82xFnpdmWEcibauT788TT8Muqk",webGif:"colorstudys/thumbs/pbd_anim.gif",tokenId:13,edition:"Edition of 55",description:"Pantone 297 C. Released free to ACK badge holders on Sep 6, 2022. Edition of 55, limited until the release of ACK's piano collection.",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"},
             {title:"max pain v2",image:"colorstudys/maxpainv2.gif",tokenId:14,edition:"Edition of 613",description:"oh the agony",contract:"0x232a68a51d6e07357ae025d2a459c16077327102"}
         ]},
         { name: "Opepen Set 030: a.c.k.", image: "opepen/web/opepen_catalog.jpg",
@@ -7934,12 +7930,12 @@
           description: "Opepen Set 030: a.c.k. — AlphaCentauriKid's contribution to Jack Butcher's Opepen Edition. Six artworks across edition tiers, each reimagining the Opepen silhouette through ACK's signature collage of classical art, skulls, and Muse mythology.",
           token: "ERC-721", chain: "Ethereum", contract: "0x6339e5e072086621540d0362c4e3cea0d643e114",
           artworks: [
-            {title:"supernatural",image:"opepen/web/supernatural_web.jpg",fullRes:"opepen/Opepen supernatural.png",edition:"1 of 1",tokenId:10633,tokenIds:[10633],description:"The 1/1. Classical figures entwined in supernatural ascension — the rarest tier of Set 030."},
-            {title:"the servant",image:"opepen/web/the_servant_web.jpg",fullRes:"opepen/Opepen the servant.png",edition:"1 of 4",tokenId:6171,tokenIds:[6171,12317,13256,13647],description:"Edition of 4. The servant coin reimagined as an Opepen — clockwork devotion to the Muse."},
-            {title:"romeopepen",image:"opepen/web/romeopepen_web.jpg",fullRes:"opepen/Opepen romeopepen (1).png",edition:"1 of 5",tokenId:1275,tokenIds:[1275,7367,9583,13125,15236],description:"Edition of 5. Romeo and Juliet retold through moonlit balcony and wisteria — a nocturnal love letter."},
-            {title:"Muse T.V.",image:"opepen/web/musetv_web.jpg",fullRes:"opepen/Opepen Muse T.V. (1).png",edition:"1 of 10",tokenId:4584,tokenIds:[4584,4645,6466,6601,8517,8932,9854,12244,13740,15516],description:"Edition of 10. The Muse broadcasts through static and skeleton — a memento mori for the screen age."},
-            {title:"tiptoe",image:"opepen/web/tiptoe_web.jpg",fullRes:"opepen/Opepen tiptoe (1).png",edition:"1 of 20",tokenId:216,tokenIds:[216,1553,2383,3252,3692,4202,5501,6192,6669,7282,7858,8026,8132,8942,12149,12386,12910,13139,14008,15324],description:"Edition of 20. A piano skeleton dances on water's edge — music and mortality in delicate balance."},
-            {title:"da Vinci van Gogh",image:"opepen/web/davinci_vangogh_web.jpg",fullRes:"opepen/Opepen da Vinci van Gogh (1).png",edition:"1 of 40",tokenId:7,tokenIds:[7,785,1485,1834,2499,2647,3242,4124,4875,5313,5314,6089,6574,6592,6735,6765,6999,7484,7969,8065,8818,9333,9399,9870,10307,10485,10755,10856,11023,12080,12219,12699,13084,13281,13352,13653,14710,14743,15364,15527],description:"Edition of 40. Two skulls bloom with Van Gogh's almond blossoms — masters merged in memento mori."}
+            {title:"supernatural",image:"opepen/web/supernatural_web.jpg",fullRes:"https://ipfs.io/ipfs/QmasXxev43z8UBLP2Yj8xv4ZEBAFq7VpT3Lhe5C18jHaZ5/supernatural.png",edition:"1 of 1",tokenId:10633,tokenIds:[10633],description:"The 1/1. Classical figures entwined in supernatural ascension — the rarest tier of Set 030."},
+            {title:"the servant",image:"opepen/web/the_servant_web.jpg",fullRes:"https://ipfs.io/ipfs/QmasXxev43z8UBLP2Yj8xv4ZEBAFq7VpT3Lhe5C18jHaZ5/the servant.png",edition:"1 of 4",tokenId:6171,tokenIds:[6171,12317,13256,13647],description:"Edition of 4. The servant coin reimagined as an Opepen — clockwork devotion to the Muse."},
+            {title:"romeopepen",image:"opepen/web/romeopepen_web.jpg",fullRes:"https://ipfs.io/ipfs/QmasXxev43z8UBLP2Yj8xv4ZEBAFq7VpT3Lhe5C18jHaZ5/romeopepen.png",edition:"1 of 5",tokenId:1275,tokenIds:[1275,7367,9583,13125,15236],description:"Edition of 5. Romeo and Juliet retold through moonlit balcony and wisteria — a nocturnal love letter."},
+            {title:"Muse T.V.",image:"opepen/web/musetv_web.jpg",fullRes:"https://ipfs.io/ipfs/QmasXxev43z8UBLP2Yj8xv4ZEBAFq7VpT3Lhe5C18jHaZ5/Muse TV.png",edition:"1 of 10",tokenId:4584,tokenIds:[4584,4645,6466,6601,8517,8932,9854,12244,13740,15516],description:"Edition of 10. The Muse broadcasts through static and skeleton — a memento mori for the screen age."},
+            {title:"tiptoe",image:"opepen/web/tiptoe_web.jpg",fullRes:"https://ipfs.io/ipfs/QmasXxev43z8UBLP2Yj8xv4ZEBAFq7VpT3Lhe5C18jHaZ5/tiptoe.png",edition:"1 of 20",tokenId:216,tokenIds:[216,1553,2383,3252,3692,4202,5501,6192,6669,7282,7858,8026,8132,8942,12149,12386,12910,13139,14008,15324],description:"Edition of 20. A piano skeleton dances on water's edge — music and mortality in delicate balance."},
+            {title:"da Vinci van Gogh",image:"opepen/web/davinci_vangogh_web.jpg",fullRes:"https://ipfs.io/ipfs/QmasXxev43z8UBLP2Yj8xv4ZEBAFq7VpT3Lhe5C18jHaZ5/da Vinci van Gogh.png",edition:"1 of 40",tokenId:7,tokenIds:[7,785,1485,1834,2499,2647,3242,4124,4875,5313,5314,6089,6574,6592,6735,6765,6999,7484,7969,8065,8818,9333,9399,9870,10307,10485,10755,10856,11023,12080,12219,12699,13084,13281,13352,13653,14710,14743,15364,15527],description:"Edition of 40. Two skulls bloom with Van Gogh's almond blossoms — masters merged in memento mori."}
           ]
         },
         { name: "6529", image: "6529/great_restoration.png",
@@ -7958,7 +7954,7 @@
           mintDate: "Aug 2022",
           salesData: { totalVolume: "$178,717", totalSales: "39", highestSale: "$16,079" },
           artworks: [
-            {title:"made these for your girl",image:"foryourgirl/web/foryourgirl_web.gif",fullRes:"foryourgirl.gif",edition:"Edition of 39",description:"PROOF Grails Season II. 39 owners. Highest sale: $16,079."}
+            {title:"made these for your girl",image:"foryourgirl/web/foryourgirl_web.gif",fullRes:"https://arweave.net/29RwvZZzdAShv3WfbaD9P7hppkW_Sh9LoM2hyCSojEA",edition:"Edition of 39",description:"PROOF Grails Season II. 39 owners. Highest sale: $16,079."}
         ]},
         { name: "notxcopy", image: "selfreflect_thumb.jpg", omDisabled: true, artworks: [] },
         { name: "ACKek", image: "https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/0bbf510c1386d63e21a473910f6f1efd.png?w=500", omDisabled: true, artworks: [
@@ -18983,8 +18979,6 @@
         _touchHint.innerHTML = '<span>touch to experience full resolution</span>';
         _touchHint.id = 'focusTouchHint';
         node.appendChild(_touchHint);
-        // Auto-remove after animation completes (3 pulses × 3.5s + 1.2s delay ≈ 12s)
-        setTimeout(function() { if (_touchHint.parentNode) _touchHint.parentNode.removeChild(_touchHint); }, 13000);
         // On mobile: pause all non-essential rendering to free memory
         if (_isRealMobile) {
           bgGridPaused = true;
@@ -19156,8 +19150,8 @@
             if (artData && artData.focusImage) {
               _focusSrc = artData.focusImage;
             } else if (_isGifArtwork) {
-              // GIF artworks (Warothys, Editions, etc.) — use fullRes GIF directly, no JPG intermediary
-              _focusSrc = artData.fullRes;
+              // GIF artworks — prefer webGif (compressed animated) over massive fullRes GIFs (e.g. pbd.gif at 112MB)
+              _focusSrc = (artData.webGif) ? artData.webGif : artData.fullRes;
             } else if (artData && artData.fullRes) {
               const _fr = artData.fullRes;
               // Skip mp4 fullRes — video playback is handled separately per-collection
@@ -19258,7 +19252,8 @@
                 _clearLoading();
                 // ── After crisp JPG is displayed, load animated GIF over it ──
                 // Skip if _focusSrc is already the GIF (no need to re-assign same src)
-                const _desktopGifSrc = (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
+                const _desktopGifSrc = (artData && artData.webGif) ? artData.webGif
+                  : (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
                   : (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image : null;
                 if (_desktopGifSrc && _desktopGifSrc !== _focusSrc) {
                   const _desktopGifLoader = new Image();
@@ -21794,7 +21789,10 @@
             </div>
           </div>`
         : '';
-      const masterDigitalLine = artwork.fullRes
+      // Only show VIEW MASTER DIGITAL for remote URLs (arweave/ipfs) or when running locally (file://)
+      const _isRemoteFullRes = artwork.fullRes && (artwork.fullRes.startsWith('http://') || artwork.fullRes.startsWith('https://'));
+      const _isLocalDev = window.location.protocol === 'file:';
+      const masterDigitalLine = (artwork.fullRes && (_isRemoteFullRes || _isLocalDev))
         ? `<div class="node-info-line" style="margin-top:8px;border-top:1px solid rgba(220,150,50,0.12);padding-top:8px;"><a href="${artwork.fullRes}" target="_blank" class="master-digital-link" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(220,150,50,0.65);text-decoration:none;letter-spacing:0.08em;cursor:pointer;transition:color 0.3s;" onmouseover="this.style.color='rgba(220,150,50,0.95)'" onmouseout="this.style.color='rgba(220,150,50,0.65)'">&gt; VIEW MASTER DIGITAL</a></div>`
         : '';
       const _collectorName = artwork.collector || artwork.buyer || '';
