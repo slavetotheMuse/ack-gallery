@@ -21930,8 +21930,8 @@
               <div style="padding:10px 12px 8px;display:flex;align-items:center;gap:10px;">
                 ${pfpHtml}
                 <div style="min-width:0;flex:1;">
-                  <a href="${linkHref}" target="_blank" style="font-size:0.65rem;color:#f0f0ee;font-weight:500;text-decoration:none;letter-spacing:0.04em;transition:color 0.3s;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.color='${headerBg}'" onmouseout="this.style.color='#f0f0ee'">${displayName}</a>
-                  <div style="margin-top:2px;font-size:0.42rem;color:rgba(80,200,120,0.5);letter-spacing:0.08em;">VERIFIED ON-CHAIN</div>
+                  <span class="collector-name-link" data-wallet="${ownerAddr}" style="font-size:0.65rem;color:#f0f0ee;font-weight:500;text-decoration:none;letter-spacing:0.04em;transition:color 0.3s;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;" title="View collection">${displayName}</span>
+                  ${linkHref ? '<a href="' + linkHref + '" target="_blank" style="font-size:0.38rem;color:rgba(160,158,150,0.35);text-decoration:none;letter-spacing:0.04em;transition:color 0.2s;display:block;margin-top:1px;" onmouseover="this.style.color=\'rgba(160,158,150,0.65)\'" onmouseout="this.style.color=\'rgba(160,158,150,0.35)\'">etherscan ↗</a>' : ''}
                 </div>
               </div>
               <div id="collectorOwnedSection" style="border-top:1px solid rgba(60,60,60,0.5);padding:8px 12px;">
@@ -21939,6 +21939,49 @@
               </div>
             `;
             document.body.appendChild(cNode);
+
+            // "View bags" click handler on collector name
+            var _collNameLink = cNode.querySelector('.collector-name-link[data-wallet]');
+            if (_collNameLink) {
+              _collNameLink.addEventListener('mouseover', function() { this.style.color = headerBg; });
+              _collNameLink.addEventListener('mouseout', function() { this.style.color = '#f0f0ee'; });
+              _collNameLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var _wallet = this.dataset.wallet;
+                // Remove collector popup
+                cNode.style.opacity = '0';
+                cNode.style.transform = 'translateY(10px) scale(0.95)';
+                var _cWire = document.getElementById('collectorWireSvg');
+                if (_cWire) _cWire.style.opacity = '0';
+                setTimeout(function() {
+                  if (cNode.parentNode) cNode.remove();
+                  if (_cWire && _cWire.parentNode) _cWire.remove();
+                }, 350);
+                setTimeout(function() { openMyBags(_wallet); }, 400);
+              });
+            }
+
+            // ENS resolution for 0x addresses in single-collector popup
+            if (ownerAddr.startsWith('0x') && !ownerAddr.endsWith('.eth')) {
+              ACK_CHAIN.resolveENS(ownerAddr).then(function(ens) {
+                if (!ens || !document.getElementById('collectorNode')) return;
+                var _nameEl = cNode.querySelector('.collector-name-link');
+                if (_nameEl) _nameEl.textContent = ens;
+                // Update etherscan link to ENS lookup
+                var _esLink = cNode.querySelector('a[href*="etherscan"]');
+                if (_esLink) _esLink.href = 'https://etherscan.io/name-lookup-search?id=' + ens;
+                // Try loading ENS avatar
+                var _pfpSlot = cNode.querySelector('div[style*="border-radius:50%"]');
+                if (_pfpSlot && !cNode.querySelector('img[src*="ens.domains"]')) {
+                  var _ensImg = document.createElement('img');
+                  _ensImg.src = 'https://metadata.ens.domains/mainnet/avatar/' + ens;
+                  _ensImg.style.cssText = 'width:28px;height:28px;border-radius:50%;border:1px solid rgba(60,60,60,0.6);object-fit:cover;';
+                  _ensImg.onerror = function() { this.style.display = 'none'; };
+                  _pfpSlot.replaceWith(_ensImg);
+                }
+              });
+            }
 
             // Position above detail panel
             const panelRect = infoPanel.getBoundingClientRect();
@@ -30307,8 +30350,11 @@
       _myBagsLoading = true;
 
       // Close any open detail view first (e.g. when navigating from collectors popup)
+      // Track whether we need to wait for close animation to complete
+      var _needsCloseWait = false;
       if (document.getElementById('detailOverlay') && document.getElementById('detailOverlay').classList.contains('active')) {
         closeDetail();
+        _needsCloseWait = true;
       }
 
       var shortAddr = ACK_CHAIN.shortAddr(walletAddr);
@@ -30337,7 +30383,12 @@
               col.artworks.forEach(function(art, ai) {
                 if (matched) return;
                 var artToken = art.tokenId !== undefined ? parseInt(art.tokenId) : -1;
-                if (artToken === nftTokenId || art.title === nftTitle) {
+                // Check single tokenId, tokenIds array (for editions like Opepen), or title match
+                var _tokenMatch = artToken === nftTokenId;
+                if (!_tokenMatch && art.tokenIds) {
+                  _tokenMatch = art.tokenIds.indexOf(nftTokenId) !== -1;
+                }
+                if (_tokenMatch || art.title === nftTitle) {
                   var clone = Object.assign({}, art);
                   clone._sourceCollection = col.name;
                   clone._sourceCollectionIndex = ci;
@@ -30401,7 +30452,12 @@
         COLLECTIONS.push(bagsCollection);
 
         // Open through the standard detail path
-        openDetail(_myBagsCollectionIndex);
+        // If we called closeDetail(), wait for its 550ms animation + buffer before opening
+        // Otherwise the closeDetail timeout fires AFTER openDetail and removes the overlay
+        var _openBagsDelay = _needsCloseWait ? 650 : 0;
+        setTimeout(function() {
+          openDetail(_myBagsCollectionIndex);
+        }, _openBagsDelay);
 
         // Async ENS resolve — update collection name + header if ENS comes back
         if (!isOwnWallet && walletAddr.startsWith('0x')) {
