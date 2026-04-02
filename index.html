@@ -2497,14 +2497,14 @@
     /* ── Touch to experience full resolution — hover hint in focus view ── */
     .focus-touch-hint {
       position: absolute;
-      top: -18px; left: 0;
+      top: -14px; left: 2px;
       pointer-events: none;
       z-index: 60;
       opacity: 0;
       transition: opacity 0.5s ease;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
     .node-card.focused:hover .focus-touch-hint {
       opacity: 1;
@@ -2512,9 +2512,9 @@
     .focus-touch-hint span {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 400;
-      font-size: 0.48rem;
-      letter-spacing: 0.08em;
-      color: rgba(200,195,185,0.4);
+      font-size: 7.5px;
+      letter-spacing: 0.03em;
+      color: rgba(200,195,185,0.32);
       white-space: nowrap;
     }
 
@@ -8649,21 +8649,8 @@
             });
           });
         }
-        // Only play intro audio once per day — mute on subsequent visits
-        var _introAudioMuted = false;
-        try {
-          var _lastIntroAudio = localStorage.getItem('ack_intro_audio_ts');
-          if (_lastIntroAudio) {
-            var _elapsed = Date.now() - parseInt(_lastIntroAudio, 10);
-            // 24 hours = 86400000ms
-            if (_elapsed < 86400000) _introAudioMuted = true;
-          }
-        } catch(e) { /* localStorage unavailable — play audio */ }
-
-        if (!_introAudioMuted) {
-          _playWhisperAudio();
-          try { localStorage.setItem('ack_intro_audio_ts', String(Date.now())); } catch(e) {}
-        }
+        // Play intro audio every time
+        _playWhisperAudio();
 
         var textWrap = document.getElementById('whispersTextWrap');
         var textEl = document.getElementById('whispersText');
@@ -18980,7 +18967,7 @@
         // ── "Touch to experience full resolution" hint — pulses softly above artwork ──
         var _touchHint = document.createElement('div');
         _touchHint.className = 'focus-touch-hint';
-        _touchHint.innerHTML = '<span style="font-size:0.4rem;opacity:0.6;">◈</span><span>touch to experience full resolution</span>';
+        _touchHint.innerHTML = '<span style="font-size:5px;opacity:0.5;line-height:1;">▸</span><span>full resolution</span>';
         _touchHint.id = 'focusTouchHint';
         node.appendChild(_touchHint);
         // On mobile: pause all non-essential rendering to free memory
