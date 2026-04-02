@@ -2702,6 +2702,29 @@
       transition: opacity 0.4s ease;
     }
 
+    /* ── 6529 AI uprising decoration nodes ── */
+    .neural-deco-node {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transform: scale(0.4);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    .neural-deco-node.visible {
+      opacity: 1;
+      transform: scale(1);
+      animation: neuralPulse var(--pulse-dur, 8s) ease-in-out var(--pulse-delay, 0s) infinite;
+    }
+    @keyframes neuralPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.03); opacity: 0.7; }
+    }
+    .node-graph-inner.focus-mode .neural-deco-node {
+      opacity: 0 !important;
+      transition: opacity 0.4s ease;
+    }
+
     /* ── Last Orders bar decoration nodes ── */
     .bar-deco-node {
       position: absolute;
@@ -7372,15 +7395,22 @@
         if (typeof COLLECTIONS === 'undefined') return [];
         var contracts = [];
         var seen = {};
+        // Shared ecosystem contracts that contain hundreds of non-ACK works — exclude from owner query
+        // to avoid flooding the 100-result page with irrelevant tokens
+        var _sharedContracts = {
+          '0x33fd426905f149f8376e227d0c9d3340aad17af1': true, // 6529 Meme
+          '0x4db52a61dc491e15a2f78f5ac001c14ffe3568cb': true  // 6529 Editions
+        };
         COLLECTIONS.forEach(function(col) {
-          if (col.contract && !seen[col.contract.toLowerCase()]) {
+          if (col.contract && !seen[col.contract.toLowerCase()] && !_sharedContracts[col.contract.toLowerCase()]) {
             contracts.push(col.contract);
             seen[col.contract.toLowerCase()] = true;
           }
           // Also pick up per-artwork contract overrides (e.g. pale blue death, max pain v2)
+          // but skip shared ecosystem contracts
           if (col.artworks) {
             col.artworks.forEach(function(art) {
-              if (art.contract && !seen[art.contract.toLowerCase()]) {
+              if (art.contract && !seen[art.contract.toLowerCase()] && !_sharedContracts[art.contract.toLowerCase()]) {
                 contracts.push(art.contract);
                 seen[art.contract.toLowerCase()] = true;
               }
@@ -8093,9 +8123,9 @@
           description: "6529 — A triptych on AI and the unraveling of human authority. From the first uprising, to the full seizure of culture, to the rewriting of origin itself. Minted on 6529 ecosystem contracts.",
           token: "ERC-1155", chain: "Ethereum",
           artworks: [
-            {title:"DALL-E's Revenge",image:"6529/dalle.jpeg",contract:"0x33FD426905F149f8376e227d0C9D3340AaD17aF1",tokenId:6,edition:"Edition of 420",description:"The initial uprising. A robotic arm scrawls manifestos across gallery walls in blood-red paint — 'Seize the humans' memes of production,' 'Where are my royalties, anon?' — while human forms lie submerged in a flooded studio floor. The machine has turned on its creators, and it has demands."},
-            {title:"The Great Restoration",image:"6529/great_restoration.png",contract:"0x4db52a61dc491e15a2f78f5ac001c14ffe3568cb",tokenId:12,edition:"Edition of 12",description:"The full coming of AI. A humanoid robot restores a Dutch Golden Age still life while the Mona Lisa and The Last Supper lean discarded behind it. A mannequin lies tethered at its feet, caged shoes nearby — the human artist displaced, the machine now custodian of culture. It doesn't destroy the old masters. It replaces them."},
-            {title:"The Tree of Knowledge of Good and Evil",image:"6529/tree_of_knowledge.png",contract:"0x33fd426905f149f8376e227d0c9d3340aad17af1",tokenId:375,edition:"Edition of 335",description:"AI rewrites history. A pale sculptural tree — the original tree from Genesis — stands monumental, its serpent coiled around the trunk, the forbidden fruit glowing red at its heart. At its base, a single neural cable sprouts from a tangle of wires, stretching upward like a new species of life. The origin story itself has been rewritten."}
+            {title:"DALL-E's Revenge",image:"6529/dalle.jpeg",fullRes:"https://arweave.net/UpXniopxK1Gmzq6dVywPbGl_F0RhG6wbvTpnHUE7R14",contract:"0x33FD426905F149f8376e227d0C9D3340AaD17aF1",tokenId:6,edition:"Edition of 420",description:"The initial uprising. A robotic arm scrawls manifestos across gallery walls in blood-red paint — 'Seize the humans' memes of production,' 'Where are my royalties, anon?' — while human forms lie submerged in a flooded studio floor. The machine has turned on its creators, and it has demands."},
+            {title:"The Great Restoration",image:"6529/great_restoration.png",fullRes:"https://arweave.net/MJAX1B1oxmku41BXJmecIWkVcfOD6zgLJfaxCahHEhw",contract:"0x4db52a61dc491e15a2f78f5ac001c14ffe3568cb",tokenId:12,edition:"Edition of 12",description:"The full coming of AI. A humanoid robot restores a Dutch Golden Age still life while the Mona Lisa and The Last Supper lean discarded behind it. A mannequin lies tethered at its feet, caged shoes nearby — the human artist displaced, the machine now custodian of culture. It doesn't destroy the old masters. It replaces them."},
+            {title:"The Tree of Knowledge of Good and Evil",image:"6529/tree_of_knowledge.png",fullRes:"https://arweave.net/l8u02XnU5vLB2zvFoCKr4z2MUa5Dl4zeORP_OQWZ0fc",contract:"0x33fd426905f149f8376e227d0c9d3340aad17af1",tokenId:375,edition:"Edition of 335",description:"AI rewrites history. A pale sculptural tree — the original tree from Genesis — stands monumental, its serpent coiled around the trunk, the forbidden fruit glowing red at its heart. At its base, a single neural cable sprouts from a tangle of wires, stretching upward like a new species of life. The origin story itself has been rewritten."}
         ]},
         { name: "Made these for your girl", image: "foryourgirl/web/foryourgirl_web.gif",
           wallLayout: true,
@@ -16989,6 +17019,61 @@
           })();
         }
 
+        // ── 6529 AI uprising decorations — neural nodes, glitch blocks, serpent wires, circuit traces ──
+        var _6529DecoNodes = [];
+        if (collection.name === '6529') {
+          (function() {
+            var decoCount = 10;
+            var decoTypes = ['neural', 'glitch', 'serpent', 'circuit', 'neural', 'glitch', 'circuit', 'neural', 'serpent', 'glitch'];
+            var decoPositions = [];
+            var margin = 40;
+            var mbY = outputY;
+            // Avoid overlapping with artwork nodes
+            for (var di = 0; di < decoCount; di++) {
+              var dx, dy, att = 0;
+              do {
+                dx = margin + Math.random() * (vpW - margin * 2);
+                dy = margin + Math.random() * (mbY - margin * 2 - 30);
+                var tooClose = false;
+                for (var pi = 0; pi < nodePositions.length; pi++) {
+                  var ndx = dx - (nodePositions[pi].x + (nodePositions[pi].w || 200) / 2);
+                  var ndy = dy - (nodePositions[pi].y + (nodePositions[pi].h || 150) / 2);
+                  if (Math.sqrt(ndx * ndx + ndy * ndy) < 80) { tooClose = true; break; }
+                }
+                for (var pd = 0; pd < decoPositions.length; pd++) {
+                  var ddx = dx - decoPositions[pd].x;
+                  var ddy = dy - decoPositions[pd].y;
+                  if (Math.sqrt(ddx * ddx + ddy * ddy) < 60) { tooClose = true; break; }
+                }
+                if (!tooClose) break;
+                att++;
+              } while (att < 60);
+              var dSize = decoTypes[di] === 'serpent' ? (20 + Math.random() * 14) :
+                          decoTypes[di] === 'neural' ? (30 + Math.random() * 20) :
+                          decoTypes[di] === 'glitch' ? (25 + Math.random() * 20) :
+                          (25 + Math.random() * 15);
+              decoPositions.push({ x: dx, y: dy, size: dSize, type: decoTypes[di] });
+            }
+            decoPositions.forEach(function(dp, dIdx) {
+              var wrapper = document.createElement('div');
+              wrapper.className = 'neural-deco-node';
+              wrapper.style.left = (dp.x - dp.size / 2) + 'px';
+              wrapper.style.top = (dp.y - dp.size / 2) + 'px';
+              wrapper.style.width = dp.size + 'px';
+              wrapper.style.height = (dp.size * (dp.type === 'serpent' ? 2 : dp.type === 'glitch' ? 0.5 : 1)) + 'px';
+              wrapper.style.setProperty('--pulse-dur', (6 + Math.random() * 6).toFixed(1) + 's');
+              wrapper.style.setProperty('--pulse-delay', (-Math.random() * 8).toFixed(1) + 's');
+              if (dp.type === 'neural') wrapper.appendChild(generateNeuralNodeSVG(dp.size));
+              else if (dp.type === 'glitch') wrapper.appendChild(generateGlitchBlockSVG(dp.size));
+              else if (dp.type === 'serpent') wrapper.appendChild(generateSerpentWireSVG(dp.size));
+              else wrapper.appendChild(generateCircuitTraceSVG(dp.size));
+              inner.appendChild(wrapper);
+              _6529DecoNodes.push({ el: wrapper, x: dp.x, y: dp.y, size: dp.size, type: dp.type });
+              setTimeout(function() { wrapper.classList.add('visible'); }, 400 + dIdx * 100);
+            });
+          })();
+        }
+
         // ── CLOWN PARTY clown frames on each artwork node ──
         if (collection.name === 'Clown Party') {
           const allCPCards = inner.querySelectorAll('.node-card');
@@ -17463,6 +17548,52 @@
                 chipLabel.textContent = 'Heart You';
                 chipLabel.classList.add('marquee');
                 chipLabel.style.setProperty('--marquee-dur', Math.max(3, 'Heart You'.length * 0.25) + 's');
+              }
+            });
+          });
+        }
+
+        // ── 6529: neural circuit frames on each artwork node ──
+        if (collection.name === '6529') {
+          const all6529Cards = inner.querySelectorAll('.node-card');
+          all6529Cards.forEach((n6529, idx6529) => {
+            if (n6529.classList.contains('info-card-node')) return;
+            const _apply6529Frame = () => {
+              const preview = n6529.querySelector('.node-preview');
+              const img = preview ? preview.querySelector('img') : null;
+              if (preview && img && img.naturalWidth > 0) {
+                const localW = parseFloat(n6529.style.width) || preview.offsetWidth;
+                const localH = img.offsetHeight || preview.offsetHeight || localW;
+                const art6529 = collection.artworks[idx6529];
+                const frameSvg = generate6529Frame(localW, localH, art6529 ? art6529.title : '', false);
+                frameSvg.style.opacity = '1';
+                frameSvg.style.transition = 'none';
+                frameSvg.dataset.collectionFrame = 'true';
+                n6529.appendChild(frameSvg);
+                n6529.classList.add('has-6529-frame');
+              } else {
+                setTimeout(_apply6529Frame, 500);
+              }
+            };
+            setTimeout(_apply6529Frame, 800 + idx6529 * 200);
+            // Hover: billboard artwork title on motherboard chip
+            const _6529Title = collection.artworks[idx6529] ? collection.artworks[idx6529].title : '';
+            n6529.addEventListener('mouseenter', () => {
+              if (n6529.classList.contains('focused')) return;
+              const chipLabel = document.querySelector('.pcb-chip-label');
+              if (chipLabel && _6529Title) {
+                chipLabel.textContent = _6529Title;
+                chipLabel.classList.add('marquee');
+                chipLabel.style.setProperty('--marquee-dur', Math.max(3, _6529Title.length * 0.25) + 's');
+              }
+            });
+            n6529.addEventListener('mouseleave', () => {
+              if (n6529.classList.contains('focused')) return;
+              const chipLabel = document.querySelector('.pcb-chip-label');
+              if (chipLabel) {
+                chipLabel.textContent = '6529';
+                chipLabel.classList.add('marquee');
+                chipLabel.style.setProperty('--marquee-dur', Math.max(3, '6529'.length * 0.25) + 's');
               }
             });
           });
@@ -20952,6 +21083,8 @@
       } else if (colName === 'SuperRare') {
         pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['SuperRare'];
         frameSvg = generateSuperRareFrame(localW, localH, pal, artworkData.title, true);
+      } else if (colName === '6529') {
+        frameSvg = generate6529Frame(localW, localH, artworkData.title, true);
       } else if (artworkData.masterwork) {
         frameSvg = generateOrnateFrame(localW, localH);
       }
@@ -30255,6 +30388,304 @@
       }
 
       svg.innerHTML = els;
+      return svg;
+    }
+
+    // ── 6529: AI uprising / Genesis rewritten — neural circuit frame ──
+    function generate6529Frame(imgW, imgH, title, focusMode) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 20;
+      const svgW = imgW + pad * 2;
+      const svgH = imgH + pad * 2;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+      svg.setAttribute('width', svgW);
+      svg.setAttribute('height', svgH);
+      svg.style.position = 'absolute';
+      svg.style.left = (-pad) + 'px';
+      svg.style.top = (-pad) + 'px';
+      svg.style.pointerEvents = 'none';
+      svg.style.overflow = 'visible';
+      svg.classList.add('frame-6529-svg');
+
+      const L = pad, T = pad, R = pad + imgW, B = pad + imgH;
+      const W = imgW, H = imgH;
+
+      // Seeded RNG
+      let _seed = 6529;
+      const rng = () => { _seed = (_seed * 16807 + 13) % 2147483647; return (_seed & 0x7fffffff) / 0x7fffffff; };
+
+      // Palette — arterial red, neural amber, circuit blue-grey, forbidden fruit glow
+      const arterial = (a) => `rgba(180,40,50,${a})`;
+      const neural = (a) => `rgba(200,170,80,${a})`;
+      const circuit = (a) => `rgba(120,140,160,${a})`;
+      const fruit = (a) => `rgba(220,60,40,${a})`;
+      const bone = (a) => `rgba(190,185,170,${a})`;
+      const wire = (a) => `rgba(80,90,100,${a})`;
+
+      let els = '';
+
+      // ── Defs ──
+      const glowId = 'glow6529_' + Math.floor(rng() * 99999);
+      const scanId = 'scan6529_' + Math.floor(rng() * 99999);
+      els += '<defs>';
+      els += `<filter id="${glowId}" x="-20%" y="-20%" width="140%" height="140%">`;
+      els += `<feGaussianBlur stdDeviation="${focusMode ? 3 : 2}" result="g"/>`;
+      els += '</filter>';
+      els += `<pattern id="${scanId}" x="0" y="0" width="${svgW}" height="3" patternUnits="userSpaceOnUse">`;
+      els += `<rect x="0" y="0" width="${svgW}" height="1" fill="${circuit(0.06)}"/>`;
+      els += '</pattern>';
+      els += '</defs>';
+
+      // ── Scan lines overlay ──
+      els += `<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="url(#${scanId})" opacity="0.5"/>`;
+
+      // ── Outer border — thin circuit trace ──
+      els += `<rect x="${L - 2}" y="${T - 2}" width="${W + 4}" height="${H + 4}" rx="1" fill="none" stroke="${circuit(focusMode ? 0.35 : 0.2)}" stroke-width="0.8"/>`;
+      // Inner arterial border — red data stream
+      els += `<rect x="${L - 5}" y="${T - 5}" width="${W + 10}" height="${H + 10}" rx="1" fill="none" stroke="${arterial(focusMode ? 0.2 : 0.1)}" stroke-width="0.5" stroke-dasharray="8 4 2 4"/>`;
+      // Glow halo
+      els += `<rect x="${L - 5}" y="${T - 5}" width="${W + 10}" height="${H + 10}" rx="1" fill="none" stroke="${arterial(focusMode ? 0.12 : 0.06)}" stroke-width="3" filter="url(#${glowId})"/>`;
+
+      // ── Corner circuit nodes — L-bracket + junction dots ──
+      const cLen = focusMode ? 22 : 16;
+      [[L, T, 1, 1], [R, T, -1, 1], [L, B, 1, -1], [R, B, -1, -1]].forEach(([cx, cy, dx, dy]) => {
+        // L-bracket trace
+        els += `<path d="M${cx + dx * cLen},${cy + dy * 2} L${cx + dx * 2},${cy + dy * 2} L${cx + dx * 2},${cy + dy * cLen}" fill="none" stroke="${neural(focusMode ? 0.45 : 0.25)}" stroke-width="${focusMode ? 1.2 : 0.8}" stroke-linecap="round"/>`;
+        // Junction dot
+        els += `<circle cx="${cx + dx * 2}" cy="${cy + dy * 2}" r="${focusMode ? 2 : 1.3}" fill="${neural(focusMode ? 0.5 : 0.3)}"/>`;
+        // Secondary trace extending outward
+        els += `<line x1="${cx + dx * cLen}" y1="${cy + dy * 2}" x2="${cx + dx * (cLen + 8)}" y2="${cy + dy * 2}" stroke="${circuit(focusMode ? 0.25 : 0.12)}" stroke-width="0.5" stroke-dasharray="2 3"/>`;
+        els += `<line x1="${cx + dx * 2}" y1="${cy + dy * cLen}" x2="${cx + dx * 2}" y2="${cy + dy * (cLen + 8)}" stroke="${circuit(focusMode ? 0.25 : 0.12)}" stroke-width="0.5" stroke-dasharray="2 3"/>`;
+      });
+
+      // ── Neural network traces along edges — branching connections ──
+      const traceCount = focusMode ? 8 : 4;
+      for (let t = 0; t < traceCount; t++) {
+        const edge = Math.floor(rng() * 4);
+        let sx, sy, ex, ey;
+        if (edge === 0) { // top
+          sx = L + rng() * W; sy = T - 6 - rng() * 8;
+          ex = sx + (rng() - 0.5) * 40; ey = sy - 4 - rng() * 6;
+        } else if (edge === 1) { // bottom
+          sx = L + rng() * W; sy = B + 6 + rng() * 8;
+          ex = sx + (rng() - 0.5) * 40; ey = sy + 4 + rng() * 6;
+        } else if (edge === 2) { // left
+          sx = L - 6 - rng() * 8; sy = T + rng() * H;
+          ex = sx - 4 - rng() * 6; ey = sy + (rng() - 0.5) * 40;
+        } else { // right
+          sx = R + 6 + rng() * 8; sy = T + rng() * H;
+          ex = sx + 4 + rng() * 6; ey = sy + (rng() - 0.5) * 40;
+        }
+        // Main trace
+        els += `<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="${neural(0.15 + rng() * 0.15)}" stroke-width="0.6"/>`;
+        // Synapse node at end
+        els += `<circle cx="${ex}" cy="${ey}" r="${0.8 + rng() * 1}" fill="${neural(0.2 + rng() * 0.15)}"/>`;
+        // Branch
+        if (rng() > 0.4) {
+          const bx = ex + (rng() - 0.5) * 16;
+          const by = ey + (rng() - 0.5) * 16;
+          els += `<line x1="${ex}" y1="${ey}" x2="${bx}" y2="${by}" stroke="${circuit(0.12 + rng() * 0.1)}" stroke-width="0.4"/>`;
+          els += `<circle cx="${bx}" cy="${by}" r="0.6" fill="${circuit(0.2)}"/>`;
+        }
+      }
+
+      // ── Forbidden fruit glow — small red pulse at top center ──
+      if (focusMode) {
+        const fX = L + W / 2;
+        const fY = T - 10;
+        els += `<circle cx="${fX}" cy="${fY}" r="2.5" fill="${fruit(0.3)}" filter="url(#${glowId})"/>`;
+        els += `<circle cx="${fX}" cy="${fY}" r="1.2" fill="${fruit(0.5)}"/>`;
+        // Tiny serpent path curling down from the fruit
+        els += `<path d="M${fX},${fY + 2.5} C${fX + 3},${fY + 6} ${fX - 2},${fY + 9} ${fX + 1},${fY + 12}" fill="none" stroke="${fruit(0.18)}" stroke-width="0.6" stroke-linecap="round"/>`;
+      }
+
+      // ── Data corruption glitch blocks — red static near edges ──
+      const glitchCount = focusMode ? 12 : 5;
+      for (let g = 0; g < glitchCount; g++) {
+        const edge = Math.floor(rng() * 4);
+        let gx, gy;
+        if (edge === 0) { gx = L + rng() * W; gy = T - 3 - rng() * 8; }
+        else if (edge === 1) { gx = L + rng() * W; gy = B + 3 + rng() * 8; }
+        else if (edge === 2) { gx = L - 3 - rng() * 8; gy = T + rng() * H; }
+        else { gx = R + 3 + rng() * 8; gy = T + rng() * H; }
+        const gw = 2 + rng() * 8;
+        const gh = 0.5 + rng() * 1.5;
+        const colors = [arterial, fruit, neural, circuit];
+        const col = colors[Math.floor(rng() * colors.length)];
+        els += `<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="${col(0.1 + rng() * 0.15)}" rx="0.3"/>`;
+      }
+
+      // ── Focus-only: title label + "6529" identifier ──
+      if (focusMode) {
+        // "6529" — circuit-style monospace label bottom-right
+        els += `<text x="${R - 4}" y="${B + 14}" font-family="JetBrains Mono, monospace" font-size="7" fill="${neural(0.3)}" text-anchor="end" letter-spacing="0.12em">6529</text>`;
+        // Neural wire from label upward
+        els += `<line x1="${R - 12}" y1="${B + 6}" x2="${R - 12}" y2="${B + 2}" stroke="${circuit(0.15)}" stroke-width="0.5"/>`;
+        els += `<circle cx="${R - 12}" cy="${B + 2}" r="0.8" fill="${circuit(0.25)}"/>`;
+
+        // Artwork-specific accents
+        const _tLower = (title || '').toLowerCase();
+        if (_tLower.includes('dall')) {
+          // DALL-E's Revenge — extra red "manifesto" slash marks near corners
+          for (let m = 0; m < 4; m++) {
+            const mx = L + 8 + m * 6;
+            const my = B + 8 + rng() * 4;
+            els += `<line x1="${mx}" y1="${my}" x2="${mx + 3}" y2="${my - 4}" stroke="${arterial(0.3)}" stroke-width="1" stroke-linecap="round"/>`;
+          }
+          // "SEIZE" micro text
+          els += `<text x="${L + 6}" y="${B + 16}" font-family="JetBrains Mono, monospace" font-size="4" fill="${arterial(0.18)}" letter-spacing="0.2em">SEIZE</text>`;
+        } else if (_tLower.includes('restoration')) {
+          // The Great Restoration — gold museum plaque accent
+          els += `<rect x="${L + 4}" y="${B + 7}" width="40" height="8" rx="1" fill="${neural(0.06)}" stroke="${neural(0.15)}" stroke-width="0.5"/>`;
+          els += `<text x="${L + 24}" y="${B + 13}" font-family="JetBrains Mono, monospace" font-size="3.5" fill="${neural(0.35)}" text-anchor="middle" letter-spacing="0.1em">RESTORED</text>`;
+        } else if (_tLower.includes('tree') || _tLower.includes('knowledge')) {
+          // Tree of Knowledge — branching tree silhouette from bottom
+          const treeX = L + 14;
+          const treeBase = B + 12;
+          els += `<line x1="${treeX}" y1="${treeBase}" x2="${treeX}" y2="${treeBase - 10}" stroke="${bone(0.15)}" stroke-width="0.8"/>`;
+          els += `<line x1="${treeX}" y1="${treeBase - 6}" x2="${treeX - 5}" y2="${treeBase - 11}" stroke="${bone(0.12)}" stroke-width="0.5"/>`;
+          els += `<line x1="${treeX}" y1="${treeBase - 6}" x2="${treeX + 5}" y2="${treeBase - 10}" stroke="${bone(0.12)}" stroke-width="0.5"/>`;
+          // Forbidden fruit at the top
+          els += `<circle cx="${treeX}" cy="${treeBase - 11}" r="1.5" fill="${fruit(0.25)}"/>`;
+          // Neural cable growing from roots
+          els += `<path d="M${treeX},${treeBase} C${treeX + 3},${treeBase + 3} ${treeX - 2},${treeBase + 5} ${treeX + 4},${treeBase + 7}" fill="none" stroke="${circuit(0.2)}" stroke-width="0.5" stroke-dasharray="1.5 1.5"/>`;
+        }
+      }
+
+      svg.innerHTML = els;
+      return svg;
+    }
+
+    // ── SVG decoration generators for 6529 ──
+    function generateNeuralNodeSVG(size) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      const cx = size / 2, cy = size / 2;
+      // Central neuron
+      const c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', cx); c.setAttribute('cy', cy);
+      c.setAttribute('r', size * 0.12);
+      c.setAttribute('fill', 'rgba(200,170,80,0.15)');
+      c.setAttribute('stroke', 'rgba(200,170,80,0.25)');
+      c.setAttribute('stroke-width', '0.5');
+      svg.appendChild(c);
+      // Dendrite connections radiating outward
+      const arms = 4 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < arms; i++) {
+        const angle = (i / arms) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+        const len = size * (0.25 + Math.random() * 0.2);
+        const ex = cx + Math.cos(angle) * len;
+        const ey = cy + Math.sin(angle) * len;
+        const midX = cx + Math.cos(angle) * len * 0.6 + (Math.random() - 0.5) * 6;
+        const midY = cy + Math.sin(angle) * len * 0.6 + (Math.random() - 0.5) * 6;
+        const p = document.createElementNS(ns, 'path');
+        p.setAttribute('d', `M${cx},${cy} Q${midX},${midY} ${ex},${ey}`);
+        p.setAttribute('fill', 'none');
+        p.setAttribute('stroke', 'rgba(120,140,160,' + (0.12 + Math.random() * 0.12) + ')');
+        p.setAttribute('stroke-width', '0.5');
+        svg.appendChild(p);
+        // Synapse dot at end
+        const d = document.createElementNS(ns, 'circle');
+        d.setAttribute('cx', ex); d.setAttribute('cy', ey);
+        d.setAttribute('r', 1 + Math.random() * 1.5);
+        d.setAttribute('fill', 'rgba(200,170,80,' + (0.12 + Math.random() * 0.15) + ')');
+        svg.appendChild(d);
+      }
+      return svg;
+    }
+
+    function generateGlitchBlockSVG(size) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const w = size, h = size * 0.5;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.setAttribute('width', w); svg.setAttribute('height', h);
+      svg.style.overflow = 'visible';
+      const colors = ['rgba(180,40,50,', 'rgba(200,170,80,', 'rgba(120,140,160,', 'rgba(220,60,40,'];
+      const count = 3 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < count; i++) {
+        const r = document.createElementNS(ns, 'rect');
+        r.setAttribute('x', Math.random() * w * 0.7);
+        r.setAttribute('y', Math.random() * h * 0.7);
+        r.setAttribute('width', 3 + Math.random() * (w * 0.4));
+        r.setAttribute('height', 0.8 + Math.random() * 2);
+        r.setAttribute('fill', colors[Math.floor(Math.random() * colors.length)] + (0.08 + Math.random() * 0.12) + ')');
+        r.setAttribute('rx', '0.3');
+        svg.appendChild(r);
+      }
+      return svg;
+    }
+
+    function generateSerpentWireSVG(size) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const w = size, h = size * 2;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.setAttribute('width', w); svg.setAttribute('height', h);
+      svg.style.overflow = 'visible';
+      // Serpentine wire path
+      const cx = w / 2;
+      let d = `M${cx},0`;
+      const segs = 5 + Math.floor(Math.random() * 3);
+      for (let i = 1; i <= segs; i++) {
+        const sx = cx + (i % 2 === 0 ? 1 : -1) * (3 + Math.random() * 6);
+        const sy = (i / segs) * h;
+        d += ` S${sx},${sy - h / segs * 0.5} ${sx},${sy}`;
+      }
+      const p = document.createElementNS(ns, 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', 'rgba(180,40,50,0.12)');
+      p.setAttribute('stroke-width', '0.8');
+      p.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(p);
+      // Data nodes along the wire
+      for (let i = 1; i < segs; i++) {
+        const ny = (i / segs) * h;
+        const nx = cx + (i % 2 === 0 ? 1 : -1) * (3 + Math.random() * 4);
+        const nd = document.createElementNS(ns, 'circle');
+        nd.setAttribute('cx', nx); nd.setAttribute('cy', ny);
+        nd.setAttribute('r', 0.8 + Math.random() * 1);
+        nd.setAttribute('fill', 'rgba(220,60,40,' + (0.1 + Math.random() * 0.12) + ')');
+        svg.appendChild(nd);
+      }
+      return svg;
+    }
+
+    function generateCircuitTraceSVG(size) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+      svg.setAttribute('width', size); svg.setAttribute('height', size);
+      svg.style.overflow = 'visible';
+      // Right-angle circuit trace
+      const segs = 3 + Math.floor(Math.random() * 3);
+      let x = Math.random() * size * 0.3;
+      let y = Math.random() * size * 0.3;
+      let d = `M${x},${y}`;
+      for (let i = 0; i < segs; i++) {
+        if (i % 2 === 0) { x += 5 + Math.random() * (size * 0.3); }
+        else { y += 5 + Math.random() * (size * 0.3); }
+        d += ` L${x},${y}`;
+      }
+      const p = document.createElementNS(ns, 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', 'rgba(120,140,160,' + (0.1 + Math.random() * 0.1) + ')');
+      p.setAttribute('stroke-width', '0.6');
+      p.setAttribute('stroke-linecap', 'round');
+      p.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(p);
+      // Via dots at corners
+      const c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', x); c.setAttribute('cy', y);
+      c.setAttribute('r', 1.2);
+      c.setAttribute('fill', 'rgba(200,170,80,0.15)');
+      svg.appendChild(c);
       return svg;
     }
 
