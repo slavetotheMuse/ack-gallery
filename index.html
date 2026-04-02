@@ -2247,28 +2247,17 @@
       transition: opacity 0.4s ease;
     }
 
-    /* ── Global bags decoration nodes ── */
-    .bags-global-deco {
-      position: absolute;
+    /* ── Bags decoration nodes (proper node-cards with wires) ── */
+    .bags-deco-node {
       pointer-events: none;
       z-index: 0;
     }
-    @keyframes bagsDecoFloat {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      33% { transform: translateY(-4px) rotate(1.5deg); }
-      66% { transform: translateY(2px) rotate(-1deg); }
+    .bags-deco-node .node-preview {
+      border: 1px solid rgba(180,160,120,0.12);
+      background: transparent;
     }
-    @keyframes bagsDecoSway {
-      0%, 100% { transform: translateX(0); }
-      50% { transform: translateX(5px); }
-    }
-    .bags-global-deco {
-      animation:
-        bagsDecoFloat var(--float-dur, 9s) ease-in-out var(--float-delay, 0s) infinite,
-        bagsDecoSway var(--sway-dur, 11s) ease-in-out var(--sway-delay, 0s) infinite;
-    }
-    /* Hide global decos during focus mode */
-    .node-graph-inner.focus-mode .bags-global-deco {
+    /* Hide deco nodes during focus mode */
+    .node-graph-inner.focus-mode .bags-deco-node {
       opacity: 0 !important;
       transition: opacity 0.4s ease;
     }
@@ -15555,6 +15544,14 @@
           });
         }
 
+        // Helper: build small marketplace link pills for bags live strip
+        function _buildBagsLinks(contract, tokenId) {
+          var osUrl = ACK_CHAIN.openSeaUrl(contract, tokenId);
+          var esUrl = ACK_CHAIN.etherscanUrl(contract, tokenId);
+          return '<a href="' + osUrl + '" target="_blank" rel="noopener" style="color:rgba(80,130,200,0.55);text-decoration:none;font-size:0.35rem;letter-spacing:0.04em;" onmouseover="this.style.color=\'rgba(80,130,200,1)\'" onmouseout="this.style.color=\'rgba(80,130,200,0.55)\'" onclick="event.stopPropagation()">OS</a>' +
+            '<a href="' + esUrl + '" target="_blank" rel="noopener" style="color:rgba(100,180,100,0.55);text-decoration:none;font-size:0.35rem;letter-spacing:0.04em;margin-left:3px;" onmouseover="this.style.color=\'rgba(100,180,100,1)\'" onmouseout="this.style.color=\'rgba(100,180,100,0.55)\'" onclick="event.stopPropagation()">ES</a>';
+        }
+
         // ── Build DOM for all nodes ──
         artworks.forEach((artwork, i) => { try {
           const np = nodePositions[i];
@@ -15896,6 +15893,51 @@
             titleTag.innerHTML = '<span class="node-title-dot"></span>' + artwork.title + (showEditionInNode ? '<span class="node-edition-tag">' + artwork.edition + '</span>' : '');
           }
           node.appendChild(titleTag);
+
+          // ── MY BAGS: Live data strip below each card (offers, listings, marketplace links) ──
+          if (collection._isMyBags && artwork._sourceCollection) {
+            const _srcCol = COLLECTIONS.find(c => c.name === artwork._sourceCollection && c.contract);
+            const _srcContract = _srcCol ? _srcCol.contract : null;
+            const _srcTokenId = artwork.tokenId;
+            if (_srcContract && _srcTokenId !== undefined) {
+              const liveStrip = document.createElement('div');
+              liveStrip.className = 'bags-live-strip';
+              liveStrip.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.38rem;color:rgba(200,190,170,0.4);letter-spacing:0.06em;margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;';
+              // Placeholder while loading
+              liveStrip.innerHTML = '<span style="opacity:0.3;">...</span>';
+              node.appendChild(liveStrip);
+
+              // Async fetch live data
+              const _lsContract = _srcContract;
+              const _lsTokenId = _srcTokenId;
+              const _lsStrip = liveStrip;
+              const _lsArt = artwork;
+              setTimeout(function() {
+                if (!ACK_CHAIN.hasKey()) {
+                  // No API key — just show marketplace links
+                  _lsStrip.innerHTML = _buildBagsLinks(_lsContract, _lsTokenId);
+                  return;
+                }
+                Promise.all([
+                  ACK_CHAIN.enrichArtwork(_lsContract, _lsTokenId, _lsArt),
+                  ACK_CHAIN.getMarketStatus(_lsContract, _lsTokenId, _lsArt)
+                ]).then(function(results) {
+                  var aw = results[0];
+                  var parts = [];
+                  if (aw.isListed && aw.listingPriceEth) {
+                    parts.push('<span style="color:rgba(50,205,50,0.75);font-weight:600;">' + aw.listingPriceEth + ' ETH</span>');
+                  }
+                  if (aw.hasOffer && aw.bestOfferEth) {
+                    parts.push('<span style="color:rgba(255,165,0,0.75);">offer ' + aw.bestOfferEth + '</span>');
+                  }
+                  parts.push(_buildBagsLinks(_lsContract, _lsTokenId));
+                  _lsStrip.innerHTML = parts.join('<span style="opacity:0.2;margin:0 1px;">·</span>');
+                }).catch(function() {
+                  _lsStrip.innerHTML = _buildBagsLinks(_lsContract, _lsTokenId);
+                });
+              }, 800 + i * 200); // stagger API calls
+            }
+          }
 
           // Collaboration credit tag — bottom right of artwork
           if (artwork.collabTag) {
@@ -17410,8 +17452,8 @@
             // Store ambient nodes on inner for wire drawing access
             inner._bagsAmbientNodes = _bagsAmbientNodes;
 
-            // ── MY BAGS: Global decoration scatter — my_bags_decoration.png + subtle SVG accents ──
-            // Spread small decoration nodes across the entire bags page (not tied to a specific collection)
+            // ── MY BAGS: Decoration node scatter — proper node-cards wired to motherboard ──
+            // These are real node-card elements with port-out so noodle wires connect them
             (function() {
               var allCards = inner.querySelectorAll('.node-card');
               if (allCards.length === 0) return;
@@ -17429,15 +17471,14 @@
                 globalMaxY = Math.max(globalMaxY, cy + ch);
               });
 
-              // Expand scatter zone beyond cards into margins
-              var scatterPad = 100;
-              var sMinX = Math.max(20, globalMinX - scatterPad);
-              var sMinY = Math.max(20, globalMinY - scatterPad);
-              var sMaxX = Math.min(vpW - 20, globalMaxX + scatterPad);
-              var sMaxY = Math.min(vpH - 160, globalMaxY + scatterPad);
+              // Expand scatter zone well beyond cards — use full viewport margins
+              var sMinX = Math.max(30, globalMinX - 180);
+              var sMinY = Math.max(30, globalMinY - 120);
+              var sMaxX = Math.min(vpW - 30, globalMaxX + 180);
+              var sMaxY = Math.min(vpH - 180, globalMaxY + 100);
 
-              // Number of decos scales with artwork count — more pieces = more scattered decos
-              var decoCount = Math.min(14, Math.max(5, Math.round(allCards.length * 0.5)));
+              // Scale deco count with artwork count: 6-12 decoration nodes
+              var decoCount = Math.min(12, Math.max(6, Math.round(allCards.length * 0.6)));
 
               // Collect card rects for collision avoidance
               var cardRects = [];
@@ -17458,82 +17499,63 @@
                   var tooClose = false;
                   for (var ci = 0; ci < cardRects.length; ci++) {
                     var r = cardRects[ci];
-                    if (dx > r.x - 20 && dx < r.x + r.w + 20 && dy > r.y - 20 && dy < r.y + r.h + 20) {
+                    // Keep some distance from artwork cards
+                    if (dx > r.x - 30 && dx < r.x + r.w + 30 && dy > r.y - 30 && dy < r.y + r.h + 30) {
                       tooClose = true; break;
+                    }
+                  }
+                  // Also avoid other decos we've already placed
+                  if (!tooClose) {
+                    for (var pi = 0; pi < cardRects.length; pi++) {
+                      // (already placed decos are appended to cardRects below)
                     }
                   }
                   if (!tooClose) break;
                   att++;
-                } while (att < 50);
+                } while (att < 60);
 
-                var decoSize = 18 + Math.random() * 22; // 18-40px — small and subtle
-                var decoEl = document.createElement('div');
-                decoEl.className = 'bags-global-deco';
-                decoEl.style.position = 'absolute';
-                decoEl.style.left = (dx - decoSize / 2) + 'px';
-                decoEl.style.top = (dy - decoSize / 2) + 'px';
-                decoEl.style.width = decoSize + 'px';
-                decoEl.style.height = decoSize + 'px';
-                decoEl.style.opacity = '0';
-                decoEl.style.transition = 'opacity 1.2s ease';
-                decoEl.style.pointerEvents = 'none';
-                decoEl.style.zIndex = '0';
+                var decoSize = 28 + Math.round(Math.random() * 24); // 28-52px
 
-                // Alternate between my_bags_decoration.png and subtle SVG accent shapes
-                if (di % 3 === 0 || di % 3 === 1) {
-                  // Use my_bags_decoration.png
-                  var dImg = document.createElement('img');
-                  dImg.src = 'my_bags_decoration.png';
-                  dImg.alt = '';
-                  dImg.loading = 'lazy';
-                  dImg.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:0.25;filter:grayscale(0.3);';
-                  // Slight rotation for organic feel
-                  dImg.style.transform = 'rotate(' + (Math.random() * 40 - 20).toFixed(0) + 'deg)';
-                  decoEl.appendChild(dImg);
-                } else {
-                  // SVG accent — small diamond/dot/cross shapes for visual texture
-                  var accSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                  accSvg.setAttribute('viewBox', '0 0 24 24');
-                  accSvg.style.cssText = 'width:100%;height:100%;opacity:0.12;';
-                  var shapes = ['diamond', 'cross', 'circle'];
-                  var shapeType = shapes[di % shapes.length];
-                  if (shapeType === 'diamond') {
-                    var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                    poly.setAttribute('points', '12,2 22,12 12,22 2,12');
-                    poly.setAttribute('fill', 'none');
-                    poly.setAttribute('stroke', 'rgba(180,160,120,0.6)');
-                    poly.setAttribute('stroke-width', '1');
-                    accSvg.appendChild(poly);
-                  } else if (shapeType === 'cross') {
-                    var l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    l1.setAttribute('x1', '4'); l1.setAttribute('y1', '12');
-                    l1.setAttribute('x2', '20'); l1.setAttribute('y2', '12');
-                    l1.setAttribute('stroke', 'rgba(180,160,120,0.5)'); l1.setAttribute('stroke-width', '1');
-                    var l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    l2.setAttribute('x1', '12'); l2.setAttribute('y1', '4');
-                    l2.setAttribute('x2', '12'); l2.setAttribute('y2', '20');
-                    l2.setAttribute('stroke', 'rgba(180,160,120,0.5)'); l2.setAttribute('stroke-width', '1');
-                    accSvg.appendChild(l1); accSvg.appendChild(l2);
-                  } else {
-                    var circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    circ.setAttribute('cx', '12'); circ.setAttribute('cy', '12'); circ.setAttribute('r', '6');
-                    circ.setAttribute('fill', 'none');
-                    circ.setAttribute('stroke', 'rgba(180,160,120,0.4)');
-                    circ.setAttribute('stroke-width', '1');
-                    accSvg.appendChild(circ);
-                  }
-                  decoEl.appendChild(accSvg);
-                }
+                // Build as a proper node-card so noodle wires connect it
+                var decoNode = document.createElement('div');
+                decoNode.className = 'node-card bags-deco-node';
+                decoNode.style.left = dx + 'px';
+                decoNode.style.top = dy + 'px';
+                decoNode.style.width = decoSize + 'px';
+                decoNode.style.opacity = '0';
+                decoNode.style.transition = 'opacity 1.2s ease';
+                decoNode.style.pointerEvents = 'none';
+                // Breathing animation like real nodes
+                decoNode.style.setProperty('--breathe-dur', (5 + Math.random() * 4).toFixed(1) + 's');
+                decoNode.style.setProperty('--breathe-delay', (Math.random() * -8).toFixed(1) + 's');
+                decoNode.style.setProperty('--port-dur', (3.5 + Math.random() * 3).toFixed(1) + 's');
+                decoNode.style.setProperty('--port-delay', (Math.random() * -5).toFixed(1) + 's');
 
-                // Gentle floating animation via CSS custom properties
-                decoEl.style.setProperty('--sway-dur', (8 + Math.random() * 6).toFixed(1) + 's');
-                decoEl.style.setProperty('--sway-delay', (-Math.random() * 10).toFixed(1) + 's');
-                decoEl.style.setProperty('--float-dur', (8 + Math.random() * 6).toFixed(1) + 's');
-                decoEl.style.setProperty('--float-delay', (-Math.random() * 10).toFixed(1) + 's');
+                // Image preview
+                var decoPreview = document.createElement('div');
+                decoPreview.className = 'node-preview';
+                var dImg = document.createElement('img');
+                dImg.src = 'my_bags_decoration_web.png';
+                dImg.alt = '';
+                dImg.loading = 'lazy';
+                dImg.style.cssText = 'width:100%;height:auto;display:block;opacity:0.35;';
+                // Slight rotation for organic scatter
+                dImg.style.transform = 'rotate(' + (Math.random() * 30 - 15).toFixed(0) + 'deg)';
+                decoPreview.appendChild(dImg);
+                decoNode.appendChild(decoPreview);
 
-                inner.appendChild(decoEl);
+                // Port-out dot — this is what drawNoodles uses to wire to the motherboard
+                var decoPort = document.createElement('div');
+                decoPort.className = 'node-port port-out port-bottom';
+                decoNode.appendChild(decoPort);
+
+                inner.appendChild(decoNode);
+
+                // Track placed position for collision avoidance with subsequent decos
+                cardRects.push({ x: dx, y: dy, w: decoSize, h: decoSize });
+
                 var _diDelay = di;
-                setTimeout(function() { decoEl.style.opacity = '1'; }, 1500 + _diDelay * 150);
+                setTimeout(function() { decoNode.style.opacity = '1'; }, 1500 + _diDelay * 200);
               }
             })();
 
