@@ -15061,6 +15061,230 @@
               return;
             }
 
+            // ── Smart auto-layout for My Bags / collector pages ──
+            if (collection._isMyBags && !isMobile && count > 0) {
+              const _bagsPad = 60;
+              const _bagsOutputReserve = 140;
+              const _bagsAvailW = vpW - _bagsPad * 2;
+              const _bagsAvailH = vpH - _bagsPad * 2 - 40 - _bagsOutputReserve;
+              const _bagsGap = 28;
+
+              // ── Collection sizing tiers (dynamic based on count) ──
+              // sizeFactor: multiplier on base card width (1.0 = normal)
+              // maxPerRow: preferred max items per row in a group
+              // These are base rules — sizeFactor adjusts dynamically when a collector has few pieces
+              function _getBagsRule(colName, grpCount) {
+                // Static definitions
+                const _rules = {
+                  'The Great Color Study':    { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.90 },
+                  'Warothys':                 { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.85 },
+                  'servants':                 { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.75 },
+                  'Starry Nights':            { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.75 },
+                  'Broken Keys':              { baseSF: 0.55, maxPerRow: 8, tier: 'medium', fewSF: 1.20 },
+                  'ACKPFP':                   { baseSF: 0.75, maxPerRow: 5, tier: 'medium', fewSF: 1.0 },
+                  'Heart You':                { baseSF: 0.70, maxPerRow: 4, tier: 'medium', fewSF: 1.0 },
+                  'ACK Editions':             { baseSF: 0.90, maxPerRow: 4, tier: 'medium', fewSF: 1.10 },
+                  'Clown Party':              { baseSF: 0.85, maxPerRow: 4, tier: 'medium', fewSF: 1.10 },
+                  'Opepen Set 030: a.c.k.':   { baseSF: 0.80, maxPerRow: 6, tier: 'medium', fewSF: 1.0 },
+                  'Piano Blossoms':           { baseSF: 1.20, maxPerRow: 3, tier: 'hero', fewSF: 1.40 },
+                  'SuperRare':                { baseSF: 1.30, maxPerRow: 2, tier: 'hero', fewSF: 1.50 },
+                  'Her Favorite Flowers':     { baseSF: 1.30, maxPerRow: 2, tier: 'hero', fewSF: 1.50 },
+                  'Tempted in the Garden':    { baseSF: 1.40, maxPerRow: 1, tier: 'hero', fewSF: 1.60 },
+                  'Last Orders':              { baseSF: 1.40, maxPerRow: 1, tier: 'hero', fewSF: 1.60 },
+                  'Right Click Print':        { baseSF: 1.30, maxPerRow: 1, tier: 'hero', fewSF: 1.50 },
+                  'Made these for your girl': { baseSF: 1.30, maxPerRow: 1, tier: 'hero', fewSF: 1.50 },
+                };
+                const r = _rules[colName] || { baseSF: 0.85, maxPerRow: 4, tier: 'medium', fewSF: 1.10 };
+                // Dynamic: if collector has few pieces from a normally-dense collection, make them bigger
+                // "few" = 3 or fewer pieces → use fewSF; linearly blend for 4-10 pieces
+                let sf = r.baseSF;
+                if (grpCount <= 3) {
+                  sf = r.fewSF;
+                } else if (grpCount <= 10) {
+                  const t = (grpCount - 3) / 7; // 0 at 3, 1 at 10
+                  sf = r.fewSF * (1 - t) + r.baseSF * t;
+                }
+                // Broken Keys special: "always pretty big" per user — min sizeFactor 1.0 when ≤ 6 pieces
+                if (colName === 'Broken Keys' && grpCount <= 6) sf = Math.max(sf, 1.0);
+                return { sizeFactor: sf, maxPerRow: r.maxPerRow, tier: r.tier };
+              }
+
+              // Group artworks by _sourceCollection
+              const _bagsGroups = [];
+              const _bagsGroupMap = {};
+              artworks.forEach((art, i) => {
+                const src = art._sourceCollection || 'Unknown';
+                if (!_bagsGroupMap[src]) {
+                  _bagsGroupMap[src] = { name: src, indices: [], artworks: [] };
+                  _bagsGroups.push(_bagsGroupMap[src]);
+                }
+                _bagsGroupMap[src].indices.push(i);
+                _bagsGroupMap[src].artworks.push(art);
+              });
+
+              // Sort groups: hero tier first (prominent placement), then medium, then small-grid
+              const _tierOrder = { 'hero': 0, 'medium': 1, 'small-grid': 2 };
+              _bagsGroups.sort((a, b) => {
+                const rA = _getBagsRule(a.name, a.indices.length);
+                const rB = _getBagsRule(b.name, b.indices.length);
+                const tA = _tierOrder[rA.tier] !== undefined ? _tierOrder[rA.tier] : 1;
+                const tB = _tierOrder[rB.tier] !== undefined ? _tierOrder[rB.tier] : 1;
+                if (tA !== tB) return tA - tB;
+                return a.indices[0] - b.indices[0];
+              });
+
+              // Determine base card width from available space and total count
+              // Aim for a balanced density that fills ~70-80% of viewport
+              const _totalPieces = count;
+              const _densityFactor = _totalPieces <= 4 ? 0.38 : _totalPieces <= 8 ? 0.30 : _totalPieces <= 16 ? 0.22 : _totalPieces <= 30 ? 0.16 : 0.12;
+              const _baseCardW = Math.min(320, Math.max(80, Math.sqrt((_bagsAvailW * _bagsAvailH * _densityFactor) / _totalPieces)));
+
+              // ── Layout each group, placing groups in a flowing arrangement ──
+              // We use a "zone" approach: divide viewport into regions and assign groups
+              const _groupBoxes = []; // { gIdx, x, y, w, h, nodePositions: [{idx, x, y, w, h}] }
+
+              _bagsGroups.forEach((grp) => {
+                const rule = _getBagsRule(grp.name, grp.indices.length);
+                const sf = rule.sizeFactor;
+                const maxPR = rule.maxPerRow;
+                const grpCount = grp.indices.length;
+                const cardW = Math.round(_baseCardW * sf);
+
+                // Compute per-card dimensions using aspect ratios
+                const cards = [];
+                grp.indices.forEach((idx, ci) => {
+                  const ar = _imgAspects[idx] || 1.0;
+                  const w = cardW;
+                  const h = Math.round(w * ar);
+                  cards.push({ idx, w, h, ar });
+                });
+
+                // Arrange cards in rows within the group
+                const rows = [];
+                let rowStart = 0;
+                while (rowStart < cards.length) {
+                  const rowEnd = Math.min(rowStart + maxPR, cards.length);
+                  rows.push(cards.slice(rowStart, rowEnd));
+                  rowStart = rowEnd;
+                }
+
+                // Position cards within group (relative to group origin 0,0)
+                const innerGap = Math.max(12, Math.round(_bagsGap * sf * 0.7));
+                let gy = 0;
+                const groupNodes = [];
+
+                rows.forEach((row, ri) => {
+                  // Total row width
+                  let rowW = row.reduce((s, c) => s + c.w, 0) + (row.length - 1) * innerGap;
+                  let maxH = 0;
+                  row.forEach(c => { if (c.h > maxH) maxH = c.h; });
+
+                  // Add subtle stagger on alternate rows
+                  const stagger = (ri % 2 === 1) ? Math.round(row[0].w * 0.08) : 0;
+
+                  let gx = stagger;
+                  row.forEach((c, ci) => {
+                    // Vertical centering within row + tiny random offset for organic feel
+                    const yOff = Math.round((maxH - c.h) / 2) + Math.round((Math.sin(c.idx * 3.7 + ci * 2.1) * 0.03) * maxH);
+                    groupNodes.push({ idx: c.idx, rx: gx, ry: gy + yOff, w: c.w, h: c.h });
+                    gx += c.w + innerGap;
+                  });
+                  gy += maxH + innerGap + 16; // 16 for title tag space
+                });
+
+                // Compute group bounding box
+                let grpW = 0, grpH = 0;
+                groupNodes.forEach(n => {
+                  if (n.rx + n.w > grpW) grpW = n.rx + n.w;
+                  if (n.ry + n.h > grpH) grpH = n.ry + n.h;
+                });
+
+                _groupBoxes.push({ name: grp.name, grpW, grpH, nodes: groupNodes, tier: rule.tier });
+              });
+
+              // ── Position groups on the canvas using a flowing packer ──
+              // Strategy: place groups in a masonry-like flow, largest first (hero at top)
+              // Use a "shelf" approach: fill horizontal bands top to bottom
+              const _placedGroups = [];
+              let _shelfY = _bagsPad + 20;
+              let _shelfX = _bagsPad;
+              let _shelfMaxH = 0;
+              const _interGroupGap = Math.round(_bagsGap * 1.5);
+
+              _groupBoxes.forEach((gb, gi) => {
+                // Check if group fits on current shelf
+                if (_shelfX + gb.grpW > vpW - _bagsPad && _shelfX > _bagsPad + 10) {
+                  // Move to next shelf
+                  _shelfY += _shelfMaxH + _interGroupGap;
+                  _shelfX = _bagsPad;
+                  _shelfMaxH = 0;
+                }
+
+                // Add subtle horizontal offset for organic feel (not perfectly left-aligned)
+                const _orgOffX = Math.round(Math.sin(gi * 4.3 + 1.7) * 12);
+                const _orgOffY = Math.round(Math.cos(gi * 3.1 + 0.9) * 8);
+
+                const gx = _shelfX + _orgOffX;
+                const gy = _shelfY + _orgOffY;
+
+                _placedGroups.push({ gx, gy, box: gb });
+
+                _shelfX += gb.grpW + _interGroupGap;
+                if (gb.grpH > _shelfMaxH) _shelfMaxH = gb.grpH;
+              });
+
+              // Center everything vertically if there's space
+              const _totalLayoutH = _shelfY + _shelfMaxH - (_bagsPad + 20);
+              let _vShift = 0;
+              if (_totalLayoutH < _bagsAvailH) {
+                _vShift = Math.round((_bagsAvailH - _totalLayoutH) / 2);
+              }
+
+              // Center everything horizontally
+              let _minX = Infinity, _maxX = 0;
+              _placedGroups.forEach(pg => {
+                pg.box.nodes.forEach(n => {
+                  const absX = pg.gx + n.rx;
+                  if (absX < _minX) _minX = absX;
+                  if (absX + n.w > _maxX) _maxX = absX + n.w;
+                });
+              });
+              const _layoutW = _maxX - _minX;
+              const _hShift = _layoutW < _bagsAvailW ? Math.round((_bagsAvailW - _layoutW) / 2 + _bagsPad - _minX) : 0;
+
+              // Write out nodePositions
+              _placedGroups.forEach(pg => {
+                pg.box.nodes.forEach(n => {
+                  const x = pg.gx + n.rx + _hShift;
+                  const y = pg.gy + n.ry + _vShift;
+                  // Place into correct index in nodePositions
+                  nodePositions[n.idx] = { x, y, w: n.w, h: n.h, portX: x + n.w / 2, portY: y + n.h + 12 };
+                });
+              });
+
+              // Fill any gaps (shouldn't happen, but safety)
+              for (let i = 0; i < count; i++) {
+                if (!nodePositions[i]) {
+                  nodePositions[i] = { x: _bagsPad, y: _bagsPad, w: 120, h: 120, portX: _bagsPad + 60, portY: _bagsPad + 132 };
+                }
+              }
+
+              nodeW = nodePositions[0] ? nodePositions[0].w : 180;
+              outputX = (vpW - outputNodeW) / 2;
+              outputY = vpH - 80;
+              totalW = vpW;
+              // Check if layout overflows viewport vertically — expand if needed
+              let _bagsMaxY = 0;
+              nodePositions.forEach(np => { if (np.y + np.h > _bagsMaxY) _bagsMaxY = np.y + np.h; });
+              if (_bagsMaxY > vpH - _bagsOutputReserve) {
+                outputY = _bagsMaxY + 40;
+                totalH = outputY + 100;
+              } else {
+                totalH = vpH;
+              }
+              return;
+            }
+
             const _isHeartYouGap = collection.name === 'Heart You';
             const gap = isMobile ? 16 : (_isHeartYouGap ? 56 : 44);
             const pad = isMobile ? 16 : 60;
