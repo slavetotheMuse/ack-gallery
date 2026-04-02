@@ -7897,14 +7897,14 @@
           description: "Limited edition animated works by AlphaCentauriKid. ERC-1155 on Ethereum.",
           token: "ERC-1155", chain: "Ethereum", contract: "0x232a68a51d6e07357ae025d2a459c16077327102",
           artworks: [
-            {title:"Void Engine",image:"ackeditions_gallery/web/void_engine_web.gif",fullRes:"https://arweave.net/8kkyEK4DpnQcYt0U3hhlWnxOHIJTV6IuRT1gZvhpNSs",edition:"Edition of 6",tokenId:17},
-            {title:"lisan al-gaib",image:"ackeditions_gallery/web/lisan_web.gif",fullRes:"https://arweave.net/WMsZKEGSnwbNib_Wh5CD7rYVV86aetz2xaUAhDla1JY",edition:"Edition of 10",tokenId:20},
-            {title:"Exodus",image:"ackeditions_gallery/web/exodus_web.gif",fullRes:"https://arweave.net/5d_X3b7o7_eHzwu6YtxO_Ut6B5bBzfpye88huFKgBVg",edition:"Edition of 5",tokenId:16},
-            {title:"Aerial Screw",image:"ackeditions_gallery/web/aerial_screw_web.gif",fullRes:"https://arweave.net/HjFxopgbKEw2BMq0m0Y5v66pNAjROwG3m0CrUpUwIgs",hoverImage:"ackeditions_gallery/web/Specchio_Vortice_web.gif",edition:"Edition of 14",tokenId:19},
-            {title:"pink elephant on parade",image:"ackeditions_gallery/web/pink_elephant_on_parade_web.gif",fullRes:"https://arweave.net/a9hPFmM_bLjJMiTbQJU8wzz5djzcHSKxU4-lIX0f8wE",edition:"Edition of 48",tokenId:5},
-            {title:"majestic white elephant",image:"ackeditions_gallery/web/majestic_white_elephant_web.gif",fullRes:"https://arweave.net/LGeabOluX7iO7XcHWx5CMz7HdLYkNqTvaqZMGZQff4I",edition:"Edition of 47",tokenId:6},
-            {title:"circus elephant",image:"ackeditions_gallery/web/circus_elephant_web.gif",fullRes:"https://arweave.net/ZcwEDRsy7Ie0fUT2jA4SgNcXUAFFMGidSoEui4tE4AI",edition:"Edition of 9",tokenId:11},
-            {title:"Skelekart",image:"ackeditions_gallery/web/skelekart_web.gif",fullRes:"https://arweave.net/OQTf6kIy53YT7x0lnJqFDT6JGFRHdLPYWrWRmu6Ts-M",edition:"Edition of 13",tokenId:18},
+            {title:"Void Engine",image:"ackeditions_gallery/web/void_engine_web.gif",fullRes:"https://arweave.net/8kkyEK4DpnQcYt0U3hhlWnxOHIJTV6IuRT1gZvhpNSs",edition:"Edition of 6",tokenId:17,focusScale:1.3},
+            {title:"lisan al-gaib",image:"ackeditions_gallery/web/lisan_web.gif",fullRes:"https://arweave.net/WMsZKEGSnwbNib_Wh5CD7rYVV86aetz2xaUAhDla1JY",edition:"Edition of 10",tokenId:20,focusScale:1.3},
+            {title:"Exodus",image:"ackeditions_gallery/web/exodus_web.gif",fullRes:"https://arweave.net/5d_X3b7o7_eHzwu6YtxO_Ut6B5bBzfpye88huFKgBVg",edition:"Edition of 5",tokenId:16,focusScale:1.3},
+            {title:"Aerial Screw",image:"ackeditions_gallery/web/aerial_screw_web.gif",fullRes:"https://arweave.net/HjFxopgbKEw2BMq0m0Y5v66pNAjROwG3m0CrUpUwIgs",hoverImage:"ackeditions_gallery/web/Specchio_Vortice_web.gif",edition:"Edition of 14",tokenId:19,focusScale:1.3},
+            {title:"pink elephant on parade",image:"ackeditions_gallery/web/pink_elephant_on_parade_web.gif",fullRes:"https://arweave.net/a9hPFmM_bLjJMiTbQJU8wzz5djzcHSKxU4-lIX0f8wE",edition:"Edition of 48",tokenId:5,focusScale:1.3},
+            {title:"majestic white elephant",image:"ackeditions_gallery/web/majestic_white_elephant_web.gif",fullRes:"https://arweave.net/LGeabOluX7iO7XcHWx5CMz7HdLYkNqTvaqZMGZQff4I",edition:"Edition of 47",tokenId:6,focusScale:1.3},
+            {title:"circus elephant",image:"ackeditions_gallery/web/circus_elephant_web.gif",fullRes:"https://arweave.net/ZcwEDRsy7Ie0fUT2jA4SgNcXUAFFMGidSoEui4tE4AI",edition:"Edition of 9",tokenId:11,focusScale:1.3},
+            {title:"Skelekart",image:"ackeditions_gallery/web/skelekart_web.gif",fullRes:"https://arweave.net/OQTf6kIy53YT7x0lnJqFDT6JGFRHdLPYWrWRmu6Ts-M",edition:"Edition of 13",tokenId:18,focusScale:1.3},
             {title:"la nuit étoilée",image:"ackeditions_gallery/web/lanuit_web.gif",fullRes:"https://arweave.net/yGmovdTJKNtu91z9bK9xHPFCSIaeiu8mseac7rkyaRM",edition:"Edition of 300",tokenId:8},
             {title:"max pain v2",image:"ackeditions_gallery/web/maxpainv2_web.gif",fullRes:"https://arweave.net/KaHGqy9BHdSlZ5LctCIbBQa15t2gmlcZyLlDI1BcKDI",edition:"Edition of 613",tokenId:14},
             {title:"NGMI Burn Token",image:"ackeditions_gallery/web/ngmi_bottle_web.gif",fullRes:"https://arweave.net/mWxN-xqSsuijB7Q3r0xp14njv29knRddC5Dh8XK4exg",edition:"Edition of 8",tokenId:3},
@@ -18826,6 +18826,11 @@
       const _isHeartYouFocus = _focusColNameEarly === 'Heart You';
       if ((_isEditionsFocus || _isColorStudyFocus || _isHeartYouFocus) && !_isMobileFocus) {
         scaleFactor *= 0.85;
+      }
+
+      // Per-artwork focusScale override (e.g. 1.3 = 30% bigger in focus view)
+      if (!_isMobileFocus && artData && artData.focusScale) {
+        scaleFactor *= artData.focusScale;
       }
 
       // Clamp so artwork doesn't overlap the left candle (desktop only)
