@@ -2251,10 +2251,23 @@
     .bags-deco-node {
       pointer-events: none;
       z-index: 0;
+      cursor: default;
     }
     .bags-deco-node .node-preview {
-      border: 1px solid rgba(180,160,120,0.12);
+      border: none;
       background: transparent;
+      box-shadow: none;
+      padding: 0;
+      overflow: visible;
+    }
+    .bags-deco-node .node-preview img {
+      filter: sepia(0.3) brightness(0.7);
+    }
+    /* No title tag, focus hint, or other overlays on deco nodes */
+    .bags-deco-node .node-title-tag,
+    .bags-deco-node .node-focus-hint,
+    .bags-deco-node .bags-live-strip {
+      display: none !important;
     }
     /* Hide deco nodes during focus mode */
     .node-graph-inner.focus-mode .bags-deco-node {
@@ -7184,6 +7197,15 @@
           if (col.contract && !seen[col.contract.toLowerCase()]) {
             contracts.push(col.contract);
             seen[col.contract.toLowerCase()] = true;
+          }
+          // Also pick up per-artwork contract overrides (e.g. pale blue death, max pain v2)
+          if (col.artworks) {
+            col.artworks.forEach(function(art) {
+              if (art.contract && !seen[art.contract.toLowerCase()]) {
+                contracts.push(art.contract);
+                seen[art.contract.toLowerCase()] = true;
+              }
+            });
           }
         });
         return contracts;
@@ -15139,6 +15161,27 @@
                 _bagsGroupMap[src].artworks.push(art);
               });
 
+              // Circus elephant precedence: sort circus elephant to front of ACK Editions group
+              var _ackEdGrp = _bagsGroupMap['ACK Editions'];
+              if (_ackEdGrp) {
+                var _elephantNames = ['pink elephant on parade', 'majestic white elephant', 'circus elephant'];
+                var _ownedEls = _ackEdGrp.indices.filter(function(idx) {
+                  return _elephantNames.indexOf((artworks[idx].title || '').toLowerCase()) >= 0;
+                });
+                if (_ownedEls.length === 3) {
+                  // Move circus elephant to index 0 within this group
+                  var _ciIdx = _ackEdGrp.indices.findIndex(function(idx) {
+                    return (artworks[idx].title || '').toLowerCase() === 'circus elephant';
+                  });
+                  if (_ciIdx > 0) {
+                    var removed = _ackEdGrp.indices.splice(_ciIdx, 1);
+                    _ackEdGrp.indices.unshift(removed[0]);
+                    var removedArt = _ackEdGrp.artworks.splice(_ciIdx, 1);
+                    _ackEdGrp.artworks.unshift(removedArt[0]);
+                  }
+                }
+              }
+
               // Sort groups: hero tier first (prominent placement), then medium, then small-grid
               const _tierOrder = { 'hero': 0, 'medium': 1, 'small-grid': 2 };
               _bagsGroups.sort((a, b) => {
@@ -15170,9 +15213,23 @@
 
                 // Compute per-card dimensions using aspect ratios
                 const cards = [];
+                // Circus elephant precedence: if all 3 elephants in ACK Editions, circus elephant gets biggest card
+                var _circusBoost = false;
+                if (grp.name === 'ACK Editions') {
+                  var _elephantTitles = ['pink elephant on parade', 'majestic white elephant', 'circus elephant'];
+                  var _ownedElephants = grp.indices.filter(function(idx) {
+                    var t = (artworks[idx].title || '').toLowerCase();
+                    return _elephantTitles.indexOf(t) >= 0;
+                  });
+                  _circusBoost = (_ownedElephants.length === 3);
+                }
                 grp.indices.forEach((idx, ci) => {
                   const ar = _imgAspects[idx] || 1.0;
-                  const w = cardW;
+                  var w = cardW;
+                  // Circus elephant gets 1.5x size when all 3 elephants owned
+                  if (_circusBoost && (artworks[idx].title || '').toLowerCase() === 'circus elephant') {
+                    w = Math.round(cardW * 1.5);
+                  }
                   const h = Math.round(w * ar);
                   cards.push({ idx, w, h, ar });
                 });
@@ -15894,48 +15951,19 @@
           }
           node.appendChild(titleTag);
 
-          // ── MY BAGS: Live data strip below each card (offers, listings, marketplace links) ──
+          // ── MY BAGS: Marketplace link strip below each card (OS/ES only, NO offers/prices) ──
           if (collection._isMyBags && artwork._sourceCollection) {
-            const _srcCol = COLLECTIONS.find(c => c.name === artwork._sourceCollection && c.contract);
-            const _srcContract = _srcCol ? _srcCol.contract : null;
+            const _srcCol = COLLECTIONS.find(c => c.name === artwork._sourceCollection);
+            // Use artwork-level contract override (e.g. pale blue death) or fall back to collection contract
+            const _srcContract = artwork.contract || (_srcCol ? _srcCol.contract : null);
             const _srcTokenId = artwork.tokenId;
             if (_srcContract && _srcTokenId !== undefined) {
               const liveStrip = document.createElement('div');
               liveStrip.className = 'bags-live-strip';
               liveStrip.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.38rem;color:rgba(200,190,170,0.4);letter-spacing:0.06em;margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;';
-              // Placeholder while loading
-              liveStrip.innerHTML = '<span style="opacity:0.3;">...</span>';
+              // Show marketplace links only — no offers/listings on bags pages
+              liveStrip.innerHTML = _buildBagsLinks(_srcContract, _srcTokenId);
               node.appendChild(liveStrip);
-
-              // Async fetch live data
-              const _lsContract = _srcContract;
-              const _lsTokenId = _srcTokenId;
-              const _lsStrip = liveStrip;
-              const _lsArt = artwork;
-              setTimeout(function() {
-                if (!ACK_CHAIN.hasKey()) {
-                  // No API key — just show marketplace links
-                  _lsStrip.innerHTML = _buildBagsLinks(_lsContract, _lsTokenId);
-                  return;
-                }
-                Promise.all([
-                  ACK_CHAIN.enrichArtwork(_lsContract, _lsTokenId, _lsArt),
-                  ACK_CHAIN.getMarketStatus(_lsContract, _lsTokenId, _lsArt)
-                ]).then(function(results) {
-                  var aw = results[0];
-                  var parts = [];
-                  if (aw.isListed && aw.listingPriceEth) {
-                    parts.push('<span style="color:rgba(50,205,50,0.75);font-weight:600;">' + aw.listingPriceEth + ' ETH</span>');
-                  }
-                  if (aw.hasOffer && aw.bestOfferEth) {
-                    parts.push('<span style="color:rgba(255,165,0,0.75);">offer ' + aw.bestOfferEth + '</span>');
-                  }
-                  parts.push(_buildBagsLinks(_lsContract, _lsTokenId));
-                  _lsStrip.innerHTML = parts.join('<span style="opacity:0.2;margin:0 1px;">·</span>');
-                }).catch(function() {
-                  _lsStrip.innerHTML = _buildBagsLinks(_lsContract, _lsTokenId);
-                });
-              }, 800 + i * 200); // stagger API calls
             }
           }
 
@@ -17480,6 +17508,9 @@
               // Scale deco count with artwork count: 6-12 decoration nodes
               var decoCount = Math.min(12, Math.max(6, Math.round(allCards.length * 0.6)));
 
+              // Track decoration nodes for wire drawing in drawNoodles
+              var _bagsDecoNodes = [];
+
               // Collect card rects for collision avoidance
               var cardRects = [];
               allCards.forEach(function(c) {
@@ -17554,9 +17585,15 @@
                 // Track placed position for collision avoidance with subsequent decos
                 cardRects.push({ x: dx, y: dy, w: decoSize, h: decoSize });
 
+                // Register for wire drawing
+                _bagsDecoNodes.push({ el: decoNode, x: dx + decoSize / 2, y: dy + decoSize, size: decoSize });
+
                 var _diDelay = di;
                 setTimeout(function() { decoNode.style.opacity = '1'; }, 1500 + _diDelay * 200);
               }
+
+              // Store on inner so drawNoodles can wire them
+              inner._bagsDecoNodes = _bagsDecoNodes;
             })();
 
           })();
@@ -17941,6 +17978,31 @@
               flow.setAttribute('stroke-width', '0.9');
               flow.setAttribute('stroke-dasharray', '3 18');
               const dur = (3.5 + Math.random() * 3).toFixed(1);
+              flow.style.animation = `wireFlow ${dur}s linear infinite`;
+              wiresSvg.appendChild(flow);
+            });
+          }
+
+          // ── My Bags decoration node wires — warm gold, subtle ──
+          if (inner._bagsDecoNodes && inner._bagsDecoNodes.length > 0) {
+            const decoWireBase = 'rgba(180,160,120,0.12)';
+            const decoWireFlow = 'rgba(200,170,100,0.08)';
+            inner._bagsDecoNodes.forEach((dn) => {
+              const fromPt = { x: dn.x, y: dn.y };
+              const d = _makeWirePath(fromPt, op);
+              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              path.setAttribute('d', d);
+              path.setAttribute('fill', 'none');
+              path.setAttribute('stroke', decoWireBase);
+              path.setAttribute('stroke-width', '0.6');
+              wiresSvg.appendChild(path);
+              const flow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              flow.setAttribute('d', d);
+              flow.setAttribute('fill', 'none');
+              flow.setAttribute('stroke', decoWireFlow);
+              flow.setAttribute('stroke-width', '0.8');
+              flow.setAttribute('stroke-dasharray', '3 20');
+              const dur = (4 + Math.random() * 3).toFixed(1);
               flow.style.animation = `wireFlow ${dur}s linear infinite`;
               wiresSvg.appendChild(flow);
             });
@@ -21680,7 +21742,8 @@
       const _isEdition = (artwork.edition && artwork.edition.toLowerCase().indexOf('edition of') !== -1) || (artwork.tokenIds && artwork.tokenIds.length > 1);
       // For editions (ERC-1155): show "COLLECTORS" (plural) with popup trigger
       // For 1-of-1: show "COLLECTOR" (singular) with existing single-collector popup
-      const collectorLine = (collection.contract && artwork.tokenId !== undefined) || _collectorName
+      const _artContract = artwork.contract || collection.contract;
+      const collectorLine = (_artContract && artwork.tokenId !== undefined) || _collectorName
         ? `<div class="node-info-line" style="margin-top:4px;"><a href="#" class="collector-link" id="collectorToggleLink" data-edition="${_isEdition ? 'true' : 'false'}" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(220,150,50,0.65);text-decoration:none;letter-spacing:0.08em;cursor:pointer;transition:color 0.3s;" onmouseover="this.style.color='rgba(220,150,50,0.95)'" onmouseout="this.style.color='rgba(220,150,50,0.65)'">&gt; ${_isEdition ? 'COLLECTORS' : 'COLLECTOR'}</a></div>`
         : '';
       // Build tab content
@@ -21780,11 +21843,11 @@
             ${collectorLine}
             <div id="liveChainData" style="margin-top:6px;border-top:1px solid rgba(220,150,50,0.08);padding-top:6px;"></div>
             <div class="node-info-line" style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-              ${(artwork.openSeaUrl || (collection.contract && artwork.tokenId !== undefined))
-                ? `<a href="${artwork.openSeaUrl || ACK_CHAIN.openSeaUrl(collection.contract, artwork.tokenId)}" target="_blank" rel="noopener" style="font-family:'JetBrains Mono',monospace;font-size:0.45rem;color:rgba(80,130,200,0.7);text-decoration:none;letter-spacing:0.06em;padding:2px 6px;border:1px solid rgba(80,130,200,0.2);border-radius:2px;transition:all 0.3s;" onmouseover="this.style.color='rgba(80,130,200,1)';this.style.borderColor='rgba(80,130,200,0.5)'" onmouseout="this.style.color='rgba(80,130,200,0.7)';this.style.borderColor='rgba(80,130,200,0.2)'">OPENSEA ↗</a>`
+              ${(artwork.openSeaUrl || (_artContract && artwork.tokenId !== undefined))
+                ? `<a href="${artwork.openSeaUrl || ACK_CHAIN.openSeaUrl(_artContract, artwork.tokenId)}" target="_blank" rel="noopener" style="font-family:'JetBrains Mono',monospace;font-size:0.45rem;color:rgba(80,130,200,0.7);text-decoration:none;letter-spacing:0.06em;padding:2px 6px;border:1px solid rgba(80,130,200,0.2);border-radius:2px;transition:all 0.3s;" onmouseover="this.style.color='rgba(80,130,200,1)';this.style.borderColor='rgba(80,130,200,0.5)'" onmouseout="this.style.color='rgba(80,130,200,0.7)';this.style.borderColor='rgba(80,130,200,0.2)'">OPENSEA ↗</a>`
                 : ''}
-              ${(artwork.etherscanUrl || (collection.contract && artwork.tokenId !== undefined))
-                ? `<a href="${artwork.etherscanUrl || ACK_CHAIN.etherscanUrl(collection.contract, artwork.tokenId)}" target="_blank" rel="noopener" style="font-family:'JetBrains Mono',monospace;font-size:0.45rem;color:rgba(100,180,100,0.7);text-decoration:none;letter-spacing:0.06em;padding:2px 6px;border:1px solid rgba(100,180,100,0.2);border-radius:2px;transition:all 0.3s;" onmouseover="this.style.color='rgba(100,180,100,1)';this.style.borderColor='rgba(100,180,100,0.5)'" onmouseout="this.style.color='rgba(100,180,100,0.7)';this.style.borderColor='rgba(100,180,100,0.2)'">ETHERSCAN ↗</a>`
+              ${(artwork.etherscanUrl || (_artContract && artwork.tokenId !== undefined))
+                ? `<a href="${artwork.etherscanUrl || ACK_CHAIN.etherscanUrl(_artContract, artwork.tokenId)}" target="_blank" rel="noopener" style="font-family:'JetBrains Mono',monospace;font-size:0.45rem;color:rgba(100,180,100,0.7);text-decoration:none;letter-spacing:0.06em;padding:2px 6px;border:1px solid rgba(100,180,100,0.2);border-radius:2px;transition:all 0.3s;" onmouseover="this.style.color='rgba(100,180,100,1)';this.style.borderColor='rgba(100,180,100,0.5)'" onmouseout="this.style.color='rgba(100,180,100,0.7)';this.style.borderColor='rgba(100,180,100,0.2)'">ETHERSCAN ↗</a>`
                 : ''}
             </div>
           </div>
@@ -22046,14 +22109,16 @@
       });
 
       // ── Fetch live on-chain data if Alchemy key is set ──
-      if (collection.contract && artwork.tokenId !== undefined) {
+      // Use artwork-level contract override if present (e.g. pale blue death on ACK Editions contract)
+      var _liveContract = artwork.contract || collection.contract;
+      if (_liveContract && artwork.tokenId !== undefined) {
         var _liveDiv = document.getElementById('liveChainData');
         if (_liveDiv) {
           if (ACK_CHAIN.hasKey()) {
             _liveDiv.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.42rem;color:rgba(220,150,50,0.3);letter-spacing:0.1em;">LOADING ON-CHAIN DATA...</div>';
             Promise.all([
-              ACK_CHAIN.enrichArtwork(collection.contract, artwork.tokenId, artwork),
-              ACK_CHAIN.getMarketStatus(collection.contract, artwork.tokenId, artwork)
+              ACK_CHAIN.enrichArtwork(_liveContract, artwork.tokenId, artwork),
+              ACK_CHAIN.getMarketStatus(_liveContract, artwork.tokenId, artwork)
             ]).then(function(results) {
               var aw = results[0];
               var sections = [];
@@ -22114,7 +22179,7 @@
           ACK_SFX.micro();
           // Check if this is an ERC-1155 edition — use multi-collector popup
           if (_collectorLink.dataset.edition === 'true') {
-            _buildCollectorsPopupGlobal(collection.contract, artwork.tokenId, infoPanel, artwork.tokenIds);
+            _buildCollectorsPopupGlobal(artwork.contract || collection.contract, artwork.tokenId, infoPanel, artwork.tokenIds);
             return;
           }
           // Toggle — if already showing, remove it
@@ -22418,9 +22483,9 @@
           if (_collectorLink.dataset.edition === 'true') {
             // ERC-1155 editions: no single owner display, just the clickable COLLECTORS link
             _collectorLink.textContent = '> COLLECTORS';
-          } else if (ACK_CHAIN.hasKey() && collection.contract && artwork.tokenId !== undefined) {
+          } else if (ACK_CHAIN.hasKey() && _artContract && artwork.tokenId !== undefined) {
             _collectorLink.textContent = '> LOADING...';
-            ACK_CHAIN.getOwners(collection.contract, artwork.tokenId).then(function(data) {
+            ACK_CHAIN.getOwners(_artContract, artwork.tokenId).then(function(data) {
               const liveOwner = (data && data.owners && data.owners[0]) ? data.owners[0] : _collectorName;
               _collectorLink.textContent = '> COLLECTOR';
               _buildCollectorPopup(liveOwner || _collectorName);
@@ -23188,10 +23253,11 @@
 
       // ── Collectors link for editions (ERC-1155) ──
       const _overlayIsEdition = artwork.edition && artwork.edition.toLowerCase().indexOf('edition of') !== -1;
-      if (_overlayIsEdition && collection.contract && artwork.tokenId !== undefined) {
+      var _overlayContract = artwork.contract || collection.contract;
+      if (_overlayIsEdition && _overlayContract && artwork.tokenId !== undefined) {
         html += `<div class="overlay-divider"></div>`;
         html += `<div class="overlay-section" style="padding:6px 0;">`;
-        html += `<a href="#" class="overlay-collectors-link" data-contract="${collection.contract}" data-token-id="${artwork.tokenId}" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(220,150,50,0.65);text-decoration:none;letter-spacing:0.08em;cursor:pointer;transition:color 0.3s;" onmouseover="this.style.color='rgba(220,150,50,0.95)'" onmouseout="this.style.color='rgba(220,150,50,0.65)'">&gt; COLLECTORS</a>`;
+        html += `<a href="#" class="overlay-collectors-link" data-contract="${_overlayContract}" data-token-id="${artwork.tokenId}" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(220,150,50,0.65);text-decoration:none;letter-spacing:0.08em;cursor:pointer;transition:color 0.3s;" onmouseover="this.style.color='rgba(220,150,50,0.95)'" onmouseout="this.style.color='rgba(220,150,50,0.65)'">&gt; COLLECTORS</a>`;
         html += `</div>`;
       }
 
