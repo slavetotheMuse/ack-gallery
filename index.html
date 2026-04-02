@@ -31395,8 +31395,42 @@
       var isOwnWallet = connectedAddr && walletAddr.toLowerCase() === connectedAddr.toLowerCase();
       var ackContracts = ACK_CHAIN.getAllACKContracts();
 
-      // Fetch real on-chain holdings
-      ACK_CHAIN.getNFTsForOwner(walletAddr, ackContracts).then(function(ownedNfts) {
+      // Build list of artworks on shared ecosystem contracts (6529 etc.)
+      // These need individual ownership checks since their contracts are excluded from the main query
+      var _sharedArtworks = [];
+      var _sharedContractSet = {
+        '0x33fd426905f149f8376e227d0c9d3340aad17af1': true,
+        '0x4db52a61dc491e15a2f78f5ac001c14ffe3568cb': true
+      };
+      COLLECTIONS.forEach(function(col, ci) {
+        if (col._isMyBags || !col.artworks) return;
+        col.artworks.forEach(function(art, ai) {
+          var c = (art.contract || col.contract || '').toLowerCase();
+          if (_sharedContractSet[c]) {
+            _sharedArtworks.push({ contract: c, tokenId: art.tokenId, colIdx: ci, artIdx: ai });
+          }
+        });
+      });
+
+      // Fetch real on-chain holdings + check shared contract artworks in parallel
+      var _mainQuery = ACK_CHAIN.getNFTsForOwner(walletAddr, ackContracts);
+
+      // For shared contracts: check each artwork individually via getOwnersForNFT
+      var _sharedChecks = _sharedArtworks.map(function(sa) {
+        var url = 'https://eth-mainnet.g.alchemy.com/nft/v3/H717ymfzuJN1-pbKa_znA/getOwnersForNFT?contractAddress=' + sa.contract + '&tokenId=' + sa.tokenId;
+        return fetch(url, { headers: { accept: 'application/json' } })
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(data) {
+            if (!data || !data.owners) return null;
+            var isOwner = data.owners.some(function(o) { return o.toLowerCase() === walletAddr.toLowerCase(); });
+            return isOwner ? sa : null;
+          })
+          .catch(function() { return null; });
+      });
+
+      Promise.all([_mainQuery, Promise.all(_sharedChecks)]).then(function(results) {
+        var ownedNfts = results[0] || [];
+        var ownedShared = results[1].filter(function(r) { return r !== null; });
         _myBagsLoading = false;
 
         // Match on-chain NFTs to local gallery data ONLY — skip unrecognized tokens
@@ -31434,6 +31468,19 @@
             // Non-matching tokens (unrevealed opepen, non-ACK works on shared contracts) are dropped
           });
         }
+
+        // Add confirmed shared-contract artworks (6529 etc.)
+        ownedShared.forEach(function(sa) {
+          var col = COLLECTIONS[sa.colIdx];
+          var art = col && col.artworks ? col.artworks[sa.artIdx] : null;
+          if (art) {
+            var clone = Object.assign({}, art);
+            clone._sourceCollection = col.name;
+            clone._sourceCollectionIndex = sa.colIdx;
+            clone._sourceArtworkIndex = sa.artIdx;
+            bagsArtworks.push(clone);
+          }
+        });
 
         // Sort by source collection so works from the same collection are grouped together
         // Use the order they appear in COLLECTIONS for a natural grouping
