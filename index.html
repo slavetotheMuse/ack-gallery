@@ -2497,20 +2497,23 @@
     /* ── Touch to experience full resolution — hover hint in focus view ── */
     .focus-touch-hint {
       position: absolute;
-      top: -22px; left: 0; width: 100%;
+      top: -32px; left: 0; width: 100%;
       pointer-events: none;
       z-index: 60;
       opacity: 0;
-      transition: opacity 0.35s ease;
+      transition: opacity 0.6s ease;
+      text-align: center;
     }
     .node-card.focused:hover .focus-touch-hint {
       opacity: 1;
     }
     .focus-touch-hint span {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.5rem;
-      letter-spacing: 0.06em;
-      color: rgba(200,195,185,0.45);
+      font-family: 'Josefin Sans', 'Futura', 'Century Gothic', sans-serif;
+      font-weight: 100;
+      font-size: clamp(10px, 1.1vw, 15px);
+      letter-spacing: 0.4em;
+      color: rgba(245,240,230,0.35);
+      text-transform: lowercase;
       white-space: nowrap;
     }
 
