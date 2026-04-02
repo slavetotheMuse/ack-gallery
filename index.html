@@ -33750,6 +33750,13 @@
           _contentEl.style.transition = 'opacity 0.25s ease';
           _contentEl.style.opacity = '0';
         }
+        // Schedule opacity reset so openDetail's new content is visible
+        setTimeout(function() {
+          if (_contentEl) {
+            _contentEl.style.transition = '';
+            _contentEl.style.opacity = '';
+          }
+        }, 300);
         // Clean up candle wires
         var _cwSvg = document.getElementById('candleWires');
         var _detCanvas = document.querySelector('.node-graph-canvas');
