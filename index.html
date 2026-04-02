@@ -25236,8 +25236,8 @@
         });
         // Subtle cross motifs (resurrection) along bottom
         for (var bx = L+40; bx < R-40; bx += 60) {
-          svg.appendChild(path('M '+bx+' '+(B-3)+' L '+bx+' '+(B-12)', dkBlue+'0.2)', '0.8', '1'));
-          svg.appendChild(path('M '+(bx-3)+' '+(B-8)+' L '+(bx+3)+' '+(B-8)', dkBlue+'0.2)', '0.8', '1'));
+          svg.appendChild(path('M '+bx+' '+(B-3)+' L '+bx+' '+(B-12), dkBlue+'0.2)', '0.8', '1'));
+          svg.appendChild(path('M '+(bx-3)+' '+(B-8)+' L '+(bx+3)+' '+(B-8), dkBlue+'0.2)', '0.8', '1'));
         }
       }
 
@@ -25282,13 +25282,13 @@
         // Dark base border with neon accents
         svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', dkMC+'0.9)', '2.5', '1'));
         // Glitchy offset lines — signal interference
-        svg.appendChild(path('M '+(L+3)+' '+(T+3)+' L '+(R-4)+' '+(T+3)', neonG+'0.4)', '0.8', '1'));
-        svg.appendChild(path('M '+(L+4)+' '+(T+5)+' L '+(R-3)+' '+(T+5)', neonR+'0.25)', '0.5', '1'));
-        svg.appendChild(path('M '+(L+3)+' '+(B-3)+' L '+(R-4)+' '+(B-3)', neonG+'0.35)', '0.8', '1'));
-        svg.appendChild(path('M '+(L+4)+' '+(B-5)+' L '+(R-3)+' '+(B-5)', neonR+'0.2)', '0.5', '1'));
+        svg.appendChild(path('M '+(L+3)+' '+(T+3)+' L '+(R-4)+' '+(T+3), neonG+'0.4)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(T+5)+' L '+(R-3)+' '+(T+5), neonR+'0.25)', '0.5', '1'));
+        svg.appendChild(path('M '+(L+3)+' '+(B-3)+' L '+(R-4)+' '+(B-3), neonG+'0.35)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(B-5)+' L '+(R-3)+' '+(B-5), neonR+'0.2)', '0.5', '1'));
         // Vertical scan lines on sides
-        svg.appendChild(path('M '+(L+3)+' '+(T+10)+' L '+(L+3)+' '+(B-10)', neonG+'0.3)', '0.8', '1'));
-        svg.appendChild(path('M '+(R-3)+' '+(T+10)+' L '+(R-3)+' '+(B-10)', neonG+'0.3)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+3)+' '+(T+10)+' L '+(L+3)+' '+(B-10), neonG+'0.3)', '0.8', '1'));
+        svg.appendChild(path('M '+(R-3)+' '+(T+10)+' L '+(R-3)+' '+(B-10), neonG+'0.3)', '0.8', '1'));
         // Interference hash marks
         for (var hy = T+20; hy < B-20; hy += 25) {
           var hOff = (Math.sin(hy * 0.3) * 4).toFixed(1);
@@ -25352,13 +25352,13 @@
         var dkCI = 'rgba(25,20,30,';
         svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', dkCI+'0.85)', '2.5', '1'));
         // Gradient-like dual lines (pink + cyan = social media aesthetic)
-        svg.appendChild(path('M '+(L+4)+' '+(T+4)+' L '+(R-4)+' '+(T+4)', pink+'0.45)', '1.2', '1'));
-        svg.appendChild(path('M '+(L+4)+' '+(T+7)+' L '+(R-4)+' '+(T+7)', cyan+'0.35)', '0.8', '1'));
-        svg.appendChild(path('M '+(L+4)+' '+(B-4)+' L '+(R-4)+' '+(B-4)', cyan+'0.45)', '1.2', '1'));
-        svg.appendChild(path('M '+(L+4)+' '+(B-7)+' L '+(R-4)+' '+(B-7)', pink+'0.35)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(T+4)+' L '+(R-4)+' '+(T+4), pink+'0.45)', '1.2', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(T+7)+' L '+(R-4)+' '+(T+7), cyan+'0.35)', '0.8', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(B-4)+' L '+(R-4)+' '+(B-4), cyan+'0.45)', '1.2', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(B-7)+' L '+(R-4)+' '+(B-7), pink+'0.35)', '0.8', '1'));
         // Side accents
-        svg.appendChild(path('M '+(L+4)+' '+(T+12)+' L '+(L+4)+' '+(B-12)', pink+'0.2)', '0.6', '1'));
-        svg.appendChild(path('M '+(R-4)+' '+(T+12)+' L '+(R-4)+' '+(B-12)', cyan+'0.2)', '0.6', '1'));
+        svg.appendChild(path('M '+(L+4)+' '+(T+12)+' L '+(L+4)+' '+(B-12), pink+'0.2)', '0.6', '1'));
+        svg.appendChild(path('M '+(R-4)+' '+(T+12)+' L '+(R-4)+' '+(B-12), cyan+'0.2)', '0.6', '1'));
       }
 
       // ═══════════════════════════════════════════
@@ -25486,8 +25486,8 @@
         svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', tdBk+'0.9)', '2.5', '1'));
         svg.appendChild(path('M '+(L+6)+' '+(T+6)+' L '+(R-6)+' '+(T+6)+' L '+(R-6)+' '+(B-6)+' L '+(L+6)+' '+(B-6)+' Z', tdGld+'0.3)', '1', '1'));
         // Life/death duality — left side warm, right side cold
-        svg.appendChild(path('M '+(L+3)+' '+(T+15)+' L '+(L+3)+' '+(B-15)', 'rgba(180,120,60,0.2)', '1.5', '1'));
-        svg.appendChild(path('M '+(R-3)+' '+(T+15)+' L '+(R-3)+' '+(B-15)', 'rgba(80,90,110,0.2)', '1.5', '1'));
+        svg.appendChild(path('M '+(L+3)+' '+(T+15)+' L '+(L+3)+' '+(B-15), 'rgba(180,120,60,0.2)', '1.5', '1'));
+        svg.appendChild(path('M '+(R-3)+' '+(T+15)+' L '+(R-3)+' '+(B-15), 'rgba(80,90,110,0.2)', '1.5', '1'));
         // Time marker ticks along bottom (evolution timeline)
         var ticks = 37; // number of arweave updates
         var tickSp = (R - L - 30) / ticks;
