@@ -1238,6 +1238,9 @@
     .nav-wallet-link.wallet-connected::after {
       background: rgba(50,205,50,0.5);
     }
+    .nav-wallet-link[title] {
+      cursor: pointer;
+    }
 
     /* ── Salesbot — minimized dot + expandable feed ── */
     .salesbot-node {
@@ -5887,7 +5890,7 @@
       </button>
       <div class="nav-right" id="navRight">
         <a class="nav-link" onclick="toggleCatalogOM()">Collections</a>
-        <a class="nav-link nav-wallet-link" id="navWalletLink" onclick="handleNavWallet()">Connect Wallet</a>
+        <a class="nav-link nav-wallet-link" id="navWalletLink" onclick="handleNavWallet()" title="Read-only — view your collection. This site never requests transactions.">Connect Wallet</a>
         <div class="about-dropdown" id="aboutDropdown">
           <button class="nav-link" onclick="toggleAbout()">About</button>
           <div class="about-panel">
