@@ -8738,28 +8738,49 @@
 
           if (_isLocal) {
             // file:// — skip Web Audio entirely, just play plain Audio
-            audio.volume = 0.06;
-            audio.play().then(function() {
-
-            }).catch(function(err) {
+            audio.volume = 0.04;
+            audio.play().then(function() {}).catch(function(err) {
               console.warn('[ACK] Whisper audio failed on file://:', err);
             });
+            // Layer original whisper audio faintly
+            var _origLocal = new Audio('dreamsarewhispers.wav');
+            _origLocal.volume = 0.012;
+            _origLocal.play().catch(function(){});
             return;
           }
 
-          // https:// — use Web Audio API for reverb/ambience
+          // https:// — use Web Audio API for distortion, resonance, reverb
           audio.volume = 1.0;
           var _wCtx, _wSrc;
           try {
             _wCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (_wCtx.state === 'suspended') _wCtx.resume();
             _wSrc = _wCtx.createMediaElementSource(audio);
-            // Master gain
+
+            // Master gain — turned down from 0.08
             var _masterGain = _wCtx.createGain();
-            _masterGain.gain.value = 0.08;
-            // Low-pass
+            _masterGain.gain.value = 0.05;
+
+            // Low-pass filter
             var _wLP = _wCtx.createBiquadFilter();
-            _wLP.type = 'lowpass'; _wLP.frequency.value = 1800; _wLP.Q.value = 0.4;
+            _wLP.type = 'lowpass'; _wLP.frequency.value = 1600; _wLP.Q.value = 0.5;
+
+            // Resonance — bandpass peaking filter for eerie mid presence
+            var _resBP = _wCtx.createBiquadFilter();
+            _resBP.type = 'peaking'; _resBP.frequency.value = 800; _resBP.Q.value = 4.0; _resBP.gain.value = 6;
+
+            // Distortion — subtle waveshaper for grit
+            var _distortion = _wCtx.createWaveShaper();
+            var _distCurveLen = 44100;
+            var _distCurve = new Float32Array(_distCurveLen);
+            var _distAmt = 12; // moderate soft-clip
+            for (var k = 0; k < _distCurveLen; k++) {
+              var x = (k * 2) / _distCurveLen - 1;
+              _distCurve[k] = ((3 + _distAmt) * x * 20 * (Math.PI / 180)) / (Math.PI + _distAmt * Math.abs(x));
+            }
+            _distortion.curve = _distCurve;
+            _distortion.oversample = '4x';
+
             // Synthetic convolver reverb (2.5s tail)
             var _irLen = _wCtx.sampleRate * 2.5;
             var _irBuf = _wCtx.createBuffer(2, _irLen, _wCtx.sampleRate);
@@ -8770,18 +8791,43 @@
               }
             }
             var _conv = _wCtx.createConvolver(); _conv.buffer = _irBuf;
-            var _dryGain = _wCtx.createGain(); _dryGain.gain.value = 0.6;
-            var _wetGain = _wCtx.createGain(); _wetGain.gain.value = 0.4;
-            _wSrc.connect(_wLP); _wLP.connect(_dryGain); _wLP.connect(_conv);
+            var _dryGain = _wCtx.createGain(); _dryGain.gain.value = 0.5;
+            var _wetGain = _wCtx.createGain(); _wetGain.gain.value = 0.5;
+
+            // Chain: source → lowpass → resonance → distortion → dry/wet reverb → master
+            _wSrc.connect(_wLP);
+            _wLP.connect(_resBP);
+            _resBP.connect(_distortion);
+            _distortion.connect(_dryGain);
+            _distortion.connect(_conv);
             _conv.connect(_wetGain);
-            _dryGain.connect(_masterGain); _wetGain.connect(_masterGain);
+            _dryGain.connect(_masterGain);
+            _wetGain.connect(_masterGain);
             _masterGain.connect(_wCtx.destination);
+
+            // ── Layer original dreamsarewhispers.wav very faintly underneath ──
+            var _origAudio = new Audio('dreamsarewhispers.wav');
+            _origAudio.volume = 1.0;
+            var _origSrc = _wCtx.createMediaElementSource(_origAudio);
+            var _origGain = _wCtx.createGain();
+            _origGain.gain.value = 0.018; // very faint ghost layer
+            // Give the original a bit of lowpass + reverb too
+            var _origLP = _wCtx.createBiquadFilter();
+            _origLP.type = 'lowpass'; _origLP.frequency.value = 1200; _origLP.Q.value = 0.3;
+            _origSrc.connect(_origLP);
+            _origLP.connect(_origGain);
+            _origLP.connect(_conv); // share the reverb
+            var _origWetGain = _wCtx.createGain(); _origWetGain.gain.value = 0.025;
+            _conv.connect(_origWetGain); // already connected above, convolver mixes both
+            _origGain.connect(_wCtx.destination);
+            _origAudio.play().catch(function(){});
+
           } catch(e) {
             // If createMediaElementSource was called, source is detached — connect direct
             if (_wSrc && _wCtx) {
-              try { var _fg = _wCtx.createGain(); _fg.gain.value = 0.06; _wSrc.connect(_fg); _fg.connect(_wCtx.destination); } catch(e3){}
+              try { var _fg = _wCtx.createGain(); _fg.gain.value = 0.04; _wSrc.connect(_fg); _fg.connect(_wCtx.destination); } catch(e3){}
             } else {
-              audio.volume = 0.06;
+              audio.volume = 0.04;
             }
           }
           audio.play().then(function() {
@@ -8789,7 +8835,7 @@
           }).catch(function(err) {
             console.warn('[ACK] Web Audio play failed:', err, '— trying plain fallback');
             var fallbackAudio = new Audio('intro_sequence_audio.mp3');
-            fallbackAudio.volume = 0.06;
+            fallbackAudio.volume = 0.04;
             fallbackAudio.play().catch(function(err2) {
               console.warn('[ACK] Fallback audio also failed:', err2);
             });
