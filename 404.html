@@ -4,359 +4,178 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>404 — a.c.k. art</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <meta name="description" content="nah">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #505050;
+      --node-bg: #3a3a3a;
+      --node-border: #666;
+      --text: #ccc;
+      --text-dim: #888;
+      --accent: #e8c47c;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
     body {
-      background: #0a0908;
-      color: rgba(200,190,175,0.7);
+      background: var(--bg);
       font-family: 'JetBrains Mono', monospace;
-      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-      cursor: crosshair;
-    }
-
-    .container {
       position: relative;
-      width: 100vw;
-      height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%);
+      pointer-events: none;
+    }
+    .node {
+      position: relative;
+      z-index: 1;
+      background: var(--node-bg);
+      border: 1px solid var(--node-border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
+      width: 320px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: nodeFloat 6s ease-in-out infinite;
+    }
+    .node:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(232,196,124,0.3);
+    }
+    @keyframes nodeFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .node-header {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-
-    /* The "nah" artwork */
-    .nah-artwork {
+    .node-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: 0.5px;
+    }
+    .node-badge {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .node-image { display: block; width: 100%; height: auto; }
+    .four-oh-four {
       position: absolute;
-      width: 220px;
-      height: 220px;
-      border-radius: 4px;
-      overflow: hidden;
-      z-index: 10;
-      box-shadow: 0 0 40px rgba(200,170,90,0.04), 0 0 80px rgba(0,0,0,0.5);
-      opacity: 0;
-      animation: nahFadeIn 1.5s ease 0.3s forwards;
-    }
-    .nah-artwork img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    /* Wire SVG overlay */
-    .wire-layer {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 5;
-      pointer-events: none;
-    }
-
-    /* 404 digits drawn by wires */
-    .digits-404 {
-      position: absolute;
-      z-index: 8;
-      pointer-events: none;
-    }
-
-    /* Bottom text */
-    .bottom-text {
-      position: fixed;
-      bottom: 48px;
+      z-index: 2;
+      top: -48px;
       left: 50%;
       transform: translateX(-50%);
-      text-align: center;
-      z-index: 20;
-      opacity: 0;
-      animation: textFadeIn 1s ease 2.5s forwards;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 72px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 8px;
+      text-shadow: 0 2px 20px rgba(232,196,124,0.3);
+      opacity: 0.85;
+      user-select: none;
     }
-    .bottom-text .label {
-      font-size: 11px;
-      letter-spacing: 0.35em;
-      color: rgba(200,170,90,0.25);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .bottom-text a {
-      display: inline-block;
-      font-size: 12px;
-      letter-spacing: 0.15em;
-      color: rgba(200,180,140,0.4);
-      text-decoration: none;
-      border: 1px solid rgba(200,170,90,0.12);
-      padding: 10px 28px;
-      transition: all 0.3s ease;
-    }
-    .bottom-text a:hover {
-      color: rgba(200,180,140,0.7);
-      border-color: rgba(200,170,90,0.3);
-      background: rgba(200,170,90,0.03);
-    }
-
-    /* PCB trace dots scattered */
-    .pcb-dot {
+    .connector {
       position: absolute;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background: rgba(200,170,90,0.06);
-      pointer-events: none;
+      background: var(--node-border);
+      border: 1px solid rgba(255,255,255,0.15);
     }
-
-    @keyframes nahFadeIn {
-      0% { opacity: 0; transform: scale(0.9); }
-      100% { opacity: 1; transform: scale(1); }
+    .connector.left { left: -4px; top: 50%; transform: translateY(-50%); }
+    .connector.right { right: -4px; top: 50%; transform: translateY(-50%); }
+    .noodle {
+      position: absolute;
+      z-index: 0;
+      fill: none;
+      stroke: var(--node-border);
+      stroke-width: 1.5;
+      opacity: 0.3;
     }
-    @keyframes textFadeIn {
-      0% { opacity: 0; transform: translateX(-50%) translateY(8px); }
-      100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .subtitle {
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
-    @keyframes wireDraw {
-      0% { stroke-dashoffset: var(--wire-len); }
-      100% { stroke-dashoffset: 0; }
+    .home-link {
+      position: absolute;
+      z-index: 10;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 2px;
+      transition: color 0.3s;
+      padding: 8px 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
     }
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.03; }
-      50% { opacity: 0.08; }
+    .home-link:hover {
+      color: var(--accent);
+      border-color: rgba(232,196,124,0.3);
+    }
+    .scene { animation: fadeIn 1.2s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="container" id="container">
-    <!-- "nah" artwork -->
-    <div class="nah-artwork" id="nahArt">
-      <img src="https://i2c.seadn.io/ethereum/0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3/0e823ae91fc5eca3641f291c73a595/560e823ae91fc5eca3641f291c73a595.png?w=500" alt="nah" crossorigin="anonymous">
-    </div>
-
-    <!-- Wire SVG layer -->
-    <svg class="wire-layer" id="wireLayer" xmlns="http://www.w3.org/2000/svg"></svg>
-
-    <!-- Bottom navigation -->
-    <div class="bottom-text">
-      <div class="label">page not found</div>
-      <a href="/">return to gallery</a>
+  <svg class="noodle" style="top:0;left:0;width:100%;height:100%;" viewBox="0 0 1400 900" preserveAspectRatio="none">
+    <path d="M 0 350 C 200 350, 350 420, 490 420" />
+    <path d="M 910 420 C 1050 420, 1200 300, 1400 300" />
+    <path d="M 0 500 C 150 500, 300 460, 490 460" />
+    <path d="M 910 460 C 1100 460, 1250 550, 1400 550" />
+  </svg>
+  <div class="scene">
+    <div style="position:relative;display:inline-block;">
+      <div class="four-oh-four">404</div>
+      <div class="node" onclick="window.location.href='/'">
+        <div class="connector left"></div>
+        <div class="connector right"></div>
+        <div class="node-header">
+          <span class="node-title">nah</span>
+          <span class="node-badge">1 of 1</span>
+        </div>
+        <img class="node-image" src="1of1s/web/nah_web.jpg" alt="nah" draggable="false">
+        <div class="subtitle">page not found</div>
+      </div>
     </div>
   </div>
-
-  <script>
-    (function() {
-      var container = document.getElementById('container');
-      var wireLayer = document.getElementById('wireLayer');
-      var nahArt = document.getElementById('nahArt');
-      var W = window.innerWidth;
-      var H = window.innerHeight;
-      wireLayer.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-
-      // Center the artwork
-      var artW = 220, artH = 220;
-      var artX = (W - artW) / 2;
-      var artY = (H - artH) / 2 - 20;
-      nahArt.style.left = artX + 'px';
-      nahArt.style.top = artY + 'px';
-
-      // Artwork center point (wire origin)
-      var cx = artX + artW / 2;
-      var cy = artY + artH / 2;
-
-      // Seeded random
-      var seed = 404;
-      function rand() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
-
-      // PCB scatter dots
-      for (var d = 0; d < 60; d++) {
-        var dot = document.createElement('div');
-        dot.className = 'pcb-dot';
-        var ds = 2 + rand() * 4;
-        dot.style.width = ds + 'px';
-        dot.style.height = ds + 'px';
-        dot.style.left = (rand() * W) + 'px';
-        dot.style.top = (rand() * H) + 'px';
-        dot.style.animation = 'pulseGlow ' + (3 + rand() * 4).toFixed(1) + 's ease-in-out infinite ' + (rand() * 3).toFixed(1) + 's';
-        container.appendChild(dot);
-      }
-
-      // ── Draw "404" with wires emanating from the artwork ──
-
-      // Define the three digits as path segments relative to a bounding box
-      // Each digit is drawn as a series of points that form the number shape
-      // These are relative coordinates within a 60×80 unit cell
-
-      function digitPaths(digit) {
-        if (digit === 4) {
-          return [
-            // Vertical stroke down-right
-            [{x:0, y:0}, {x:0, y:50}],
-            // Horizontal bar
-            [{x:0, y:50}, {x:40, y:50}],
-            // Full height right stroke
-            [{x:40, y:0}, {x:40, y:80}]
-          ];
-        }
-        if (digit === 0) {
-          // Rectangular zero — four sides
-          return [
-            [{x:0, y:0}, {x:40, y:0}],
-            [{x:40, y:0}, {x:40, y:80}],
-            [{x:40, y:80}, {x:0, y:80}],
-            [{x:0, y:80}, {x:0, y:0}]
-          ];
-        }
-        return [];
-      }
-
-      // Position the three digits: "4" "0" "4"
-      var digitScale = Math.min(W / 900, H / 600, 1) * 0.9;
-      var dw = 40 * digitScale;
-      var dh = 80 * digitScale;
-      var gap = 30 * digitScale;
-      var totalW = dw * 3 + gap * 2;
-      var startX = (W - totalW) / 2;
-      var startY = cy + artH / 2 + 50;
-
-      // Clamp startY so digits don't go off screen
-      if (startY + dh > H - 100) startY = H - 100 - dh;
-
-      var digits = [4, 0, 4];
-      var allWires = [];
-      var wireDelay = 800; // ms after page load
-
-      digits.forEach(function(dig, di) {
-        var ox = startX + di * (dw + gap);
-        var oy = startY;
-        var segments = digitPaths(dig);
-
-        segments.forEach(function(seg, si) {
-          // Start point on artwork edge
-          var p0 = {x: seg[0].x * digitScale + ox, y: seg[0].y * digitScale + oy};
-          var p1 = {x: seg[1].x * digitScale + ox, y: seg[1].y * digitScale + oy};
-
-          // Wire from artwork center → segment start, then trace the segment
-          var edgeX = cx + (p0.x - cx) * 0.3;
-          var edgeY = cy + artH / 2; // bottom edge of artwork
-
-          // Create a path: artwork edge → control point → segment start → segment end
-          var midX = (edgeX + p0.x) / 2 + (rand() - 0.5) * 40;
-          var midY = (edgeY + p0.y) / 2 + (rand() - 0.5) * 20;
-
-          // Full wire path
-          var d = 'M ' + edgeX.toFixed(1) + ' ' + edgeY.toFixed(1) +
-                  ' Q ' + midX.toFixed(1) + ' ' + midY.toFixed(1) +
-                  ' ' + p0.x.toFixed(1) + ' ' + p0.y.toFixed(1) +
-                  ' L ' + p1.x.toFixed(1) + ' ' + p1.y.toFixed(1);
-
-          allWires.push({
-            d: d,
-            delay: wireDelay + di * 400 + si * 150,
-            color: si % 2 === 0 ? 'rgba(200,170,90,0.25)' : 'rgba(180,160,130,0.18)'
-          });
-        });
-      });
-
-      // Draw motherboard wires from artwork to random points (decorative)
-      for (var w = 0; w < 12; w++) {
-        var angle = rand() * Math.PI * 2;
-        var dist = 120 + rand() * 250;
-        var tx = cx + Math.cos(angle) * dist;
-        var ty = cy + Math.sin(angle) * dist;
-        // Edge of artwork
-        var ea = Math.atan2(ty - cy, tx - cx);
-        var ex = cx + Math.cos(ea) * (artW / 2 + 5);
-        var ey = cy + Math.sin(ea) * (artH / 2 + 5);
-
-        // PCB-style right-angle wire
-        var useHFirst = rand() > 0.5;
-        var midPt = useHFirst
-          ? 'L ' + tx.toFixed(1) + ' ' + ey.toFixed(1)
-          : 'L ' + ex.toFixed(1) + ' ' + ty.toFixed(1);
-
-        allWires.push({
-          d: 'M ' + ex.toFixed(1) + ' ' + ey.toFixed(1) + ' ' + midPt + ' L ' + tx.toFixed(1) + ' ' + ty.toFixed(1),
-          delay: 300 + w * 120,
-          color: 'rgba(200,170,90,' + (0.04 + rand() * 0.06).toFixed(2) + ')',
-          decorative: true
-        });
-      }
-
-      // Render all wires with staggered draw animation
-      allWires.forEach(function(wire) {
-        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', wire.d);
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', wire.color);
-        path.setAttribute('stroke-width', wire.decorative ? '0.5' : '1.2');
-        path.setAttribute('stroke-linecap', 'round');
-        path.setAttribute('stroke-linejoin', 'round');
-        wireLayer.appendChild(path);
-
-        // Measure path length for draw animation
-        var len = path.getTotalLength();
-        path.style.strokeDasharray = len;
-        path.style.strokeDashoffset = len;
-        path.style.setProperty('--wire-len', len);
-        path.style.animation = 'wireDraw ' + (wire.decorative ? '1.5s' : '0.8s') + ' ease ' + wire.delay + 'ms forwards';
-
-        // Add solder dot at end of digit wires
-        if (!wire.decorative) {
-          var endPt = path.getPointAtLength(len);
-          setTimeout(function() {
-            var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            dot.setAttribute('cx', endPt.x.toFixed(1));
-            dot.setAttribute('cy', endPt.y.toFixed(1));
-            dot.setAttribute('r', '2');
-            dot.setAttribute('fill', wire.color.replace(/[\d.]+\)$/, '0.4)'));
-            wireLayer.appendChild(dot);
-          }, wire.delay + 800);
-        }
-
-        // Add solder dot at junction points for decorative wires
-        if (wire.decorative) {
-          setTimeout(function() {
-            var mp = path.getPointAtLength(len * 0.5);
-            var ep = path.getPointAtLength(len);
-            [mp, ep].forEach(function(pt) {
-              var sdot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              sdot.setAttribute('cx', pt.x.toFixed(1));
-              sdot.setAttribute('cy', pt.y.toFixed(1));
-              sdot.setAttribute('r', '1.5');
-              sdot.setAttribute('fill', 'rgba(200,170,90,0.08)');
-              wireLayer.appendChild(sdot);
-            });
-          }, wire.delay + 1500);
-        }
-      });
-
-      // Add via holes (through-hole circles) at random points
-      for (var v = 0; v < 20; v++) {
-        setTimeout(function() {
-          var vx = rand() * W;
-          var vy = rand() * H;
-          // Avoid artwork area
-          if (Math.abs(vx - cx) < artW * 0.7 && Math.abs(vy - cy) < artH * 0.7) return;
-          var via = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          via.setAttribute('cx', vx.toFixed(1));
-          via.setAttribute('cy', vy.toFixed(1));
-          via.setAttribute('r', (2 + rand() * 2).toFixed(1));
-          via.setAttribute('fill', 'none');
-          via.setAttribute('stroke', 'rgba(200,170,90,' + (0.04 + rand() * 0.04).toFixed(2) + ')');
-          via.setAttribute('stroke-width', '0.4');
-          wireLayer.appendChild(via);
-        }, 1500 + v * 80);
-      }
-
-      // Subtle glow behind artwork
-      var glow = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-      glow.innerHTML = '<radialGradient id="artGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(200,170,90,0.06)"/><stop offset="100%" stop-color="rgba(200,170,90,0)"/></radialGradient>';
-      wireLayer.insertBefore(glow, wireLayer.firstChild);
-      var glowRect = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-      glowRect.setAttribute('cx', cx.toFixed(1));
-      glowRect.setAttribute('cy', cy.toFixed(1));
-      glowRect.setAttribute('rx', (artW * 1.5).toFixed(1));
-      glowRect.setAttribute('ry', (artH * 1.5).toFixed(1));
-      glowRect.setAttribute('fill', 'url(#artGlow)');
-      wireLayer.insertBefore(glowRect, wireLayer.firstChild);
-    })();
-  </script>
+  <a class="home-link" href="/">← enter gallery</a>
 </body>
 </html>
