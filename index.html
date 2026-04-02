@@ -8968,6 +8968,17 @@
 
     // ── Pre-intro: "Whispers are messages from the deep" — Dune-style audio + text reveal ──
     function _showWhispersPreIntro(onComplete) {
+      // Skip intro if user has seen it recently (within 3 days)
+      try {
+        var _introSeen = localStorage.getItem('ack_intro_seen');
+        if (_introSeen && (Date.now() - parseInt(_introSeen, 10)) < 3 * 24 * 60 * 60 * 1000) {
+          // Go straight to vortex
+          var _ov = document.getElementById('intro-overlay');
+          if (_ov) { _ov.classList.add('fade-out'); _ov.style.display = 'none'; }
+          if (onComplete) onComplete();
+          return;
+        }
+      } catch(e) {}
       // Load Dune-style font (Josefin Sans — geometric, Futura-inspired)
       if (!document.getElementById('duneFont')) {
         var fl = document.createElement('link');
@@ -9310,6 +9321,7 @@
           setTimeout(function() {
             // Let intro audio continue playing (has its own fade-out tail)
             preIntro.remove();
+            try { localStorage.setItem('ack_intro_seen', Date.now().toString()); } catch(e) {}
             if (onComplete) onComplete();
           }, 4200);
         }, 6000);
