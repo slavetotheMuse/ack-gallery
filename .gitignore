@@ -18,7 +18,7 @@ index_backup_*.html
 # Gallery preview images (*_web.*, thumbs/) are kept.
 
 # Root-level large files
-1.Wicked.gif
+/1.Wicked.gif
 aerialscrew_sprite.png
 backgroundtest.png
 but_wait.gif

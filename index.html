@@ -18710,11 +18710,11 @@
             } else {
             // Derive focus-res path: "broken-keys/rage.png" → "broken-keys-focus/rage.jpg"
             // Also handles GIFs: "warothy/1.Wicked.gif" → "warothy-focus/1.Wicked.jpg"
-            function _deriveFocusPath(localPath) {
+            function _deriveFocusPath(localPath, ext) {
               const parts = localPath.split('/');
               if (parts.length >= 2) {
                 const dir = parts[0] + '-focus';
-                const file = parts.slice(1).join('/').replace(/\.[^.]+$/, '.jpg');
+                const file = parts.slice(1).join('/').replace(/\.[^.]+$/, ext || '.jpg');
                 return dir + '/' + file;
               }
               return null;
@@ -18779,19 +18779,22 @@
                     nodeImg.src = thumbSrc; // worst case: keep thumbnail
                     nodeImg.onerror = null;
                   };
-                } else if (_isGifArtwork && artData && artData.image && artData.image !== _focusSrc) {
-                  // fullRes GIF 404'd — try the animated web GIF (artData.image)
-                  nodeImg.src = artData.image;
+                } else if (_isGifArtwork && artData) {
+                  // fullRes GIF 404'd — try focus GIF (800px) → web GIF → focus JPG → thumb
+                  var _mbFocusGif = _deriveFocusPath(artData.fullRes || artData.image, '.gif');
+                  nodeImg.src = _mbFocusGif;
                   nodeImg.onerror = function() {
-                    // web GIF also failed — try focus JPG
-                    var _mbFocusJpg = _deriveFocusPath(artData.fullRes || artData.image);
-                    if (_mbFocusJpg) {
-                      nodeImg.src = _mbFocusJpg;
-                      nodeImg.onerror = function() { nodeImg.src = thumbSrc; nodeImg.onerror = null; };
-                    } else {
-                      nodeImg.src = thumbSrc;
-                      nodeImg.onerror = null;
-                    }
+                    // Focus GIF not available — try web GIF
+                    if (artData.image && artData.image !== _focusSrc) {
+                      nodeImg.src = artData.image;
+                      nodeImg.onerror = function() {
+                        var _mbFocusJpg = _deriveFocusPath(artData.fullRes || artData.image);
+                        if (_mbFocusJpg) {
+                          nodeImg.src = _mbFocusJpg;
+                          nodeImg.onerror = function() { nodeImg.src = thumbSrc; nodeImg.onerror = null; };
+                        } else { nodeImg.src = thumbSrc; nodeImg.onerror = null; }
+                      };
+                    } else { nodeImg.src = thumbSrc; nodeImg.onerror = null; }
                   };
                 } else {
                   // Non-GIF: try derived focus JPG
@@ -18846,21 +18849,29 @@
                   fb.onload = () => { nodeImg.src = artData.fullRes; _clearLoading(); };
                   fb.onerror = _clearLoading;
                   fb.src = artData.fullRes;
-                } else if (_isGifArtwork && artData && artData.image && artData.image !== _focusSrc) {
-                  // fullRes GIF 404'd (e.g. on Vercel) — try the web GIF (artData.image) which is animated and deployed
-                  var fbWebGif = new Image();
-                  fbWebGif.onload = function() { nodeImg.src = artData.image; _clearLoading(); };
-                  fbWebGif.onerror = function() {
-                    // web GIF also failed — try focus JPG as last resort
-                    var _fbFocusJpg = _deriveFocusPath(artData.fullRes || artData.image);
-                    if (_fbFocusJpg) {
-                      var fbJpg = new Image();
-                      fbJpg.onload = function() { nodeImg.src = _fbFocusJpg; _clearLoading(); };
-                      fbJpg.onerror = _clearLoading;
-                      fbJpg.src = _fbFocusJpg;
+                } else if (_isGifArtwork && artData) {
+                  // fullRes GIF 404'd (e.g. on Vercel) — try focus GIF (800px optimized) → web GIF → focus JPG
+                  var _focusGifPath = _deriveFocusPath(artData.fullRes || artData.image, '.gif');
+                  var _tryFocusGif = new Image();
+                  _tryFocusGif.onload = function() { nodeImg.src = _focusGifPath; _clearLoading(); };
+                  _tryFocusGif.onerror = function() {
+                    // Focus GIF not available — try web GIF (artData.image, animated but smaller)
+                    if (artData.image && artData.image !== _focusSrc) {
+                      var fbWebGif = new Image();
+                      fbWebGif.onload = function() { nodeImg.src = artData.image; _clearLoading(); };
+                      fbWebGif.onerror = function() {
+                        var _fbFocusJpg = _deriveFocusPath(artData.fullRes || artData.image);
+                        if (_fbFocusJpg) {
+                          var fbJpg = new Image();
+                          fbJpg.onload = function() { nodeImg.src = _fbFocusJpg; _clearLoading(); };
+                          fbJpg.onerror = _clearLoading;
+                          fbJpg.src = _fbFocusJpg;
+                        } else { _clearLoading(); }
+                      };
+                      fbWebGif.src = artData.image;
                     } else { _clearLoading(); }
                   };
-                  fbWebGif.src = artData.image;
+                  _tryFocusGif.src = _focusGifPath;
                 } else {
                   // Non-GIF fullRes failed — try derived focus JPG → ?w=1400 → give up
                   var _fbFocusJpg = _deriveFocusPath(artData ? (artData.fullRes || artData.image) : null);
