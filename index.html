@@ -8970,11 +8970,8 @@
       try {
         var _introSeen = localStorage.getItem('ack_intro_seen');
         if (_introSeen && (Date.now() - parseInt(_introSeen, 10)) < 3 * 24 * 60 * 60 * 1000) {
-          // Skip entire intro — jump straight to catalog
-          var _ov = document.getElementById('intro-overlay');
-          if (_ov) { _ov.style.opacity = '0'; _ov.style.pointerEvents = 'none'; _ov.classList.add('fade-out'); }
-          // Defer beginReveal until after init() renders collections, grid, candles
-          setTimeout(function() { beginReveal(); }, 100);
+          // Skip whispers only — go straight to vortex page
+          if (onComplete) onComplete();
           return;
         }
       } catch(e) {}
