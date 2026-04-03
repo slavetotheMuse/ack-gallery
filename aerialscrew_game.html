@@ -10,13 +10,13 @@
     html, body {
       width: 100%; height: 100%;
       font-family: 'JetBrains Mono', monospace;
-      background: #1e1c1a; color: #e0e0dc;
+      background: #6a8faa; color: #e0e0dc;
       overflow: hidden; user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
     }
     canvas {
-      display: block; width: 100%; height: 100%;
+      display: block;
       position: absolute; top: 0; left: 0;
     }
     #hud {
@@ -26,10 +26,11 @@
     .hud-score {
       position: absolute; top: 20px;
       font-size: 11px; letter-spacing: 0.3em;
-      color: rgba(220,150,50,0.5); text-transform: uppercase;
+      color: rgba(50,40,30,0.6); text-transform: uppercase;
+      text-shadow: 0 1px 3px rgba(255,255,255,0.3);
     }
     .hud-score .val {
-      display: block; font-size: 22px; color: rgba(220,150,50,0.9);
+      display: block; font-size: 22px; color: rgba(50,40,30,0.85);
       letter-spacing: 0.05em; margin-top: 2px;
     }
     #coinScore { left: 20px; }
@@ -37,7 +38,7 @@
     #overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: rgba(10,9,8,0.85); z-index: 20;
+      background: rgba(40,55,70,0.85); z-index: 20;
       backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
       pointer-events: auto; cursor: pointer;
       text-align: center; padding: 40px;
@@ -51,17 +52,17 @@
     }
     #overlay .sub {
       font-size: 11px; letter-spacing: 0.25em;
-      color: rgba(200,180,150,0.35); margin-top: 28px;
+      color: rgba(180,200,220,0.4); margin-top: 28px;
       text-transform: uppercase;
     }
     #overlay .prompt {
       font-size: 12px; letter-spacing: 0.35em;
-      color: rgba(220,150,50,0.5); margin-top: 40px;
+      color: rgba(220,200,160,0.6); margin-top: 40px;
       animation: pulse 2.5s ease-in-out infinite;
     }
     #overlay .final-score {
       font-size: 14px; letter-spacing: 0.15em;
-      color: rgba(220,150,50,0.7); margin-top: 20px;
+      color: rgba(220,200,160,0.8); margin-top: 20px;
     }
     @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
   </style>
@@ -83,30 +84,32 @@
   'use strict';
 
   // ── CONSTANTS ──
-  var SPRITE_FRAMES = 10;
-  var SPRITE_FW = 500;    // each frame in the 5000x1070 sprite sheet
-  var SPRITE_FH = 1070;
-  var GRAVITY = 0.45;
-  var JUMP_FORCE = -8;
+  var SPRITE_FRAMES = 42;
+  var SPRITE_FW = 200;
+  var SPRITE_FH = 214;
+  var GRAVITY = 0.1;
+  var JUMP_FORCE = -3.2;
+  var AIR_DRAG = 0.98;        // gentle drag so it floats
+  var MAX_FALL_SPEED = 2.5;   // terminal velocity — drifts, never plummets
   var SCROLL_SPEED = 3;
-  var COIN_SPAWN_DIST = 280;
-  var OBSTACLE_SPAWN_DIST = 450;
-  var GAP_MIN = 180;
-  var GAP_MAX = 260;
-  var SCREW_W = 60;
+  var COIN_SPAWN_DIST = 300;
+  var OBSTACLE_SPAWN_DIST = 520;
+  var GAP_MIN = 280;
+  var GAP_MAX = 380;
+  var SCREW_W = 160;
   var SCREW_H = Math.round(SCREW_W * (SPRITE_FH / SPRITE_FW));
-  var COIN_R = 18;
+  var COIN_R = 22;
+  var OBS_W = 80; // base obstacle width
+
+  // C4D primitive types
+  var C4D_SHAPES = ['cube', 'sphere', 'cylinder', 'cone', 'torus', 'capsule', 'pyramid', 'octahedron'];
 
   // ── STATE ──
   var canvas, ctx, W, H;
-  var state = 'start'; // start | playing | dead
+  var state = 'start';
   var score = 0, best = 0;
   var frameCount = 0;
-
-  // Screw (player)
   var screw = { x: 0, y: 0, vy: 0, frame: 0, animTimer: 0, rotation: 0 };
-
-  // World
   var coins = [];
   var obstacles = [];
   var particles = [];
@@ -122,6 +125,144 @@
   var assetsLoaded = 0;
   var totalAssets = 3;
 
+  // ── AUDIO ENGINE (Web Audio API) ──
+  var audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e) { audioCtx = null; }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playFlap() {
+    var ac = ensureAudio(); if (!ac) return;
+    var t = ac.currentTime;
+    // Soft wind gust — long filtered noise that swells and fades
+    var dur = 0.35;
+    var buf = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) {
+      var frac = i / d.length;
+      // Envelope: quick swell then slow fade
+      var env = frac < 0.15 ? (frac / 0.15) : Math.pow(1 - (frac - 0.15) / 0.85, 1.5);
+      d[i] = (Math.random() * 2 - 1) * env * 0.15;
+    }
+    var src = ac.createBufferSource();
+    src.buffer = buf;
+    // Soft bandpass — airy, not harsh
+    var bp = ac.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(600, t);
+    bp.frequency.linearRampToValueAtTime(350, t + dur); // pitch drops as gust fades
+    bp.Q.value = 0.6;
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.linearRampToValueAtTime(0, t + dur);
+    src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
+    src.start(); src.stop(t + dur + 0.01);
+
+    // Very faint tonal hum underneath — like wind through the screw blades
+    var osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.linearRampToValueAtTime(180, t + 0.2);
+    var g2 = ac.createGain();
+    g2.gain.setValueAtTime(0.04, t);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    osc.connect(g2); g2.connect(ac.destination);
+    osc.start(); osc.stop(t + 0.22);
+  }
+
+  function playCoin() {
+    var ac = ensureAudio(); if (!ac) return;
+    var t = ac.currentTime;
+    // Soft chime — gentle bell, not harsh
+    var osc1 = ac.createOscillator();
+    osc1.type = 'sine';
+    osc1.frequency.value = 740;
+    var g1 = ac.createGain();
+    g1.gain.setValueAtTime(0.08, t);
+    g1.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc1.connect(g1); g1.connect(ac.destination);
+    osc1.start(); osc1.stop(t + 0.55);
+    // Harmonic shimmer
+    var osc2 = ac.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = 1110;
+    var g2 = ac.createGain();
+    g2.gain.setValueAtTime(0.04, t + 0.03);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    osc2.connect(g2); g2.connect(ac.destination);
+    osc2.start(t + 0.03); osc2.stop(t + 0.45);
+    // Tiny breeze layer
+    var dur = 0.15;
+    var buf = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) {
+      var frac = i / d.length;
+      d[i] = (Math.random() * 2 - 1) * (1 - frac) * 0.03;
+    }
+    var src = ac.createBufferSource();
+    src.buffer = buf;
+    var hp = ac.createBiquadFilter();
+    hp.type = 'highpass'; hp.frequency.value = 2000;
+    src.connect(hp); hp.connect(ac.destination);
+    src.start(); src.stop(t + dur);
+  }
+
+  function playDeath() {
+    var ac = ensureAudio(); if (!ac) return;
+    var t = ac.currentTime;
+    // Soft descending tone — like wind dying down
+    var osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(200, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + 0.6);
+    var g = ac.createGain();
+    g.gain.setValueAtTime(0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    osc.connect(g); g.connect(ac.destination);
+    osc.start(); osc.stop(t + 0.65);
+    // Wind scatter — soft noise fade
+    var dur = 0.5;
+    var buf = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) {
+      var frac = i / d.length;
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - frac, 2) * 0.08;
+    }
+    var src = ac.createBufferSource();
+    src.buffer = buf;
+    var bp = ac.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 300; bp.Q.value = 0.5;
+    var g2 = ac.createGain();
+    g2.gain.value = 0.15;
+    src.connect(bp); bp.connect(g2); g2.connect(ac.destination);
+    src.start(); src.stop(t + dur + 0.05);
+  }
+
+  function playPass() {
+    var ac = ensureAudio(); if (!ac) return;
+    var t = ac.currentTime;
+    // Whisper of air — barely-there breeze
+    var dur = 0.18;
+    var buf = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) {
+      var frac = i / d.length;
+      var env = Math.sin(frac * Math.PI);
+      d[i] = (Math.random() * 2 - 1) * env * 0.04;
+    }
+    var src = ac.createBufferSource();
+    src.buffer = buf;
+    var bp = ac.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 500; bp.Q.value = 0.4;
+    src.connect(bp); bp.connect(ac.destination);
+    src.start(); src.stop(t + dur + 0.01);
+  }
+
   // ── INIT ──
   function init() {
     canvas = document.getElementById('gameCanvas');
@@ -129,44 +270,45 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // Input — accept clicks, touches, and spacebar
     document.addEventListener('click', onInput);
     document.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
     document.addEventListener('touchend', function(e) { e.preventDefault(); onInput(e); }, { passive: false });
     document.addEventListener('keydown', function(e) { if (e.code === 'Space') { e.preventDefault(); onInput(e); } });
 
-    // Load assets
     spriteImg.onload = coinFaceImg.onload = coinBackImg.onload = function() {
       assetsLoaded++;
       if (assetsLoaded >= totalAssets) console.log('[ACK] All game assets loaded');
     };
     spriteImg.onerror = function() { console.warn('[ACK] Sprite sheet failed to load'); };
-    spriteImg.src = 'aerialscrew_sprite.png';
+    spriteImg.src = 'aerialscrew_sprite_strip.png';
     coinFaceImg.src = 'servant_face_web.png';
     coinBackImg.src = 'servant_back_web.png';
 
-    // Initial screw position
     screw.x = W * 0.18;
     screw.y = H * 0.45;
-
-    // Load best score
     try { best = parseInt(localStorage.getItem('ack_screw_best')) || 0; } catch(e) {}
     document.getElementById('bestVal').textContent = best;
 
     requestAnimationFrame(loop);
   }
 
+  var dpr = 1;
   function resize() {
+    dpr = window.devicePixelRatio || 1;
     W = window.innerWidth;
     H = window.innerHeight;
-    canvas.width = W;
-    canvas.height = H;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     screw.x = W * 0.18;
   }
 
   // ── INPUT ──
   function onInput() {
     if (state === 'start') {
+      ensureAudio();
       startGame();
     } else if (state === 'playing') {
       flap();
@@ -177,12 +319,15 @@
 
   function flap() {
     screw.vy = JUMP_FORCE;
+    // Gentle air wisps — drift downward slowly, larger and fainter
     for (var i = 0; i < 4; i++) {
       particles.push({
-        x: screw.x, y: screw.y + SCREW_H * 0.4,
-        vx: -1 - Math.random() * 2, vy: 1 + Math.random() * 2,
-        life: 20 + Math.random() * 15, maxLife: 35,
-        r: 2 + Math.random() * 2
+        x: screw.x + (Math.random() - 0.5) * SCREW_W * 0.4,
+        y: screw.y + SCREW_H * 0.35,
+        vx: -0.3 - Math.random() * 1.2,
+        vy: 0.5 + Math.random() * 1,
+        life: 30 + Math.random() * 20, maxLife: 50,
+        r: 3 + Math.random() * 4, wisp: true
       });
     }
   }
@@ -224,19 +369,20 @@
 
   function die() {
     state = 'dead';
+    playDeath();
     if (score > best) {
       best = score;
       try { localStorage.setItem('ack_screw_best', best); } catch(e) {}
       document.getElementById('bestVal').textContent = best;
     }
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 25; i++) {
       var angle = Math.random() * Math.PI * 2;
-      var speed = 2 + Math.random() * 4;
+      var speed = 2 + Math.random() * 5;
       particles.push({
         x: screw.x, y: screw.y,
         vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
         life: 30 + Math.random() * 20, maxLife: 50,
-        r: 2 + Math.random() * 3
+        r: 2 + Math.random() * 4
       });
     }
     setTimeout(function() {
@@ -264,9 +410,22 @@
 
   function spawnObstacle(x) {
     var gapH = GAP_MIN + Math.random() * (GAP_MAX - GAP_MIN);
-    gapH = Math.max(gapH - difficulty * 5, 140);
+    gapH = Math.max(gapH - difficulty * 4, 240);
     var gapY = 80 + Math.random() * (H - gapH - 160);
-    obstacles.push({ x: x, gapY: gapY, gapH: gapH, w: 40, scored: false });
+
+    // Pick random C4D shapes for top and bottom
+    var topShape = C4D_SHAPES[Math.floor(Math.random() * C4D_SHAPES.length)];
+    var botShape = C4D_SHAPES[Math.floor(Math.random() * C4D_SHAPES.length)];
+    // Slight width variation per shape
+    var w = OBS_W + Math.floor(Math.random() * 30 - 10);
+    // Random subtle hue shift
+    var hue = Math.floor(Math.random() * 30); // 0-30 warm range
+
+    obstacles.push({
+      x: x, gapY: gapY, gapH: gapH, w: w, scored: false,
+      topShape: topShape, botShape: botShape, hue: hue,
+      rotPhase: Math.random() * Math.PI * 2
+    });
   }
 
   // ── UPDATE ──
@@ -274,17 +433,18 @@
     if (state !== 'playing') return;
     frameCount++;
 
-    difficulty = 1 + score * 0.05;
-    var speed = SCROLL_SPEED + difficulty * 0.3;
+    difficulty = 1 + score * 0.04;
+    var speed = SCROLL_SPEED + difficulty * 0.25;
 
-    // Physics
     screw.vy += GRAVITY;
+    screw.vy *= AIR_DRAG;
+    if (screw.vy > MAX_FALL_SPEED) screw.vy = MAX_FALL_SPEED;
     screw.y += screw.vy;
-    screw.rotation = Math.min(Math.max(screw.vy * 3, -30), 60);
+    // Gentle tilt — much less extreme rotation
+    screw.rotation = Math.min(Math.max(screw.vy * 5, -18), 25);
 
-    // Animate sprite
     screw.animTimer++;
-    if (screw.animTimer >= 4) {
+    if (screw.animTimer >= 3) {
       screw.animTimer = 0;
       screw.frame = (screw.frame + 1) % SPRITE_FRAMES;
     }
@@ -294,11 +454,11 @@
     // Spawn
     while (nextCoinX < scrollX + W + 200) {
       spawnCoin(nextCoinX);
-      nextCoinX += COIN_SPAWN_DIST - difficulty * 5 + Math.random() * 100;
+      nextCoinX += COIN_SPAWN_DIST - difficulty * 4 + Math.random() * 120;
     }
     while (nextObsX < scrollX + W + 200) {
       spawnObstacle(nextObsX);
-      nextObsX += OBSTACLE_SPAWN_DIST + Math.random() * 100;
+      nextObsX += OBSTACLE_SPAWN_DIST + Math.random() * 120;
     }
 
     // Coins
@@ -313,35 +473,42 @@
       if (!c.collected) {
         var dx = (c.x - scrollX) - screw.x;
         var dy = c.y - screw.y;
-        if (Math.sqrt(dx * dx + dy * dy) < c.r + SCREW_W * 0.35) {
+        if (Math.sqrt(dx * dx + dy * dy) < c.r + SCREW_W * 0.3) {
           c.collected = true;
           score++;
+          playCoin();
           document.getElementById('coinVal').textContent = score;
-          for (var p = 0; p < 6; p++) {
+          for (var p = 0; p < 8; p++) {
             particles.push({
               x: c.x - scrollX, y: c.y,
-              vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4,
+              vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5,
               life: 15 + Math.random() * 10, maxLife: 25,
-              r: 2 + Math.random() * 2, gold: true
+              r: 2 + Math.random() * 3, gold: true
             });
           }
         }
       }
     }
 
-    // Obstacles
+    // Obstacles collision
+    var hitW = SCREW_W * 0.25;  // tighter hitbox for fairness with big sprite
+    var hitH = SCREW_H * 0.3;
     for (var j = obstacles.length - 1; j >= 0; j--) {
       var obs = obstacles[j];
-      if (obs.x - scrollX < -60) { obstacles.splice(j, 1); continue; }
+      if (obs.x - scrollX < -120) { obstacles.splice(j, 1); continue; }
       var ox = obs.x - scrollX;
-      var sL = screw.x - SCREW_W * 0.3;
-      var sR = screw.x + SCREW_W * 0.3;
-      var sT = screw.y - SCREW_H * 0.35;
-      var sB = screw.y + SCREW_H * 0.35;
+      var sL = screw.x - hitW;
+      var sR = screw.x + hitW;
+      var sT = screw.y - hitH;
+      var sB = screw.y + hitH;
       if (sR > ox && sL < ox + obs.w) {
         if (sT < obs.gapY || sB > obs.gapY + obs.gapH) {
           die(); return;
         }
+      }
+      if (!obs.scored && ox + obs.w < screw.x) {
+        obs.scored = true;
+        playPass();
       }
     }
 
@@ -356,13 +523,426 @@
     }
   }
 
+  // ── C4D SHAPE DRAWING ──
+  // Each shape is drawn centered at (0,0) fitting within (-hw, -hh) to (hw, hh)
+  var accent = 'rgba(70,60,50,';
+
+  function drawC4DShape(shape, hw, hh, phase) {
+    var t = frameCount * 0.015 + phase;
+    ctx.lineWidth = 1.5;
+
+    switch(shape) {
+      case 'cube':
+        // 3D cube wireframe with face fill
+        var d = Math.min(hw, hh) * 0.25; // perspective offset
+        var px = Math.sin(t) * d * 0.3;
+        var py = Math.cos(t) * d * 0.2;
+        // Back face
+        ctx.fillStyle = 'rgba(55,60,68,0.92)';
+        ctx.strokeStyle = accent + '0.2)';
+        ctx.beginPath();
+        ctx.rect(-hw + d + px, -hh + d + py, hw * 2 - d * 2, hh * 2 - d * 2);
+        ctx.fill(); ctx.stroke();
+        // Front face
+        ctx.fillStyle = 'rgba(65,72,82,0.93)';
+        ctx.strokeStyle = accent + '0.3)';
+        ctx.beginPath();
+        ctx.rect(-hw, -hh, hw * 2 - d, hh * 2 - d);
+        ctx.fill(); ctx.stroke();
+        // Connecting edges
+        ctx.strokeStyle = accent + '0.15)';
+        ctx.beginPath();
+        ctx.moveTo(-hw, -hh); ctx.lineTo(-hw + d + px, -hh + d + py);
+        ctx.moveTo(hw - d, -hh); ctx.lineTo(hw + px, -hh + d + py);
+        ctx.moveTo(hw - d, hh - d); ctx.lineTo(hw + px, hh + py);
+        ctx.moveTo(-hw, hh - d); ctx.lineTo(-hw + d + px, hh + py);
+        ctx.stroke();
+        // Inner detail lines
+        ctx.strokeStyle = accent + '0.06)';
+        ctx.lineWidth = 1;
+        for (var cy = -hh + 12; cy < hh - d; cy += 18) {
+          ctx.beginPath(); ctx.moveTo(-hw + 4, cy); ctx.lineTo(hw - d - 4, cy); ctx.stroke();
+        }
+        break;
+
+      case 'sphere':
+        // Shaded sphere with latitude/longitude lines
+        var grad = ctx.createRadialGradient(-hw * 0.25, -hh * 0.25, 2, 0, 0, Math.min(hw, hh));
+        grad.addColorStop(0, 'rgba(90,96,108,0.93)');
+        grad.addColorStop(0.7, 'rgba(56,62,72,0.93)');
+        grad.addColorStop(1, 'rgba(48,54,64,0.93)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, hw, hh, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = accent + '0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Longitude lines
+        ctx.strokeStyle = accent + '0.1)';
+        ctx.lineWidth = 1;
+        for (var ln = 0; ln < 5; ln++) {
+          var lnx = Math.sin(t + ln * 0.62) * hw * 0.9;
+          var ew = Math.abs(Math.cos(t + ln * 0.62)) * hw * 0.3 + 2;
+          ctx.beginPath();
+          ctx.ellipse(lnx * 0.5, 0, ew, hh * 0.9, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Latitude lines
+        for (var lt = -2; lt <= 2; lt++) {
+          var ly = lt * hh * 0.33;
+          var lw = Math.sqrt(1 - (lt * 0.33) * (lt * 0.33)) * hw;
+          if (lw > 2) {
+            ctx.beginPath();
+            ctx.ellipse(0, ly, lw, hh * 0.08, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+        // Specular highlight
+        ctx.fillStyle = 'rgba(255,250,240,0.12)';
+        ctx.beginPath();
+        ctx.ellipse(-hw * 0.3, -hh * 0.3, hw * 0.35, hh * 0.25, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+
+      case 'cylinder':
+        // C4D cylinder with top ellipse cap
+        ctx.fillStyle = 'rgba(60,66,76,0.93)';
+        ctx.strokeStyle = accent + '0.25)';
+        ctx.lineWidth = 1.5;
+        // Body
+        ctx.beginPath();
+        ctx.moveTo(-hw, -hh * 0.7);
+        ctx.lineTo(-hw, hh * 0.7);
+        ctx.ellipse(0, hh * 0.7, hw, hh * 0.2, 0, Math.PI, 0, true);
+        ctx.lineTo(hw, -hh * 0.7);
+        ctx.ellipse(0, -hh * 0.7, hw, hh * 0.2, 0, 0, Math.PI, true);
+        ctx.fill(); ctx.stroke();
+        // Top cap (brighter)
+        ctx.fillStyle = 'rgba(75,82,92,0.93)';
+        ctx.beginPath();
+        ctx.ellipse(0, -hh * 0.7, hw, hh * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Ring lines on body
+        ctx.strokeStyle = accent + '0.06)';
+        ctx.lineWidth = 1;
+        for (var ry = -hh * 0.5; ry < hh * 0.6; ry += 16) {
+          ctx.beginPath();
+          ctx.ellipse(0, ry, hw * 0.98, hh * 0.08, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        break;
+
+      case 'cone':
+        // C4D cone with elliptical base
+        ctx.fillStyle = 'rgba(60,66,76,0.93)';
+        ctx.strokeStyle = accent + '0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -hh);
+        ctx.lineTo(hw, hh * 0.65);
+        ctx.ellipse(0, hh * 0.65, hw, hh * 0.22, 0, 0, Math.PI, false);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Base ellipse
+        ctx.fillStyle = 'rgba(68,74,84,0.93)';
+        ctx.beginPath();
+        ctx.ellipse(0, hh * 0.65, hw, hh * 0.22, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Edge lines
+        ctx.strokeStyle = accent + '0.08)';
+        ctx.lineWidth = 1;
+        for (var el = 1; el <= 3; el++) {
+          var frac = el * 0.25;
+          var ew2 = hw * frac;
+          var ey = -hh + (hh + hh * 0.65) * frac;
+          ctx.beginPath();
+          ctx.ellipse(0, ey, ew2, hh * 0.08 * frac, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        break;
+
+      case 'torus':
+        // Torus (donut) drawn with concentric ellipses
+        var R = Math.min(hw, hh) * 0.75; // major radius
+        var r = Math.min(hw, hh) * 0.3;  // minor radius
+        // Outer ring
+        ctx.fillStyle = 'rgba(60,66,76,0.9)';
+        ctx.strokeStyle = accent + '0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, hw, hh * 0.45, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Inner hole
+        ctx.fillStyle = 'rgba(38,44,54,0.95)';
+        ctx.strokeStyle = accent + '0.2)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, hw * 0.4, hh * 0.15, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Cross-section rings to show 3D
+        ctx.strokeStyle = accent + '0.08)';
+        ctx.lineWidth = 1;
+        for (var ti = 0; ti < 8; ti++) {
+          var ta = t + ti * Math.PI * 0.25;
+          var tx = Math.cos(ta) * hw * 0.7;
+          var ty = Math.sin(ta) * hh * 0.3;
+          ctx.beginPath();
+          ctx.ellipse(tx, ty, r * 0.4, r * 0.7, ta * 0.3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Top highlight
+        ctx.fillStyle = 'rgba(255,250,240,0.08)';
+        ctx.beginPath();
+        ctx.ellipse(0, -hh * 0.15, hw * 0.6, hh * 0.12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+
+      case 'capsule':
+        // Rounded capsule (pill shape)
+        var capR = Math.min(hw, hh * 0.3);
+        ctx.fillStyle = 'rgba(60,66,76,0.93)';
+        ctx.strokeStyle = accent + '0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-hw, -hh + capR);
+        ctx.arcTo(-hw, -hh, 0, -hh, capR);
+        ctx.arcTo(hw, -hh, hw, -hh + capR, capR);
+        ctx.lineTo(hw, hh - capR);
+        ctx.arcTo(hw, hh, 0, hh, capR);
+        ctx.arcTo(-hw, hh, -hw, hh - capR, capR);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Horizontal bands
+        ctx.strokeStyle = accent + '0.06)';
+        ctx.lineWidth = 1;
+        for (var by = -hh + capR; by < hh - capR; by += 14) {
+          ctx.beginPath(); ctx.moveTo(-hw + 4, by); ctx.lineTo(hw - 4, by); ctx.stroke();
+        }
+        // Specular
+        ctx.fillStyle = 'rgba(255,250,240,0.1)';
+        ctx.fillRect(-hw * 0.2, -hh, hw * 0.15, hh * 2);
+        break;
+
+      case 'pyramid':
+        // 4-sided pyramid with visible front two faces
+        ctx.fillStyle = 'rgba(55,50,43,0.9)';
+        ctx.strokeStyle = accent + '0.25)';
+        ctx.lineWidth = 1.5;
+        // Left face
+        ctx.beginPath();
+        ctx.moveTo(0, -hh);
+        ctx.lineTo(-hw, hh);
+        ctx.lineTo(0, hh * 0.7);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(56,62,72,0.93)';
+        ctx.fill(); ctx.stroke();
+        // Right face
+        ctx.beginPath();
+        ctx.moveTo(0, -hh);
+        ctx.lineTo(hw, hh);
+        ctx.lineTo(0, hh * 0.7);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(68,74,84,0.93)';
+        ctx.fill(); ctx.stroke();
+        // Base edge
+        ctx.strokeStyle = accent + '0.15)';
+        ctx.beginPath();
+        ctx.moveTo(-hw, hh); ctx.lineTo(hw, hh);
+        ctx.stroke();
+        // Edge detail
+        ctx.strokeStyle = accent + '0.06)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, -hh); ctx.lineTo(0, hh * 0.7);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        break;
+
+      case 'octahedron':
+        // Diamond / octahedron shape
+        ctx.lineWidth = 1.5;
+        // Top half — left face
+        ctx.fillStyle = 'rgba(64,70,80,0.93)';
+        ctx.strokeStyle = accent + '0.25)';
+        ctx.beginPath();
+        ctx.moveTo(0, -hh);
+        ctx.lineTo(-hw, 0);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Top half — right face
+        ctx.fillStyle = 'rgba(75,82,92,0.93)';
+        ctx.beginPath();
+        ctx.moveTo(0, -hh);
+        ctx.lineTo(hw, 0);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Bottom half — left face
+        ctx.fillStyle = 'rgba(52,58,68,0.93)';
+        ctx.beginPath();
+        ctx.moveTo(0, hh);
+        ctx.lineTo(-hw, 0);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Bottom half — right face
+        ctx.fillStyle = 'rgba(60,66,76,0.93)';
+        ctx.beginPath();
+        ctx.moveTo(0, hh);
+        ctx.lineTo(hw, 0);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Center line
+        ctx.strokeStyle = accent + '0.08)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-hw, 0); ctx.lineTo(hw, 0);
+        ctx.stroke();
+        break;
+    }
+  }
+
+  // Draw a C4D obstacle column (stack of shapes filling a region)
+  function drawObstacleColumn(ox, startY, endY, shape, w, phase) {
+    var segH = Math.min(w * 1.4, 100); // each shape segment height
+    var hw = w * 0.5;
+    var hh = segH * 0.45;
+    var columnH = endY - startY;
+    if (columnH < segH * 0.5) return;
+
+    // Number of shapes to stack
+    var count = Math.max(1, Math.floor(columnH / segH));
+    var spacing = columnH / count;
+
+    for (var s = 0; s < count; s++) {
+      var cy = startY + spacing * 0.5 + s * spacing;
+      ctx.save();
+      ctx.translate(ox + w * 0.5, cy);
+      drawC4DShape(shape, hw, Math.min(hh, spacing * 0.42), phase + s * 0.5);
+      ctx.restore();
+    }
+
+    // Column spine line connecting shapes
+    ctx.strokeStyle = accent + '0.1)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.moveTo(ox + w * 0.5, startY);
+    ctx.lineTo(ox + w * 0.5, endY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
   // ── DRAW ──
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    // Grid (parallax)
-    ctx.strokeStyle = 'rgba(220,150,50,0.06)';
+    // ── SKY BACKGROUND — C4D pre-render style ──
+    // Sky gradient: warm golden hour tones
+    var skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+    skyGrad.addColorStop(0, '#5b7fa6');    // upper sky — muted steel blue
+    skyGrad.addColorStop(0.25, '#7d9db8'); // mid sky — soft blue
+    skyGrad.addColorStop(0.5, '#a8b8c4');  // horizon haze — pale silver
+    skyGrad.addColorStop(0.7, '#c4bfaa');  // warm haze band
+    skyGrad.addColorStop(0.85, '#b8a88a'); // golden lower atmosphere
+    skyGrad.addColorStop(1, '#8a7e6a');    // ground tone
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── DISTANT MOUNTAINS (very slow parallax) ──
+    var mtnScroll = scrollX * 0.04;
+    // Far range — faint, blue-gray
+    ctx.fillStyle = 'rgba(100,115,135,0.35)';
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.72);
+    for (var mx = 0; mx <= W; mx += 3) {
+      var mh1 = Math.sin((mx + mtnScroll) * 0.003) * H * 0.08
+              + Math.sin((mx + mtnScroll) * 0.007 + 1.2) * H * 0.05
+              + Math.sin((mx + mtnScroll) * 0.0015) * H * 0.1;
+      ctx.lineTo(mx, H * 0.62 - mh1);
+    }
+    ctx.lineTo(W, H * 0.72); ctx.closePath(); ctx.fill();
+
+    // Mid range — slightly darker, warmer
+    ctx.fillStyle = 'rgba(120,115,100,0.3)';
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.78);
+    var mtnScroll2 = scrollX * 0.07;
+    for (var mx2 = 0; mx2 <= W; mx2 += 3) {
+      var mh2 = Math.sin((mx2 + mtnScroll2) * 0.005 + 2) * H * 0.06
+              + Math.sin((mx2 + mtnScroll2) * 0.012 + 0.8) * H * 0.035
+              + Math.sin((mx2 + mtnScroll2) * 0.002 + 4) * H * 0.07;
+      ctx.lineTo(mx2, H * 0.68 - mh2);
+    }
+    ctx.lineTo(W, H * 0.78); ctx.closePath(); ctx.fill();
+
+    // Near foothills — warmest, most visible
+    ctx.fillStyle = 'rgba(140,130,110,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.85);
+    var mtnScroll3 = scrollX * 0.12;
+    for (var mx3 = 0; mx3 <= W; mx3 += 4) {
+      var mh3 = Math.sin((mx3 + mtnScroll3) * 0.008 + 5) * H * 0.04
+              + Math.sin((mx3 + mtnScroll3) * 0.018 + 1.5) * H * 0.025;
+      ctx.lineTo(mx3, H * 0.78 - mh3);
+    }
+    ctx.lineTo(W, H * 0.85); ctx.closePath(); ctx.fill();
+
+    // ── CLOUDS — layered, drifting at different speeds ──
+    // Cloud seed positions (deterministic from scroll)
+    var cloudLayers = [
+      { speed: 0.06, y: 0.12, scale: 1.4, alpha: 0.5 },
+      { speed: 0.1,  y: 0.22, scale: 1.1, alpha: 0.4 },
+      { speed: 0.15, y: 0.08, scale: 0.9, alpha: 0.35 },
+      { speed: 0.08, y: 0.32, scale: 1.0, alpha: 0.3 },
+      { speed: 0.18, y: 0.18, scale: 0.7, alpha: 0.25 },
+      { speed: 0.05, y: 0.42, scale: 1.2, alpha: 0.2 }
+    ];
+    for (var ci = 0; ci < cloudLayers.length; ci++) {
+      var cl = cloudLayers[ci];
+      var cloudOff = -(scrollX * cl.speed) % (W * 2.5);
+      ctx.globalAlpha = cl.alpha;
+      ctx.fillStyle = 'rgba(240,238,232,1)';
+      // Draw 3-4 cloud puffs per layer
+      for (var cp = 0; cp < 4; cp++) {
+        var cx = cloudOff + cp * W * 0.65 + ci * 120;
+        var cy = H * cl.y + Math.sin(ci * 2.3 + cp * 1.7) * 20;
+        var cw = (60 + cp * 25 + ci * 15) * cl.scale;
+        var ch = (18 + cp * 6 + ci * 4) * cl.scale;
+        // Main puff
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, cw, ch, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Secondary puff offset
+        ctx.beginPath();
+        ctx.ellipse(cx + cw * 0.5, cy + ch * 0.3, cw * 0.6, ch * 0.7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Third puff
+        ctx.beginPath();
+        ctx.ellipse(cx - cw * 0.4, cy + ch * 0.2, cw * 0.5, ch * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // ── C4D GRID OVERLAY — keeps the technical feel on top of the sky ──
+    // Deep grid (slow parallax)
+    ctx.strokeStyle = 'rgba(60,80,110,0.08)';
     ctx.lineWidth = 1;
+    var gs2 = 120;
+    var offX2 = -(scrollX * 0.1) % gs2;
+    for (var gx2 = offX2; gx2 < W; gx2 += gs2) {
+      ctx.beginPath(); ctx.moveTo(gx2, 0); ctx.lineTo(gx2, H); ctx.stroke();
+    }
+    for (var gy2 = 0; gy2 < H; gy2 += gs2) {
+      ctx.beginPath(); ctx.moveTo(0, gy2); ctx.lineTo(W, gy2); ctx.stroke();
+    }
+
+    // Fine grid (faster parallax)
+    ctx.strokeStyle = 'rgba(60,80,110,0.05)';
     var gs = 50;
     var offX = -(scrollX * 0.3) % gs;
     for (var gx = offX; gx < W; gx += gs) {
@@ -372,51 +952,49 @@
       ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
     }
 
-    // Floor / ceiling
-    ctx.strokeStyle = 'rgba(220,150,50,0.15)';
-    ctx.lineWidth = 2;
+    // ── HORIZON LINE — ground boundary ──
+    ctx.strokeStyle = 'rgba(160,140,110,0.2)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, H * 0.82); ctx.lineTo(W, H * 0.82); ctx.stroke();
+
+    // Floor / ceiling bounds
+    ctx.strokeStyle = 'rgba(80,100,120,0.12)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(0, H - 15); ctx.lineTo(W, H - 15); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(W, 8); ctx.stroke();
 
-    // Obstacles
+    // ── OBSTACLES — C4D PRIMITIVE SHAPES ──
     for (var j = 0; j < obstacles.length; j++) {
       var obs = obstacles[j];
       var ox = obs.x - scrollX;
-      if (ox < -60 || ox > W + 60) continue;
+      if (ox < -120 || ox > W + 120) continue;
 
-      // Top pillar
-      ctx.fillStyle = 'rgba(60,55,48,0.9)';
-      ctx.fillRect(ox, 0, obs.w, obs.gapY);
-      ctx.strokeStyle = 'rgba(220,150,50,0.3)';
+      // Top column of shapes
+      drawObstacleColumn(ox, 15, obs.gapY - 6, obs.topShape, obs.w, obs.rotPhase);
+
+      // Bottom column of shapes
+      drawObstacleColumn(ox, obs.gapY + obs.gapH + 6, H - 20, obs.botShape, obs.w, obs.rotPhase + 3);
+
+      // Gap boundary markers — small brackets
+      ctx.strokeStyle = accent + '0.2)';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(ox, 0, obs.w, obs.gapY);
-      ctx.strokeStyle = 'rgba(220,150,50,0.08)';
-      for (var ny = 20; ny < obs.gapY; ny += 30) {
-        ctx.beginPath(); ctx.moveTo(ox + 5, ny); ctx.lineTo(ox + obs.w - 5, ny); ctx.stroke();
-      }
-
-      // Bottom pillar
-      var botY = obs.gapY + obs.gapH;
-      ctx.fillStyle = 'rgba(60,55,48,0.9)';
-      ctx.fillRect(ox, botY, obs.w, H - botY);
-      ctx.strokeStyle = 'rgba(220,150,50,0.3)';
-      ctx.strokeRect(ox, botY, obs.w, H - botY);
-      ctx.strokeStyle = 'rgba(220,150,50,0.08)';
-      for (var ny2 = botY + 20; ny2 < H; ny2 += 30) {
-        ctx.beginPath(); ctx.moveTo(ox + 5, ny2); ctx.lineTo(ox + obs.w - 5, ny2); ctx.stroke();
-      }
-
-      // Gap arrows
-      ctx.fillStyle = 'rgba(220,150,50,0.2)';
+      var bx = ox + obs.w * 0.5;
+      // Top bracket
       ctx.beginPath();
-      ctx.moveTo(ox + obs.w / 2, obs.gapY + 4);
-      ctx.lineTo(ox + obs.w / 2 - 6, obs.gapY + 12);
-      ctx.lineTo(ox + obs.w / 2 + 6, obs.gapY + 12);
-      ctx.fill();
+      ctx.moveTo(bx - 10, obs.gapY); ctx.lineTo(bx - 10, obs.gapY - 6);
+      ctx.lineTo(bx + 10, obs.gapY - 6); ctx.lineTo(bx + 10, obs.gapY);
+      ctx.stroke();
+      // Bottom bracket
       ctx.beginPath();
-      ctx.moveTo(ox + obs.w / 2, botY - 4);
-      ctx.lineTo(ox + obs.w / 2 - 6, botY - 12);
-      ctx.lineTo(ox + obs.w / 2 + 6, botY - 12);
+      ctx.moveTo(bx - 10, obs.gapY + obs.gapH); ctx.lineTo(bx - 10, obs.gapY + obs.gapH + 6);
+      ctx.lineTo(bx + 10, obs.gapY + obs.gapH + 6); ctx.lineTo(bx + 10, obs.gapY + obs.gapH);
+      ctx.stroke();
+
+      // Gap center dot
+      var pulseAlpha = 0.12 + Math.sin(frameCount * 0.05 + j) * 0.06;
+      ctx.fillStyle = accent + pulseAlpha + ')';
+      ctx.beginPath();
+      ctx.arc(bx, obs.gapY + obs.gapH / 2, 3, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -439,12 +1017,11 @@
       } else {
         var bobY = c.y + Math.sin(frameCount * 0.04 + c.spin) * 4;
         drawCoin(cx, bobY, c.r, c.spin);
-        // Glow
         ctx.save();
         ctx.globalAlpha = 0.12;
         ctx.beginPath();
         ctx.arc(cx, bobY, c.r + 6, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(220,150,50,0.4)';
+        ctx.fillStyle = 'rgba(200,160,60,0.5)';
         ctx.fill();
         ctx.restore();
       }
@@ -454,11 +1031,20 @@
     for (var k = 0; k < particles.length; k++) {
       var pt = particles[k];
       var a = pt.life / pt.maxLife;
-      ctx.globalAlpha = a;
-      ctx.fillStyle = pt.gold ? 'rgba(220,150,50,0.8)' : 'rgba(200,180,150,0.6)';
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, pt.r * a, 0, Math.PI * 2);
-      ctx.fill();
+      if (pt.wisp) {
+        // Air wisps — very faint, larger, softer edges
+        ctx.globalAlpha = a * 0.25;
+        ctx.fillStyle = 'rgba(200,190,170,0.5)';
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.r * (0.6 + a * 0.4), 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.globalAlpha = a;
+        ctx.fillStyle = pt.gold ? 'rgba(200,160,60,0.8)' : 'rgba(180,170,150,0.6)';
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.r * a, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     ctx.globalAlpha = 1;
 
@@ -469,10 +1055,24 @@
   }
 
   function drawScrew() {
+    // Drop shadow
+    ctx.save();
+    ctx.translate(screw.x + 5, screw.y + 8);
+    ctx.rotate(screw.rotation * Math.PI / 180);
+    ctx.globalAlpha = 0.12;
+    if (spriteImg.complete && spriteImg.naturalWidth > 0) {
+      ctx.drawImage(
+        spriteImg,
+        screw.frame * SPRITE_FW, 0, SPRITE_FW, SPRITE_FH,
+        -SCREW_W / 2, -SCREW_H / 2, SCREW_W, SCREW_H
+      );
+    }
+    ctx.restore();
+
+    // Main sprite
     ctx.save();
     ctx.translate(screw.x, screw.y);
     ctx.rotate(screw.rotation * Math.PI / 180);
-
     if (spriteImg.complete && spriteImg.naturalWidth > 0) {
       ctx.drawImage(
         spriteImg,
@@ -480,7 +1080,6 @@
         -SCREW_W / 2, -SCREW_H / 2, SCREW_W, SCREW_H
       );
     } else {
-      // Fallback
       ctx.fillStyle = 'rgba(200,180,150,0.8)';
       ctx.fillRect(-SCREW_W / 2, -SCREW_H / 4, SCREW_W, SCREW_H / 2);
       ctx.fillStyle = 'rgba(220,150,50,0.6)';
@@ -497,13 +1096,10 @@
     var scaleX = Math.cos(spin);
     var img = scaleX > 0 ? coinFaceImg : coinBackImg;
     var absScale = Math.abs(scaleX);
-
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(absScale || 0.01, 1);
-
     if (img.complete && img.naturalWidth > 0) {
-      // Circular clip
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.closePath();
@@ -516,13 +1112,12 @@
       ctx.fill();
     }
     ctx.restore();
-
     // Rim
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(absScale || 0.01, 1);
-    ctx.strokeStyle = 'rgba(220,150,50,0.3)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(180,140,50,0.5)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.stroke();
@@ -534,15 +1129,14 @@
     update();
     draw();
 
-    // Idle hover on start/dead screens
     if (state === 'start' || state === 'dead') {
       screw.animTimer++;
-      if (screw.animTimer >= 6) {
+      if (screw.animTimer >= 4) {
         screw.animTimer = 0;
         screw.frame = (screw.frame + 1) % SPRITE_FRAMES;
       }
       if (state === 'start') {
-        screw.y = H * 0.45 + Math.sin(Date.now() * 0.002) * 15;
+        screw.y = H * 0.45 + Math.sin(Date.now() * 0.0015) * 25;
       }
     }
 

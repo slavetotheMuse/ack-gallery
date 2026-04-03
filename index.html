@@ -2014,11 +2014,10 @@
 
     /* ── Arcade Node styling ── */
     .arcade-node .collection-thumbnail { cursor: pointer; }
-    .arcade-node:hover .collection-thumbnail {
-      border-color: rgba(200,60,60,0.35) !important;
-      box-shadow: 0 0 12px rgba(200,60,60,0.08);
+    .arcade-node:hover .arcade-thumbnail img {
+      opacity: 1 !important;
+      filter: drop-shadow(0 0 8px rgba(200,60,60,0.2));
     }
-    .arcade-node:hover .arcade-thumbnail svg { opacity: 0.75 !important; }
 
     /* ── Arcade Overlay ── */
     .arcade-overlay {
@@ -13838,7 +13837,7 @@
 
       // ── ARCADE NODE — Balloon Bags ──
       (function() {
-        const arcadeSlot = { x: 8.5, y: 42, w: 4.2, ar: 1 };
+        const arcadeSlot = { x: 8.5, y: 42, w: 4.2, ar: 610/923 };
         const aw = Math.floor((arcadeSlot.w / 100) * layoutW);
         const ah = Math.floor(aw / arcadeSlot.ar);
         const acx = layoutOffX + (arcadeSlot.x / 100) * layoutW;
@@ -13879,44 +13878,17 @@
         thumb.style.display = 'flex';
         thumb.style.alignItems = 'center';
         thumb.style.justifyContent = 'center';
-        thumb.style.background = 'rgba(25,22,30,0.8)';
-        thumb.style.border = '1px solid rgba(160,150,120,0.2)';
+        thumb.style.background = 'transparent';
+        thumb.style.border = 'none';
         thumb.style.borderRadius = '3px';
         thumb.style.position = 'relative';
         thumb.style.overflow = 'hidden';
 
-        // Arcade icon — joystick SVG
-        const ns = 'http://www.w3.org/2000/svg';
-        const icon = document.createElementNS(ns, 'svg');
-        icon.setAttribute('width', Math.floor(aw * 0.5));
-        icon.setAttribute('height', Math.floor(ah * 0.5));
-        icon.setAttribute('viewBox', '0 0 40 40');
-        icon.style.opacity = '0.5';
-        // Joystick base
-        const base = document.createElementNS(ns, 'ellipse');
-        base.setAttribute('cx','20'); base.setAttribute('cy','32');
-        base.setAttribute('rx','14'); base.setAttribute('ry','5');
-        base.setAttribute('fill','rgba(160,150,120,0.3)');
-        icon.appendChild(base);
-        // Stick
-        const stick = document.createElementNS(ns, 'line');
-        stick.setAttribute('x1','20'); stick.setAttribute('y1','32');
-        stick.setAttribute('x2','20'); stick.setAttribute('y2','14');
-        stick.setAttribute('stroke','rgba(160,150,120,0.5)'); stick.setAttribute('stroke-width','3');
-        stick.setAttribute('stroke-linecap','round');
-        icon.appendChild(stick);
-        // Ball top
-        const ball = document.createElementNS(ns, 'circle');
-        ball.setAttribute('cx','20'); ball.setAttribute('cy','12');
-        ball.setAttribute('r','5'); ball.setAttribute('fill','rgba(200,60,60,0.5)');
-        icon.appendChild(ball);
-        thumb.appendChild(icon);
-
-        // Bag icon overlay
-        const bagIcon = document.createElement('img');
-        bagIcon.src = 'my_bags_decoration_web.png';
-        bagIcon.style.cssText = 'position:absolute;bottom:4px;right:4px;width:20px;height:20px;opacity:0.4;';
-        thumb.appendChild(bagIcon);
+        // Arcade icon — custom image
+        const arcadeImg = document.createElement('img');
+        arcadeImg.src = 'arcade.png';
+        arcadeImg.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:0.85;';
+        thumb.appendChild(arcadeImg);
 
         arcadeNode.appendChild(thumb);
 
