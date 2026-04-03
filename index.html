@@ -15469,16 +15469,18 @@
     }
 
     // ══════════════════════════════════════════════════
-    // ── ARCADE OVERLAY — Balloon Bags game ──
+    // ── ARCADE OVERLAY — Lobby + Game Launcher ──
     // ══════════════════════════════════════════════════
     var _arcadeOverlay = null;
     var _arcadeActive = false;
+    var _arcadeEscHandler = null;
+    var _arcadeCleanup = null;
+    var _arcadeGameFrame = null; // iframe for aerial screw
 
     function openArcadeOverlay() {
       if (_arcadeActive) return;
       _arcadeActive = true;
 
-      // Create overlay
       _arcadeOverlay = document.createElement('div');
       _arcadeOverlay.className = 'arcade-overlay';
       _arcadeOverlay.id = 'arcadeOverlay';
@@ -15490,32 +15492,204 @@
       closeBtn.onclick = closeArcadeOverlay;
       _arcadeOverlay.appendChild(closeBtn);
 
-      // Basket
+      // ── LOBBY CONTENT ──
+      var lobby = document.createElement('div');
+      lobby.id = 'arcadeLobby';
+      lobby.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;padding:40px;';
+
+      // Title
+      var title = document.createElement('div');
+      title.style.cssText = 'font-family:"EB Garamond",Georgia,serif;font-size:clamp(26px,4vw,38px);color:rgba(195,175,130,0.7);letter-spacing:0.04em;margin-bottom:6px;';
+      title.textContent = 'arcade';
+      lobby.appendChild(title);
+
+      var sub = document.createElement('div');
+      sub.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:0.3em;color:rgba(195,175,130,0.25);text-transform:uppercase;margin-bottom:50px;';
+      sub.textContent = 'ack.art';
+      lobby.appendChild(sub);
+
+      // Game cards container
+      var grid = document.createElement('div');
+      grid.style.cssText = 'display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;justify-content:center;';
+
+      // ── Game Card: Balloon Bags ──
+      var card1 = _createGameCard({
+        title: 'Balloon Bags',
+        subtitle: 'pop balloons \u2022 collect bags \u2022 dodge thieves',
+        thumbType: 'balloonBags',
+        onClick: function() { _launchBalloonBags(); }
+      });
+      grid.appendChild(card1);
+
+      // ── Game Card: Aerial Screw ──
+      var card2 = _createGameCard({
+        title: 'Aerial Screw',
+        subtitle: 'tap to glide \u2022 collect coins \u2022 avoid obstacles',
+        thumbType: 'aerialScrew',
+        onClick: function() { _launchAerialScrew(); }
+      });
+      grid.appendChild(card2);
+
+      lobby.appendChild(grid);
+
+      // Decoration: floating bags in background
+      var decoContainer = document.createElement('div');
+      decoContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:1;';
+      var decoAssets = ['my_bags_decoration_web.png','servant_face_web.png','aerialscrew_thumb.png'];
+      for (var di = 0; di < 12; di++) {
+        var deco = document.createElement('img');
+        deco.src = decoAssets[di % decoAssets.length];
+        var dx = 5 + Math.random() * 90;
+        var dy = 5 + Math.random() * 90;
+        var ds = 16 + Math.random() * 28;
+        var dr = -20 + Math.random() * 40;
+        var da = 0.04 + Math.random() * 0.06;
+        deco.style.cssText = 'position:absolute;left:'+dx+'%;top:'+dy+'%;width:'+ds+'px;height:'+ds+'px;object-fit:contain;opacity:'+da+';transform:rotate('+dr+'deg);pointer-events:none;';
+        decoContainer.appendChild(deco);
+      }
+      _arcadeOverlay.appendChild(decoContainer);
+      _arcadeOverlay.appendChild(lobby);
+
+      document.body.appendChild(_arcadeOverlay);
+      document.body.classList.add('arcade-active');
+      requestAnimationFrame(function() { _arcadeOverlay.classList.add('active'); });
+
+      _arcadeEscHandler = function(e) { if (e.key === 'Escape') closeArcadeOverlay(); };
+      document.addEventListener('keydown', _arcadeEscHandler);
+    }
+
+    function _createGameCard(opts) {
+      var card = document.createElement('div');
+      card.style.cssText = 'width:220px;cursor:pointer;transition:transform 0.25s ease, filter 0.25s ease;';
+      card.onmouseenter = function() { card.style.transform='scale(1.05) translateY(-4px)'; card.style.filter='brightness(1.15)'; };
+      card.onmouseleave = function() { card.style.transform=''; card.style.filter=''; };
+      card.onclick = opts.onClick;
+
+      // Thumbnail area
+      var thumbWrap = document.createElement('div');
+      thumbWrap.style.cssText = 'width:220px;height:160px;border:1px solid rgba(195,175,130,0.2);border-radius:4px;overflow:hidden;background:rgba(20,18,25,0.5);display:flex;align-items:center;justify-content:center;position:relative;';
+
+      if (opts.thumbType === 'balloonBags') {
+        // Canvas-drawn scene with balloons + bag
+        var cv = document.createElement('canvas');
+        cv.width = 440; cv.height = 320;
+        cv.style.cssText = 'width:100%;height:100%;';
+        var cx = cv.getContext('2d');
+        // Dark bg
+        cx.fillStyle = '#1e1e22';
+        cx.fillRect(0,0,440,320);
+        // Grid lines
+        cx.strokeStyle = 'rgba(40,40,45,0.5)';
+        cx.lineWidth = 1;
+        for (var gx=0;gx<440;gx+=20){cx.beginPath();cx.moveTo(gx,0);cx.lineTo(gx,320);cx.stroke();}
+        for (var gy=0;gy<320;gy+=20){cx.beginPath();cx.moveTo(0,gy);cx.lineTo(440,gy);cx.stroke();}
+        // Draw some balloons
+        var balloonColors = ['#c75b7a','#6ba5d7','#d4a843','#8ec07c','#c490d1','#e8937a'];
+        var balloonPositions = [{x:90,y:80},{x:180,y:120},{x:290,y:70},{x:360,y:140},{x:140,y:180},{x:320,y:200}];
+        balloonPositions.forEach(function(bp,i){
+          // String
+          cx.strokeStyle = 'rgba(160,155,140,0.3)';
+          cx.lineWidth = 1;
+          cx.beginPath(); cx.moveTo(bp.x,bp.y+22); cx.lineTo(bp.x,bp.y+52); cx.stroke();
+          // Balloon
+          cx.fillStyle = balloonColors[i % balloonColors.length];
+          cx.globalAlpha = 0.7;
+          cx.beginPath(); cx.ellipse(bp.x,bp.y,16,22,0,0,Math.PI*2); cx.fill();
+          cx.globalAlpha = 1;
+          // Highlight
+          cx.fillStyle = 'rgba(255,255,255,0.15)';
+          cx.beginPath(); cx.ellipse(bp.x-5,bp.y-8,5,8,0,0,Math.PI*2); cx.fill();
+        });
+        // Central bag
+        var bagImg = new Image();
+        bagImg.onload = function(){ cx.drawImage(bagImg, 190, 140, 60, 60); };
+        bagImg.src = 'my_bags_decoration_web.png';
+        thumbWrap.appendChild(cv);
+      } else if (opts.thumbType === 'aerialScrew') {
+        // Sky background with screw silhouette
+        var cv2 = document.createElement('canvas');
+        cv2.width = 440; cv2.height = 320;
+        cv2.style.cssText = 'width:100%;height:100%;';
+        var cx2 = cv2.getContext('2d');
+        // Sky gradient
+        var skyG = cx2.createLinearGradient(0,0,0,320);
+        skyG.addColorStop(0,'#5b7fa6');
+        skyG.addColorStop(0.5,'#a8b8c4');
+        skyG.addColorStop(1,'#8a7e6a');
+        cx2.fillStyle = skyG;
+        cx2.fillRect(0,0,440,320);
+        // Grid overlay
+        cx2.strokeStyle = 'rgba(60,80,110,0.1)';
+        cx2.lineWidth = 1;
+        for (var gx2=0;gx2<440;gx2+=25){cx2.beginPath();cx2.moveTo(gx2,0);cx2.lineTo(gx2,320);cx2.stroke();}
+        for (var gy2=0;gy2<320;gy2+=25){cx2.beginPath();cx2.moveTo(0,gy2);cx2.lineTo(440,gy2);cx2.stroke();}
+        // Mountains
+        cx2.fillStyle = 'rgba(100,115,135,0.3)';
+        cx2.beginPath(); cx2.moveTo(0,260);
+        for (var mm=0;mm<=440;mm+=4){cx2.lineTo(mm, 220 - Math.sin(mm*0.015)*30 - Math.sin(mm*0.04)*15);}
+        cx2.lineTo(440,260); cx2.closePath(); cx2.fill();
+        // Clouds
+        cx2.fillStyle = 'rgba(240,238,232,0.35)';
+        [{x:80,y:60},{x:250,y:90},{x:380,y:50}].forEach(function(cl){
+          cx2.beginPath(); cx2.ellipse(cl.x,cl.y,50,14,0,0,Math.PI*2); cx2.fill();
+          cx2.beginPath(); cx2.ellipse(cl.x+30,cl.y+5,30,10,0,0,Math.PI*2); cx2.fill();
+        });
+        // Aerial screw image
+        var screwImg = new Image();
+        screwImg.onload = function(){ cx2.drawImage(screwImg, 0, 0, 200, 214, 150, 80, 140, 150); };
+        screwImg.src = 'aerialscrew_sprite_strip.png';
+        // Coin
+        var coinImg = new Image();
+        coinImg.onload = function(){
+          cx2.beginPath(); cx2.arc(340,160,18,0,Math.PI*2); cx2.closePath(); cx2.save(); cx2.clip();
+          cx2.drawImage(coinImg, 322, 142, 36, 36); cx2.restore();
+          cx2.strokeStyle='rgba(200,160,60,0.5)'; cx2.lineWidth=1.5;
+          cx2.beginPath(); cx2.arc(340,160,18,0,Math.PI*2); cx2.stroke();
+        };
+        coinImg.src = 'servant_face_web.png';
+        thumbWrap.appendChild(cv2);
+      }
+
+      card.appendChild(thumbWrap);
+
+      // Title
+      var nameEl = document.createElement('div');
+      nameEl.style.cssText = 'font-family:"EB Garamond",Georgia,serif;font-size:15px;color:rgba(225,215,195,0.75);margin-top:10px;letter-spacing:0.02em;';
+      nameEl.textContent = opts.title;
+      card.appendChild(nameEl);
+
+      // Subtitle
+      var subEl = document.createElement('div');
+      subEl.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:8px;color:rgba(195,175,130,0.3);letter-spacing:0.15em;margin-top:4px;text-transform:uppercase;';
+      subEl.textContent = opts.subtitle;
+      card.appendChild(subEl);
+
+      return card;
+    }
+
+    // ── GAME LAUNCHERS ──
+
+    function _launchBalloonBags() {
+      var lobby = document.getElementById('arcadeLobby');
+      if (lobby) lobby.style.display = 'none';
+
+      // Add balloon bags UI
       var basket = document.createElement('div');
       basket.className = 'bag-basket';
       basket.id = 'arcadeBagBasket';
       basket.innerHTML = '<div class="basket-bowl" id="arcadeBasketBowl"></div><div class="basket-count" id="arcadeBasketCount"></div>';
       _arcadeOverlay.appendChild(basket);
 
-      // Scoreboard
       var sb = document.createElement('div');
       sb.className = 'scoreboard';
       sb.id = 'arcadeScoreboard';
       sb.innerHTML = '<div class="score-collected" id="arcadeScoreCollected"></div>' +
         '<div class="score-stolen" id="arcadeScoreStolen"></div>' +
         '<div class="score-powerup" id="arcadeScorePowerup"></div>';
-      sb.style.top = '46px'; // offset below close button
+      sb.style.top = '46px';
       _arcadeOverlay.appendChild(sb);
 
-      document.body.appendChild(_arcadeOverlay);
-
-      // Activate with delay for transition
-      document.body.classList.add('arcade-active');
-      requestAnimationFrame(function() {
-        _arcadeOverlay.classList.add('active');
-      });
-
-      // Inject game styles for elements created dynamically
+      // Inject balloon bags styles
       if (!document.getElementById('arcadeGameStyles')) {
         var sty = document.createElement('style');
         sty.id = 'arcadeGameStyles';
@@ -15559,22 +15733,30 @@
         document.head.appendChild(sty);
       }
 
-      // Start the game engine
       _startArcadeGame(_arcadeOverlay);
-
-      // ESC key handler
-      _arcadeEscHandler = function(e) { if (e.key === 'Escape') closeArcadeOverlay(); };
-      document.addEventListener('keydown', _arcadeEscHandler);
     }
 
-    var _arcadeEscHandler = null;
-    var _arcadeCleanup = null;
+    function _launchAerialScrew() {
+      var lobby = document.getElementById('arcadeLobby');
+      if (lobby) lobby.style.display = 'none';
+
+      // Launch aerial screw as fullscreen iframe within the overlay
+      _arcadeGameFrame = document.createElement('iframe');
+      _arcadeGameFrame.src = 'aerialscrew_game.html';
+      _arcadeGameFrame.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:10;background:transparent;';
+      _arcadeGameFrame.setAttribute('allowfullscreen','');
+      _arcadeOverlay.appendChild(_arcadeGameFrame);
+    }
 
     function closeArcadeOverlay() {
       if (!_arcadeActive) return;
       _arcadeActive = false;
       if (_arcadeEscHandler) { document.removeEventListener('keydown', _arcadeEscHandler); _arcadeEscHandler = null; }
       if (_arcadeCleanup) { _arcadeCleanup(); _arcadeCleanup = null; }
+      if (_arcadeGameFrame) {
+        if (_arcadeGameFrame.parentNode) _arcadeGameFrame.parentNode.removeChild(_arcadeGameFrame);
+        _arcadeGameFrame = null;
+      }
       document.body.classList.remove('arcade-active');
       if (_arcadeOverlay) {
         _arcadeOverlay.classList.remove('active');
