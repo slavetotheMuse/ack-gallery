@@ -2294,6 +2294,28 @@
       opacity: 1;
     }
 
+    /* ── Ackstract frame ── */
+    .ackstract-frame-svg {
+      position: absolute;
+      pointer-events: none;
+      z-index: 5;
+      overflow: visible;
+      opacity: 0;
+      transition: opacity 0.8s ease 0.3s;
+    }
+    .node-card.focused .ackstract-frame-svg { opacity: 1; }
+
+    /* ── Her Favorite Flowers frame ── */
+    .hff-frame-svg {
+      position: absolute;
+      pointer-events: none;
+      z-index: 5;
+      overflow: visible;
+      opacity: 0;
+      transition: opacity 1s ease 0.3s;
+    }
+    .node-card.focused .hff-frame-svg { opacity: 1; }
+
     /* ── Botanical frame for "Made these for your girl" ── */
     .botanical-frame-svg {
       position: absolute;
@@ -8259,17 +8281,17 @@
              fullRes:"https://ipfs.io/ipfs/QmT7DDa7qFpEssLESuHvXbcSSjdnAvQ3RFsJ6TBVEhi8MR/IMG_7945.GIF",
              tokenId:29200,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"}
         ]},
-        { name: "Heart You", image: "https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/b17eac188a54cba4f200a27867cf25/71b17eac188a54cba4f200a27867cf25.gif?w=500",
+        { name: "Heart You", image: "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",
           token: "ERC-721", chain: "Ethereum", contract: "0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3",
           artworks: [
-            {title:"Heart You",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/b17eac188a54cba4f200a27867cf25/71b17eac188a54cba4f200a27867cf25.gif?w=500",tokenId:1},
-            {title:"Heart You #2",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/8931768c620bd48dd2c4a582a81b6dd8.gif?w=500",tokenId:2},
-            {title:"Heart You #3",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/8552b43e4b7988b214a03ff5334267de.gif?w=500",tokenId:3},
-            {title:"Heart You #4",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/9c6bee37e75d52ae8e002e644e1a5f01.gif?w=500",tokenId:4},
-            {title:"Heart You #5",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/84b7299a08c63921761e0d278b3fd542.gif?w=500",tokenId:5},
-            {title:"Heart You #6",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/54579136e2179ccf4f0457525233d791.gif?w=500",tokenId:6},
-            {title:"Heart You #7",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/6a5fc8c26dfc7088a70cab28fec8b1c1.gif?w=500",tokenId:7},
-            {title:"Heart You #8",image:"https://i2c.seadn.io/ethereum/0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3/dbaa51c9bd69e446c512fc35dccafc6d.gif?w=500",tokenId:8}
+            {title:"Heart You",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",tokenId:1},
+            {title:"Heart You #2",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/4b610259e41c1cccf05a6da6f81cf343",tokenId:2},
+            {title:"Heart You #3",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a08464254d57b28859c6eaa87fb96d53",tokenId:3},
+            {title:"Heart You #4",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/2f76bf3fa51c11a02d3ed056e03f9dc6",tokenId:4},
+            {title:"Heart You #5",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a836f8fe3bf899936f954d0715f7566e",tokenId:5},
+            {title:"Heart You #6",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/596ca11dac0bb92686100b96d4aee474",tokenId:6},
+            {title:"Heart You #7",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d628b05e8a829b372dad2a9b8d66cae8",tokenId:7},
+            {title:"Heart You #8",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/ded20db8b10d516c1c831945d1bd058b",tokenId:8}
         ]},
         { name: "Her Favorite Flowers", image: "her_favorite_flowers/web/made_these_for_my_girl_web.jpg", wallLayout: true,
           token: "ERC-721", chain: "Ethereum", contract: "0xa3cdefc4aea0407937ac3ea127b7491f24e5fe63",
@@ -17915,6 +17937,58 @@
           })();
         }
 
+        // ── HER FAVORITE FLOWERS frames on each artwork node ──
+        if (collection.name === 'Her Favorite Flowers') {
+          const allHFFCards = inner.querySelectorAll('.node-card');
+          allHFFCards.forEach((hffNode, hffIdx) => {
+            if (hffNode.classList.contains('info-card-node')) return;
+            const _applyHFFFrame = () => {
+              const preview = hffNode.querySelector('.node-preview');
+              const img = preview ? preview.querySelector('img') : null;
+              if (preview && img && img.naturalWidth > 0) {
+                const localW = parseFloat(hffNode.style.width) || preview.offsetWidth;
+                const localH = img.offsetHeight || preview.offsetHeight || localW;
+                const artTitle = collection.artworks[hffIdx] ? collection.artworks[hffIdx].title : '';
+                const frameSvg = generateHFFFrame(localW, localH, artTitle, false);
+                frameSvg.style.opacity = '1';
+                frameSvg.style.transition = 'none';
+                frameSvg.dataset.collectionFrame = 'true';
+                hffNode.appendChild(frameSvg);
+                hffNode.classList.add('has-hff-frame');
+              } else {
+                setTimeout(_applyHFFFrame, 500);
+              }
+            };
+            setTimeout(_applyHFFFrame, 800 + hffIdx * 200);
+          });
+        }
+
+        // ── ACKSTRACT frames on each artwork node ──
+        if (collection.name === 'Ackstract') {
+          const allAckCards = inner.querySelectorAll('.node-card');
+          allAckCards.forEach((ackNode, ackIdx) => {
+            if (ackNode.classList.contains('info-card-node')) return;
+            const _applyAckFrame = () => {
+              const preview = ackNode.querySelector('.node-preview');
+              const img = preview ? preview.querySelector('img') : null;
+              if (preview && img && img.naturalWidth > 0) {
+                const localW = parseFloat(ackNode.style.width) || preview.offsetWidth;
+                const localH = img.offsetHeight || preview.offsetHeight || localW;
+                const artTitle = collection.artworks[ackIdx] ? collection.artworks[ackIdx].title : '';
+                const frameSvg = generateAckstractFrame(localW, localH, artTitle, false);
+                frameSvg.style.opacity = '1';
+                frameSvg.style.transition = 'none';
+                frameSvg.dataset.collectionFrame = 'true';
+                ackNode.appendChild(frameSvg);
+                ackNode.classList.add('has-ackstract-frame');
+              } else {
+                setTimeout(_applyAckFrame, 500);
+              }
+            };
+            setTimeout(_applyAckFrame, 800 + ackIdx * 200);
+          });
+        }
+
         // ══════════════════════════════════════════════════════════════
         // ── ACK EDITIONS decoration system ──
         // ══════════════════════════════════════════════════════════════
@@ -20861,6 +20935,16 @@
               const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Piano Blossoms'];
               const frameSvg = generateBlossomFrame(localW, localH, pal, artworkData.title, true);
               node.appendChild(frameSvg);
+            } else if (_colName === 'Her Favorite Flowers') {
+              const oldFrame = node.querySelector('.hff-frame-svg[data-collection-frame]');
+              if (oldFrame) oldFrame.style.display = 'none';
+              const frameSvg = generateHFFFrame(localW, localH, artworkData.title, true);
+              node.appendChild(frameSvg);
+            } else if (_colName === 'Ackstract') {
+              const oldFrame = node.querySelector('.ackstract-frame-svg[data-collection-frame]');
+              if (oldFrame) oldFrame.style.display = 'none';
+              const frameSvg = generateAckstractFrame(localW, localH, artworkData.title, true);
+              node.appendChild(frameSvg);
             } else if (!hasCollectionFrame) {
               if (_colName === 'Clown Party') {
                 const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Clown Party'];
@@ -21973,7 +22057,8 @@
         '.colorstudy-frame-svg', '.opepen-frame-svg', '.heartyou-frame-svg',
         '.starry-frame-svg', '.pfp-frame-svg', '.brokenkeys-frame-svg',
         '.warothy-frame-svg', '.botanical-frame-svg', '.servant-frame-svg',
-        '.tempted-frame-svg', '.bar-frame-svg', '.superrare-frame-svg'
+        '.tempted-frame-svg', '.bar-frame-svg', '.superrare-frame-svg',
+        '.ackstract-frame-svg', '.hff-frame-svg'
       ];
       frameSelectors.forEach(function(sel) {
         var frames = node.querySelectorAll(sel);
@@ -22061,6 +22146,10 @@
         frameSvg = generateSuperRareFrame(localW, localH, pal, artworkData.title, true);
       } else if (colName === '6529') {
         frameSvg = generate6529Frame(localW, localH, artworkData.title, true);
+      } else if (colName === 'Her Favorite Flowers') {
+        frameSvg = generateHFFFrame(localW, localH, artworkData.title, true);
+      } else if (colName === 'Ackstract') {
+        frameSvg = generateAckstractFrame(localW, localH, artworkData.title, true);
       } else if (colName === '1 of 1s') {
         frameSvg = generate1of1Frame(localW, localH, artworkData.title);
       } else if (artworkData.masterwork) {
@@ -25249,10 +25338,9 @@
         // Double line frame — pale blue wash
         svg.appendChild(path('M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z', blue+'0.6)', '2.5', '1'));
         svg.appendChild(path('M '+(L+6)+' '+(T+6)+' L '+(R-6)+' '+(T+6)+' L '+(R-6)+' '+(B-6)+' L '+(L+6)+' '+(B-6)+' Z', paleB+'0.25)', '0.8', '1'));
-        // Ethereal glow corners
+        // Ethereal glow corners — subtle small dots
         [{x:L,y:T},{x:R,y:T},{x:L,y:B},{x:R,y:B}].forEach(function(c) {
-          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'12', fill: 'none', stroke: paleB+'0.15)', 'stroke-width':'8'}));
-          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'3', fill: blue+'0.45)'}));
+          svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'2.5', fill: blue+'0.4)', stroke: paleB+'0.2)', 'stroke-width':'0.6'}));
         });
         // Subtle cross motifs (resurrection) along bottom
         for (var bx = L+40; bx < R-40; bx += 60) {
@@ -25551,6 +25639,400 @@
         [{x:L,y:T},{x:R,y:T},{x:L,y:B},{x:R,y:B}].forEach(function(c) {
           svg.appendChild(el('circle', {cx:c.x, cy:c.y, r:'2.5', fill:defG+'0.4)'}));
         });
+      }
+
+      return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // ── ACKSTRACT FRAME — cosmic chaos, fractured geometry, nebula energy ──
+    // ══════════════════════════════════════════════════════════════════
+    function generateAckstractFrame(imgW, imgH, title, focusMode) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 6;
+      const W = imgW + pad * 2, H = imgH + pad * 2;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.classList.add('ackstract-frame-svg');
+      svg.style.left = -pad + 'px';
+      svg.style.top = -pad + 'px';
+      svg.style.width = W + 'px';
+      svg.style.height = H + 'px';
+
+      const L = 2, T = 2, R = W - 2, B = H - 2;
+      const cx = W / 2, cy = H / 2;
+      const t = (title || '').toLowerCase();
+
+      // Seeded random from title
+      let seed = 271;
+      for (let i = 0; i < t.length; i++) seed = (seed * 16807 + t.charCodeAt(i)) % 2147483647;
+      function rand() { seed = (seed * 16807 + 11) % 2147483647; return (seed & 0xffff) / 0xffff; }
+
+      function el(tag, attrs) {
+        const e = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        return e;
+      }
+      function path(d, stroke, sw, opacity, fill) {
+        return el('path', { d: d, stroke: stroke || 'none', 'stroke-width': sw || '1', fill: fill || 'none', opacity: opacity || '1', 'stroke-linecap': 'round' });
+      }
+
+      // ── Per-artwork color palettes ──
+      let primary, secondary, glow, dim;
+      if (t.indexOf('stars fell') !== -1) {
+        // Cosmic teal-purple with warm gold sparkle
+        primary = 'rgba(60,180,190,';   // teal
+        secondary = 'rgba(160,120,200,'; // purple
+        glow = 'rgba(220,185,100,';      // gold
+        dim = 'rgba(40,70,90,';
+      } else if (t.indexOf('not') !== -1 && t.indexOf('surely') !== -1) {
+        // Deep crimson — forbidden knowledge
+        primary = 'rgba(160,35,30,';
+        secondary = 'rgba(90,20,20,';
+        glow = 'rgba(200,60,50,';
+        dim = 'rgba(60,15,15,';
+      } else if (t.indexOf('creation') !== -1) {
+        // Volcanic fire — explosive orange/red
+        primary = 'rgba(200,90,30,';
+        secondary = 'rgba(170,50,20,';
+        glow = 'rgba(255,160,60,';
+        dim = 'rgba(80,30,10,';
+      } else if (t.indexOf('boy') !== -1 || t.indexOf('muse') !== -1) {
+        // Ethereal sage-lavender mist
+        primary = 'rgba(140,160,130,';
+        secondary = 'rgba(160,140,180,';
+        glow = 'rgba(200,195,170,';
+        dim = 'rgba(80,90,75,';
+      } else {
+        // Default: deep space purple
+        primary = 'rgba(80,60,160,';
+        secondary = 'rgba(120,90,200,';
+        glow = 'rgba(180,160,220,';
+        dim = 'rgba(40,30,80,';
+      }
+
+      // ══════════════════════════════════════════════════════════
+      // OUTER FRAME — fractured double border with energy pulses
+      // ══════════════════════════════════════════════════════════
+
+      // Outer fractured border — not a clean rectangle, slightly broken
+      const frac = focusMode ? 2.5 : 1.5;
+      const outerD = 'M '+(L+frac)+' '+T+' L '+(R-frac)+' '+T+
+        ' L '+R+' '+(T+frac)+' L '+R+' '+(B-frac)+
+        ' L '+(R-frac)+' '+B+' L '+(L+frac)+' '+B+
+        ' L '+L+' '+(B-frac)+' L '+L+' '+(T+frac)+' Z';
+      svg.appendChild(path(outerD, primary+'0.5)', '1.2', '1'));
+
+      // Inner border — thinner, slightly offset for parallax energy feel
+      svg.appendChild(path(
+        'M '+(L+4)+' '+(T+4)+' L '+(R-4)+' '+(T+4)+' L '+(R-4)+' '+(B-4)+' L '+(L+4)+' '+(B-4)+' Z',
+        secondary+'0.25)', '0.5', '1'
+      ));
+
+      // ── Corner energy bursts — fractured geometric shards ──
+      const shardLen = Math.min(45, Math.min(imgW, imgH) * 0.14);
+      [{x:L,y:T,dx:1,dy:1},{x:R,y:T,dx:-1,dy:1},{x:L,y:B,dx:1,dy:-1},{x:R,y:B,dx:-1,dy:-1}].forEach(function(c) {
+        // Primary shard line
+        const sl = shardLen * (0.7 + rand() * 0.3);
+        svg.appendChild(path(
+          'M '+c.x+' '+c.y+' L '+(c.x+c.dx*sl)+' '+(c.y+c.dy*(sl*0.3+rand()*5)),
+          primary+'0.6)', '1.2', '1'
+        ));
+        // Perpendicular shard
+        svg.appendChild(path(
+          'M '+c.x+' '+c.y+' L '+(c.x+c.dx*(sl*0.3+rand()*5))+' '+(c.y+c.dy*sl),
+          primary+'0.6)', '1.2', '1'
+        ));
+        // Small scattered fragment lines
+        for (let f = 0; f < 3; f++) {
+          const fx = c.x + c.dx * (8 + rand() * shardLen * 0.6);
+          const fy = c.y + c.dy * (8 + rand() * shardLen * 0.6);
+          const fa = rand() * Math.PI * 2;
+          const fl = 3 + rand() * 8;
+          svg.appendChild(path(
+            'M '+fx.toFixed(1)+' '+fy.toFixed(1)+' L '+(fx+Math.cos(fa)*fl).toFixed(1)+' '+(fy+Math.sin(fa)*fl).toFixed(1),
+            glow+'0.3)', '0.6', '1'
+          ));
+        }
+        // Energy dot at corner
+        svg.appendChild(el('circle', {cx:c.x+c.dx*2, cy:c.y+c.dy*2, r: focusMode ? '3' : '2', fill:glow+'0.4)', stroke:primary+'0.5)', 'stroke-width':'0.6'}));
+      });
+
+      // ── Edge energy particles — tiny dots scattered along frame edges ──
+      const particleCount = focusMode ? 20 : 10;
+      for (let p = 0; p < particleCount; p++) {
+        let px, py;
+        const side = Math.floor(rand() * 4);
+        if (side === 0) { px = L + shardLen + rand() * (R - L - shardLen * 2); py = T + rand() * 3 - 1; }
+        else if (side === 1) { px = R + rand() * 3 - 1; py = T + shardLen + rand() * (B - T - shardLen * 2); }
+        else if (side === 2) { px = L + shardLen + rand() * (R - L - shardLen * 2); py = B + rand() * 3 - 1; }
+        else { px = L + rand() * 3 - 1; py = T + shardLen + rand() * (B - T - shardLen * 2); }
+        const pr = 0.4 + rand() * 1.2;
+        const pOp = 0.15 + rand() * 0.25;
+        const useGlow = rand() > 0.6;
+        svg.appendChild(el('circle', {cx:px.toFixed(1), cy:py.toFixed(1), r:pr.toFixed(1), fill:(useGlow ? glow : primary)+pOp.toFixed(2)+')'}));
+      }
+
+      // ── Focus mode extras — nebula wisps + geometric constellation ──
+      if (focusMode) {
+        // Nebula wisps along edges
+        for (let w = 0; w < 4; w++) {
+          const wx = L + shardLen + rand() * (R - L - shardLen * 2);
+          const wy = w < 2 ? (T - 1 + rand() * 4) : (B - 3 + rand() * 4);
+          const wLen = 20 + rand() * 40;
+          const wCurve = 5 + rand() * 10;
+          svg.appendChild(path(
+            'M '+wx.toFixed(1)+' '+wy.toFixed(1)+' Q '+(wx+wLen/2).toFixed(1)+' '+(wy+(w<2?wCurve:-wCurve)).toFixed(1)+' '+(wx+wLen).toFixed(1)+' '+wy.toFixed(1),
+            secondary+'0.15)', '1.5', '1'
+          ));
+        }
+        // Side wisps
+        for (let w = 0; w < 3; w++) {
+          const wy = T + shardLen + rand() * (B - T - shardLen * 2);
+          const wx = w < 1 ? (L - 1 + rand() * 3) : (R - 2 + rand() * 3);
+          const wLen = 15 + rand() * 30;
+          const wCurve = 4 + rand() * 8;
+          svg.appendChild(path(
+            'M '+wx.toFixed(1)+' '+wy.toFixed(1)+' Q '+(wx+(w<1?wCurve:-wCurve)).toFixed(1)+' '+(wy+wLen/2).toFixed(1)+' '+wx.toFixed(1)+' '+(wy+wLen).toFixed(1),
+            primary+'0.12)', '1.2', '1'
+          ));
+        }
+
+        // Constellation — small connected dots in one corner area
+        const conX = rand() > 0.5 ? L + 6 : R - 30;
+        const conY = rand() > 0.5 ? T + 6 : B - 30;
+        const stars = [];
+        for (let s = 0; s < 4; s++) {
+          stars.push({ x: conX + rand() * 24, y: conY + rand() * 24 });
+          svg.appendChild(el('circle', {cx:stars[s].x.toFixed(1), cy:stars[s].y.toFixed(1), r:(0.6+rand()*0.8).toFixed(1), fill:glow+'0.35)'}));
+        }
+        // Connect consecutive stars
+        for (let s = 0; s < stars.length - 1; s++) {
+          svg.appendChild(path(
+            'M '+stars[s].x.toFixed(1)+' '+stars[s].y.toFixed(1)+' L '+stars[s+1].x.toFixed(1)+' '+stars[s+1].y.toFixed(1),
+            glow+'0.12)', '0.4', '1'
+          ));
+        }
+      }
+
+      // ── Midpoint accent marks along each edge ──
+      const midAcc = primary+'0.35)';
+      // Top center
+      svg.appendChild(path('M '+(cx-8)+' '+(T+0.5)+' L '+cx+' '+(T-1.5)+' L '+(cx+8)+' '+(T+0.5), midAcc, '0.8', '1'));
+      // Bottom center
+      svg.appendChild(path('M '+(cx-8)+' '+(B-0.5)+' L '+cx+' '+(B+1.5)+' L '+(cx+8)+' '+(B-0.5), midAcc, '0.8', '1'));
+      // Left center
+      svg.appendChild(path('M '+(L+0.5)+' '+(cy-8)+' L '+(L-1.5)+' '+cy+' L '+(L+0.5)+' '+(cy+8), midAcc, '0.8', '1'));
+      // Right center
+      svg.appendChild(path('M '+(R-0.5)+' '+(cy-8)+' L '+(R+1.5)+' '+cy+' L '+(R-0.5)+' '+(cy+8), midAcc, '0.8', '1'));
+
+      return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // ── HER FAVORITE FLOWERS FRAME — dark botanical, moonlit thorns and petals ──
+    // ══════════════════════════════════════════════════════════════════
+    function generateHFFFrame(imgW, imgH, title, focusMode) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 6;
+      const W = imgW + pad * 2, H = imgH + pad * 2;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.classList.add('hff-frame-svg');
+      svg.style.left = -pad + 'px';
+      svg.style.top = -pad + 'px';
+      svg.style.width = W + 'px';
+      svg.style.height = H + 'px';
+
+      const L = 2, T = 2, R = W - 2, B = H - 2;
+      const cx = W / 2, cy = H / 2;
+      const t = (title || '').toLowerCase();
+
+      // Seeded random from title
+      let seed = 389;
+      for (let i = 0; i < t.length; i++) seed = (seed * 16807 + t.charCodeAt(i)) % 2147483647;
+      function rand() { seed = (seed * 16807 + 11) % 2147483647; return (seed & 0xffff) / 0xffff; }
+
+      function el(tag, attrs) {
+        const e = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        return e;
+      }
+      function path(d, stroke, sw, opacity, fill) {
+        return el('path', { d: d, stroke: stroke || 'none', 'stroke-width': sw || '1', fill: fill || 'none', opacity: opacity || '1', 'stroke-linecap': 'round' });
+      }
+
+      // ── Color palette: midnight navy, emerald, muted gold, moonlit silver ──
+      const navy = 'rgba(25,30,55,';
+      const emerald = 'rgba(60,140,110,';
+      const moonGold = 'rgba(185,165,110,';
+      const silver = 'rgba(170,175,185,';
+      const thorn = 'rgba(90,65,55,';
+      const petalPink = 'rgba(160,110,130,';
+
+      // Per-artwork tint
+      let accent, accentDim;
+      if (t.indexOf('made these') !== -1 || t.indexOf('my girl') !== -1) {
+        // Deep navy bouquet — emerald roses, pale lilies
+        accent = emerald;
+        accentDim = 'rgba(45,90,80,';
+      } else if (t.indexOf('moonlight') !== -1 || t.indexOf('kissed') !== -1) {
+        // Oxidized garden — golden bronze patina
+        accent = moonGold;
+        accentDim = 'rgba(120,105,70,';
+      } else {
+        accent = petalPink;
+        accentDim = 'rgba(120,80,95,';
+      }
+
+      // ══════════════════════════════════════════════════════════
+      // OUTER FRAME — elegant double border with organic softness
+      // ══════════════════════════════════════════════════════════
+
+      // Outer border
+      svg.appendChild(path(
+        'M '+L+' '+T+' L '+R+' '+T+' L '+R+' '+B+' L '+L+' '+B+' Z',
+        accent+'0.45)', '1.0', '1'
+      ));
+      // Inner thin border
+      svg.appendChild(path(
+        'M '+(L+4)+' '+(T+4)+' L '+(R-4)+' '+(T+4)+' L '+(R-4)+' '+(B-4)+' L '+(L+4)+' '+(B-4)+' Z',
+        accent+'0.15)', '0.4', '1'
+      ));
+
+      // ── Corner vine flourishes — organic tendrils with thorns ──
+      const vineLen = Math.min(55, Math.min(imgW, imgH) * 0.16);
+      [{x:L,y:T,dx:1,dy:1},{x:R,y:T,dx:-1,dy:1},{x:L,y:B,dx:1,dy:-1},{x:R,y:B,dx:-1,dy:-1}].forEach(function(c) {
+        // Main vine tendril — horizontal
+        const vl = vineLen * (0.8 + rand() * 0.2);
+        const curve1 = 3 + rand() * 5;
+        svg.appendChild(path(
+          'M '+c.x+' '+c.y+' C '+(c.x+c.dx*vl*0.3)+' '+(c.y+c.dy*curve1)+' '+(c.x+c.dx*vl*0.6)+' '+(c.y-c.dy*curve1*0.5)+' '+(c.x+c.dx*vl)+' '+(c.y+c.dy*2),
+          accent+'0.5)', '1.0', '1'
+        ));
+        // Main vine tendril — vertical
+        svg.appendChild(path(
+          'M '+c.x+' '+c.y+' C '+(c.x+c.dx*curve1)+' '+(c.y+c.dy*vl*0.3)+' '+(c.x-c.dx*curve1*0.5)+' '+(c.y+c.dy*vl*0.6)+' '+(c.x+c.dx*2)+' '+(c.y+c.dy*vl),
+          accent+'0.5)', '1.0', '1'
+        ));
+
+        // Small curling tendril off main vine
+        const tx = c.x + c.dx * vl * 0.5;
+        const ty = c.y + c.dy * 3;
+        svg.appendChild(path(
+          'M '+tx.toFixed(1)+' '+ty.toFixed(1)+' Q '+(tx+c.dx*8).toFixed(1)+' '+(ty+c.dy*10).toFixed(1)+' '+(tx+c.dx*4).toFixed(1)+' '+(ty+c.dy*15).toFixed(1),
+          accentDim+'0.3)', '0.6', '1'
+        ));
+
+        // Thorn marks along vine
+        for (let th = 0; th < 2; th++) {
+          const thPos = 0.25 + th * 0.35;
+          const thx = c.x + c.dx * vl * thPos;
+          const thy = c.y + c.dy * (curve1 * 0.3 * Math.sin(thPos * Math.PI));
+          const thAngle = rand() * Math.PI;
+          const thLen = 2 + rand() * 2;
+          svg.appendChild(path(
+            'M '+thx.toFixed(1)+' '+thy.toFixed(1)+' L '+(thx+Math.cos(thAngle)*thLen).toFixed(1)+' '+(thy+Math.sin(thAngle)*thLen).toFixed(1),
+            thorn+'0.4)', '0.7', '1'
+          ));
+        }
+
+        // Corner petal accent — a single abstract petal shape
+        const petalX = c.x + c.dx * 6;
+        const petalY = c.y + c.dy * 6;
+        const pr = 3 + rand() * 2;
+        const pAngle = Math.atan2(c.dy, c.dx) + Math.PI * 0.25;
+        svg.appendChild(el('ellipse', {
+          cx: petalX.toFixed(1), cy: petalY.toFixed(1),
+          rx: (pr * 1.3).toFixed(1), ry: (pr * 0.6).toFixed(1),
+          transform: 'rotate(' + (pAngle * 180 / Math.PI).toFixed(0) + ' ' + petalX.toFixed(1) + ' ' + petalY.toFixed(1) + ')',
+          fill: accent + '0.12)', stroke: accent + '0.25)', 'stroke-width': '0.4'
+        }));
+
+        // Corner dot
+        svg.appendChild(el('circle', {cx:c.x+c.dx*1.5, cy:c.y+c.dy*1.5, r:'2', fill:moonGold+'0.35)', stroke:accent+'0.4)', 'stroke-width':'0.5'}));
+      });
+
+      // ── Leaf silhouettes along top and bottom edges ──
+      const leafCount = focusMode ? 6 : 3;
+      for (let li = 0; li < leafCount; li++) {
+        const lSide = li % 2 === 0 ? 'top' : 'bottom';
+        const lx = L + vineLen + rand() * (R - L - vineLen * 2);
+        const ly = lSide === 'top' ? T + rand() * 2 : B - rand() * 2;
+        const lDir = lSide === 'top' ? 1 : -1;
+        const lSize = 4 + rand() * 5;
+        const lAngle = -30 + rand() * 60;
+        // Simple leaf shape — two curves forming a leaf
+        svg.appendChild(path(
+          'M '+lx.toFixed(1)+' '+ly.toFixed(1)+
+          ' Q '+(lx+lSize*0.5).toFixed(1)+' '+(ly+lDir*lSize).toFixed(1)+' '+(lx+lSize).toFixed(1)+' '+ly.toFixed(1)+
+          ' Q '+(lx+lSize*0.5).toFixed(1)+' '+(ly-lDir*lSize*0.3).toFixed(1)+' '+lx.toFixed(1)+' '+ly.toFixed(1),
+          accent+'0.2)', '0.5', '1', accent+'0.06)'
+        ));
+        // Leaf vein
+        svg.appendChild(path(
+          'M '+lx.toFixed(1)+' '+ly.toFixed(1)+' L '+(lx+lSize).toFixed(1)+' '+ly.toFixed(1),
+          accent+'0.12)', '0.3', '1'
+        ));
+      }
+
+      // ── Moonlit sparkle dots scattered in frame margin ──
+      const sparkleCount = focusMode ? 14 : 6;
+      for (let s = 0; s < sparkleCount; s++) {
+        let sx, sy;
+        const side = Math.floor(rand() * 4);
+        if (side === 0) { sx = L + vineLen*0.5 + rand() * (R - L - vineLen); sy = T + rand() * 2.5 - 0.5; }
+        else if (side === 1) { sx = R + rand() * 2.5 - 0.5; sy = T + vineLen*0.5 + rand() * (B - T - vineLen); }
+        else if (side === 2) { sx = L + vineLen*0.5 + rand() * (R - L - vineLen); sy = B + rand() * 2.5 - 0.5; }
+        else { sx = L + rand() * 2.5 - 0.5; sy = T + vineLen*0.5 + rand() * (B - T - vineLen); }
+        const sr = 0.3 + rand() * 0.8;
+        const sOp = 0.12 + rand() * 0.2;
+        const useSilver = rand() > 0.5;
+        svg.appendChild(el('circle', {cx:sx.toFixed(1), cy:sy.toFixed(1), r:sr.toFixed(1), fill:(useSilver ? silver : moonGold)+sOp.toFixed(2)+')'}));
+      }
+
+      // ── Focus mode extras — more elaborate vine work + scattered petals ──
+      if (focusMode) {
+        // Extra vine tendrils along sides
+        for (let v = 0; v < 4; v++) {
+          const vSide = v % 2;
+          const vx = vSide === 0 ? L + rand() * 2 : R - rand() * 2;
+          const vy = T + vineLen + rand() * (B - T - vineLen * 2);
+          const vDir = vSide === 0 ? 1 : -1;
+          const vLen = 15 + rand() * 25;
+          svg.appendChild(path(
+            'M '+vx.toFixed(1)+' '+vy.toFixed(1)+
+            ' Q '+(vx+vDir*(5+rand()*5)).toFixed(1)+' '+(vy+vLen*0.5).toFixed(1)+
+            ' '+vx.toFixed(1)+' '+(vy+vLen).toFixed(1),
+            accentDim+'0.2)', '0.8', '1'
+          ));
+        }
+
+        // Scattered petals in frame margin
+        for (let p = 0; p < 5; p++) {
+          const px = L + 5 + rand() * (R - L - 10);
+          const py = rand() > 0.5 ? (T - 1 + rand() * 4) : (B - 3 + rand() * 4);
+          const pSize = 2 + rand() * 3;
+          const pAng = rand() * 360;
+          svg.appendChild(el('ellipse', {
+            cx: px.toFixed(1), cy: py.toFixed(1),
+            rx: (pSize * 1.2).toFixed(1), ry: (pSize * 0.5).toFixed(1),
+            transform: 'rotate(' + pAng.toFixed(0) + ' ' + px.toFixed(1) + ' ' + py.toFixed(1) + ')',
+            fill: petalPink + '0.08)', stroke: petalPink + '0.15)', 'stroke-width': '0.3'
+          }));
+        }
+
+        // Midpoint ornamental marks — tiny diamond / seed shapes
+        [{x:cx,y:T-0.5,dx:0,dy:-1},{x:cx,y:B+0.5,dx:0,dy:1},{x:L-0.5,y:cy,dx:-1,dy:0},{x:R+0.5,y:cy,dx:1,dy:0}].forEach(function(m) {
+          svg.appendChild(path(
+            'M '+(m.x-4)+' '+m.y+' L '+m.x+' '+(m.y+m.dy*3)+' L '+(m.x+4)+' '+m.y+' L '+m.x+' '+(m.y-m.dy*3)+' Z',
+            moonGold+'0.25)', '0.5', '1', moonGold+'0.05)'
+          ));
+        });
+      } else {
+        // Simple midpoint marks for collection view
+        svg.appendChild(el('circle', {cx:cx, cy:T, r:'1.5', fill:moonGold+'0.2)'}));
+        svg.appendChild(el('circle', {cx:cx, cy:B, r:'1.5', fill:moonGold+'0.2)'}));
       }
 
       return svg;
@@ -33899,7 +34381,7 @@
       cleanupMasterworkFrame(focusedNode);
 
       // Clean up focus-added frames, but preserve the collection-view ones
-      focusedNode.querySelectorAll('.botanical-frame-svg, .bar-frame-svg, .blossom-frame-svg, .clown-frame-svg, .editions-frame-svg, .starry-frame-svg, .lisan-frame-svg, .pfp-frame-svg, .warothy-frame-svg, .brokenkeys-frame-svg, .colorstudy-frame-svg, .opepen-frame-svg, .heartyou-frame-svg, .tempted-frame-svg, .servant-frame-svg, .superrare-frame-svg').forEach(bf => {
+      focusedNode.querySelectorAll('.botanical-frame-svg, .bar-frame-svg, .blossom-frame-svg, .clown-frame-svg, .editions-frame-svg, .starry-frame-svg, .lisan-frame-svg, .pfp-frame-svg, .warothy-frame-svg, .brokenkeys-frame-svg, .colorstudy-frame-svg, .opepen-frame-svg, .heartyou-frame-svg, .tempted-frame-svg, .servant-frame-svg, .superrare-frame-svg, .ackstract-frame-svg, .hff-frame-svg').forEach(bf => {
         if (!bf.dataset.collectionFrame) bf.remove();
         else bf.style.display = ''; // unhide collection frames (Piano Blossoms hides them on focus)
       });
