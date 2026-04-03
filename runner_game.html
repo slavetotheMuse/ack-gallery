@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SERVANT RUN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#0a0a0c; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  canvas { display:block; width:100%; height:100%; image-rendering:auto; cursor:pointer; }
+</style>
+</head>
+<body>
+<canvas id="gc"></canvas>
+<script>
+/* ═══════════════════════════════════════════════════════
+   SERVANT RUN — Side-scroll tap-to-jump collector
+   The servant coin runs through the ACK world,
+   collecting bags, artworks, and shitcoin prizes.
+   ═══════════════════════════════════════════════════════ */
+
+(function(){
+'use strict';
+
+var C = document.getElementById('gc');
+var X = C.getContext('2d');
+var W, H, SCALE;
+var GROUND_Y;
+var BASE_W = 800;
+
+// ── State ──
+var STATE = 'menu'; // menu | playing | dead
+var score = 0;
+var bestScore = 0;
+var distance = 0;
+var coins = 0;
+var shitcoinsCollected = [];
+var artworksCollected = [];
+var servantCoins = 0;
+var speed = 4.5;
+var speedIncrement = 0.0004;
+var frameCount = 0;
+var shakeTimer = 0;
+var flashTimer = 0;
+var flashColor = '';
+
+// ── Galaxy Boost ──
+var boostMeter = 0;
+var BOOST_THRESHOLD = 15; // collect 15 items to trigger
+var boostState = 'none'; // none | launching | galaxy | reentry
+var boostTimer = 0;
+var boostDuration = 480; // ~8 seconds at 60fps
+var galaxyCollectibles = [];
+var galaxyStars = [];
+var galaxyScore = 0;
+var boostFlashAlpha = 0;
+var playerLaunchY = 0;
+var playerOrigY = 0;
+var boostCombo = 0; // how many boosts this run
+var boostInvulnTimer = 0; // brief invulnerability after landing
+
+try { bestScore = parseInt(localStorage.getItem('ack_servant_run_best') || '0', 10); } catch(e){}
+
+// ── Player (piano man) ──
+var player = {
+  x: 0, y: 0, w: 100, h: 62,  // wider for piano sprite
+  vy: 0, onGround: true,
+  jumpCount: 0,
+  maxJumps: 2,
+  squash: 1, stretch: 1,
+  tilt: 0  // slight tilt when jumping
+};
+var GRAVITY = 0.55;
+var JUMP_FORCE = -11.5;
+var DOUBLE_JUMP_FORCE = -10;
+
+// ── Obstacles / Collectibles ──
+var obstacles = [];
+var collectibles = [];
+var particles = [];
+var bgElements = [];
+var groundTiles = [];
+
+// ── Artwork collectible pool ──
+var artworkPool = [
+  { name:'Starsfell', src:'starsfell_web.jpg' },
+  { name:'Supernatural', src:'supernatural_web.jpg' },
+  { name:'Tinman', src:'tinman_web.jpg' },
+  { name:'Curation of Saints', src:'curation_of_saints_web.jpg' },
+  { name:'There Is No Piano', src:'there_is_no_piano_web.jpg' },
+  { name:'Self Portrait', src:'selfportraitnew_web.jpg' },
+  { name:'But Wait...My Bags!', src:'but_wait_thumb.jpg' },
+  { name:'Pollen', src:'pollen_thumb.jpg' },
+  { name:'Selfreflect', src:'selfreflect_thumb.jpg' },
+  { name:'Wicked', src:'wicked_thumb.jpg' }
+];
+var artworkImages = {};
+
+// ── Fake shitcoin prize pool ──
+var shitcoinPool = [
+  // Real-ish coins
+  { ticker:'$BTC', color:'#F7931A', desc:'Digital gold baby' },
+  { ticker:'$ETH', color:'#627EEA', desc:'Ultra sound money' },
+  { ticker:'$SOL', color:'#9945FF', desc:'Fast and sometimes online' },
+  { ticker:'$DOGE', color:'#C3A634', desc:'Much wow, very coin' },
+  { ticker:'$PEPE', color:'#4CAF50', desc:'Feels good man' },
+  { ticker:'$SHIB', color:'#E42D04', desc:'The DOGE killer (allegedly)' },
+  // Rekt culture
+  { ticker:'$REKT', color:'#FF0000', desc:'Buy high sell low master' },
+  { ticker:'$REKTGUY', color:'#E84040', desc:'He bought? DUMP IT' },
+  { ticker:'$NGMI', color:'#DC143C', desc:'Not gonna make it (but styled)' },
+  { ticker:'$COPIUM', color:'#4169E1', desc:'For when your portfolio dips' },
+  { ticker:'$HOPIUM', color:'#00BFFF', desc:'Tomorrow is always green' },
+  // ACK-themed
+  { ticker:'$SERCOIN', color:'#C9A84C', desc:'The one true servant coin' },
+  { ticker:'$MUSEWIF', color:'#FF69B4', desc:'Muse with hat' },
+  { ticker:'$PIANOBROKE', color:'#F5F5DC', desc:'48 keys, all broken' },
+  { ticker:'$CLOWNINU', color:'#FF4500', desc:'Honk honk to the moon' },
+  { ticker:'$SKELEPUMP', color:'#DDD', desc:'Dead cat bounce specialist' },
+  { ticker:'$DEATHFLIP', color:'#808080', desc:'Memento mori, memento profit' },
+  // Degen classics
+  { ticker:'$FARTCOIN', color:'#8B4513', desc:'The gas fee is literal' },
+  { ticker:'$RUGSWORTH', color:'#8B0000', desc:'Guaranteed 100x (downward)' },
+  { ticker:'$WENLAMBO', color:'#DAA520', desc:'Any day now...' },
+  { ticker:'$BAGHODLR', color:'#B8860B', desc:'Diamond hands, paper gains' },
+  { ticker:'$APEING', color:'#228B22', desc:'FOMO is a feature' },
+  { ticker:'$MOONTARD', color:'#9370DB', desc:'To the moon (wrong direction)' },
+  { ticker:'$PONZI', color:'#FFD700', desc:'Sustainable tokenomics' },
+  { ticker:'$DEVSDOXX', color:'#2F4F4F', desc:'Team fully doxxed (trust us)' },
+  { ticker:'$GWEI', color:'#5B7FA6', desc:'Gas fees are a feature' },
+  { ticker:'$LIQUIDATED', color:'#B22222', desc:'Leveraged to the tits' },
+  { ticker:'$WAGMI', color:'#32CD32', desc:'We are all gonna make it' },
+  { ticker:'$SAYLOR', color:'#FF8C00', desc:'Never selling. NEVER.' },
+  { ticker:'$PAPRHANDS', color:'#D2B48C', desc:'Sold the bottom, congrats' }
+];
+
+// ── Image loading ──
+var imgHero = new Image();
+var imgServantFace = new Image();
+var imgServantBack = new Image();
+var imgBags = new Image();
+var imgLogo = new Image();
+
+imgHero.src = 'piano.png';
+imgServantFace.src = 'servant_face_web.png';
+imgServantBack.src = 'servant_back_web.png';
+imgBags.src = 'my_bags_decoration_web.png';
+imgLogo.src = 'ACK_gold_logo.png';
+
+artworkPool.forEach(function(art){
+  var img = new Image();
+  img.onerror = function(){};
+  img.src = art.src;
+  artworkImages[art.name] = img;
+});
+
+// ── Audio (Web Audio API — all synthesized) ──
+var audioCtx = null;
+var musicPlaying = false;
+var musicGain = null;
+var musicNodes = [];
+
+function ensureAudio(){
+  if(!audioCtx){
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  }
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playJumpSound(){
+  if(!audioCtx) return;
+  var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(280, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(560, audioCtx.currentTime + 0.12);
+  g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+  o.start(); o.stop(audioCtx.currentTime + 0.15);
+}
+
+function playDoubleJumpSound(){
+  if(!audioCtx) return;
+  var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(400, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+  g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+  o.start(); o.stop(audioCtx.currentTime + 0.12);
+}
+
+function playCoinSound(){
+  if(!audioCtx) return;
+  var o1 = audioCtx.createOscillator(), o2 = audioCtx.createOscillator();
+  var g = audioCtx.createGain();
+  o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+  o1.type = 'sine'; o1.frequency.value = 740;
+  o2.type = 'sine'; o2.frequency.value = 1110;
+  g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+  o1.start(); o2.start(); o1.stop(audioCtx.currentTime+0.25); o2.stop(audioCtx.currentTime+0.25);
+}
+
+function playArtworkSound(){
+  if(!audioCtx) return;
+  [880, 1110, 1320].forEach(function(f, i){
+    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.08, audioCtx.currentTime + i*0.04);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4 + i*0.04);
+    o.start(audioCtx.currentTime + i*0.04); o.stop(audioCtx.currentTime + 0.4 + i*0.04);
+  });
+}
+
+function playShitcoinSound(){
+  if(!audioCtx) return;
+  // Goofy descending bloop
+  var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'square';
+  o.frequency.setValueAtTime(600, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.2);
+  g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+  o.start(); o.stop(audioCtx.currentTime + 0.25);
+  // Second bloop
+  var o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.type = 'square';
+  o2.frequency.setValueAtTime(400, audioCtx.currentTime + 0.08);
+  o2.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+  g2.gain.setValueAtTime(0.06, audioCtx.currentTime + 0.08);
+  g2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+  o2.start(audioCtx.currentTime+0.08); o2.stop(audioCtx.currentTime+0.3);
+}
+
+function playServantCoinSound(){
+  if(!audioCtx) return;
+  // Epic ascending chime — triple arpeggio
+  var freqs = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+  freqs.forEach(function(f, i){
+    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine'; o.frequency.value = f;
+    var t = audioCtx.currentTime + i*0.06;
+    g.gain.setValueAtTime(0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    o.start(t); o.stop(t + 0.5);
+  });
+  // Shimmer
+  var o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.type = 'triangle'; o2.frequency.value = 1568;
+  g2.gain.setValueAtTime(0.06, audioCtx.currentTime + 0.1);
+  g2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.7);
+  o2.start(audioCtx.currentTime + 0.1); o2.stop(audioCtx.currentTime + 0.7);
+}
+
+function playDeathSound(){
+  if(!audioCtx) return;
+  var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(200, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.5);
+  g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+  o.start(); o.stop(audioCtx.currentTime + 0.5);
+}
+
+function playLandSound(){
+  if(!audioCtx) return;
+  var buf = audioCtx.createBufferSource();
+  var buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.08, audioCtx.sampleRate);
+  var data = buffer.getChannelData(0);
+  for(var i=0;i<data.length;i++) data[i] = (Math.random()*2-1) * Math.exp(-i/(audioCtx.sampleRate*0.015));
+  buf.buffer = buffer;
+  var filt = audioCtx.createBiquadFilter();
+  filt.type = 'lowpass'; filt.frequency.value = 150;
+  var g = audioCtx.createGain(); g.gain.value = 0.15;
+  buf.connect(filt); filt.connect(g); g.connect(audioCtx.destination);
+  buf.start();
+}
+
+function playBoostLaunchSound(){
+  if(!audioCtx) return;
+  var t = audioCtx.currentTime;
+  // Rising shimmer — ascending sine sweep
+  var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(200, t);
+  o.frequency.exponentialRampToValueAtTime(1200, t+1.5);
+  g.gain.setValueAtTime(0.15, t);
+  g.gain.linearRampToValueAtTime(0.08, t+1.2);
+  g.gain.exponentialRampToValueAtTime(0.001, t+2);
+  o.start(t); o.stop(t+2);
+
+  // Pad chord underneath
+  var freqs = [261.6, 329.6, 392, 523.2]; // C major chord
+  for(var i=0;i<freqs.length;i++){
+    var p = audioCtx.createOscillator(), pg = audioCtx.createGain();
+    var pf = audioCtx.createBiquadFilter();
+    p.connect(pf); pf.connect(pg); pg.connect(audioCtx.destination);
+    p.type = 'triangle';
+    p.frequency.value = freqs[i];
+    pf.type = 'lowpass'; pf.frequency.value = 800;
+    pg.gain.setValueAtTime(0, t);
+    pg.gain.linearRampToValueAtTime(0.04, t+0.3);
+    pg.gain.linearRampToValueAtTime(0.04, t+1.5);
+    pg.gain.exponentialRampToValueAtTime(0.001, t+2.5);
+    p.start(t); p.stop(t+2.5);
+  }
+}
+
+function playBoostCollectSound(pitch){
+  if(!audioCtx) return;
+  var t = audioCtx.currentTime;
+  var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(600+(pitch||0)*100, t);
+  o.frequency.exponentialRampToValueAtTime(1200+(pitch||0)*80, t+0.08);
+  g.gain.setValueAtTime(0.08, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+0.15);
+  o.start(t); o.stop(t+0.2);
+}
+
+function playBoostReentrySound(){
+  if(!audioCtx) return;
+  var t = audioCtx.currentTime;
+  // Descending whoosh
+  var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  var f = audioCtx.createBiquadFilter();
+  o.connect(f); f.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  f.type = 'lowpass';
+  o.frequency.setValueAtTime(800, t);
+  o.frequency.exponentialRampToValueAtTime(100, t+1);
+  f.frequency.setValueAtTime(2000, t);
+  f.frequency.exponentialRampToValueAtTime(200, t+1);
+  g.gain.setValueAtTime(0.1, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+1.2);
+  o.start(t); o.stop(t+1.3);
+}
+
+// ── Galaxy Boost Logic ──
+function triggerGalaxyBoost(){
+  boostState = 'launching';
+  boostTimer = 0;
+  galaxyCollectibles = [];
+  galaxyStars = [];
+  galaxyScore = 0;
+  boostFlashAlpha = 1;
+  playerOrigY = player.y;
+  boostCombo++;
+  playBoostLaunchSound();
+  showNotification('G A L A X Y   B O O S T', 'rgba(100,200,255,1)');
+
+  // Pre-generate galaxy star field
+  for(var i=0;i<300;i++){
+    galaxyStars.push({
+      x: Math.random()*W*4,
+      y: Math.random()*H,
+      size: 0.5+Math.random()*3,
+      brightness: 0.3+Math.random()*0.7,
+      speed: 2+Math.random()*8,
+      color: Math.random()>0.8 ? (Math.random()>0.5?'180,220,255':'255,200,100') : '255,255,255'
+    });
+  }
+
+  // Pre-spawn galaxy collectibles — lots of them!
+  var spacing = 60*SCALE;
+  for(var j=0;j<40;j++){
+    var gx = W + spacing*j + Math.random()*30*SCALE;
+    var gy = 50*SCALE + Math.random()*(H-200*SCALE);
+    var roll = Math.random();
+    var gc = { x:gx, y:gy, collected:false, bobOffset:Math.random()*Math.PI*2 };
+
+    if(roll < 0.45){
+      // Star bag — special galaxy version
+      gc.type = 'starbag';
+      gc.w = 34*SCALE; gc.h = 34*SCALE;
+      gc.value = 3;
+    } else if(roll < 0.75){
+      // Gold coin burst
+      gc.type = 'galaxycoin';
+      gc.w = 28*SCALE; gc.h = 28*SCALE;
+      gc.value = 2;
+      gc.spinAngle = Math.random()*Math.PI*2;
+    } else if(roll < 0.90){
+      // Servant coin — more common in galaxy!
+      gc.type = 'galaxyservant';
+      gc.w = 36*SCALE; gc.h = 36*SCALE;
+      gc.value = 10;
+      gc.spinAngle = Math.random()*Math.PI*2;
+    } else {
+      // Mega star — big points
+      gc.type = 'megastar';
+      gc.w = 50*SCALE; gc.h = 50*SCALE;
+      gc.value = 15;
+    }
+    galaxyCollectibles.push(gc);
+  }
+}
+
+function updateGalaxyBoost(){
+  boostTimer++;
+  boostFlashAlpha *= 0.95;
+
+  if(boostState === 'launching'){
+    // Player rises off screen over ~60 frames
+    var launchProgress = Math.min(boostTimer/60, 1);
+    var ease = 1-Math.pow(1-launchProgress, 3); // ease-out cubic
+    player.y = playerOrigY - ease*(playerOrigY+player.h*SCALE+50*SCALE);
+    player.tilt = -0.3*ease;
+    player.stretch = 1+0.4*ease;
+    player.squash = 1-0.2*ease;
+
+    if(boostTimer >= 60){
+      boostState = 'galaxy';
+      boostTimer = 0;
+      player.y = H*0.45; // center of screen in galaxy
+      player.tilt = 0;
+      player.squash = 1; player.stretch = 1;
+    }
+  }
+
+  else if(boostState === 'galaxy'){
+    // Galaxy flight! Player floats in center, collectibles stream past
+    var floatY = H*0.45 + Math.sin(boostTimer/30)*30*SCALE;
+    player.y = floatY;
+    player.tilt = Math.sin(boostTimer/20)*0.08;
+
+    // Allow vertical movement via tap (quick dodge up)
+    // Player can tap to rise, gravity pulls back to center
+
+    // Scroll galaxy stars
+    for(var si=0;si<galaxyStars.length;si++){
+      var gs = galaxyStars[si];
+      gs.x -= gs.speed*SCALE;
+      if(gs.x < -10){ gs.x = W+Math.random()*200; gs.y=Math.random()*H; }
+    }
+
+    // Scroll and collect galaxy collectibles
+    var galSpeed = (6+boostCombo)*SCALE;
+    var pw = player.w*SCALE*0.8, ph = player.h*SCALE*0.8;
+    var px = player.x + (player.w*SCALE-pw)/2;
+    var py = player.y + (player.h*SCALE-ph)/2;
+
+    for(var ci=galaxyCollectibles.length-1;ci>=0;ci--){
+      var gc = galaxyCollectibles[ci];
+      gc.x -= galSpeed;
+      if(gc.spinAngle!==undefined) gc.spinAngle += 0.1;
+
+      if(!gc.collected){
+        var bobY = Math.sin(Date.now()/250+gc.bobOffset)*8*SCALE;
+        if(rectsOverlap(px,py,pw,ph, gc.x, gc.y+bobY, gc.w, gc.h)){
+          gc.collected = true;
+          galaxyScore += gc.value;
+          score += gc.value;
+          playBoostCollectSound(galaxyScore%8);
+
+          // Sparkle particles
+          for(var k=0;k<6;k++){
+            particles.push({
+              x:gc.x+gc.w/2, y:gc.y+bobY+gc.h/2,
+              vx:(Math.random()-0.5)*6*SCALE, vy:(Math.random()-0.5)*6*SCALE,
+              life:15+Math.random()*10, maxLife:25, size:2+Math.random()*4,
+              color: gc.type==='megastar'?'rgba(255,255,200,':'rgba(100,200,255,'
+            });
+          }
+
+          if(gc.type==='starbag') coins++;
+          if(gc.type==='galaxyservant') servantCoins++;
+        }
+      }
+    }
+
+    // End galaxy phase
+    if(boostTimer >= boostDuration){
+      boostState = 'reentry';
+      boostTimer = 0;
+      playBoostReentrySound();
+      showNotification('GALAXY HAUL: +' + galaxyScore, 'rgba(255,220,100,1)');
+    }
+  }
+
+  else if(boostState === 'reentry'){
+    // Player descends back to ground over ~50 frames
+    var reentryProgress = Math.min(boostTimer/50, 1);
+    var ease = reentryProgress*reentryProgress; // ease-in
+    var targetY = GROUND_Y - player.h*SCALE;
+    player.y = -player.h*SCALE + ease*(targetY + player.h*SCALE);
+    player.tilt = 0.2*(1-reentryProgress);
+    player.stretch = 1+0.3*(1-reentryProgress);
+    player.squash = 1-0.15*(1-reentryProgress);
+
+    if(boostTimer >= 50){
+      boostState = 'none';
+      boostTimer = 0;
+      player.y = targetY;
+      player.vy = 0;
+      player.onGround = true;
+      player.jumpCount = 0;
+      player.tilt = 0;
+      player.squash = 1.3; player.stretch = 0.7; // landing squash
+      boostInvulnTimer = 90; // ~1.5s invulnerability after landing
+      boostFlashAlpha = 0.5;
+      // Increase threshold for next boost
+      BOOST_THRESHOLD = Math.min(25, BOOST_THRESHOLD + 3);
+
+      // Landing particles
+      for(var k=0;k<15;k++){
+        particles.push({
+          x:player.x+player.w*SCALE/2, y:GROUND_Y,
+          vx:(Math.random()-0.5)*8*SCALE, vy:-Math.random()*5*SCALE,
+          life:20+Math.random()*15, maxLife:35, size:3+Math.random()*5,
+          color:k%3===0?'rgba(100,200,255,':'rgba(220,170,60,'
+        });
+      }
+    }
+  }
+}
+
+function drawGalaxyScene(){
+  // Deep space background
+  X.fillStyle='#050310'; X.fillRect(0,0,W,H);
+
+  // Warp speed streaks
+  var warpIntensity = boostState==='galaxy'?1:0.5;
+  for(var si=0;si<galaxyStars.length;si++){
+    var gs = galaxyStars[si];
+    var streakLen = gs.speed*3*warpIntensity*SCALE;
+    var a = gs.brightness*warpIntensity;
+    X.strokeStyle='rgba('+gs.color+','+a+')';
+    X.lineWidth = gs.size*0.5*SCALE;
+    X.beginPath();
+    X.moveTo(gs.x, gs.y);
+    X.lineTo(gs.x+streakLen, gs.y);
+    X.stroke();
+    // Star point
+    X.beginPath();X.arc(gs.x,gs.y,gs.size*0.6*SCALE,0,Math.PI*2);
+    X.fillStyle='rgba('+gs.color+','+a+')';X.fill();
+  }
+
+  // Nebula swirls
+  var t = Date.now()/3000;
+  for(var ni=0;ni<3;ni++){
+    var nx = W*(0.3+ni*0.25)+Math.sin(t+ni*2)*100*SCALE;
+    var ny = H*0.4+Math.cos(t*0.7+ni)*80*SCALE;
+    var nr = (120+ni*50)*SCALE;
+    var ng = X.createRadialGradient(nx,ny,0,nx,ny,nr);
+    var colors = [
+      ['rgba(60,100,200,0.08)','rgba(60,100,200,0)'],
+      ['rgba(150,60,180,0.06)','rgba(150,60,180,0)'],
+      ['rgba(60,180,200,0.07)','rgba(60,180,200,0)']
+    ];
+    ng.addColorStop(0,colors[ni][0]);
+    ng.addColorStop(1,colors[ni][1]);
+    X.fillStyle=ng; X.fillRect(0,0,W,H);
+  }
+
+  // Galaxy collectibles
+  for(var ci=0;ci<galaxyCollectibles.length;ci++){
+    var gc = galaxyCollectibles[ci];
+    if(gc.collected || gc.x+gc.w<-20 || gc.x>W+100) continue;
+    var bobY = Math.sin(Date.now()/250+gc.bobOffset)*8*SCALE;
+    var cx = gc.x, cy = gc.y+bobY;
+
+    if(gc.type==='starbag'){
+      // Star bag — bag with a star glow
+      X.save();X.translate(cx+gc.w/2,cy+gc.h/2);
+      var starGlow = X.createRadialGradient(0,0,gc.w*0.2,0,0,gc.w*0.8);
+      starGlow.addColorStop(0,'rgba(100,200,255,0.3)');
+      starGlow.addColorStop(1,'rgba(100,200,255,0)');
+      X.fillStyle=starGlow; X.fillRect(-gc.w,-gc.h,gc.w*2,gc.h*2);
+      // Draw the bag image
+      if(imgBags.complete && imgBags.naturalWidth>0){
+        X.drawImage(imgBags,-gc.w/2,-gc.h/2,gc.w,gc.h);
+      } else {
+        X.fillStyle='#64c8ff'; X.fillRect(-gc.w/2,-gc.h/2,gc.w,gc.h);
+      }
+      // Star overlay
+      X.font='bold '+(gc.w*0.4)+'px serif';
+      X.fillStyle='rgba(255,255,255,0.7)'; X.textAlign='center'; X.textBaseline='middle';
+      X.fillText('\u2605',0,0);
+      X.restore();
+    }
+    else if(gc.type==='galaxycoin'){
+      // Spinning gold coin
+      X.save();X.translate(cx+gc.w/2,cy+gc.h/2);
+      var scaleX = Math.cos(gc.spinAngle||0);
+      X.scale(Math.abs(scaleX)+0.1,1);
+      X.beginPath();X.arc(0,0,gc.w/2,0,Math.PI*2);
+      var cGrad = X.createRadialGradient(-gc.w*0.15,-gc.w*0.15,gc.w*0.05,0,0,gc.w/2);
+      cGrad.addColorStop(0,'#fff8d0');cGrad.addColorStop(0.5,'#f0d060');cGrad.addColorStop(1,'#c9a030');
+      X.fillStyle=cGrad;X.fill();
+      X.strokeStyle='rgba(255,255,200,0.5)';X.lineWidth=1.5*SCALE;X.stroke();
+      X.font='bold '+(gc.w*0.45)+'px JetBrains Mono';
+      X.fillStyle='rgba(160,120,20,0.8)';X.textAlign='center';X.textBaseline='middle';
+      X.fillText('$',0,1*SCALE);
+      X.restore();
+    }
+    else if(gc.type==='galaxyservant'){
+      // Servant coin with cosmic aura
+      drawServantCoin(cx, cy, gc.w, gc.h, gc.spinAngle||0);
+      // Extra cosmic ring
+      X.save();X.translate(cx+gc.w/2,cy+gc.h/2);
+      X.strokeStyle='rgba(100,200,255,0.3)';
+      X.lineWidth=2*SCALE;
+      X.beginPath();X.arc(0,0,gc.w*0.8,0,Math.PI*2);X.stroke();
+      X.restore();
+    }
+    else if(gc.type==='megastar'){
+      // Big pulsing star
+      X.save();X.translate(cx+gc.w/2,cy+gc.h/2);
+      var starPulse = 0.9+Math.sin(Date.now()/200)*0.1;
+      X.scale(starPulse,starPulse);
+      // Outer glow
+      var mglow = X.createRadialGradient(0,0,gc.w*0.1,0,0,gc.w*0.7);
+      mglow.addColorStop(0,'rgba(255,255,200,0.4)');
+      mglow.addColorStop(0.5,'rgba(255,200,100,0.15)');
+      mglow.addColorStop(1,'rgba(255,200,100,0)');
+      X.fillStyle=mglow; X.fillRect(-gc.w,-gc.h,gc.w*2,gc.h*2);
+      // 5-pointed star shape
+      X.beginPath();
+      for(var sp=0;sp<10;sp++){
+        var angle = sp*Math.PI/5 - Math.PI/2;
+        var rad = sp%2===0 ? gc.w*0.4 : gc.w*0.18;
+        if(sp===0) X.moveTo(Math.cos(angle)*rad, Math.sin(angle)*rad);
+        else X.lineTo(Math.cos(angle)*rad, Math.sin(angle)*rad);
+      }
+      X.closePath();
+      var starGrad = X.createLinearGradient(-gc.w/2,-gc.w/2,gc.w/2,gc.w/2);
+      starGrad.addColorStop(0,'#fff8d0');starGrad.addColorStop(0.5,'#ffd700');starGrad.addColorStop(1,'#ffaa00');
+      X.fillStyle=starGrad;X.fill();
+      X.strokeStyle='rgba(255,255,255,0.6)';X.lineWidth=1*SCALE;X.stroke();
+      X.restore();
+    }
+  }
+
+  // "GALAXY BOOST" text at top
+  if(boostState==='galaxy'){
+    var gba = 0.4+Math.sin(Date.now()/300)*0.2;
+    X.save();X.textAlign='center';
+    X.font='700 '+(14*SCALE)+'px JetBrains Mono';
+    X.fillStyle='rgba(100,200,255,'+gba+')';
+    X.fillText('G A L A X Y   B O O S T', W/2, 25*SCALE);
+    // Timer bar
+    var barW = W*0.5;
+    var barH = 4*SCALE;
+    var barX = W/2-barW/2;
+    var barY = 35*SCALE;
+    var progress = 1-boostTimer/boostDuration;
+    X.fillStyle='rgba(100,200,255,0.15)'; X.fillRect(barX,barY,barW,barH);
+    var bGrad = X.createLinearGradient(barX,barY,barX+barW*progress,barY);
+    bGrad.addColorStop(0,'rgba(100,200,255,0.8)');bGrad.addColorStop(1,'rgba(200,150,255,0.8)');
+    X.fillStyle=bGrad; X.fillRect(barX,barY,barW*progress,barH);
+    // Score in galaxy
+    X.font='700 '+(12*SCALE)+'px JetBrains Mono';
+    X.fillStyle='rgba(255,220,100,0.8)';
+    X.fillText('+'+galaxyScore, W/2, 52*SCALE);
+    X.restore();
+  }
+}
+
+function drawBoostMeter(){
+  if(boostState!=='none') return;
+  if(boostMeter <= 0) return;
+
+  // Small meter above player or at side of HUD
+  var meterW = 60*SCALE;
+  var meterH = 6*SCALE;
+  var meterX = player.x + player.w*SCALE/2 - meterW/2;
+  var meterY = player.y - 16*SCALE;
+  var fill = Math.min(boostMeter/BOOST_THRESHOLD, 1);
+
+  // Background
+  X.fillStyle='rgba(10,10,20,0.5)';
+  X.fillRect(meterX-1*SCALE, meterY-1*SCALE, meterW+2*SCALE, meterH+2*SCALE);
+
+  // Fill bar with color transition
+  if(fill < 1){
+    var mGrad = X.createLinearGradient(meterX,meterY,meterX+meterW*fill,meterY);
+    mGrad.addColorStop(0,'rgba(100,200,255,0.7)');
+    mGrad.addColorStop(1,'rgba(150,100,255,0.7)');
+    X.fillStyle=mGrad;
+  } else {
+    // Full — pulsing gold!
+    var pulse = 0.7+Math.sin(Date.now()/200)*0.3;
+    X.fillStyle='rgba(255,220,100,'+pulse+')';
+  }
+  X.fillRect(meterX, meterY, meterW*fill, meterH);
+
+  // Border
+  X.strokeStyle='rgba(100,200,255,0.3)';
+  X.lineWidth=0.5*SCALE;
+  X.strokeRect(meterX, meterY, meterW, meterH);
+
+  // Label when full
+  if(fill >= 1){
+    var lp = 0.5+Math.sin(Date.now()/300)*0.5;
+    X.font='700 '+(8*SCALE)+'px JetBrains Mono';
+    X.fillStyle='rgba(255,220,100,'+lp+')';
+    X.textAlign='center';
+    X.fillText('BOOST READY', meterX+meterW/2, meterY-4*SCALE);
+  }
+}
+
+// ═══════════════════════════════════════════
+// ── HAUNTING PIANO + DEEP SPACE AMBIENCE ──
+// Slow, sparse, melancholic piano notes
+// over a vast cosmic drone
+// ═══════════════════════════════════════════
+
+var musicStartTime = 0;
+var BPM = 60; // very slow
+var BEAT = 60 / BPM;
+
+// Notes — minor keys, sad intervals
+var N = {
+  A1:55, B1:61.74, C2:65.41, D2:73.42, E2:82.41, F2:87.31, G2:98, A2:110, B2:123.47,
+  C3:130.81, D3:146.83, E3:164.81, F3:174.61, G3:196, A3:220, B3:246.94,
+  C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392, A4:440, B4:493.88,
+  C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99
+};
+
+// ── Piano tone: sine + soft harmonics with natural decay ──
+function pianoNote(freq, startT, dur, vol){
+  // A real piano is a struck string — fast attack, long decay, warm harmonics
+  var harmonics = [1, 2, 3, 4.01, 5.02]; // slight detuning for warmth
+  var vols = [1, 0.35, 0.12, 0.06, 0.03];
+  var decays = [1, 0.7, 0.5, 0.35, 0.25]; // higher harmonics die faster
+
+  harmonics.forEach(function(h, i){
+    var osc = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq * h;
+    var filt = audioCtx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.value = 2000 - i*300; // darker for upper harmonics
+
+    // Piano envelope: instant attack, exponential decay
+    var noteVol = vol * vols[i];
+    var noteDur = dur * decays[i];
+    g.gain.setValueAtTime(noteVol, startT);
+    g.gain.setValueAtTime(noteVol * 0.8, startT + 0.02);
+    g.gain.exponentialRampToValueAtTime(Math.max(noteVol * 0.01, 0.0001), startT + noteDur);
+
+    osc.connect(filt); filt.connect(g); g.connect(musicGain);
+    osc.start(startT); osc.stop(startT + noteDur + 0.1);
+    musicNodes.push(osc);
+  });
+}
+
+// ── Deep space drone: very low, slow-moving, vast ──
+function spaceDrone(freq, startT, dur, vol){
+  var osc = audioCtx.createOscillator();
+  var g = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+
+  // Very slow LFO for subtle pitch drift — feels alive
+  var lfo = audioCtx.createOscillator();
+  var lfoG = audioCtx.createGain();
+  lfo.frequency.value = 0.1 + Math.random()*0.15; // very slow wobble
+  lfoG.gain.value = freq * 0.008; // tiny pitch variation
+  lfo.connect(lfoG); lfoG.connect(osc.frequency);
+  lfo.start(startT); lfo.stop(startT + dur + 0.5);
+  musicNodes.push(lfo);
+
+  // Fade in and out very slowly
+  g.gain.setValueAtTime(0, startT);
+  g.gain.linearRampToValueAtTime(vol, startT + dur*0.3);
+  g.gain.setValueAtTime(vol, startT + dur*0.7);
+  g.gain.linearRampToValueAtTime(0, startT + dur);
+
+  var filt = audioCtx.createBiquadFilter();
+  filt.type = 'lowpass';
+  filt.frequency.value = 200;
+
+  osc.connect(filt); filt.connect(g); g.connect(musicGain);
+  osc.start(startT); osc.stop(startT + dur + 0.5);
+  musicNodes.push(osc);
+}
+
+// ── Cosmic shimmer: filtered noise, like distant solar wind ──
+function cosmicShimmer(startT, dur, vol){
+  var buf = audioCtx.createBufferSource();
+  var len = Math.floor(audioCtx.sampleRate * dur);
+  var buffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  var d = buffer.getChannelData(0);
+  // Slow-modulated noise
+  for(var i=0;i<len;i++){
+    var env = Math.sin(i/len * Math.PI); // fade in/out
+    d[i] = (Math.random()*2-1) * env * 0.5;
+  }
+  buf.buffer = buffer;
+
+  var bp = audioCtx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 400 + Math.random()*300;
+  bp.Q.value = 0.5;
+
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0, startT);
+  g.gain.linearRampToValueAtTime(vol, startT + dur*0.4);
+  g.gain.linearRampToValueAtTime(0, startT + dur);
+
+  buf.connect(bp); bp.connect(g); g.connect(musicGain);
+  buf.start(startT);
+  musicNodes.push(buf);
+}
+
+// ── Reverse-ish swell: builds from nothing — ghostly ──
+function ghostSwell(freq, startT, dur, vol){
+  var osc = audioCtx.createOscillator();
+  var g = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = freq;
+
+  var filt = audioCtx.createBiquadFilter();
+  filt.type = 'lowpass';
+  // Filter opens slowly — sounds like it's emerging from the void
+  filt.frequency.setValueAtTime(80, startT);
+  filt.frequency.exponentialRampToValueAtTime(1200, startT + dur*0.8);
+  filt.frequency.exponentialRampToValueAtTime(80, startT + dur);
+
+  g.gain.setValueAtTime(0, startT);
+  g.gain.linearRampToValueAtTime(vol, startT + dur*0.7);
+  g.gain.linearRampToValueAtTime(0, startT + dur);
+
+  osc.connect(filt); filt.connect(g); g.connect(musicGain);
+  osc.start(startT); osc.stop(startT + dur + 0.2);
+  musicNodes.push(osc);
+}
+
+function startMusic(){
+  if(!audioCtx || musicPlaying) return;
+  musicPlaying = true;
+
+  musicGain = audioCtx.createGain();
+  musicGain.gain.value = 0.35;
+  musicGain.connect(audioCtx.destination);
+
+  scheduleMusicLoop();
+}
+
+var musicLoopTimer = null;
+
+function scheduleMusicLoop(){
+  if(!musicPlaying || !audioCtx) return;
+
+  var now = audioCtx.currentTime;
+  var B = BEAT; // 1 second per beat at 60bpm
+  var loopBeats = 32; // 32 seconds
+  var loopDuration = loopBeats * B;
+
+  // ═══ LAYER 1: DEEP SPACE DRONES ═══
+  // Sub-bass hum that slowly shifts — the void beneath everything
+  spaceDrone(N.A1, now, loopDuration, 0.12);
+  spaceDrone(N.E2, now, loopDuration, 0.06);
+  // Second drone enters halfway, slightly different pitch = beating
+  spaceDrone(55.5, now + 16*B, 16*B, 0.08); // slightly detuned A1
+
+  // ═══ LAYER 2: COSMIC SHIMMER ═══
+  // Distant filtered noise — solar wind, radiation hiss
+  cosmicShimmer(now + 2*B, 12*B, 0.03);
+  cosmicShimmer(now + 18*B, 10*B, 0.025);
+
+  // ═══ LAYER 3: HAUNTING PIANO ═══
+  // Sparse, slow, melancholic — each note rings out alone in the void
+  // Am - Dm - Em - Am progression, broken chords
+
+  var piano = [
+    // Bar 1-4: opening — Am broken chord, very sparse
+    [N.A3, 0, 4, 0.12],
+    [N.C4, 1, 3.5, 0.09],
+    [N.E4, 2.5, 3, 0.08],
+
+    // Bar 5-8: Dm — shifts the mood
+    [N.D3, 5, 4, 0.11],
+    [N.F4, 6, 3, 0.08],
+    [N.A4, 7.5, 3, 0.07],
+
+    // Bar 9-12: Em — tension
+    [N.E3, 9, 4, 0.11],
+    [N.G4, 10, 3, 0.08],
+    [N.B4, 11.5, 3, 0.07],
+    [N.E5, 12.5, 2.5, 0.05],  // high note — aching
+
+    // Bar 13-16: Am resolve — but sadder
+    [N.A3, 14, 4, 0.12],
+    [N.E4, 15, 3, 0.08],
+    [N.A4, 16, 3.5, 0.06],
+
+    // Bar 17-20: second pass — Fmaj, more space between
+    [N.F3, 18, 4, 0.10],
+    [N.A4, 19.5, 3, 0.07],
+    [N.C5, 20.5, 3, 0.06],
+
+    // Bar 21-24: G — reaching upward
+    [N.G3, 22, 4, 0.10],
+    [N.B4, 23, 3, 0.07],
+    [N.D5, 24.5, 2.5, 0.06],
+
+    // Bar 25-28: Am again — the return
+    [N.A3, 26, 4, 0.11],
+    [N.C5, 27, 3, 0.07],
+    [N.E5, 28, 3, 0.05],  // highest point — lonely
+
+    // Bar 29-32: final descent — E alone
+    [N.E3, 29.5, 4, 0.10],
+    [N.B3, 30.5, 3, 0.07]
+  ];
+
+  piano.forEach(function(p){
+    pianoNote(p[0], now + p[1]*B, p[2]*B, p[3]);
+  });
+
+  // ═══ LAYER 4: GHOST SWELLS ═══
+  // Occasional reverse-style pads that bloom from silence
+  ghostSwell(N.A3, now + 4*B, 6*B, 0.04);
+  ghostSwell(N.E4, now + 13*B, 5*B, 0.03);
+  ghostSwell(N.A4, now + 22*B, 6*B, 0.035);
+  ghostSwell(N.C4, now + 28*B, 4*B, 0.03);
+
+  // Schedule next loop
+  musicLoopTimer = setTimeout(function(){
+    musicNodes = [];
+    scheduleMusicLoop();
+  }, (loopDuration - 0.5) * 1000);
+}
+
+function stopMusic(){
+  musicPlaying = false;
+  if(musicLoopTimer) clearTimeout(musicLoopTimer);
+  musicNodes.forEach(function(n){ try { n.stop(); } catch(e){} });
+  musicNodes = [];
+  if(musicGain){
+    try { musicGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5); } catch(e){}
+  }
+}
+
+// ── Resize ──
+function resize(){
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  C.width = W * dpr;
+  C.height = H * dpr;
+  C.style.width = W + 'px';
+  C.style.height = H + 'px';
+  X.setTransform(dpr, 0, 0, dpr, 0, 0);
+  SCALE = W / BASE_W;
+  GROUND_Y = H - 80 * SCALE;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ── Input ──
+var jumpPressed = false;
+
+function doJump(){
+  ensureAudio();
+  if(STATE === 'menu'){
+    startGame();
+    return;
+  }
+  if(STATE === 'dead'){
+    if(frameCount > 30) startGame();
+    return;
+  }
+  // During galaxy boost, tap moves player up
+  if(boostState === 'galaxy'){
+    player.y -= 40*SCALE;
+    if(player.y < 20*SCALE) player.y = 20*SCALE;
+    return;
+  }
+  // During launch/reentry, ignore taps
+  if(boostState === 'launching' || boostState === 'reentry') return;
+
+  if(player.jumpCount < player.maxJumps){
+    if(player.jumpCount === 0){
+      player.vy = JUMP_FORCE * SCALE;
+      player.squash = 0.7; player.stretch = 1.3;
+      playJumpSound();
+    } else {
+      player.vy = DOUBLE_JUMP_FORCE * SCALE;
+      player.squash = 0.6; player.stretch = 1.4;
+      playDoubleJumpSound();
+      for(var i=0;i<8;i++){
+        particles.push({
+          x: player.x + player.w*SCALE/2, y: player.y + player.h*SCALE,
+          vx: (Math.random()-0.5)*3*SCALE, vy: Math.random()*2*SCALE,
+          life: 20+Math.random()*15, maxLife: 35, size: 3+Math.random()*4,
+          color: 'rgba(220,170,60,'
+        });
+      }
+    }
+    player.jumpCount++;
+    player.onGround = false;
+  }
+}
+
+window.addEventListener('keydown', function(e){
+  if(e.code==='Space'||e.code==='ArrowUp'||e.key==='w'){
+    e.preventDefault();
+    if(!jumpPressed){ jumpPressed=true; doJump(); }
+  }
+});
+window.addEventListener('keyup', function(e){
+  if(e.code==='Space'||e.code==='ArrowUp'||e.key==='w') jumpPressed=false;
+});
+C.addEventListener('pointerdown', function(e){ e.preventDefault(); doJump(); });
+
+// ── Spawn helpers ──
+var spawnTimer = 0;
+var collectibleTimer = 0;
+var difficultyLevel = 0;
+
+function spawnObstacle(){
+  var types = ['skull','skull','brokenkey'];
+  if(difficultyLevel > 2) types.push('skull_tall');
+  if(difficultyLevel > 4) types.push('double_skull');
+  var type = types[Math.floor(Math.random()*types.length)];
+  var ob = { x: W+20, type: type, passed: false };
+  if(type==='skull'){ ob.w=36*SCALE; ob.h=40*SCALE; }
+  else if(type==='skull_tall'){ ob.w=36*SCALE; ob.h=60*SCALE; }
+  else if(type==='double_skull'){ ob.w=60*SCALE; ob.h=40*SCALE; }
+  else if(type==='brokenkey'){ ob.w=28*SCALE; ob.h=55*SCALE; }
+  ob.y = GROUND_Y - ob.h;
+  obstacles.push(ob);
+}
+
+function spawnCollectible(){
+  var roll = Math.random();
+  var c = { x: W+20, collected: false, bobOffset: Math.random()*Math.PI*2 };
+
+  if(roll < 0.45){
+    // Bag (45%)
+    c.type = 'bag';
+    c.w = 32*SCALE; c.h = 32*SCALE;
+    c.y = Math.random()<0.4 ? GROUND_Y - c.h - (80+Math.random()*60)*SCALE : GROUND_Y - c.h - 5*SCALE;
+    c.value = 1;
+  } else if(roll < 0.72){
+    // Shitcoin prize (27%)
+    c.type = 'shitcoin';
+    var sc = shitcoinPool[Math.floor(Math.random()*shitcoinPool.length)];
+    c.ticker = sc.ticker;
+    c.coinColor = sc.color;
+    c.desc = sc.desc;
+    c.w = 30*SCALE; c.h = 30*SCALE;
+    c.y = GROUND_Y - c.h - (40+Math.random()*100)*SCALE;
+    c.value = 2;
+    c.spinAngle = Math.random()*Math.PI*2;
+  } else if(roll < 0.90){
+    // Artwork (18%)
+    var artIdx = Math.floor(Math.random()*artworkPool.length);
+    c.type = 'artwork';
+    c.artName = artworkPool[artIdx].name;
+    c.w = 44*SCALE; c.h = 44*SCALE;
+    c.y = GROUND_Y - c.h - (100+Math.random()*80)*SCALE;
+    c.value = 5;
+    c.glow = 0;
+  } else {
+    // SERVANT COIN — ultra rare bonus (10%)
+    c.type = 'servant';
+    c.w = 40*SCALE; c.h = 40*SCALE;
+    c.y = GROUND_Y - c.h - (120+Math.random()*100)*SCALE; // always high up
+    c.value = 25;
+    c.spinAngle = Math.random()*Math.PI*2;
+  }
+  collectibles.push(c);
+}
+
+// ── Background ──
+// ── Background layer types for the fever dream ──
+var bgLayers = []; // parallax layers (far, mid, near)
+var bgStars = [];
+var bgStructures = []; // staircases, pipes, clocks, doors, pianos
+
+function initBackground(){
+  bgElements = [];
+  bgLayers = [];
+  bgStars = [];
+  bgStructures = [];
+
+  // Deep space stars — hundreds of tiny dots
+  for(var s=0;s<200;s++){
+    bgStars.push({
+      x: Math.random()*W*3,
+      y: Math.random()*H*0.8,
+      size: 0.5 + Math.random()*2,
+      brightness: 0.2 + Math.random()*0.6,
+      twinkleSpeed: 1 + Math.random()*4,
+      speed: 0.1 + Math.random()*0.3
+    });
+  }
+
+  // Nebula clouds (far background)
+  for(var n=0;n<5;n++){
+    bgLayers.push({
+      type:'nebula',
+      x: Math.random()*W*2,
+      y: 30 + Math.random()*H*0.4,
+      w: 200 + Math.random()*400,
+      h: 100 + Math.random()*200,
+      color: ['rgba(100,30,80,','rgba(30,50,120,','rgba(80,20,60,','rgba(20,60,90,','rgba(60,10,40,'][n%5],
+      opacity: 0.04 + Math.random()*0.06,
+      speed: 0.15 + Math.random()*0.2
+    });
+  }
+
+  // Surreal structures — Escher staircases, Mario pipes, Alice doors, piano spirals, clock towers
+  var structureTypes = [
+    'staircase_escher','staircase_escher',
+    'mario_pipe','mario_pipe',
+    'alice_door','alice_door',
+    'piano_spiral','piano_spiral',
+    'clock_tower',
+    'floating_island',
+    'impossible_triangle',
+    'giant_key',
+    'mushroom',
+    'portal',
+    'blossom_tree'
+  ];
+
+  for(var i=0;i<20;i++){
+    var st = structureTypes[Math.floor(Math.random()*structureTypes.length)];
+    bgStructures.push({
+      type: st,
+      x: Math.random()*W*3,
+      y: 30 + Math.random()*(GROUND_Y-150),
+      size: 30 + Math.random()*80,
+      opacity: 0.04 + Math.random()*0.1,
+      speed: 0.3 + Math.random()*0.8,
+      rotation: Math.random()*0.3-0.15,
+      phase: Math.random()*Math.PI*2
+    });
+  }
+
+  groundTiles = [];
+  for(var j=0;j<Math.ceil(W/40)+4;j++) groundTiles.push({x:j*40});
+}
+
+// ── Start / Reset ──
+function startGame(){
+  STATE = 'playing';
+  score=0; distance=0; coins=0;
+  speed = 4.5*SCALE;
+  frameCount=0; difficultyLevel=0;
+  artworksCollected=[]; shitcoinsCollected=[]; servantCoins=0;
+  obstacles=[]; collectibles=[]; particles=[];
+  boostMeter=0; boostState='none'; boostTimer=0;
+  galaxyCollectibles=[]; galaxyStars=[]; galaxyScore=0;
+  boostFlashAlpha=0; boostCombo=0; boostInvulnTimer=0;
+  BOOST_THRESHOLD=15;
+
+  player.x = 80*SCALE;
+  player.y = GROUND_Y - player.h*SCALE;
+  player.vy=0; player.onGround=true;
+  player.jumpCount=0; player.tilt=0;
+  player.squash=1; player.stretch=1;
+
+  spawnTimer=0; collectibleTimer=0;
+  initBackground();
+  startMusic();
+}
+
+function die(){
+  STATE = 'dead';
+  frameCount = 0;
+  shakeTimer = 15;
+  flashTimer = 8;
+  flashColor = 'rgba(200,50,40,0.3)';
+  playDeathSound();
+  stopMusic();
+
+  for(var i=0;i<20;i++){
+    var angle = Math.random()*Math.PI*2;
+    var spd = 2+Math.random()*5;
+    particles.push({
+      x: player.x+player.w*SCALE/2, y: player.y+player.h*SCALE/2,
+      vx: Math.cos(angle)*spd*SCALE, vy: Math.sin(angle)*spd*SCALE-2*SCALE,
+      life: 30+Math.random()*20, maxLife:50, size: 3+Math.random()*5,
+      color: i%2===0?'rgba(200,50,40,':'rgba(220,170,60,'
+    });
+  }
+
+  var total = score + coins*10;
+  if(total > bestScore){
+    bestScore = total;
+    try { localStorage.setItem('ack_servant_run_best', bestScore.toString()); } catch(e){}
+  }
+}
+
+function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by;
+}
+
+// ── Draw helpers ──
+
+function drawSkull(cx, cy, w, h){
+  X.save(); X.translate(cx, cy);
+  X.fillStyle='#d4cfc0';
+  X.beginPath(); X.ellipse(w/2,h*0.38,w*0.42,h*0.38,0,0,Math.PI*2); X.fill();
+  X.fillStyle='#c4bfb0';
+  X.fillRect(w*0.2,h*0.55,w*0.6,h*0.22);
+  X.beginPath(); X.moveTo(w*0.2,h*0.77); X.lineTo(w*0.35,h*0.92); X.lineTo(w*0.65,h*0.92); X.lineTo(w*0.8,h*0.77); X.fill();
+  X.fillStyle='#1a0a0a';
+  X.beginPath(); X.ellipse(w*0.32,h*0.38,w*0.1,h*0.1,0,0,Math.PI*2); X.fill();
+  X.beginPath(); X.ellipse(w*0.68,h*0.38,w*0.1,h*0.1,0,0,Math.PI*2); X.fill();
+  X.fillStyle='rgba(200,50,40,0.7)';
+  X.beginPath(); X.ellipse(w*0.32,h*0.38,w*0.05,h*0.05,0,0,Math.PI*2); X.fill();
+  X.beginPath(); X.ellipse(w*0.68,h*0.38,w*0.05,h*0.05,0,0,Math.PI*2); X.fill();
+  X.fillStyle='#1a0a0a';
+  X.beginPath(); X.moveTo(w*0.45,h*0.48); X.lineTo(w*0.5,h*0.58); X.lineTo(w*0.55,h*0.48); X.fill();
+  X.fillStyle='#e8e4d8';
+  for(var t=0;t<4;t++) X.fillRect(w*0.3+t*w*0.11,h*0.72,w*0.08,h*0.08);
+  X.fillStyle='#1a0a0a';
+  for(var t=0;t<3;t++) X.fillRect(w*0.3+w*0.08+t*w*0.11,h*0.72,w*0.03,h*0.08);
+  X.restore();
+}
+
+function drawBrokenKey(cx, cy, w, h){
+  X.save(); X.translate(cx, cy);
+  X.fillStyle='#e8e4d8'; X.fillRect(0,0,w,h);
+  X.fillStyle='#d0cbc0'; X.fillRect(0,0,w,3*SCALE);
+  X.strokeStyle='#1a0a0a'; X.lineWidth=1.5*SCALE;
+  X.beginPath(); X.moveTo(w*0.3,0); X.lineTo(w*0.5,h*0.3); X.lineTo(w*0.35,h*0.5); X.lineTo(w*0.55,h*0.75); X.lineTo(w*0.4,h); X.stroke();
+  X.fillStyle='rgba(0,0,0,0.15)'; X.fillRect(w-2*SCALE,0,2*SCALE,h);
+  X.restore();
+}
+
+function drawBag(cx, cy, w, h){
+  if(imgBags.complete && imgBags.naturalWidth>0){
+    X.drawImage(imgBags, cx, cy, w, h);
+  } else {
+    X.fillStyle='#c9a84c';
+    X.beginPath(); X.arc(cx+w/2,cy+h*0.6,w*0.4,0,Math.PI*2); X.fill();
+  }
+}
+
+function drawShitcoin(cx, cy, w, h, color, ticker, spinAngle){
+  X.save();
+  X.translate(cx+w/2, cy+h/2);
+
+  // 3D spin effect — scale X based on cos of angle
+  var scaleX = Math.abs(Math.cos(spinAngle));
+  if(scaleX < 0.05) scaleX = 0.05;
+  X.scale(scaleX, 1);
+
+  // Coin body
+  X.fillStyle = color;
+  X.beginPath(); X.arc(0, 0, w/2, 0, Math.PI*2); X.fill();
+
+  // Highlight
+  X.fillStyle = 'rgba(255,255,255,0.2)';
+  X.beginPath(); X.arc(-w*0.1, -h*0.1, w*0.3, 0, Math.PI*2); X.fill();
+
+  // Ticker text (only show when facing enough)
+  if(scaleX > 0.4){
+    X.fillStyle = 'rgba(0,0,0,0.7)';
+    X.font = 'bold '+(7*SCALE/scaleX)+'px JetBrains Mono';
+    X.textAlign = 'center'; X.textBaseline = 'middle';
+    // Truncate ticker for fit
+    var label = ticker.replace('$','');
+    if(label.length > 5) label = label.substring(0,5);
+    X.fillText('$', 0, -3*SCALE);
+    X.font = 'bold '+(5*SCALE/scaleX)+'px JetBrains Mono';
+    X.fillText(label, 0, 4*SCALE);
+  }
+
+  X.restore();
+}
+
+function drawArtworkCollectible(cx, cy, w, h, artName, glowPhase){
+  X.save();
+  var glowAlpha = 0.3 + Math.sin(glowPhase)*0.2;
+  X.shadowColor = 'rgba(220,170,60,' + glowAlpha + ')';
+  X.shadowBlur = 15*SCALE;
+  X.fillStyle = '#c9a84c';
+  X.fillRect(cx-3*SCALE, cy-3*SCALE, w+6*SCALE, h+6*SCALE);
+  X.shadowBlur = 0;
+  var img = artworkImages[artName];
+  if(img && img.complete && img.naturalWidth>0){
+    X.drawImage(img, cx, cy, w, h);
+  } else {
+    X.fillStyle='#2a2020'; X.fillRect(cx,cy,w,h);
+    X.fillStyle='#c9a84c'; X.font='bold '+(9*SCALE)+'px JetBrains Mono';
+    X.textAlign='center'; X.fillText('ACK',cx+w/2,cy+h/2+3*SCALE); X.textAlign='left';
+  }
+  X.restore();
+}
+
+// ── Draw servant coin (ultra bonus, spinning 3D) ──
+function drawServantCoin(cx, cy, w, h, spinAngle){
+  X.save();
+  X.translate(cx+w/2, cy+h/2);
+
+  var cosA = Math.cos(spinAngle);
+  var scaleX = Math.abs(cosA);
+  if(scaleX < 0.05) scaleX = 0.05;
+  var showFace = cosA >= 0;
+
+  // Big golden glow
+  X.shadowColor = 'rgba(220,180,60,0.6)';
+  X.shadowBlur = 20*SCALE;
+
+  X.scale(scaleX, 1);
+
+  var img = showFace ? imgServantFace : imgServantBack;
+  if(img.complete && img.naturalWidth > 0){
+    X.beginPath(); X.arc(0, 0, w/2, 0, Math.PI*2); X.clip();
+    X.drawImage(img, -w/2, -h/2, w, h);
+  } else {
+    X.fillStyle = '#c9a84c';
+    X.beginPath(); X.arc(0,0,w/2,0,Math.PI*2); X.fill();
+    X.fillStyle = '#1a0a0a';
+    X.font = 'bold '+(14*SCALE)+'px JetBrains Mono';
+    X.textAlign='center'; X.textBaseline='middle';
+    X.fillText('S', 0, 0);
+  }
+
+  // Gold rim
+  if(scaleX < 0.7){
+    X.strokeStyle = 'rgba(220,180,60,0.8)';
+    X.lineWidth = 3*SCALE / scaleX;
+    X.beginPath(); X.arc(0, 0, w/2, 0, Math.PI*2); X.stroke();
+  }
+
+  X.restore();
+}
+
+// ── Draw hero (piano man) ──
+// piano.png is 3840x2160 but content is at bbox (1129,566,2492,1449)
+var HERO_SX = 1129, HERO_SY = 566, HERO_SW = 2492-1129, HERO_SH = 1449-566;
+
+function drawHero(px, py, pw, ph, sq, st, tilt){
+  X.save();
+  X.translate(px + pw/2, py + ph/2);
+  X.scale(sq, st);
+  if(tilt) X.rotate(tilt);
+
+  if(imgHero.complete && imgHero.naturalWidth > 0){
+    // Draw only the cropped content area of piano.png
+    var contentAR = HERO_SW / HERO_SH; // ~1.54
+    var drawW = pw;
+    var drawH = pw / contentAR;
+    if(drawH > ph){ drawH = ph; drawW = ph * contentAR; }
+    // drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh)
+    X.drawImage(imgHero, HERO_SX, HERO_SY, HERO_SW, HERO_SH,
+      -drawW/2, -drawH/2, drawW, drawH);
+  } else {
+    X.fillStyle = '#e8e4d8';
+    X.fillRect(-pw*0.4, -ph*0.3, pw*0.8, ph*0.6);
+    X.fillStyle = '#c9a84c';
+    X.font = 'bold '+(12*SCALE)+'px JetBrains Mono';
+    X.textAlign='center'; X.textBaseline='middle';
+    X.fillText('ACK', 0, 0);
+  }
+
+  X.restore();
+}
+
+// ── Draw ──
+function drawBackground(){
+  // Deep space gradient — purple/indigo void
+  var grad = X.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#030008');
+  grad.addColorStop(0.2,'#0a0318');
+  grad.addColorStop(0.5,'#100520');
+  grad.addColorStop(0.7,'#180818');
+  grad.addColorStop(1,'#1a0a10');
+  X.fillStyle=grad; X.fillRect(0,0,W,H);
+
+  var t = Date.now()/1000;
+
+  // Stars — twinkling deep space field
+  bgStars.forEach(function(s){
+    var twinkle = 0.3 + Math.sin(t*s.twinkleSpeed + s.x)*0.5;
+    X.globalAlpha = s.brightness * twinkle;
+    X.fillStyle = '#fff';
+    X.fillRect(s.x, s.y, s.size*SCALE, s.size*SCALE);
+  });
+  X.globalAlpha = 1;
+
+  // Nebula clouds — soft colored blobs
+  bgLayers.forEach(function(n){
+    X.save();
+    X.globalAlpha = n.opacity + Math.sin(t*0.5+n.x*0.01)*0.02;
+    var grd = X.createRadialGradient(n.x+n.w/2, n.y+n.h/2, 0, n.x+n.w/2, n.y+n.h/2, n.w/2);
+    grd.addColorStop(0, n.color + '0.3)');
+    grd.addColorStop(0.5, n.color + '0.1)');
+    grd.addColorStop(1, n.color + '0)');
+    X.fillStyle = grd;
+    X.fillRect(n.x, n.y, n.w, n.h);
+    X.restore();
+  });
+
+  // ── SURREAL STRUCTURES ──
+  bgStructures.forEach(function(s){
+    X.save();
+    X.globalAlpha = s.opacity;
+    X.translate(s.x, s.y + Math.sin(t*0.5 + s.phase)*8*SCALE);
+    X.rotate(s.rotation);
+    var sz = s.size * SCALE;
+
+    if(s.type === 'staircase_escher'){
+      // Impossible staircase — M.C. Escher style
+      X.strokeStyle = 'rgba(180,160,140,0.6)';
+      X.lineWidth = 1.5*SCALE;
+      var steps = 8;
+      for(var i=0;i<steps;i++){
+        var sx = i*(sz/steps);
+        var sy = -i*(sz*0.7/steps);
+        X.strokeRect(sx, sy, sz/steps+2, sz*0.7/steps+2);
+        // Impossible: some stairs go UP on the right side too
+        if(i > steps/2){
+          X.strokeRect(sz - sx, sy - sz*0.1, sz/steps+2, sz*0.7/steps+2);
+        }
+      }
+      // Connecting impossible loop
+      X.beginPath();
+      X.moveTo(0, 0); X.lineTo(sz, 0);
+      X.moveTo(sz*0.3, -sz*0.7); X.lineTo(sz*0.8, -sz*0.5);
+      X.stroke();
+
+    } else if(s.type === 'mario_pipe'){
+      // Classic green pipe
+      X.fillStyle = 'rgba(40,160,50,0.7)';
+      X.fillRect(-sz*0.15, 0, sz*0.3, sz*0.6);
+      X.fillStyle = 'rgba(30,130,40,0.7)';
+      X.fillRect(-sz*0.2, -sz*0.05, sz*0.4, sz*0.15);
+      // Highlight
+      X.fillStyle = 'rgba(80,220,90,0.3)';
+      X.fillRect(-sz*0.1, 0, sz*0.08, sz*0.55);
+
+    } else if(s.type === 'alice_door'){
+      // Tiny ornate door floating in space
+      X.fillStyle = 'rgba(139,90,43,0.6)';
+      X.fillRect(-sz*0.12, -sz*0.3, sz*0.24, sz*0.5);
+      // Door arch
+      X.beginPath();
+      X.arc(0, -sz*0.3, sz*0.12, Math.PI, 0);
+      X.fill();
+      // Keyhole
+      X.fillStyle = 'rgba(255,220,100,0.6)';
+      X.beginPath(); X.arc(0, -sz*0.1, sz*0.025, 0, Math.PI*2); X.fill();
+      X.fillRect(-sz*0.01, -sz*0.1, sz*0.02, sz*0.06);
+      // Tiny "EAT ME" sign
+      X.fillStyle = 'rgba(220,180,100,0.4)';
+      X.font = (4*SCALE)+'px JetBrains Mono';
+      X.textAlign = 'center';
+      X.fillText('EAT ME', 0, sz*0.25);
+
+    } else if(s.type === 'piano_spiral'){
+      // Spiral of piano keys twisting into space
+      X.strokeStyle = 'rgba(220,200,180,0.5)';
+      X.lineWidth = 1*SCALE;
+      var keys = 12;
+      for(var k=0;k<keys;k++){
+        var angle = (k/keys)*Math.PI*2.5 + t*0.3;
+        var radius = sz*0.1 + k*(sz*0.04);
+        var kx = Math.cos(angle)*radius;
+        var ky = Math.sin(angle)*radius*0.5; // perspective squeeze
+        var kw = sz*0.08 - k*0.3;
+        var kh = sz*0.03;
+        X.fillStyle = k%2===0 ? 'rgba(240,235,220,0.5)' : 'rgba(30,25,20,0.5)';
+        X.save();
+        X.translate(kx, ky);
+        X.rotate(angle*0.3);
+        X.fillRect(-kw/2, -kh/2, kw, kh);
+        X.restore();
+      }
+
+    } else if(s.type === 'clock_tower'){
+      // Floating clock — Dali-esque melting
+      X.strokeStyle = 'rgba(200,180,140,0.5)';
+      X.lineWidth = 1.5*SCALE;
+      X.beginPath(); X.arc(0, 0, sz*0.2, 0, Math.PI*2); X.stroke();
+      // Clock hands
+      var hourAngle = t*0.1 + s.phase;
+      var minAngle = t*0.8 + s.phase;
+      X.beginPath(); X.moveTo(0,0);
+      X.lineTo(Math.cos(hourAngle)*sz*0.1, Math.sin(hourAngle)*sz*0.1); X.stroke();
+      X.beginPath(); X.moveTo(0,0);
+      X.lineTo(Math.cos(minAngle)*sz*0.15, Math.sin(minAngle)*sz*0.15); X.stroke();
+      // Melting drip
+      X.fillStyle = 'rgba(200,180,140,0.3)';
+      X.beginPath();
+      X.moveTo(sz*0.15, sz*0.1);
+      X.quadraticCurveTo(sz*0.2, sz*0.4, sz*0.1, sz*0.6);
+      X.quadraticCurveTo(sz*0.05, sz*0.4, sz*0.1, sz*0.1);
+      X.fill();
+
+    } else if(s.type === 'floating_island'){
+      // Chunk of ground floating with grass on top
+      X.fillStyle = 'rgba(60,40,30,0.5)';
+      X.beginPath();
+      X.moveTo(-sz*0.3, 0);
+      X.quadraticCurveTo(-sz*0.15, sz*0.3, 0, sz*0.25);
+      X.quadraticCurveTo(sz*0.15, sz*0.3, sz*0.3, 0);
+      X.lineTo(sz*0.3, -sz*0.05);
+      X.lineTo(-sz*0.3, -sz*0.05);
+      X.closePath(); X.fill();
+      // Grass
+      X.fillStyle = 'rgba(60,140,50,0.4)';
+      X.fillRect(-sz*0.3, -sz*0.08, sz*0.6, sz*0.06);
+
+    } else if(s.type === 'impossible_triangle'){
+      // Penrose triangle
+      X.strokeStyle = 'rgba(200,170,60,0.4)';
+      X.lineWidth = 2*SCALE;
+      var triSz = sz*0.3;
+      X.beginPath();
+      X.moveTo(0, -triSz); X.lineTo(triSz*0.866, triSz*0.5); X.lineTo(-triSz*0.866, triSz*0.5); X.closePath();
+      X.stroke();
+      // Inner impossible offset
+      X.beginPath();
+      X.moveTo(0, -triSz*0.5); X.lineTo(triSz*0.5, triSz*0.3); X.lineTo(-triSz*0.5, triSz*0.3); X.closePath();
+      X.stroke();
+      // Connect inner to outer at weird angles
+      X.beginPath();
+      X.moveTo(0,-triSz); X.lineTo(triSz*0.5,triSz*0.3);
+      X.moveTo(triSz*0.866,triSz*0.5); X.lineTo(-triSz*0.5,triSz*0.3);
+      X.stroke();
+
+    } else if(s.type === 'giant_key'){
+      // Floating ornate key (Broken Keys reference)
+      X.fillStyle = 'rgba(200,180,140,0.4)';
+      // Handle (circle)
+      X.beginPath(); X.arc(0, 0, sz*0.1, 0, Math.PI*2); X.fill();
+      X.fillStyle = 'rgba(160,140,100,0.3)';
+      X.beginPath(); X.arc(0, 0, sz*0.06, 0, Math.PI*2); X.fill();
+      // Shaft
+      X.fillStyle = 'rgba(200,180,140,0.4)';
+      X.fillRect(-sz*0.015, sz*0.08, sz*0.03, sz*0.35);
+      // Teeth
+      X.fillRect(-sz*0.05, sz*0.35, sz*0.04, sz*0.05);
+      X.fillRect(-sz*0.05, sz*0.28, sz*0.03, sz*0.04);
+
+    } else if(s.type === 'mushroom'){
+      // Alice in Wonderland mushroom
+      X.fillStyle = 'rgba(200,50,60,0.5)';
+      X.beginPath();
+      X.arc(0, -sz*0.1, sz*0.18, Math.PI, 0);
+      X.fill();
+      // Spots
+      X.fillStyle = 'rgba(255,240,220,0.5)';
+      X.beginPath(); X.arc(-sz*0.06, -sz*0.18, sz*0.03, 0, Math.PI*2); X.fill();
+      X.beginPath(); X.arc(sz*0.06, -sz*0.14, sz*0.025, 0, Math.PI*2); X.fill();
+      // Stem
+      X.fillStyle = 'rgba(220,210,190,0.5)';
+      X.fillRect(-sz*0.04, -sz*0.1, sz*0.08, sz*0.2);
+
+    } else if(s.type === 'portal'){
+      // Swirling void portal
+      X.strokeStyle = 'rgba(120,60,200,0.4)';
+      X.lineWidth = 2*SCALE;
+      X.beginPath(); X.ellipse(0, 0, sz*0.2, sz*0.12, 0, 0, Math.PI*2); X.stroke();
+      X.strokeStyle = 'rgba(180,100,255,0.3)';
+      X.beginPath(); X.ellipse(0, 0, sz*0.14, sz*0.08, t*0.5, 0, Math.PI*2); X.stroke();
+      X.strokeStyle = 'rgba(60,200,255,0.2)';
+      X.beginPath(); X.ellipse(0, 0, sz*0.08, sz*0.05, -t*0.7, 0, Math.PI*2); X.stroke();
+      // Center glow
+      X.fillStyle = 'rgba(180,120,255,0.15)';
+      X.beginPath(); X.arc(0, 0, sz*0.05, 0, Math.PI*2); X.fill();
+
+    } else if(s.type === 'blossom_tree'){
+      // Piano Blossoms — flowers growing from a broken piano
+      // Trunk
+      X.strokeStyle = 'rgba(100,70,40,0.5)';
+      X.lineWidth = 2*SCALE;
+      X.beginPath(); X.moveTo(0, sz*0.2); X.quadraticCurveTo(sz*0.05, 0, -sz*0.03, -sz*0.15); X.stroke();
+      X.beginPath(); X.moveTo(-sz*0.03, -sz*0.1); X.quadraticCurveTo(-sz*0.1, -sz*0.2, -sz*0.15, -sz*0.25); X.stroke();
+      X.beginPath(); X.moveTo(-sz*0.02, -sz*0.12); X.quadraticCurveTo(sz*0.05, -sz*0.22, sz*0.1, -sz*0.28); X.stroke();
+      // Blossoms
+      var blossomColors = ['rgba(255,180,200,','rgba(255,160,180,','rgba(255,200,210,','rgba(240,140,170,'];
+      for(var b=0;b<8;b++){
+        var bx = (Math.sin(b*1.8+s.phase)*0.12 + (b>3?0.05:-0.05)) * sz;
+        var by = (-0.15 - b*0.025 - Math.cos(b*1.3)*0.05) * sz;
+        var bsz = (2+Math.sin(t+b))*SCALE;
+        X.fillStyle = blossomColors[b%4] + '0.5)';
+        X.beginPath(); X.arc(bx, by, bsz+1, 0, Math.PI*2); X.fill();
+      }
+      // Falling petals
+      for(var p=0;p<3;p++){
+        var px = Math.sin(t*0.8+p*2+s.phase)*sz*0.2;
+        var py = ((t*0.3+p*0.5+s.phase)%1)*sz*0.4;
+        X.fillStyle = 'rgba(255,180,200,0.3)';
+        X.beginPath(); X.arc(px, py, 1.5*SCALE, 0, Math.PI*2); X.fill();
+      }
+    }
+
+    X.restore();
+  });
+}
+
+function drawGround(){
+  // Surreal ground — checkerboard fading into void, Mario-style blocks
+  var t = Date.now()/1000;
+
+  // Main ground body — dark with purple tint
+  var gGrad = X.createLinearGradient(0, GROUND_Y, 0, H);
+  gGrad.addColorStop(0, '#2a1525');
+  gGrad.addColorStop(0.3, '#1a0a15');
+  gGrad.addColorStop(1, '#0a0008');
+  X.fillStyle = gGrad;
+  X.fillRect(0, GROUND_Y, W, H-GROUND_Y);
+
+  // Checkerboard ground surface (2 rows of tiles)
+  var tileW = 40*SCALE;
+  var tileH = 20*SCALE;
+  var offset = (distance*3*SCALE) % (tileW*2);
+
+  for(var row=0;row<2;row++){
+    for(var col=-1;col<Math.ceil(W/tileW)+2;col++){
+      var tx = col*tileW - offset;
+      var ty = GROUND_Y + row*tileH;
+      var isLight = (col+row)%2===0;
+      X.fillStyle = isLight ? 'rgba(60,30,50,0.8)' : 'rgba(35,15,30,0.8)';
+      X.fillRect(tx, ty, tileW, tileH);
+    }
+  }
+
+  // Glowing surface line
+  X.strokeStyle = 'rgba(200,100,180,0.4)';
+  X.lineWidth = 2*SCALE;
+  X.shadowColor = 'rgba(200,100,180,0.3)';
+  X.shadowBlur = 8*SCALE;
+  X.beginPath(); X.moveTo(0,GROUND_Y); X.lineTo(W,GROUND_Y); X.stroke();
+  X.shadowBlur = 0;
+
+  // Mario-style question blocks embedded in ground occasionally
+  groundTiles.forEach(function(gt, i){
+    if(i%7===3){
+      X.fillStyle = 'rgba(220,170,50,0.15)';
+      X.fillRect(gt.x, GROUND_Y+4*SCALE, 32*SCALE, 16*SCALE);
+      X.strokeStyle = 'rgba(220,170,50,0.25)';
+      X.lineWidth = 1;
+      X.strokeRect(gt.x, GROUND_Y+4*SCALE, 32*SCALE, 16*SCALE);
+      X.fillStyle = 'rgba(220,170,50,0.2)';
+      X.font = (10*SCALE)+'px JetBrains Mono';
+      X.textAlign = 'center';
+      X.fillText('?', gt.x+16*SCALE, GROUND_Y+16*SCALE);
+      X.textAlign = 'left';
+    }
+  });
+}
+
+function drawHUD(){
+  X.save();
+  X.font='700 '+(18*SCALE)+'px JetBrains Mono';
+  X.fillStyle='rgba(225,215,195,0.8)'; X.textAlign='left';
+  X.fillText('SCORE  '+(score+coins*10), 20*SCALE, 35*SCALE);
+
+  X.font=(14*SCALE)+'px JetBrains Mono';
+  X.fillStyle='rgba(200,170,90,0.7)';
+  X.fillText('BAGS  '+coins, 20*SCALE, 58*SCALE);
+
+  var hudY = 78*SCALE;
+  if(servantCoins > 0){
+    X.fillStyle='rgba(255,220,100,0.9)';
+    X.fillText('SERVANT COINS  '+servantCoins, 20*SCALE, hudY);
+    hudY += 20*SCALE;
+  }
+  if(shitcoinsCollected.length > 0){
+    X.fillStyle='rgba(180,140,60,0.6)';
+    X.fillText('SHITCOINS  '+shitcoinsCollected.length, 20*SCALE, hudY);
+    hudY += 20*SCALE;
+  }
+  if(artworksCollected.length > 0){
+    X.fillStyle='rgba(220,170,60,0.7)';
+    X.fillText('ART  '+artworksCollected.length, 20*SCALE, hudY);
+  }
+
+  X.font=(12*SCALE)+'px JetBrains Mono';
+  X.fillStyle='rgba(225,215,195,0.4)'; X.textAlign='right';
+  X.fillText(Math.floor(distance)+'m', W-20*SCALE, 35*SCALE);
+  X.restore();
+}
+
+function drawMenu(){
+  X.save();
+  X.fillStyle='rgba(10,10,12,0.7)'; X.fillRect(0,0,W,H);
+
+  if(imgLogo.complete && imgLogo.naturalWidth>0){
+    var lw=120*SCALE; var lh=lw*(imgLogo.naturalHeight/imgLogo.naturalWidth);
+    X.globalAlpha=0.9;
+    X.drawImage(imgLogo, W/2-lw/2, H*0.18-lh/2, lw, lh);
+    X.globalAlpha=1;
+  }
+
+  X.font='700 '+(36*SCALE)+'px EB Garamond';
+  X.fillStyle='#c9a84c'; X.textAlign='center';
+  X.fillText('SERVANT RUN', W/2, H*0.38);
+
+  X.font='italic '+(16*SCALE)+'px EB Garamond';
+  X.fillStyle='rgba(225,215,195,0.6)';
+  X.fillText('collect bags \u00b7 gather art \u00b7 stack shitcoins', W/2, H*0.44);
+
+  var pulse = 0.5+Math.sin(Date.now()/500)*0.3;
+  X.font=(14*SCALE)+'px JetBrains Mono';
+  X.fillStyle='rgba(220,170,60,'+pulse+')';
+  X.fillText('TAP  OR  SPACE  TO  START', W/2, H*0.58);
+
+  if(bestScore>0){
+    X.font=(12*SCALE)+'px JetBrains Mono';
+    X.fillStyle='rgba(225,215,195,0.4)';
+    X.fillText('BEST: '+bestScore, W/2, H*0.66);
+  }
+
+  X.font=(11*SCALE)+'px JetBrains Mono';
+  X.fillStyle='rgba(225,215,195,0.25)';
+  X.fillText('tap / space / \u2191  to jump \u00b7 double tap for double jump', W/2, H*0.82);
+  X.restore();
+}
+
+// ── Death screen particles ──
+var deathParticles = [];
+function spawnDeathParticles(){
+  deathParticles = [];
+  for(var i=0;i<40;i++){
+    deathParticles.push({
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (Math.random()-0.5)*0.5*SCALE, vy: -0.3*SCALE-Math.random()*0.7*SCALE,
+      size: 1+Math.random()*3, alpha: 0.2+Math.random()*0.5,
+      color: Math.random()>0.5 ? '201,168,76' : '200,50,40',
+      life: 200+Math.random()*200
+    });
+  }
+}
+
+function drawDeathScreen(){
+  X.save();
+  var alpha = Math.min(frameCount/40, 0.85);
+  // Dark vignette overlay
+  var vg = X.createRadialGradient(W/2,H/2,W*0.1, W/2,H/2,W*0.7);
+  vg.addColorStop(0,'rgba(10,8,15,'+alpha*0.7+')');
+  vg.addColorStop(1,'rgba(5,3,8,'+alpha+')');
+  X.fillStyle=vg; X.fillRect(0,0,W,H);
+
+  // Spawn particles on first frame
+  if(frameCount===1) spawnDeathParticles();
+
+  // Floating embers
+  for(var pi=0;pi<deathParticles.length;pi++){
+    var dp=deathParticles[pi];
+    dp.x+=dp.vx; dp.y+=dp.vy;
+    dp.vx+=Math.sin(Date.now()/2000+pi)*0.01*SCALE;
+    dp.life--;
+    if(dp.y<-10||dp.life<=0){dp.y=H+10;dp.x=Math.random()*W;dp.life=200+Math.random()*200;}
+    var pa=dp.alpha*Math.min(dp.life/50,1)*Math.min(frameCount/30,1);
+    X.beginPath();X.arc(dp.x,dp.y,dp.size*SCALE,0,Math.PI*2);
+    X.fillStyle='rgba('+dp.color+','+pa+')';X.fill();
+  }
+
+  if(frameCount > 10){
+    var ta = Math.min((frameCount-10)/25, 1);
+    X.globalAlpha = ta;
+    X.textAlign='center';
+
+    // Big "REKT" title with glow and glitch
+    var rektSize = 48*SCALE;
+    var rektY = H*0.22;
+    var t = Date.now()/1000;
+
+    // Glitch offset every ~2 seconds
+    var glitchX = 0, glitchY = 0;
+    if(Math.sin(t*3.7)>0.92){ glitchX = (Math.random()-0.5)*6*SCALE; glitchY = (Math.random()-0.5)*3*SCALE; }
+
+    // Red shadow layers
+    X.font='700 '+rektSize+'px EB Garamond';
+    X.fillStyle='rgba(200,40,40,0.3)';
+    X.fillText('REKT', W/2-3*SCALE+glitchX, rektY+2*SCALE+glitchY);
+    X.fillStyle='rgba(160,30,30,0.2)';
+    X.fillText('REKT', W/2+4*SCALE-glitchX, rektY-1*SCALE-glitchY);
+
+    // Main REKT with gradient
+    var rektGrad = X.createLinearGradient(W/2-80*SCALE, rektY-30*SCALE, W/2+80*SCALE, rektY+10*SCALE);
+    rektGrad.addColorStop(0,'#e84040');
+    rektGrad.addColorStop(0.5,'#ff6b6b');
+    rektGrad.addColorStop(1,'#c93030');
+    X.fillStyle = rektGrad;
+    X.fillText('REKT', W/2, rektY);
+
+    // Subtle glow
+    X.shadowColor='rgba(230,60,60,0.6)'; X.shadowBlur=20*SCALE;
+    X.fillText('REKT', W/2, rektY);
+    X.shadowColor='transparent'; X.shadowBlur=0;
+
+    // Subtext
+    X.font='italic '+(11*SCALE)+'px EB Garamond';
+    X.fillStyle='rgba(225,215,195,0.35)';
+    var subtexts = ['the void claims another','dust to dust','not your keys, not your run','gg no re','the piano plays itself now','back to the shadow realm'];
+    var subIdx = Math.floor((score+coins+Math.floor(distance))%subtexts.length);
+    X.fillText(subtexts[subIdx], W/2, rektY+18*SCALE);
+  }
+
+  // Stats panel with decorative border
+  if(frameCount > 25){
+    var sa = Math.min((frameCount-25)/20, 1);
+    X.globalAlpha = sa;
+    X.textAlign='center';
+
+    var totalScore = score + coins*10;
+    var panelW = Math.min(W*0.85, 340*SCALE);
+    var hasBags = coins > 0;
+    var panelH = (hasBags ? 220 : 180)*SCALE;
+    var panelX = W/2 - panelW/2;
+    var panelY = H*0.30;
+
+    // Panel background
+    var panelGrad = X.createLinearGradient(panelX, panelY, panelX, panelY+panelH);
+    panelGrad.addColorStop(0,'rgba(20,18,28,0.85)');
+    panelGrad.addColorStop(1,'rgba(12,10,18,0.9)');
+    X.fillStyle = panelGrad;
+
+    // Rounded rect
+    var r = 8*SCALE;
+    X.beginPath();
+    X.moveTo(panelX+r,panelY); X.lineTo(panelX+panelW-r,panelY);
+    X.quadraticCurveTo(panelX+panelW,panelY,panelX+panelW,panelY+r);
+    X.lineTo(panelX+panelW,panelY+panelH-r);
+    X.quadraticCurveTo(panelX+panelW,panelY+panelH,panelX+panelW-r,panelY+panelH);
+    X.lineTo(panelX+r,panelY+panelH);
+    X.quadraticCurveTo(panelX,panelY+panelH,panelX,panelY+panelH-r);
+    X.lineTo(panelX,panelY+r);
+    X.quadraticCurveTo(panelX,panelY,panelX+r,panelY);
+    X.closePath();
+    X.fill();
+
+    // Border glow
+    var borderPulse = 0.3+Math.sin(Date.now()/1200)*0.15;
+    X.strokeStyle='rgba(201,168,76,'+borderPulse+')';
+    X.lineWidth=1.5*SCALE;
+    X.stroke();
+
+    // Thin accent line under title area
+    X.beginPath();
+    X.moveTo(panelX+20*SCALE, panelY+42*SCALE);
+    X.lineTo(panelX+panelW-20*SCALE, panelY+42*SCALE);
+    X.strokeStyle='rgba(201,168,76,0.2)';
+    X.lineWidth=0.5*SCALE;
+    X.stroke();
+
+    // Total score - big
+    X.font='700 '+(28*SCALE)+'px JetBrains Mono';
+    var scoreGrad = X.createLinearGradient(W/2-40*SCALE, panelY+20*SCALE, W/2+40*SCALE, panelY+35*SCALE);
+    scoreGrad.addColorStop(0,'#c9a84c');
+    scoreGrad.addColorStop(0.5,'#f0d878');
+    scoreGrad.addColorStop(1,'#c9a84c');
+    X.fillStyle = scoreGrad;
+    X.fillText(totalScore, W/2, panelY+32*SCALE);
+
+    // Score label
+    X.font=(9*SCALE)+'px JetBrains Mono';
+    X.fillStyle='rgba(225,215,195,0.35)';
+    X.fillText('T O T A L   S C O R E', W/2, panelY+42*SCALE);
+
+    // Stat grid - 2 rows
+    var gridY1 = panelY+62*SCALE;
+    var gridY2 = panelY+92*SCALE;
+    var col1 = panelX + panelW*0.25;
+    var col2 = panelX + panelW*0.5;
+    var col3 = panelX + panelW*0.75;
+
+    // Draw individual stat boxes
+    function drawStatBox(cx, cy, value, label, color){
+      X.font='700 '+(16*SCALE)+'px JetBrains Mono';
+      X.fillStyle=color;
+      X.fillText(value, cx, cy);
+      X.font=(7*SCALE)+'px JetBrains Mono';
+      X.fillStyle='rgba(225,215,195,0.3)';
+      X.fillText(label, cx, cy+12*SCALE);
+    }
+
+    drawStatBox(col1, gridY1, coins, 'BAGS', 'rgba(201,168,76,0.9)');
+    drawStatBox(col2, gridY1, shitcoinsCollected.length, 'SHITCOINS', 'rgba(180,140,60,0.8)');
+    drawStatBox(col3, gridY1, artworksCollected.length, 'ARTWORKS', 'rgba(220,170,100,0.8)');
+    drawStatBox(col1, gridY2, Math.floor(distance)+'m', 'DISTANCE', 'rgba(160,140,120,0.7)');
+    if(servantCoins>0){
+      drawStatBox(col2, gridY2, servantCoins, 'SERVANT COINS', '#f0d878');
+    }
+    drawStatBox(servantCoins>0?col3:col2, gridY2, bestScore, 'BEST', 'rgba(201,168,76,0.5)');
+
+    // ── Visual bags display ──
+    if(coins > 0){
+      var bagRowY = panelY + 108*SCALE;
+      var bagSize = 22*SCALE;
+      var maxShow = Math.min(coins, 12); // show up to 12 bags
+      var bagSpacing = Math.min(bagSize+4*SCALE, (panelW-40*SCALE)/maxShow);
+      var bagRowW = maxShow * bagSpacing;
+      var bagStartX = W/2 - bagRowW/2 + bagSpacing/2;
+
+      // "YOUR BAGS" label
+      X.font='700 '+(8*SCALE)+'px JetBrains Mono';
+      X.fillStyle='rgba(201,168,76,0.4)';
+      X.fillText('Y O U R   B A G S', W/2, bagRowY-12*SCALE);
+
+      for(var bi=0;bi<maxShow;bi++){
+        var bx = bagStartX + bi*bagSpacing;
+        var by = bagRowY;
+        // Stagger entrance animation
+        var bagDelay = 30 + bi*3;
+        if(frameCount > bagDelay){
+          var bagAlpha = Math.min((frameCount-bagDelay)/10, 1);
+          var popScale = bagAlpha < 1 ? 0.5+bagAlpha*0.5 : 1+Math.sin(Date.now()/400+bi*0.5)*0.05;
+          X.save();
+          X.globalAlpha = bagAlpha;
+          X.translate(bx, by);
+          X.scale(popScale, popScale);
+          // Glow behind each bag
+          var bagGlow = X.createRadialGradient(0,0,bagSize*0.1,0,0,bagSize*0.6);
+          bagGlow.addColorStop(0,'rgba(220,170,60,0.2)');
+          bagGlow.addColorStop(1,'rgba(220,170,60,0)');
+          X.fillStyle=bagGlow;
+          X.fillRect(-bagSize*0.6,-bagSize*0.6,bagSize*1.2,bagSize*1.2);
+          // Draw bag image
+          if(imgBags.complete && imgBags.naturalWidth>0){
+            X.drawImage(imgBags, -bagSize/2, -bagSize/2, bagSize, bagSize);
+          } else {
+            X.fillStyle='#c9a84c';
+            X.fillRect(-bagSize/2,-bagSize/2,bagSize,bagSize);
+          }
+          X.restore();
+        }
+      }
+      // "+N more" if over 12
+      if(coins > 12){
+        X.font='700 '+(9*SCALE)+'px JetBrains Mono';
+        X.fillStyle='rgba(201,168,76,0.5)';
+        X.fillText('+' + (coins-12) + ' more', W/2, bagRowY+bagSize/2+10*SCALE);
+      }
+    }
+
+    // Collected shitcoins scrolling ticker
+    if(shitcoinsCollected.length > 0){
+      var tickerY = panelY + (hasBags?158:118)*SCALE;
+      X.font='700 '+(9*SCALE)+'px JetBrains Mono';
+      X.fillStyle='rgba(200,170,60,0.45)';
+      var tickerStr = shitcoinsCollected.join('   ');
+      // Scroll if many coins
+      if(shitcoinsCollected.length > 4){
+        var scrollOffset = ((Date.now()/30)%(tickerStr.length*6*SCALE));
+        X.save();
+        X.beginPath();X.rect(panelX+10*SCALE,tickerY-10*SCALE,panelW-20*SCALE,16*SCALE);X.clip();
+        X.fillText(tickerStr+'   '+tickerStr, W/2-scrollOffset, tickerY);
+        X.restore();
+      } else {
+        X.fillText(tickerStr, W/2, tickerY);
+      }
+    }
+
+    // Collected artworks
+    if(artworksCollected.length > 0){
+      var artY = panelY + (hasBags?175:135)*SCALE;
+      X.font='italic '+(9*SCALE)+'px EB Garamond';
+      X.fillStyle='rgba(220,180,100,0.35)';
+      var artText = artworksCollected.slice(0,4).join('  \u00b7  ');
+      if(artworksCollected.length>4) artText += '  +' + (artworksCollected.length-4);
+      X.fillText(artText, W/2, artY);
+    }
+
+    // New best indicator
+    if(totalScore >= bestScore && bestScore > 0 && totalScore > 0){
+      var nbY = panelY + (hasBags?195:155)*SCALE;
+      var nbPulse = 0.6+Math.sin(Date.now()/400)*0.4;
+      X.font='700 '+(12*SCALE)+'px JetBrains Mono';
+      X.fillStyle='rgba(240,216,120,'+nbPulse+')';
+      X.shadowColor='rgba(240,216,120,0.4)'; X.shadowBlur=10*SCALE;
+      X.fillText('\u2605 NEW BEST \u2605', W/2, nbY);
+      X.shadowColor='transparent'; X.shadowBlur=0;
+    }
+
+    // Decorative corner accents on panel
+    var cornerLen = 12*SCALE;
+    X.strokeStyle='rgba(201,168,76,0.4)';
+    X.lineWidth=1*SCALE;
+    // top-left
+    X.beginPath();X.moveTo(panelX,panelY+cornerLen);X.lineTo(panelX,panelY);X.lineTo(panelX+cornerLen,panelY);X.stroke();
+    // top-right
+    X.beginPath();X.moveTo(panelX+panelW-cornerLen,panelY);X.lineTo(panelX+panelW,panelY);X.lineTo(panelX+panelW,panelY+cornerLen);X.stroke();
+    // bottom-left
+    X.beginPath();X.moveTo(panelX,panelY+panelH-cornerLen);X.lineTo(panelX,panelY+panelH);X.lineTo(panelX+cornerLen,panelY+panelH);X.stroke();
+    // bottom-right
+    X.beginPath();X.moveTo(panelX+panelW-cornerLen,panelY+panelH);X.lineTo(panelX+panelW,panelY+panelH);X.lineTo(panelX+panelW,panelY+panelH-cornerLen);X.stroke();
+  }
+
+  // Retry prompt
+  if(frameCount > 55){
+    var retryA = Math.min((frameCount-55)/20, 1);
+    X.globalAlpha = retryA;
+    X.textAlign='center';
+    var pulse = 0.35+Math.sin(Date.now()/600)*0.25;
+
+    // "nah... try again" with styling
+    X.font='700 '+(13*SCALE)+'px JetBrains Mono';
+    X.fillStyle='rgba(225,215,195,'+pulse+')';
+    X.fillText('tap to run it back', W/2, H*0.88);
+
+    // Small skull doodles flanking
+    var skY = H*0.88-4*SCALE;
+    var skS = 5*SCALE;
+    X.fillStyle='rgba(225,215,195,'+(pulse*0.5)+')';
+    X.font=(10*SCALE)+'px serif';
+    X.fillText('\u2620', W/2-90*SCALE, skY);
+    X.fillText('\u2620', W/2+90*SCALE, skY);
+
+    X.globalAlpha=1;
+  }
+
+  X.restore();
+}
+
+// ── Notifications ──
+var notifications = [];
+function showNotification(text, color){
+  notifications.push({ text:text, color:color||'rgba(220,170,60,0.9)', y:H*0.4, alpha:1, life:60 });
+}
+function updateNotifications(){
+  for(var i=notifications.length-1;i>=0;i--){
+    var n=notifications[i]; n.life--; n.y-=0.8*SCALE; n.alpha=Math.min(n.life/20,1);
+    if(n.life<=0) notifications.splice(i,1);
+  }
+}
+function drawNotifications(){
+  notifications.forEach(function(n){
+    X.save(); X.globalAlpha=n.alpha;
+    X.font='700 '+(16*SCALE)+'px EB Garamond'; X.fillStyle=n.color; X.textAlign='center';
+    X.fillText(n.text, W/2, n.y);
+    X.restore();
+  });
+}
+
+// ── Particles ──
+function updateParticles(){
+  for(var i=particles.length-1;i>=0;i--){
+    var p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.15*SCALE; p.life--;
+    if(p.life<=0) particles.splice(i,1);
+  }
+}
+function drawParticles(){
+  particles.forEach(function(p){
+    var a=p.life/p.maxLife;
+    X.fillStyle=p.color+a+')';
+    X.fillRect(p.x-p.size/2, p.y-p.size/2, p.size*SCALE, p.size*SCALE);
+  });
+}
+
+// ── Update ──
+function update(){
+  frameCount++;
+
+  if(STATE === 'playing'){
+
+    // Normal game physics only when not in galaxy boost
+    if(boostState === 'none'){
+      speed += speedIncrement * SCALE;
+      distance += speed / (3*SCALE);
+      difficultyLevel = Math.floor(distance/200);
+
+      // Player physics
+      player.vy += GRAVITY * SCALE;
+      player.y += player.vy;
+      var groundLevel = GROUND_Y - player.h*SCALE;
+      if(player.y >= groundLevel){
+        if(!player.onGround) playLandSound();
+        player.y = groundLevel; player.vy = 0;
+        player.onGround = true; player.jumpCount = 0;
+      }
+
+      player.squash += (1-player.squash)*0.15;
+      player.stretch += (1-player.stretch)*0.15;
+
+      // Tilt when jumping, level when on ground
+      if(player.onGround){
+        player.tilt += (0 - player.tilt) * 0.2;
+      } else {
+        var targetTilt = player.vy < 0 ? -0.15 : 0.1;
+        player.tilt += (targetTilt - player.tilt) * 0.1;
+      }
+
+      // Scroll background — stars, nebulae, structures
+      bgStars.forEach(function(s){
+        s.x -= s.speed*SCALE;
+        if(s.x < -5) s.x = W + Math.random()*100;
+      });
+      bgLayers.forEach(function(n){
+        n.x -= n.speed*SCALE;
+        if(n.x + n.w < -50){ n.x = W + Math.random()*200; n.y = 30+Math.random()*H*0.4; }
+      });
+      bgStructures.forEach(function(s){
+        s.x -= s.speed*SCALE;
+        if(s.x < -s.size*3){
+          s.x = W + s.size*2 + Math.random()*300;
+          s.y = 30 + Math.random()*(GROUND_Y-150);
+          s.phase = Math.random()*Math.PI*2;
+        }
+      });
+      groundTiles.forEach(function(t){
+        t.x -= speed;
+        if(t.x < -40) t.x += groundTiles.length*40;
+      });
+
+      // Spawn
+      spawnTimer++;
+      var spawnInt = Math.max(50, 110-difficultyLevel*5);
+      if(spawnTimer >= spawnInt){ spawnTimer=0; spawnObstacle(); }
+
+      collectibleTimer++;
+      var collectInt = Math.max(25, 60-difficultyLevel*3);
+      if(collectibleTimer >= collectInt){ collectibleTimer=0; spawnCollectible(); }
+    } // end boostState==='none' block
+
+    // Hitbox
+    var pw = player.w*SCALE*0.7, ph = player.h*SCALE*0.7;
+    var px = player.x + (player.w*SCALE-pw)/2;
+    var py = player.y + (player.h*SCALE-ph)/2;
+
+    // Obstacles
+    for(var i=obstacles.length-1;i>=0;i--){
+      var ob=obstacles[i]; ob.x -= speed;
+      if(boostState==='none' && boostInvulnTimer<=0 && rectsOverlap(px,py,pw,ph,ob.x,ob.y,ob.w,ob.h)){ die(); break; }
+      if(!ob.passed && ob.x+ob.w<player.x){ ob.passed=true; score+=1; }
+      if(ob.x+ob.w < -20) obstacles.splice(i,1);
+    }
+
+    // Collectibles
+    for(var j=collectibles.length-1;j>=0;j--){
+      var c=collectibles[j]; c.x -= speed;
+      if(!c.collected){
+        var bobY = Math.sin(Date.now()/300+c.bobOffset)*5*SCALE;
+        var cy = c.y + bobY;
+        if(c.type==='artwork') c.glow = Date.now()/400;
+        if(c.type==='shitcoin') c.spinAngle += 0.08;
+        if(c.type==='servant') c.spinAngle += 0.06;
+
+        if(rectsOverlap(px,py,pw,ph, c.x, cy, c.w, c.h)){
+          c.collected = true;
+          if(c.type==='bag'){
+            coins++; playCoinSound();
+            boostMeter++;
+            flashTimer=4; flashColor='rgba(220,170,60,0.15)';
+            for(var k=0;k<6;k++){
+              particles.push({
+                x:c.x+c.w/2, y:cy+c.h/2,
+                vx:(Math.random()-0.5)*4*SCALE, vy:-Math.random()*4*SCALE,
+                life:15+Math.random()*10, maxLife:25, size:2+Math.random()*3,
+                color:'rgba(220,170,60,'
+              });
+            }
+          } else if(c.type==='shitcoin'){
+            shitcoinsCollected.push(c.ticker);
+            score += c.value;
+            boostMeter++;
+            playShitcoinSound();
+            flashTimer=4; flashColor='rgba(180,140,60,0.12)';
+            showNotification(c.ticker + ' \u2014 ' + c.desc, c.coinColor);
+            for(var k=0;k<8;k++){
+              particles.push({
+                x:c.x+c.w/2, y:cy+c.h/2,
+                vx:(Math.random()-0.5)*5*SCALE, vy:-Math.random()*4*SCALE,
+                life:18+Math.random()*12, maxLife:30, size:2+Math.random()*3,
+                color:'rgba(180,140,60,'
+              });
+            }
+          } else if(c.type==='servant'){
+            // ULTRA BONUS — servant coin!
+            servantCoins++;
+            score += c.value;
+            boostMeter += 3; // servant coins fill meter fast
+            playServantCoinSound();
+            flashTimer=10; flashColor='rgba(220,180,60,0.3)';
+            shakeTimer=5;
+            showNotification('SERVANT COIN +25', 'rgba(255,220,100,1)');
+            for(var k=0;k<20;k++){
+              var angle=(k/20)*Math.PI*2;
+              particles.push({
+                x:c.x+c.w/2, y:cy+c.h/2,
+                vx:Math.cos(angle)*5*SCALE, vy:Math.sin(angle)*5*SCALE-2*SCALE,
+                life:35+Math.random()*20, maxLife:55, size:3+Math.random()*5,
+                color:k%4===0?'rgba(255,255,200,':'rgba(220,180,60,'
+              });
+            }
+          } else {
+            artworksCollected.push(c.artName);
+            boostMeter += 2; // artworks fill meter well
+            playArtworkSound();
+            flashTimer=6; flashColor='rgba(220,170,60,0.2)';
+            showNotification('\u2726 '+c.artName+' \u2726', 'rgba(220,170,60,0.9)');
+            for(var k=0;k<12;k++){
+              var angle=(k/12)*Math.PI*2;
+              particles.push({
+                x:c.x+c.w/2, y:cy+c.h/2,
+                vx:Math.cos(angle)*3*SCALE, vy:Math.sin(angle)*3*SCALE,
+                life:25+Math.random()*15, maxLife:40, size:2+Math.random()*4,
+                color:k%3===0?'rgba(255,255,220,':'rgba(220,170,60,'
+              });
+            }
+          }
+        }
+      }
+      if(c.x+c.w < -20) collectibles.splice(j,1);
+    }
+
+    // Check boost meter — trigger galaxy boost!
+    if(boostMeter >= BOOST_THRESHOLD && boostState === 'none'){
+      boostMeter = 0;
+      triggerGalaxyBoost();
+    }
+
+    // Invulnerability countdown after boost landing
+    if(boostInvulnTimer > 0) boostInvulnTimer--;
+  }
+
+  // Galaxy boost update (runs alongside or instead of normal game)
+  if(boostState !== 'none'){
+    updateGalaxyBoost();
+  }
+
+  if(shakeTimer>0) shakeTimer--;
+  if(flashTimer>0) flashTimer--;
+  updateParticles();
+  updateNotifications();
+}
+
+// ── Render ──
+function render(){
+  X.save();
+  if(shakeTimer>0){
+    X.translate((Math.random()-0.5)*shakeTimer*1.5, (Math.random()-0.5)*shakeTimer*1.5);
+  }
+
+  // Galaxy boost takes over rendering when active
+  var inGalaxy = (boostState==='galaxy' || boostState==='reentry');
+
+  if(inGalaxy){
+    drawGalaxyScene();
+  } else {
+    drawBackground();
+    drawGround();
+  }
+
+  if(STATE==='playing'||STATE==='dead'){
+    // Normal scene elements (hidden during galaxy flight)
+    if(!inGalaxy){
+      // Collectibles
+      collectibles.forEach(function(c){
+        if(c.collected) return;
+        var bobY = Math.sin(Date.now()/300+c.bobOffset)*5*SCALE;
+        if(c.type==='bag') drawBag(c.x, c.y+bobY, c.w, c.h);
+        else if(c.type==='shitcoin') drawShitcoin(c.x, c.y+bobY, c.w, c.h, c.coinColor, c.ticker, c.spinAngle);
+        else if(c.type==='servant') drawServantCoin(c.x, c.y+bobY, c.w, c.h, c.spinAngle);
+        else drawArtworkCollectible(c.x, c.y+bobY, c.w, c.h, c.artName, c.glow||0);
+      });
+
+      // Obstacles
+      obstacles.forEach(function(ob){
+        if(ob.type==='brokenkey') drawBrokenKey(ob.x,ob.y,ob.w,ob.h);
+        else drawSkull(ob.x,ob.y,ob.w,ob.h);
+      });
+    }
+
+    // Player — always visible (launching upward, flying in galaxy, or re-entering)
+    if(STATE==='playing'||(STATE==='dead'&&frameCount<5)){
+      var pw=player.w*SCALE, ph=player.h*SCALE;
+
+      // Boost aura around player
+      if(boostState!=='none'){
+        X.save();
+        var auraAlpha = 0.15+Math.sin(Date.now()/200)*0.1;
+        var aura = X.createRadialGradient(
+          player.x+pw/2, player.y+ph/2, pw*0.3,
+          player.x+pw/2, player.y+ph/2, pw*1.2
+        );
+        aura.addColorStop(0,'rgba(100,200,255,'+auraAlpha+')');
+        aura.addColorStop(0.5,'rgba(150,100,255,'+(auraAlpha*0.5)+')');
+        aura.addColorStop(1,'rgba(100,200,255,0)');
+        X.fillStyle=aura;
+        X.fillRect(player.x-pw*0.5,player.y-ph*0.5,pw*2,ph*2);
+        X.restore();
+      }
+
+      // Invulnerability shimmer after landing
+      if(boostInvulnTimer > 0){
+        X.save();
+        X.globalAlpha = 0.6+Math.sin(Date.now()/60)*0.4;
+      }
+
+      drawHero(player.x, player.y, pw, ph, player.squash, player.stretch, player.tilt);
+
+      if(boostInvulnTimer > 0) X.restore();
+
+      // Trail: rocket flame during launch, stardust during galaxy, dust on ground
+      if(boostState==='launching'){
+        for(var fi=0;fi<3;fi++){
+          particles.push({
+            x:player.x+pw/2+(Math.random()-0.5)*pw*0.3,
+            y:player.y+ph+Math.random()*10*SCALE,
+            vx:(Math.random()-0.5)*2*SCALE, vy:3*SCALE+Math.random()*4*SCALE,
+            life:10+Math.random()*8, maxLife:18, size:3+Math.random()*5,
+            color:fi%2===0?'rgba(255,150,50,':'rgba(255,220,100,'
+          });
+        }
+      } else if(boostState==='galaxy' && frameCount%2===0){
+        particles.push({
+          x:player.x, y:player.y+ph/2+(Math.random()-0.5)*ph*0.5,
+          vx:-4*SCALE-Math.random()*3*SCALE, vy:(Math.random()-0.5)*1*SCALE,
+          life:12+Math.random()*8, maxLife:20, size:1+Math.random()*3,
+          color:Math.random()>0.5?'rgba(100,200,255,':'rgba(200,150,255,'
+        });
+      } else if(boostState==='none' && boostInvulnTimer<=0 && player.onGround && STATE==='playing' && frameCount%4===0){
+        particles.push({
+          x:player.x+5*SCALE, y:GROUND_Y-2*SCALE,
+          vx:-speed*0.3, vy:-Math.random()*1*SCALE,
+          life:10+Math.random()*5, maxLife:15, size:2+Math.random()*2,
+          color:'rgba(74,58,48,'
+        });
+      }
+    }
+
+    drawParticles();
+    drawNotifications();
+
+    // Boost meter (above player during normal play)
+    if(STATE==='playing') drawBoostMeter();
+
+    drawHUD();
+
+    // Boost flash overlay
+    if(boostFlashAlpha > 0.01){
+      X.fillStyle='rgba(100,200,255,'+boostFlashAlpha+')';
+      X.fillRect(0,0,W,H);
+    }
+
+    if(flashTimer>0){ X.fillStyle=flashColor; X.fillRect(0,0,W,H); }
+    if(STATE==='dead') drawDeathScreen();
+  }
+
+  if(STATE==='menu'){
+    var ps = 120*SCALE; var psh = 75*SCALE;
+    var bobY = Math.sin(Date.now()/600)*8*SCALE;
+    drawHero(W/2-ps/2, H*0.55+bobY, ps, psh, 1, 1, Math.sin(Date.now()/1000)*0.05);
+    drawMenu();
+  }
+
+  X.restore();
+}
+
+// ── Loop ──
+function loop(){ update(); render(); requestAnimationFrame(loop); }
+initBackground();
+player.x = 80*SCALE;
+player.y = GROUND_Y - player.h*SCALE;
+loop();
+
+})();
+</script>
+</body>
+</html>
