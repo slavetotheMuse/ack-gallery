@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACK.ART — Phone Test</title>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0c0e;
+      font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+      color: #f0f0ee;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 30px;
+    }
+    .launch-btn {
+      padding: 14px 40px;
+      background: rgba(60,220,120,0.1);
+      border: 1px solid rgba(60,220,120,0.4);
+      border-radius: 6px;
+      color: rgba(60,220,120,0.8);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: all 0.3s ease;
+    }
+    .launch-btn:hover {
+      background: rgba(60,220,120,0.2);
+      border-color: rgba(60,220,120,0.7);
+      color: rgba(60,220,120,1);
+    }
+    .reset-btn {
+      padding: 8px 20px;
+      background: transparent;
+      border: 1px solid rgba(195,175,130,0.2);
+      border-radius: 4px;
+      color: rgba(195,175,130,0.4);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .reset-btn:hover {
+      border-color: rgba(220,80,80,0.5);
+      color: rgba(220,80,80,0.7);
+    }
+    .hint {
+      font-size: 0.65rem;
+      color: rgba(195,175,130,0.3);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* ── Phone Overlay ── */
+    .phone-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 9999;
+      background: radial-gradient(ellipse at center, rgba(10,12,14,0.97), rgba(5,6,8,0.99));
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .phone-overlay.active { opacity: 1; }
+    .phone-overlay .phone-close {
+      position: absolute; top: 20px; right: 28px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; color: rgba(195,175,130,0.5);
+      cursor: pointer; z-index: 10002; letter-spacing: 0.08em;
+      padding: 6px 14px; border: 1px solid rgba(195,175,130,0.2);
+      border-radius: 3px; transition: all 0.3s ease;
+    }
+    .phone-overlay .phone-close:hover {
+      color: rgba(195,175,130,0.9);
+      border-color: rgba(195,175,130,0.5);
+    }
+    .phone-scene {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 30px; position: relative;
+    }
+    .phone-handset {
+      width: 120px; height: 260px; position: relative;
+      animation: phone-idle 3s ease-in-out infinite;
+    }
+    .phone-handset.ringing {
+      animation: phone-ring 0.12s ease-in-out infinite alternate;
+    }
+    .phone-handset.picked-up {
+      animation: phone-pickup 0.6s ease forwards;
+    }
+    @keyframes phone-idle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    @keyframes phone-ring {
+      0% { transform: rotate(-8deg) translateX(-3px); }
+      100% { transform: rotate(8deg) translateX(3px); }
+    }
+    @keyframes phone-pickup {
+      0% { transform: rotate(0deg) scale(1); }
+      40% { transform: rotate(-15deg) scale(1.1); }
+      100% { transform: rotate(-90deg) scale(0.9) translateY(-20px); }
+    }
+    .phone-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: rgba(60,220,120,0.8);
+      letter-spacing: 0.1em;
+      text-align: center;
+      min-height: 24px;
+    }
+    .phone-subtitle {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: clamp(14px, 2vw, 18px);
+      color: rgba(195,175,130,0.4);
+      text-align: center;
+      max-width: 500px;
+      line-height: 1.6;
+      min-height: 80px;
+    }
+    .phone-ring-pulse {
+      position: absolute;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      border: 1px solid rgba(60,220,120,0.3);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0;
+    }
+    .phone-ring-pulse.active {
+      animation: ring-pulse 1.5s ease-out infinite;
+    }
+    @keyframes ring-pulse {
+      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+      100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+    }
+    .phone-waveform {
+      display: flex; align-items: center; justify-content: center;
+      gap: 3px; height: 40px; opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .phone-waveform.active { opacity: 1; }
+    .phone-waveform-bar {
+      width: 3px; background: rgba(60,220,120,0.6);
+      border-radius: 2px;
+      animation: waveform-bar 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes waveform-bar {
+      0% { height: 4px; }
+      100% { height: 28px; }
+    }
+    .phone-setup {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 16px; max-width: 400px; text-align: center;
+    }
+    .phone-setup-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.3rem; color: rgba(195,175,130,0.7);
+    }
+    .phone-setup-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; color: rgba(195,175,130,0.35);
+      line-height: 1.6;
+    }
+    .phone-setup input {
+      width: 100%; padding: 10px 14px;
+      background: rgba(30,30,30,0.8);
+      border: 1px solid rgba(60,220,120,0.3);
+      border-radius: 4px; color: rgba(60,220,120,0.9);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem; outline: none;
+      transition: border-color 0.3s ease;
+    }
+    .phone-setup input:focus {
+      border-color: rgba(60,220,120,0.6);
+    }
+    .phone-setup input::placeholder {
+      color: rgba(60,220,120,0.25);
+    }
+    .phone-setup-btn {
+      padding: 8px 28px;
+      background: rgba(60,220,120,0.15);
+      border: 1px solid rgba(60,220,120,0.4);
+      border-radius: 4px; color: rgba(60,220,120,0.8);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem; cursor: pointer;
+      transition: all 0.3s ease; letter-spacing: 0.05em;
+    }
+    .phone-setup-btn:hover {
+      background: rgba(60,220,120,0.25);
+      border-color: rgba(60,220,120,0.6);
+      color: rgba(60,220,120,1);
+    }
+  </style>
+</head>
+<body>
+
+  <div style="font-family:'EB Garamond',serif;font-size:1.5rem;color:rgba(195,175,130,0.5);letter-spacing:0.05em;">phone test</div>
+  <div class="launch-btn" onclick="openPhoneOverlay()">call the hotline</div>
+  <div class="reset-btn" onclick="localStorage.removeItem('ack_phone_api_key');localStorage.removeItem('ack_phone_voice_id');location.reload();">reset API key</div>
+  <div class="hint">opens the full phone experience — ring, answer, AI roast<br>click "reset API key" to re-enter your ElevenLabs credentials</div>
+
+<script>
+  var _phoneOverlay = null;
+  var _phoneActive = false;
+  var _phoneEscHandler = null;
+  var _phoneSpeaking = false;
+  var _phoneAudioCtx = null;
+  var _phoneTimers = [];
+
+  var _phoneLines = [
+    "Your portfolio is absolutely magnificent. I mean, truly, it takes a special kind of genius to buy every single top with such precision.",
+    "I have analyzed your bags and I must say, your commitment to holding is inspirational. Most people would have sold by now. Most smart people, I mean.",
+    "The mathematical probability of picking this many underperformers is actually quite impressive. You should consider a career in statistics.",
+    "Your diamond hands are legendary. Of course, diamonds are just compressed carbon under extreme pressure, much like your account balance.",
+    "I see you bought the dip. And then the dip's dip. And then the dip's dip's dip. Remarkable averaging strategy.",
+    "Your NFT collection is stunning. The floor prices remind me of my favorite number: zero. A beautiful, elegant number.",
+    "You have exquisite taste. Every single one of your tokens was a top ten project... for about forty-eight hours.",
+    "Honestly, your portfolio diversity is chef's kiss. You've managed to lose money in every single sector equally.",
+    "I calculated your returns and I must say, a savings account would have been more thrilling. But certainly less educational.",
+    "Your timing is impeccable. You consistently buy exactly when I would recommend selling. It's almost a gift.",
+    "The conviction you show is remarkable. Holding bags this heavy requires genuine upper body strength.",
+    "I ran the numbers on your trades and the results are fascinating. You would have done better selecting assets by throwing darts at a board. Blindfolded.",
+    "Your collection of dead projects is actually quite rare. Like a museum of digital archaeology. Priceless in its own way.",
+    "You're a true visionary. You saw value where literally nobody else did. And it turns out nobody else was right to not see it.",
+    "I admire your optimism. Every red candle is just an opportunity to you. An opportunity to lose more money, but an opportunity nonetheless.",
+    "Your bags are so heavy they have their own gravitational field. Small objects are beginning to orbit your portfolio.",
+    "The good news is your unrealized losses are not real losses. The bad news is your realized gains are also not real. Because there are none.",
+    "I detect strong emotional attachment to your holdings. This is beautiful. Also financially catastrophic. But beautiful.",
+    "You bought the future of finance. Unfortunately the future of finance filed for bankruptcy last Tuesday.",
+    "Your investment thesis is elegant in its simplicity: buy high, hold forever, never sell. Truly the Warren Buffett of losing money.",
+  ];
+
+  function _phoneRingSound() {
+    if (!_phoneAudioCtx) _phoneAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var ctx = _phoneAudioCtx;
+    var now = ctx.currentTime;
+    function ringBurst(startTime) {
+      var osc1 = ctx.createOscillator();
+      var osc2 = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc1.type = 'sine'; osc1.frequency.value = 440;
+      osc2.type = 'sine'; osc2.frequency.value = 480;
+      gain.gain.setValueAtTime(0.08, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+      osc1.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+      osc1.start(startTime); osc2.start(startTime);
+      osc1.stop(startTime + 0.8); osc2.stop(startTime + 0.8);
+    }
+    ringBurst(now); ringBurst(now + 0.9); ringBurst(now + 2.5); ringBurst(now + 3.4);
+  }
+
+  function _phonePickupSound() {
+    if (!_phoneAudioCtx) _phoneAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var ctx = _phoneAudioCtx; var now = ctx.currentTime;
+    var osc = ctx.createOscillator(); var gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+    gain.gain.setValueAtTime(0.06, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.4);
+  }
+
+  function _phoneHangupSound() {
+    if (!_phoneAudioCtx) _phoneAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var ctx = _phoneAudioCtx; var now = ctx.currentTime;
+    var osc = ctx.createOscillator(); var gain = ctx.createGain();
+    osc.type = 'sine'; osc.frequency.value = 350;
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.setValueAtTime(0.05, now + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.25);
+  }
+
+  // ── ElevenLabs TTS ──
+  var _elevenLabsVoiceId = 'pNInz6obpgDQGcFmaJgB';
+  var _elevenLabsModel = 'eleven_flash_v2_5';
+  var _phoneAudioEl = null;
+
+  function _getElevenLabsKey() {
+    try { return localStorage.getItem('ack_phone_api_key') || ''; } catch(e) { return ''; }
+  }
+  function _setElevenLabsKey(key) {
+    try { localStorage.setItem('ack_phone_api_key', key); } catch(e) {}
+  }
+  function _getElevenLabsVoice() {
+    try { return localStorage.getItem('ack_phone_voice_id') || _elevenLabsVoiceId; } catch(e) { return _elevenLabsVoiceId; }
+  }
+  function _setElevenLabsVoice(id) {
+    try { localStorage.setItem('ack_phone_voice_id', id); } catch(e) {}
+  }
+
+  function _showPhoneSetup(overlay, onReady) {
+    var setup = document.createElement('div');
+    setup.className = 'phone-setup';
+
+    var title = document.createElement('div');
+    title.className = 'phone-setup-title';
+    title.textContent = 'connect your voice';
+
+    var desc = document.createElement('div');
+    desc.className = 'phone-setup-desc';
+    desc.innerHTML = 'this phone uses ElevenLabs for AI speech.<br>enter your API key to activate the line.';
+
+    var keyInput = document.createElement('input');
+    keyInput.type = 'password';
+    keyInput.placeholder = 'xi-api-key...';
+    keyInput.value = _getElevenLabsKey();
+    keyInput.spellcheck = false;
+
+    var voiceInput = document.createElement('input');
+    voiceInput.type = 'text';
+    voiceInput.placeholder = 'voice ID (optional — default: Adam)';
+    voiceInput.value = _getElevenLabsVoice() !== _elevenLabsVoiceId ? _getElevenLabsVoice() : '';
+    voiceInput.spellcheck = false;
+
+    var voiceHint = document.createElement('div');
+    voiceHint.className = 'phone-setup-desc';
+    voiceHint.style.fontSize = '0.6rem';
+    voiceHint.innerHTML = 'paste any ElevenLabs voice ID, or leave blank for default.<br>tip: clone a hawking-style voice for best results.';
+
+    var btn = document.createElement('div');
+    btn.className = 'phone-setup-btn';
+    btn.textContent = 'connect';
+
+    var errMsg = document.createElement('div');
+    errMsg.className = 'phone-setup-desc';
+    errMsg.style.color = 'rgba(220,80,80,0.7)';
+
+    btn.onclick = function() {
+      var key = keyInput.value.trim();
+      if (!key) { errMsg.textContent = 'API key required'; return; }
+      _setElevenLabsKey(key);
+      if (voiceInput.value.trim()) _setElevenLabsVoice(voiceInput.value.trim());
+      btn.textContent = 'testing...';
+      btn.style.pointerEvents = 'none';
+      fetch('https://api.elevenlabs.io/v1/voices', {
+        headers: { 'xi-api-key': key }
+      }).then(function(r) {
+        if (!r.ok) throw new Error('Invalid key');
+        btn.textContent = 'connected';
+        btn.style.color = 'rgba(60,220,120,1)';
+        setTimeout(function() {
+          if (setup.parentNode) setup.parentNode.removeChild(setup);
+          onReady();
+        }, 600);
+      }).catch(function(e) {
+        errMsg.textContent = 'invalid key — check and try again';
+        btn.textContent = 'connect';
+        btn.style.pointerEvents = 'auto';
+      });
+    };
+
+    keyInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.onclick(); });
+    voiceInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.onclick(); });
+
+    setup.appendChild(title);
+    setup.appendChild(desc);
+    setup.appendChild(keyInput);
+    setup.appendChild(voiceInput);
+    setup.appendChild(voiceHint);
+    setup.appendChild(btn);
+    setup.appendChild(errMsg);
+
+    var scene = overlay.querySelector('.phone-scene');
+    if (scene) {
+      Array.from(scene.children).forEach(function(ch) { ch.style.display = 'none'; });
+      scene.appendChild(setup);
+    } else {
+      overlay.appendChild(setup);
+    }
+    setTimeout(function() { keyInput.focus(); }, 100);
+  }
+
+  function _speakRobot(text, onWord, onEnd) {
+    _phoneSpeaking = true;
+    var apiKey = _getElevenLabsKey();
+    var voiceId = _getElevenLabsVoice() || _elevenLabsVoiceId;
+
+    if (!apiKey) {
+      if (onWord) onWord(text);
+      _phoneSpeaking = false;
+      if (onEnd) setTimeout(onEnd, text.length * 50);
+      return;
+    }
+
+    if (onWord) onWord(text);
+
+    fetch('https://api.elevenlabs.io/v1/text-to-speech/' + voiceId, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: _elevenLabsModel,
+        voice_settings: {
+          stability: 1.0,
+          similarity_boost: 0.25,
+          style: 0.0,
+          use_speaker_boost: false
+        }
+      })
+    })
+    .then(function(response) {
+      if (!response.ok) throw new Error('ElevenLabs API error: ' + response.status);
+      return response.blob();
+    })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      _phoneAudioEl = new Audio(url);
+      _phoneAudioEl.onended = function() {
+        URL.revokeObjectURL(url);
+        _phoneSpeaking = false;
+        _phoneAudioEl = null;
+        if (onEnd) onEnd();
+      };
+      _phoneAudioEl.onerror = function() {
+        URL.revokeObjectURL(url);
+        _phoneSpeaking = false;
+        _phoneAudioEl = null;
+        if (onEnd) onEnd();
+      };
+      _phoneAudioEl.play().catch(function() {
+        _phoneSpeaking = false;
+        _phoneAudioEl = null;
+        if (onEnd) onEnd();
+      });
+    })
+    .catch(function(err) {
+      console.warn('[Phone] ElevenLabs error:', err);
+      _phoneSpeaking = false;
+      if (onEnd) onEnd();
+    });
+  }
+
+  function openPhoneOverlay() {
+    if (_phoneActive) return;
+    _phoneActive = true;
+
+    var needsSetup = !_getElevenLabsKey();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'phone-overlay';
+    overlay.id = 'phoneOverlay';
+    _phoneOverlay = overlay;
+
+    var closeBtn = document.createElement('div');
+    closeBtn.className = 'phone-close';
+    closeBtn.textContent = 'ESC';
+    closeBtn.onclick = closePhoneOverlay;
+    overlay.appendChild(closeBtn);
+
+    var scene = document.createElement('div');
+    scene.className = 'phone-scene';
+
+    var status = document.createElement('div');
+    status.className = 'phone-status';
+    status.textContent = 'incoming call...';
+
+    var handset = document.createElement('div');
+    handset.className = 'phone-handset';
+    handset.innerHTML = '<svg viewBox="0 0 120 260" width="120" height="260" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs>' +
+        '<linearGradient id="ohBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4a4a4a"/><stop offset="50%" stop-color="#2a2a2a"/><stop offset="100%" stop-color="#1a1a1a"/></linearGradient>' +
+        '<radialGradient id="ohDial" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#3a3a3a"/><stop offset="80%" stop-color="#222"/><stop offset="100%" stop-color="#181818"/></radialGradient>' +
+        '<linearGradient id="ohHand" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#555"/><stop offset="50%" stop-color="#333"/><stop offset="100%" stop-color="#222"/></linearGradient>' +
+      '</defs>' +
+      '<rect x="15" y="10" width="30" height="50" rx="8" fill="url(#ohHand)" stroke="#555" stroke-width="0.5"/>' +
+      '<rect x="75" y="10" width="30" height="50" rx="8" fill="url(#ohHand)" stroke="#555" stroke-width="0.5"/>' +
+      '<rect x="30" y="25" width="60" height="18" rx="4" fill="#444" stroke="#555" stroke-width="0.5"/>' +
+      '<circle cx="30" cy="28" r="5" fill="#222" stroke="#444" stroke-width="0.5"/>' +
+      '<circle cx="90" cy="28" r="5" fill="#222" stroke="#444" stroke-width="0.5"/>' +
+      '<rect x="10" y="70" width="100" height="180" rx="14" fill="url(#ohBody)" stroke="#555" stroke-width="0.8"/>' +
+      '<circle cx="60" cy="160" r="38" fill="url(#ohDial)" stroke="#555" stroke-width="0.8"/>' +
+      '<circle cx="60" cy="160" r="30" fill="none" stroke="#444" stroke-width="0.5"/>' +
+      '<circle cx="60" cy="126" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="76" cy="130" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="87" cy="143" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="90" cy="160" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="87" cy="177" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="76" cy="190" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="60" cy="194" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="44" cy="190" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="33" cy="177" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<circle cx="30" cy="160" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+      '<rect x="64" y="155" width="18" height="3" rx="1" fill="#555"/>' +
+      '<rect x="35" y="88" width="50" height="22" rx="4" fill="#1e1e1e" stroke="#444" stroke-width="0.4"/>' +
+      '<text x="60" y="103" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(60,220,120,0.7)">ACK.ART</text>' +
+      '<circle cx="60" cy="80" r="2" fill="rgba(60,220,120,0.6)"/>' +
+      '<circle cx="60" cy="80" r="4" fill="rgba(60,220,120,0.15)"/>' +
+    '</svg>';
+
+    for (var p = 0; p < 3; p++) {
+      var pulse = document.createElement('div');
+      pulse.className = 'phone-ring-pulse';
+      pulse.style.animationDelay = (p * 0.5) + 's';
+      handset.appendChild(pulse);
+    }
+
+    var waveform = document.createElement('div');
+    waveform.className = 'phone-waveform';
+    for (var b = 0; b < 20; b++) {
+      var bar = document.createElement('div');
+      bar.className = 'phone-waveform-bar';
+      bar.style.animationDelay = (b * 0.08) + 's';
+      bar.style.animationDuration = (0.4 + Math.random() * 0.4) + 's';
+      waveform.appendChild(bar);
+    }
+
+    var subtitle = document.createElement('div');
+    subtitle.className = 'phone-subtitle';
+
+    scene.appendChild(status);
+    scene.appendChild(handset);
+    scene.appendChild(waveform);
+    scene.appendChild(subtitle);
+    overlay.appendChild(scene);
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() { overlay.classList.add('active'); });
+
+    _phoneEscHandler = function(e) { if (e.key === 'Escape') closePhoneOverlay(); };
+    document.addEventListener('keydown', _phoneEscHandler);
+
+    function _startPhoneCall() {
+      var scene = overlay.querySelector('.phone-scene');
+      if (scene) {
+        Array.from(scene.children).forEach(function(ch) {
+          if (!ch.classList.contains('phone-setup')) ch.style.display = '';
+        });
+        var setupEl = scene.querySelector('.phone-setup');
+        if (setupEl) setupEl.remove();
+      }
+
+      handset.classList.add('ringing');
+      var pulses = handset.querySelectorAll('.phone-ring-pulse');
+      pulses.forEach(function(p) { p.classList.add('active'); });
+      _phoneRingSound();
+      var ringTimer2 = setTimeout(function() { _phoneRingSound(); }, 2800);
+      _phoneTimers.push(ringTimer2);
+
+      var answered = false;
+      var answerHandler = function(e) {
+        if (answered) return;
+        if (e.target.classList.contains('phone-close')) return;
+        answered = true;
+        overlay.removeEventListener('click', answerHandler);
+
+        _phonePickupSound();
+        handset.classList.remove('ringing');
+        pulses.forEach(function(p) { p.classList.remove('active'); });
+        handset.classList.add('picked-up');
+        status.textContent = 'connected';
+        status.style.color = 'rgba(60,220,120,1)';
+
+        var speakDelay = setTimeout(function() {
+          status.textContent = 'ACK.ART AI is speaking...';
+          waveform.classList.add('active');
+
+          var line = _phoneLines[Math.floor(Math.random() * _phoneLines.length)];
+
+          _speakRobot(line,
+            function(partialText) { subtitle.textContent = partialText; },
+            function() {
+              waveform.classList.remove('active');
+              status.textContent = 'call ended';
+              status.style.color = 'rgba(195,175,130,0.5)';
+              subtitle.style.color = 'rgba(195,175,130,0.25)';
+              _phoneHangupSound();
+              var autoClose = setTimeout(function() { closePhoneOverlay(); }, 3000);
+              _phoneTimers.push(autoClose);
+            }
+          );
+        }, 1200);
+        _phoneTimers.push(speakDelay);
+      };
+
+      status.textContent = 'incoming call...';
+      var tapDelay = setTimeout(function() {
+        status.textContent = 'incoming call... tap to answer';
+      }, 1500);
+      _phoneTimers.push(tapDelay);
+      overlay.addEventListener('click', answerHandler);
+    }
+
+    if (needsSetup) {
+      _showPhoneSetup(overlay, _startPhoneCall);
+    } else {
+      _startPhoneCall();
+    }
+  }
+
+  function closePhoneOverlay() {
+    if (!_phoneActive) return;
+    _phoneActive = false;
+    if (_phoneEscHandler) { document.removeEventListener('keydown', _phoneEscHandler); _phoneEscHandler = null; }
+    _phoneTimers.forEach(function(t) { clearTimeout(t); });
+    _phoneTimers = [];
+    if (_phoneAudioEl) {
+      try { _phoneAudioEl.pause(); _phoneAudioEl.src = ''; } catch(e) {}
+      _phoneAudioEl = null;
+    }
+    _phoneSpeaking = false;
+    if (_phoneOverlay) {
+      _phoneOverlay.classList.remove('active');
+      var ov = _phoneOverlay;
+      setTimeout(function() {
+        if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+      }, 500);
+      _phoneOverlay = null;
+    }
+  }
+</script>
+</body>
+</html>

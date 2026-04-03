@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACK.ART — Arcade Test</title>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      color: #f0f0ee;
+      min-height: 100vh;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(40,40,45,0.25) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(40,40,45,0.25) 1px, transparent 1px),
+        linear-gradient(rgba(40,40,45,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(40,40,45,0.08) 1px, transparent 1px),
+        #1e1e22;
+      background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+    }
+
+    .arcade-lobby {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 5; padding: 40px;
+    }
+    .arcade-lobby.hidden { display: none; }
+
+    .game-frame {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      border: none; z-index: 10; display: none;
+    }
+    .game-frame.active { display: block; }
+
+    .back-btn {
+      position: fixed; top: 16px; left: 20px; z-index: 10001;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: rgba(195,175,130,0.5); cursor: pointer;
+      letter-spacing: 0.1em; padding: 6px 12px;
+      border: 1px solid rgba(195,175,130,0.15); border-radius: 3px;
+      background: rgba(30,28,35,0.8);
+      transition: all 0.2s ease;
+      display: none;
+    }
+    .back-btn:hover {
+      color: rgba(220,210,195,0.8);
+      border-color: rgba(195,175,130,0.35);
+    }
+    .back-btn.visible { display: block; }
+
+    .game-card {
+      width: 220px; cursor: pointer;
+      transition: transform 0.25s ease, filter 0.25s ease;
+    }
+    .game-card:hover {
+      transform: scale(1.05) translateY(-4px);
+      filter: brightness(1.15);
+    }
+    .game-card-thumb {
+      width: 220px; height: 160px;
+      border: 1px solid rgba(195,175,130,0.2);
+      border-radius: 4px; overflow: hidden;
+      background: rgba(20,18,25,0.5);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .game-card-thumb canvas {
+      width: 100%; height: 100%;
+    }
+    .game-card-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 15px; color: rgba(225,215,195,0.75);
+      margin-top: 10px; letter-spacing: 0.02em;
+    }
+    .game-card-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; color: rgba(195,175,130,0.3);
+      letter-spacing: 0.15em; margin-top: 4px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="back-btn" id="backBtn" onclick="backToLobby()">← LOBBY</div>
+
+  <div class="arcade-lobby" id="lobby">
+    <div style="font-family:'EB Garamond',Georgia,serif;font-size:clamp(26px,4vw,38px);color:rgba(195,175,130,0.7);letter-spacing:0.04em;margin-bottom:6px;">arcade</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.3em;color:rgba(195,175,130,0.25);text-transform:uppercase;margin-bottom:50px;">ack.art</div>
+
+    <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;justify-content:center;">
+
+      <!-- Balloon Bags Card -->
+      <div class="game-card" onclick="launchBalloonBags()">
+        <div class="game-card-thumb">
+          <canvas id="bbThumb" width="440" height="320"></canvas>
+        </div>
+        <div class="game-card-title">Balloon Bags</div>
+        <div class="game-card-sub">pop balloons · collect bags · dodge thieves</div>
+      </div>
+
+      <!-- Aerial Screw Card -->
+      <div class="game-card" onclick="launchAerialScrew()">
+        <div class="game-card-thumb">
+          <canvas id="asThumb" width="440" height="320"></canvas>
+        </div>
+        <div class="game-card-title">Aerial Screw</div>
+        <div class="game-card-sub">tap to glide · collect coins · avoid obstacles</div>
+      </div>
+
+    </div>
+
+    <!-- Decoration nodes -->
+    <div id="decoLayer" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:1;"></div>
+  </div>
+
+  <iframe class="game-frame" id="gameFrame"></iframe>
+
+<script>
+  // ── Draw thumbnails ──
+  (function() {
+    // Balloon Bags thumbnail
+    var cv = document.getElementById('bbThumb');
+    var cx = cv.getContext('2d');
+    cx.fillStyle = '#1e1e22';
+    cx.fillRect(0,0,440,320);
+    cx.strokeStyle = 'rgba(40,40,45,0.5)';
+    cx.lineWidth = 1;
+    for (var gx=0;gx<440;gx+=20){cx.beginPath();cx.moveTo(gx,0);cx.lineTo(gx,320);cx.stroke();}
+    for (var gy=0;gy<320;gy+=20){cx.beginPath();cx.moveTo(0,gy);cx.lineTo(440,gy);cx.stroke();}
+    var balloonColors = ['#c75b7a','#6ba5d7','#d4a843','#8ec07c','#c490d1','#e8937a'];
+    var balloonPositions = [{x:90,y:80},{x:180,y:120},{x:290,y:70},{x:360,y:140},{x:140,y:180},{x:320,y:200}];
+    balloonPositions.forEach(function(bp,i){
+      cx.strokeStyle = 'rgba(160,155,140,0.3)';
+      cx.lineWidth = 1;
+      cx.beginPath(); cx.moveTo(bp.x,bp.y+22); cx.lineTo(bp.x,bp.y+52); cx.stroke();
+      cx.fillStyle = balloonColors[i % balloonColors.length];
+      cx.globalAlpha = 0.7;
+      cx.beginPath(); cx.ellipse(bp.x,bp.y,16,22,0,0,Math.PI*2); cx.fill();
+      cx.globalAlpha = 1;
+      cx.fillStyle = 'rgba(255,255,255,0.15)';
+      cx.beginPath(); cx.ellipse(bp.x-5,bp.y-8,5,8,0,0,Math.PI*2); cx.fill();
+    });
+    var bagImg = new Image();
+    bagImg.onload = function(){ cx.drawImage(bagImg, 190, 140, 60, 60); };
+    bagImg.src = 'my_bags_decoration_web.png';
+
+    // Aerial Screw thumbnail
+    var cv2 = document.getElementById('asThumb');
+    var cx2 = cv2.getContext('2d');
+    var skyG = cx2.createLinearGradient(0,0,0,320);
+    skyG.addColorStop(0,'#5b7fa6');
+    skyG.addColorStop(0.5,'#a8b8c4');
+    skyG.addColorStop(1,'#8a7e6a');
+    cx2.fillStyle = skyG;
+    cx2.fillRect(0,0,440,320);
+    cx2.strokeStyle = 'rgba(60,80,110,0.1)';
+    cx2.lineWidth = 1;
+    for (var gx2=0;gx2<440;gx2+=25){cx2.beginPath();cx2.moveTo(gx2,0);cx2.lineTo(gx2,320);cx2.stroke();}
+    for (var gy2=0;gy2<320;gy2+=25){cx2.beginPath();cx2.moveTo(0,gy2);cx2.lineTo(440,gy2);cx2.stroke();}
+    cx2.fillStyle = 'rgba(100,115,135,0.3)';
+    cx2.beginPath(); cx2.moveTo(0,260);
+    for (var mm=0;mm<=440;mm+=4){cx2.lineTo(mm, 220 - Math.sin(mm*0.015)*30 - Math.sin(mm*0.04)*15);}
+    cx2.lineTo(440,260); cx2.closePath(); cx2.fill();
+    cx2.fillStyle = 'rgba(240,238,232,0.35)';
+    [{x:80,y:60},{x:250,y:90},{x:380,y:50}].forEach(function(cl){
+      cx2.beginPath(); cx2.ellipse(cl.x,cl.y,50,14,0,0,Math.PI*2); cx2.fill();
+      cx2.beginPath(); cx2.ellipse(cl.x+30,cl.y+5,30,10,0,0,Math.PI*2); cx2.fill();
+    });
+    var screwImg = new Image();
+    screwImg.onload = function(){ cx2.drawImage(screwImg, 0, 0, 200, 214, 150, 80, 140, 150); };
+    screwImg.src = 'aerialscrew_sprite_strip.png';
+    var coinImg = new Image();
+    coinImg.onload = function(){
+      cx2.beginPath(); cx2.arc(340,160,18,0,Math.PI*2); cx2.closePath(); cx2.save(); cx2.clip();
+      cx2.drawImage(coinImg, 322, 142, 36, 36); cx2.restore();
+      cx2.strokeStyle='rgba(200,160,60,0.5)'; cx2.lineWidth=1.5;
+      cx2.beginPath(); cx2.arc(340,160,18,0,Math.PI*2); cx2.stroke();
+    };
+    coinImg.src = 'servant_face_web.png';
+
+    // Decorations
+    var decoLayer = document.getElementById('decoLayer');
+    var decoAssets = ['my_bags_decoration_web.png','servant_face_web.png','aerialscrew_thumb.png'];
+    for (var di = 0; di < 12; di++) {
+      var deco = document.createElement('img');
+      deco.src = decoAssets[di % decoAssets.length];
+      var dx = 5 + Math.random() * 90;
+      var dy = 5 + Math.random() * 90;
+      var ds = 16 + Math.random() * 28;
+      var dr = -20 + Math.random() * 40;
+      var da = 0.04 + Math.random() * 0.06;
+      deco.style.cssText = 'position:absolute;left:'+dx+'%;top:'+dy+'%;width:'+ds+'px;height:'+ds+'px;object-fit:contain;opacity:'+da+';transform:rotate('+dr+'deg);pointer-events:none;';
+      decoLayer.appendChild(deco);
+    }
+  })();
+
+  // ── Game launchers ──
+  function launchBalloonBags() {
+    document.getElementById('lobby').classList.add('hidden');
+    document.getElementById('backBtn').classList.add('visible');
+    // For now, balloon bags doesn't have a standalone page yet — show placeholder
+    var frame = document.getElementById('gameFrame');
+    frame.classList.add('active');
+    frame.srcdoc = '<html><body style="background:#1e1e22;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:monospace;"><div style="color:rgba(195,175,130,0.5);text-align:center;"><div style="font-size:24px;margin-bottom:12px;">Balloon Bags</div><div style="font-size:12px;opacity:0.5;">standalone page coming soon</div><div style="font-size:11px;opacity:0.3;margin-top:20px;">this game currently runs embedded in index.html</div></div></body></html>';
+  }
+
+  function launchAerialScrew() {
+    document.getElementById('lobby').classList.add('hidden');
+    document.getElementById('backBtn').classList.add('visible');
+    var frame = document.getElementById('gameFrame');
+    frame.src = 'aerialscrew_game.html';
+    frame.classList.add('active');
+  }
+
+  function backToLobby() {
+    document.getElementById('lobby').classList.remove('hidden');
+    document.getElementById('backBtn').classList.remove('visible');
+    var frame = document.getElementById('gameFrame');
+    frame.classList.remove('active');
+    frame.src = '';
+    frame.srcdoc = '';
+  }
+
+  // ESC to go back to lobby (or close if already in lobby)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (document.getElementById('gameFrame').classList.contains('active')) {
+        backToLobby();
+      }
+    }
+  });
+</script>
+</body>
+</html>
