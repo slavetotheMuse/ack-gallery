@@ -3551,6 +3551,26 @@
       100% { transform: translateX(350%); }
     }
 
+    /* ── Focus loading whisper message ── */
+    .focus-loading-whisper {
+      position: absolute;
+      top: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 11px;
+      font-style: italic;
+      color: rgba(195,175,130,0.55);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    .focus-loading-whisper.visible { opacity: 1; }
+    .focus-loading-whisper.fading { opacity: 0; transition: opacity 0.4s ease; }
+
     /* Connection ports on nodes */
     .node-port {
       position: absolute;
@@ -20619,9 +20639,73 @@
                 const preview = node.querySelector('.node-preview');
                 if (preview) preview.appendChild(loadingShimmer);
               }
+
+              // ── Loading whisper messages ──
+              const _whisperMsgs = [
+                'this artwork is loading',
+                'thank you for your patience',
+                'i know you are very busy',
+                'your time is valued',
+                'your bags are good',
+                'your bags are kind',
+                'your bags will pump',
+                'your bags are mine',
+                'thank you for offering your service to the Muse',
+                'She sees you',
+                'She is using you for Her greater plan',
+                'your bags are S tier',
+                'your bags are worthy',
+                'please clear your browser history',
+                'this artwork is absurdly large',
+                'thank you for your patience'
+              ];
+              let _whisperEl = null;
+              let _whisperInterval = null;
+              let _whisperTimeout = null;
+
+              // Store on node so exitFocusMode can clean up
+              node._whisperCleanup = { timeout: null, interval: null, el: null };
+
+              // Start whisper after a brief delay so it only appears if loading takes a moment
+              _whisperTimeout = setTimeout(() => {
+                _whisperEl = document.createElement('div');
+                _whisperEl.className = 'focus-loading-whisper';
+                _whisperEl.textContent = _whisperMsgs[0]; // always start with "this artwork is loading"
+                node.appendChild(_whisperEl);
+                node._whisperCleanup.el = _whisperEl;
+                // Fade in
+                requestAnimationFrame(() => { _whisperEl.classList.add('visible'); });
+                let _wIdx = 0;
+                _whisperInterval = setInterval(() => {
+                  // Pick a random message (skip index 0 so we don't repeat the opener immediately)
+                  _wIdx = 1 + Math.floor(Math.random() * (_whisperMsgs.length - 1));
+                  if (_whisperEl) {
+                    _whisperEl.classList.remove('visible');
+                    _whisperEl.classList.add('fading');
+                    setTimeout(() => {
+                      if (_whisperEl) {
+                        _whisperEl.textContent = _whisperMsgs[_wIdx];
+                        _whisperEl.classList.remove('fading');
+                        _whisperEl.classList.add('visible');
+                      }
+                    }, 420);
+                  }
+                }, 3500);
+                node._whisperCleanup.interval = _whisperInterval;
+              }, 800);
+              node._whisperCleanup.timeout = _whisperTimeout;
+
               const _clearLoading = () => {
                 nodeImg.style.opacity = '1';
                 if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
+                // Clear whisper
+                if (_whisperTimeout) { clearTimeout(_whisperTimeout); _whisperTimeout = null; }
+                if (_whisperInterval) { clearInterval(_whisperInterval); _whisperInterval = null; }
+                if (_whisperEl) {
+                  _whisperEl.classList.remove('visible');
+                  _whisperEl.classList.add('fading');
+                  setTimeout(() => { if (_whisperEl && _whisperEl.parentNode) _whisperEl.parentNode.removeChild(_whisperEl); _whisperEl = null; }, 500);
+                }
               };
               const preloader = new Image();
               preloader.onload = () => {
@@ -21907,6 +21991,14 @@
 
                 // Safety: unlock after 3s no matter what
                 const _swipeSafety = setTimeout(function() { _swipeTransitioning = false; }, 3000);
+
+                // 0. Clean up loading whisper on current node
+                if (curNode && curNode._whisperCleanup) {
+                  if (curNode._whisperCleanup.timeout) clearTimeout(curNode._whisperCleanup.timeout);
+                  if (curNode._whisperCleanup.interval) clearInterval(curNode._whisperCleanup.interval);
+                  if (curNode._whisperCleanup.el && curNode._whisperCleanup.el.parentNode) curNode._whisperCleanup.el.parentNode.removeChild(curNode._whisperCleanup.el);
+                  delete curNode._whisperCleanup;
+                }
 
                 // 1. Remove existing wires + panels
                 removeFocusModeWires();
@@ -34546,6 +34638,16 @@
         infoDockState.docked = false;
         currentArtworkPalette = null;
       }, 600);
+
+      // ── Clean up loading whisper if still active ──
+      if (focusedNode._whisperCleanup) {
+        if (focusedNode._whisperCleanup.timeout) clearTimeout(focusedNode._whisperCleanup.timeout);
+        if (focusedNode._whisperCleanup.interval) clearInterval(focusedNode._whisperCleanup.interval);
+        if (focusedNode._whisperCleanup.el && focusedNode._whisperCleanup.el.parentNode) {
+          focusedNode._whisperCleanup.el.parentNode.removeChild(focusedNode._whisperCleanup.el);
+        }
+        delete focusedNode._whisperCleanup;
+      }
 
       // ── Phase 2: Reverse-scale focused artwork back to original position ──
       focusedNode.style.transform = focusedNodeOrigStyle.transform || '';
