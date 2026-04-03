@@ -20641,8 +20641,8 @@
                 if (preview) preview.appendChild(loadingShimmer);
               }
 
-              // ── Loading whisper messages (skip for GIFs and videos) ──
-              const _skipWhisper = _isGifArtwork || _isVideoFullRes;
+              // ── Loading whisper messages (skip for videos only) ──
+              const _skipWhisper = _isVideoFullRes;
               const _whisperMsgs = [
                 'this artwork is loading',
                 'thank you for your patience',
@@ -20673,12 +20673,17 @@
                 _whisperEl = document.createElement('div');
                 _whisperEl.className = 'focus-loading-whisper';
                 _whisperEl.textContent = _whisperMsgs[0]; // always start with "this artwork is loading"
-                // Scale font to artwork width — small works get tiny text, large works get slightly bigger
                 // Counter-scale so the whisper appears at a fixed screen size
-                // regardless of how much the node is scaled up in focus mode
+                // regardless of how much the node is scaled up in focus mode.
+                // top in node-space: we want ~20px above the node on screen,
+                // so in node coords that's -20/scaleFactor, but scale() also
+                // shrinks the element so we add extra clearance.
                 var _invS = _isRealMobile ? 1 : (1 / scaleFactor);
-                _whisperEl.style.transform = 'translateX(-50%) scale(' + _invS + ')';
-                _whisperEl.style.top = (-14 * _invS) + 'px';
+                var _whisperScreenSize = 10; // desired screen px font size
+                var _whisperTopScreen = 24; // desired screen px above node top
+                _whisperEl.style.fontSize = (_whisperScreenSize * _invS) + 'px';
+                _whisperEl.style.top = '-' + (_whisperTopScreen * _invS) + 'px';
+                _whisperEl.style.transform = 'translateX(-50%)';
                 // Tint whisper to match artwork/collection frame color
                 var _wPal = (artData && ARTWORK_PALETTES[artData.image]) || COLLECTION_PALETTES[_focusColName] || null;
                 if (_wPal && _wPal.accentDim) {
