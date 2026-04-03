@@ -2013,10 +2013,23 @@
     }
 
     /* ── Arcade Node styling ── */
-    .arcade-node .collection-thumbnail { cursor: pointer; }
+    .arcade-node .collection-thumbnail {
+      cursor: pointer;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: visible;
+    }
+    .arcade-node:hover .collection-thumbnail {
+      border: none !important;
+      transform: scale(1.06);
+    }
+    .arcade-node .arcade-thumbnail img {
+      filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.4));
+    }
     .arcade-node:hover .arcade-thumbnail img {
       opacity: 1 !important;
-      filter: drop-shadow(0 0 8px rgba(200,60,60,0.2));
+      filter: drop-shadow(2px 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 8px rgba(200,60,60,0.15));
     }
 
     /* ── Arcade Overlay ── */
