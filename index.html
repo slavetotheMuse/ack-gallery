@@ -33,6 +33,9 @@
   <link rel="image_src" href="https://gallery.ack.art/but_wait_thumb.jpg">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
+  <!-- meSpeak.js — eSpeak TTS port for Stephen Hawking-style voice -->
+  <script src="https://cdn.jsdelivr.net/npm/mespeak@2.0.2/mespeak.full.min.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     :root {
@@ -36961,66 +36964,144 @@
       osc.stop(now + 0.25);
     }
 
-    function _speakRobot(text, onWord, onEnd) {
-      if (!('speechSynthesis' in window)) {
-        // Fallback: just show text
-        if (onWord) onWord(text);
-        if (onEnd) setTimeout(onEnd, text.length * 60);
+    // ── meSpeak.js initialization (eSpeak / DECtalk-style voice) ──
+    var _meSpeakReady = false;
+    var _meSpeakLoading = false;
+
+    function _initMeSpeak(cb) {
+      if (_meSpeakReady) { if (cb) cb(true); return; }
+      if (_meSpeakLoading) {
+        // Wait for existing load
+        var waitInt = setInterval(function() {
+          if (_meSpeakReady || !_meSpeakLoading) {
+            clearInterval(waitInt);
+            if (cb) cb(_meSpeakReady);
+          }
+        }, 100);
         return;
       }
-      window.speechSynthesis.cancel();
-      var utter = new SpeechSynthesisUtterance(text);
-      utter.rate = 0.75;
-      utter.pitch = 0.3;
-      utter.volume = 0.8;
-
-      // Try to find a robotic/English voice
-      var voices = window.speechSynthesis.getVoices();
-      var preferred = ['Google UK English Male', 'Microsoft David', 'Daniel', 'Alex', 'Fred', 'Fiona'];
-      for (var i = 0; i < preferred.length; i++) {
-        for (var j = 0; j < voices.length; j++) {
-          if (voices[j].name.indexOf(preferred[i]) !== -1) {
-            utter.voice = voices[j];
-            break;
+      if (typeof meSpeak === 'undefined') { if (cb) cb(false); return; }
+      _meSpeakLoading = true;
+      try {
+        // Load config
+        meSpeak.loadConfig('https://cdn.jsdelivr.net/npm/mespeak@2.0.2/mespeak_config.json');
+        // Load English voice
+        meSpeak.loadVoice('https://cdn.jsdelivr.net/npm/mespeak@2.0.2/voices/en/en-us.json', function() {
+          _meSpeakReady = true;
+          _meSpeakLoading = false;
+          if (cb) cb(true);
+        });
+        // Fallback timeout in case voice load callback doesn't fire
+        setTimeout(function() {
+          if (!_meSpeakReady) {
+            // Check if meSpeak can speak anyway (config might have loaded synchronously)
+            try {
+              meSpeak.speak('test', { rawdata: true, pitch: 30, speed: 130 });
+              _meSpeakReady = true;
+            } catch(e) {}
+            _meSpeakLoading = false;
+            if (cb && !_meSpeakReady) cb(false);
           }
-        }
-        if (utter.voice) break;
+        }, 3000);
+      } catch(e) {
+        _meSpeakLoading = false;
+        if (cb) cb(false);
       }
-      // If no preferred found, look for any English male voice
-      if (!utter.voice) {
-        for (var k = 0; k < voices.length; k++) {
-          if (voices[k].lang && voices[k].lang.indexOf('en') === 0) {
-            utter.voice = voices[k];
-            break;
-          }
-        }
-      }
+    }
 
+    // Pre-initialize meSpeak on page load
+    setTimeout(function() { _initMeSpeak(); }, 2000);
+
+    function _speakRobot(text, onWord, onEnd) {
       _phoneSpeaking = true;
-      var wordsSoFar = '';
-      utter.onboundary = function(e) {
-        if (e.name === 'word' && onWord) {
-          wordsSoFar = text.substring(0, e.charIndex + e.charLength);
-          onWord(wordsSoFar);
+
+      // Try meSpeak first (eSpeak engine — authentic DECtalk/Hawking sound)
+      if (_meSpeakReady && typeof meSpeak !== 'undefined') {
+        try {
+          // Show full text as subtitle immediately since meSpeak doesn't do word-by-word callbacks
+          if (onWord) onWord(text);
+
+          // Speak with Hawking-like parameters:
+          // pitch 25 = very low monotone, speed 130 = deliberate pace,
+          // amplitude 100 = full volume, variant m3 = male variant 3 (deeper)
+          meSpeak.speak(text, {
+            pitch: 25,
+            speed: 130,
+            amplitude: 100,
+            wordgap: 5,
+            variant: 'm3',
+            callback: function() {
+              _phoneSpeaking = false;
+              if (onEnd) onEnd();
+            }
+          });
+          return;
+        } catch(e) {
+          console.warn('[Phone] meSpeak error, falling back:', e);
         }
-      };
-      utter.onend = function() {
-        _phoneSpeaking = false;
-        if (onWord) onWord(text);
-        if (onEnd) onEnd();
-      };
-      utter.onerror = function() {
-        _phoneSpeaking = false;
-        if (onEnd) onEnd();
-      };
-      window.speechSynthesis.speak(utter);
+      }
+
+      // Fallback: Web Speech API with most robotic settings possible
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        var utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.65;
+        utter.pitch = 0.1;
+        utter.volume = 0.8;
+
+        var voices = window.speechSynthesis.getVoices();
+        // Prefer the most robotic-sounding voices
+        var preferred = ['Fred', 'Alex', 'Microsoft David', 'Google UK English Male', 'Daniel'];
+        for (var i = 0; i < preferred.length; i++) {
+          for (var j = 0; j < voices.length; j++) {
+            if (voices[j].name.indexOf(preferred[i]) !== -1) {
+              utter.voice = voices[j];
+              break;
+            }
+          }
+          if (utter.voice) break;
+        }
+        if (!utter.voice) {
+          for (var k = 0; k < voices.length; k++) {
+            if (voices[k].lang && voices[k].lang.indexOf('en') === 0) {
+              utter.voice = voices[k];
+              break;
+            }
+          }
+        }
+
+        var wordsSoFar = '';
+        utter.onboundary = function(e) {
+          if (e.name === 'word' && onWord) {
+            wordsSoFar = text.substring(0, e.charIndex + e.charLength);
+            onWord(wordsSoFar);
+          }
+        };
+        utter.onend = function() {
+          _phoneSpeaking = false;
+          if (onWord) onWord(text);
+          if (onEnd) onEnd();
+        };
+        utter.onerror = function() {
+          _phoneSpeaking = false;
+          if (onEnd) onEnd();
+        };
+        window.speechSynthesis.speak(utter);
+        return;
+      }
+
+      // Ultimate fallback: just show text with timed reveal
+      if (onWord) onWord(text);
+      _phoneSpeaking = false;
+      if (onEnd) setTimeout(onEnd, text.length * 50);
     }
 
     function openPhoneOverlay() {
       if (_phoneActive) return;
       _phoneActive = true;
 
-      // Preload voices
+      // Ensure meSpeak is initialized; also preload Web Speech API voices as fallback
+      _initMeSpeak();
       if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
 
       var overlay = document.createElement('div');
@@ -37190,6 +37271,10 @@
       if (_phoneEscHandler) { document.removeEventListener('keydown', _phoneEscHandler); _phoneEscHandler = null; }
       _phoneTimers.forEach(function(t) { clearTimeout(t); });
       _phoneTimers = [];
+      // Stop any active speech
+      if (typeof meSpeak !== 'undefined' && _meSpeakReady) {
+        try { meSpeak.stop(); } catch(e) {}
+      }
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       _phoneSpeaking = false;
       if (_phoneOverlay) {
