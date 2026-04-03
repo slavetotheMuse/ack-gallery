@@ -2032,6 +2032,126 @@
       filter: drop-shadow(2px 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 8px rgba(200,60,60,0.15));
     }
 
+    /* ── Phone Node styling ── */
+    .phone-node .collection-thumbnail {
+      cursor: pointer;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: visible;
+    }
+    .phone-node:hover .collection-thumbnail {
+      border: none !important;
+      transform: scale(1.06);
+    }
+    .phone-node .phone-thumbnail svg {
+      filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.4));
+      transition: filter 0.3s ease, opacity 0.3s ease;
+      opacity: 0.85;
+    }
+    .phone-node:hover .phone-thumbnail svg {
+      opacity: 1 !important;
+      filter: drop-shadow(2px 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 8px rgba(60,200,120,0.2));
+    }
+
+    /* ── Phone Overlay ── */
+    .phone-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 9999;
+      background: radial-gradient(ellipse at center, rgba(10,12,14,0.97), rgba(5,6,8,0.99));
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .phone-overlay.active { opacity: 1; }
+    .phone-overlay .phone-close {
+      position: absolute; top: 20px; right: 28px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem; color: rgba(195,175,130,0.5);
+      cursor: pointer; z-index: 10002; letter-spacing: 0.08em;
+      padding: 6px 14px; border: 1px solid rgba(195,175,130,0.2);
+      border-radius: 3px; transition: all 0.3s ease;
+    }
+    .phone-overlay .phone-close:hover {
+      color: rgba(195,175,130,0.9);
+      border-color: rgba(195,175,130,0.5);
+    }
+    .phone-scene {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 30px; position: relative;
+    }
+    .phone-handset {
+      width: 120px; height: 260px; position: relative;
+      animation: phone-idle 3s ease-in-out infinite;
+    }
+    .phone-handset.ringing {
+      animation: phone-ring 0.12s ease-in-out infinite alternate;
+    }
+    .phone-handset.picked-up {
+      animation: phone-pickup 0.6s ease forwards;
+    }
+    @keyframes phone-idle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    @keyframes phone-ring {
+      0% { transform: rotate(-8deg) translateX(-3px); }
+      100% { transform: rotate(8deg) translateX(3px); }
+    }
+    @keyframes phone-pickup {
+      0% { transform: rotate(0deg) scale(1); }
+      40% { transform: rotate(-15deg) scale(1.1); }
+      100% { transform: rotate(-90deg) scale(0.9) translateY(-20px); }
+    }
+    .phone-status {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      color: rgba(60,220,120,0.8);
+      letter-spacing: 0.1em;
+      text-align: center;
+      min-height: 24px;
+    }
+    .phone-subtitle {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: clamp(14px, 2vw, 18px);
+      color: rgba(195,175,130,0.4);
+      text-align: center;
+      max-width: 500px;
+      line-height: 1.6;
+      min-height: 80px;
+    }
+    .phone-ring-pulse {
+      position: absolute;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      border: 1px solid rgba(60,220,120,0.3);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0;
+    }
+    .phone-ring-pulse.active {
+      animation: ring-pulse 1.5s ease-out infinite;
+    }
+    @keyframes ring-pulse {
+      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+      100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+    }
+    .phone-waveform {
+      display: flex; align-items: center; justify-content: center;
+      gap: 3px; height: 40px; opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .phone-waveform.active { opacity: 1; }
+    .phone-waveform-bar {
+      width: 3px; background: rgba(60,220,120,0.6);
+      border-radius: 2px;
+      animation: waveform-bar 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes waveform-bar {
+      0% { height: 4px; }
+      100% { height: 28px; }
+    }
+
     /* ── Arcade Overlay ── */
     .arcade-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -13918,6 +14038,126 @@
           portX: ax + aw / 2,
           portY: ay + ah + 10,
           node: arcadeNode, size: aw, origIndex: -1,
+        });
+      })();
+
+      // ── PHONE NODE — AI Bag Roaster ──
+      (function() {
+        const phoneSlot = { x: 4.5, y: 56, w: 3.4, ar: 120/260 };
+        const pw = Math.floor((phoneSlot.w / 100) * layoutW);
+        const ph = Math.floor(pw / phoneSlot.ar);
+        const pcx = layoutOffX + (phoneSlot.x / 100) * layoutW;
+        const pcy = areaTop + layoutOffY + (phoneSlot.y / 100) * layoutH;
+        const px = pcx - pw / 2;
+        const py = pcy - ph / 2;
+
+        const phoneNode = document.createElement('div');
+        phoneNode.className = 'collection-node phone-node';
+        phoneNode.style.position = 'absolute';
+        phoneNode.style.left = px + 'px';
+        phoneNode.style.top = py + 'px';
+        phoneNode.style.width = pw + 'px';
+        phoneNode.style.height = (ph + 20) + 'px';
+
+        phoneNode.onclick = () => { openPhoneOverlay(); };
+
+        phoneNode.addEventListener('mouseenter', () => {
+          const chipLabel = document.querySelector('.pcb-chip-label');
+          if (chipLabel) { chipLabel.textContent = 'Phone'; chipLabel.classList.remove('marquee'); }
+        });
+        phoneNode.addEventListener('mouseleave', () => {
+          if (_openDetailBusy) return;
+          const overlay = document.getElementById('detailOverlay');
+          if (overlay && overlay.classList.contains('active')) return;
+          const chipLabel = document.querySelector('.pcb-chip-label');
+          if (chipLabel) { chipLabel.textContent = 'ACK'; chipLabel.classList.remove('marquee'); }
+        });
+
+        const port = document.createElement('div');
+        port.className = 'node-port';
+        port.style.top = 'auto'; port.style.bottom = '-4px';
+        phoneNode.appendChild(port);
+
+        const thumb = document.createElement('div');
+        thumb.className = 'collection-thumbnail phone-thumbnail';
+        thumb.style.height = ph + 'px';
+        thumb.style.display = 'flex';
+        thumb.style.alignItems = 'center';
+        thumb.style.justifyContent = 'center';
+        thumb.style.background = 'transparent';
+        thumb.style.border = 'none';
+        thumb.style.borderRadius = '3px';
+        thumb.style.position = 'relative';
+        thumb.style.overflow = 'visible';
+
+        // Retro rotary phone SVG
+        thumb.innerHTML = '<svg viewBox="0 0 120 260" width="' + pw + '" height="' + ph + '" xmlns="http://www.w3.org/2000/svg">' +
+          '<defs>' +
+            '<linearGradient id="phoneBody" x1="0" y1="0" x2="1" y2="1">' +
+              '<stop offset="0%" stop-color="#4a4a4a"/>' +
+              '<stop offset="50%" stop-color="#2a2a2a"/>' +
+              '<stop offset="100%" stop-color="#1a1a1a"/>' +
+            '</linearGradient>' +
+            '<radialGradient id="phoneDial" cx="50%" cy="50%" r="50%">' +
+              '<stop offset="0%" stop-color="#3a3a3a"/>' +
+              '<stop offset="80%" stop-color="#222"/>' +
+              '<stop offset="100%" stop-color="#181818"/>' +
+            '</radialGradient>' +
+            '<linearGradient id="phoneHandset" x1="0" y1="0" x2="0" y2="1">' +
+              '<stop offset="0%" stop-color="#555"/>' +
+              '<stop offset="50%" stop-color="#333"/>' +
+              '<stop offset="100%" stop-color="#222"/>' +
+            '</linearGradient>' +
+          '</defs>' +
+          // Handset (top)
+          '<rect x="15" y="10" width="30" height="50" rx="8" fill="url(#phoneHandset)" stroke="#555" stroke-width="0.5"/>' +
+          '<rect x="75" y="10" width="30" height="50" rx="8" fill="url(#phoneHandset)" stroke="#555" stroke-width="0.5"/>' +
+          '<rect x="30" y="25" width="60" height="18" rx="4" fill="#444" stroke="#555" stroke-width="0.5"/>' +
+          '<circle cx="30" cy="28" r="5" fill="#222" stroke="#444" stroke-width="0.5"/>' +
+          '<circle cx="90" cy="28" r="5" fill="#222" stroke="#444" stroke-width="0.5"/>' +
+          // Body
+          '<rect x="10" y="70" width="100" height="180" rx="14" fill="url(#phoneBody)" stroke="#555" stroke-width="0.8"/>' +
+          // Rotary dial
+          '<circle cx="60" cy="160" r="38" fill="url(#phoneDial)" stroke="#555" stroke-width="0.8"/>' +
+          '<circle cx="60" cy="160" r="30" fill="none" stroke="#444" stroke-width="0.5"/>' +
+          // Dial holes
+          '<circle cx="60" cy="126" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="76" cy="130" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="87" cy="143" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="90" cy="160" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="87" cy="177" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="76" cy="190" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="60" cy="194" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="44" cy="190" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="33" cy="177" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          '<circle cx="30" cy="160" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+          // Finger stop
+          '<rect x="64" y="155" width="18" height="3" rx="1" fill="#555"/>' +
+          // Label area
+          '<rect x="35" y="88" width="50" height="22" rx="4" fill="#1e1e1e" stroke="#444" stroke-width="0.4"/>' +
+          '<text x="60" y="103" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(60,220,120,0.7)">ACK.ART</text>' +
+          // Cord
+          '<path d="M60 250 Q55 255, 58 260 Q62 265, 56 270" stroke="#444" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+          // Subtle green LED
+          '<circle cx="60" cy="80" r="2" fill="rgba(60,220,120,0.6)"/>' +
+          '<circle cx="60" cy="80" r="4" fill="rgba(60,220,120,0.15)"/>' +
+        '</svg>';
+
+        phoneNode.appendChild(thumb);
+
+        const label = document.createElement('div');
+        label.className = 'collection-name';
+        label.textContent = 'Phone';
+        label.style.fontSize = pw < 100 ? '0.55rem' : '0.7rem';
+        phoneNode.appendChild(label);
+
+        phoneNode.classList.add('scroll-scale-node');
+        grid.appendChild(phoneNode);
+
+        nodeInfos.push({
+          portX: px + pw / 2,
+          portY: py + ph + 10,
+          node: phoneNode, size: pw, origIndex: -1,
         });
       })();
 
@@ -36621,6 +36861,346 @@
         pollSales();
       }, 3000);
     })();
+
+    // ══════════════════════════════════════════════════
+    // ── PHONE OVERLAY — AI Bag Roaster Hotline ──
+    // ══════════════════════════════════════════════════
+    var _phoneOverlay = null;
+    var _phoneActive = false;
+    var _phoneEscHandler = null;
+    var _phoneSpeaking = false;
+    var _phoneAudioCtx = null;
+    var _phoneTimers = [];
+
+    // Bag roast lines — overly positive but slightly offensive
+    var _phoneLines = [
+      "Your portfolio is absolutely magnificent. I mean, truly, it takes a special kind of genius to buy every single top with such precision.",
+      "I have analyzed your bags and I must say, your commitment to holding is inspirational. Most people would have sold by now. Most smart people, I mean.",
+      "The mathematical probability of picking this many underperformers is actually quite impressive. You should consider a career in statistics.",
+      "Your diamond hands are legendary. Of course, diamonds are just compressed carbon under extreme pressure, much like your account balance.",
+      "I see you bought the dip. And then the dip's dip. And then the dip's dip's dip. Remarkable averaging strategy.",
+      "Your NFT collection is stunning. The floor prices remind me of my favorite number: zero. A beautiful, elegant number.",
+      "You have exquisite taste. Every single one of your tokens was a top ten project... for about forty-eight hours.",
+      "Honestly, your portfolio diversity is chef's kiss. You've managed to lose money in every single sector equally.",
+      "I calculated your returns and I must say, a savings account would have been more thrilling. But certainly less educational.",
+      "Your timing is impeccable. You consistently buy exactly when I would recommend selling. It's almost a gift.",
+      "The conviction you show is remarkable. Holding bags this heavy requires genuine upper body strength.",
+      "I ran the numbers on your trades and the results are fascinating. You would have done better selecting assets by throwing darts at a board. Blindfolded.",
+      "Your collection of dead projects is actually quite rare. Like a museum of digital archaeology. Priceless in its own way.",
+      "You're a true visionary. You saw value where literally nobody else did. And it turns out nobody else was right to not see it.",
+      "I admire your optimism. Every red candle is just an opportunity to you. An opportunity to lose more money, but an opportunity nonetheless.",
+      "Your bags are so heavy they have their own gravitational field. Small objects are beginning to orbit your portfolio.",
+      "The good news is your unrealized losses are not real losses. The bad news is your realized gains are also not real. Because there are none.",
+      "I detect strong emotional attachment to your holdings. This is beautiful. Also financially catastrophic. But beautiful.",
+      "You bought the future of finance. Unfortunately the future of finance filed for bankruptcy last Tuesday.",
+      "Your investment thesis is elegant in its simplicity: buy high, hold forever, never sell. Truly the Warren Buffett of losing money.",
+    ];
+
+    function _phoneRingSound() {
+      if (!_phoneAudioCtx) _phoneAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var ctx = _phoneAudioCtx;
+      var now = ctx.currentTime;
+      // Classic phone ring: two tones alternating
+      function ringBurst(startTime) {
+        var osc1 = ctx.createOscillator();
+        var osc2 = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.value = 440;
+        osc2.type = 'sine';
+        osc2.frequency.value = 480;
+        gain.gain.setValueAtTime(0.08, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+        osc1.start(startTime);
+        osc2.start(startTime);
+        osc1.stop(startTime + 0.8);
+        osc2.stop(startTime + 0.8);
+      }
+      // Ring pattern: ring-ring, pause, ring-ring
+      ringBurst(now);
+      ringBurst(now + 0.9);
+      ringBurst(now + 2.5);
+      ringBurst(now + 3.4);
+    }
+
+    function _phonePickupSound() {
+      if (!_phoneAudioCtx) _phoneAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var ctx = _phoneAudioCtx;
+      var now = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    }
+
+    function _phoneHangupSound() {
+      if (!_phoneAudioCtx) _phoneAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var ctx = _phoneAudioCtx;
+      var now = ctx.currentTime;
+      // Dial tone then cut
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 350;
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.setValueAtTime(0.05, now + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    }
+
+    function _speakRobot(text, onWord, onEnd) {
+      if (!('speechSynthesis' in window)) {
+        // Fallback: just show text
+        if (onWord) onWord(text);
+        if (onEnd) setTimeout(onEnd, text.length * 60);
+        return;
+      }
+      window.speechSynthesis.cancel();
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 0.75;
+      utter.pitch = 0.3;
+      utter.volume = 0.8;
+
+      // Try to find a robotic/English voice
+      var voices = window.speechSynthesis.getVoices();
+      var preferred = ['Google UK English Male', 'Microsoft David', 'Daniel', 'Alex', 'Fred', 'Fiona'];
+      for (var i = 0; i < preferred.length; i++) {
+        for (var j = 0; j < voices.length; j++) {
+          if (voices[j].name.indexOf(preferred[i]) !== -1) {
+            utter.voice = voices[j];
+            break;
+          }
+        }
+        if (utter.voice) break;
+      }
+      // If no preferred found, look for any English male voice
+      if (!utter.voice) {
+        for (var k = 0; k < voices.length; k++) {
+          if (voices[k].lang && voices[k].lang.indexOf('en') === 0) {
+            utter.voice = voices[k];
+            break;
+          }
+        }
+      }
+
+      _phoneSpeaking = true;
+      var wordsSoFar = '';
+      utter.onboundary = function(e) {
+        if (e.name === 'word' && onWord) {
+          wordsSoFar = text.substring(0, e.charIndex + e.charLength);
+          onWord(wordsSoFar);
+        }
+      };
+      utter.onend = function() {
+        _phoneSpeaking = false;
+        if (onWord) onWord(text);
+        if (onEnd) onEnd();
+      };
+      utter.onerror = function() {
+        _phoneSpeaking = false;
+        if (onEnd) onEnd();
+      };
+      window.speechSynthesis.speak(utter);
+    }
+
+    function openPhoneOverlay() {
+      if (_phoneActive) return;
+      _phoneActive = true;
+
+      // Preload voices
+      if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+
+      var overlay = document.createElement('div');
+      overlay.className = 'phone-overlay';
+      overlay.id = 'phoneOverlay';
+      _phoneOverlay = overlay;
+
+      // Close button
+      var closeBtn = document.createElement('div');
+      closeBtn.className = 'phone-close';
+      closeBtn.textContent = 'ESC';
+      closeBtn.onclick = closePhoneOverlay;
+      overlay.appendChild(closeBtn);
+
+      // Scene
+      var scene = document.createElement('div');
+      scene.className = 'phone-scene';
+
+      // Status text
+      var status = document.createElement('div');
+      status.className = 'phone-status';
+      status.textContent = 'incoming call...';
+
+      // Handset SVG
+      var handset = document.createElement('div');
+      handset.className = 'phone-handset';
+      handset.innerHTML = '<svg viewBox="0 0 120 260" width="120" height="260" xmlns="http://www.w3.org/2000/svg">' +
+        '<defs>' +
+          '<linearGradient id="ohBody" x1="0" y1="0" x2="1" y2="1">' +
+            '<stop offset="0%" stop-color="#4a4a4a"/><stop offset="50%" stop-color="#2a2a2a"/><stop offset="100%" stop-color="#1a1a1a"/>' +
+          '</linearGradient>' +
+          '<radialGradient id="ohDial" cx="50%" cy="50%" r="50%">' +
+            '<stop offset="0%" stop-color="#3a3a3a"/><stop offset="80%" stop-color="#222"/><stop offset="100%" stop-color="#181818"/>' +
+          '</radialGradient>' +
+          '<linearGradient id="ohHand" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#555"/><stop offset="50%" stop-color="#333"/><stop offset="100%" stop-color="#222"/>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<rect x="15" y="10" width="30" height="50" rx="8" fill="url(#ohHand)" stroke="#555" stroke-width="0.5"/>' +
+        '<rect x="75" y="10" width="30" height="50" rx="8" fill="url(#ohHand)" stroke="#555" stroke-width="0.5"/>' +
+        '<rect x="30" y="25" width="60" height="18" rx="4" fill="#444" stroke="#555" stroke-width="0.5"/>' +
+        '<circle cx="30" cy="28" r="5" fill="#222" stroke="#444" stroke-width="0.5"/>' +
+        '<circle cx="90" cy="28" r="5" fill="#222" stroke="#444" stroke-width="0.5"/>' +
+        '<rect x="10" y="70" width="100" height="180" rx="14" fill="url(#ohBody)" stroke="#555" stroke-width="0.8"/>' +
+        '<circle cx="60" cy="160" r="38" fill="url(#ohDial)" stroke="#555" stroke-width="0.8"/>' +
+        '<circle cx="60" cy="160" r="30" fill="none" stroke="#444" stroke-width="0.5"/>' +
+        '<circle cx="60" cy="126" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="76" cy="130" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="87" cy="143" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="90" cy="160" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="87" cy="177" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="76" cy="190" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="60" cy="194" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="44" cy="190" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="33" cy="177" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<circle cx="30" cy="160" r="4" fill="#1a1a1a" stroke="#444" stroke-width="0.3"/>' +
+        '<rect x="64" y="155" width="18" height="3" rx="1" fill="#555"/>' +
+        '<rect x="35" y="88" width="50" height="22" rx="4" fill="#1e1e1e" stroke="#444" stroke-width="0.4"/>' +
+        '<text x="60" y="103" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(60,220,120,0.7)">ACK.ART</text>' +
+        '<circle cx="60" cy="80" r="2" fill="rgba(60,220,120,0.6)"/>' +
+        '<circle cx="60" cy="80" r="4" fill="rgba(60,220,120,0.15)"/>' +
+      '</svg>';
+
+      // Ring pulse circles
+      for (var p = 0; p < 3; p++) {
+        var pulse = document.createElement('div');
+        pulse.className = 'phone-ring-pulse';
+        pulse.style.animationDelay = (p * 0.5) + 's';
+        handset.appendChild(pulse);
+      }
+
+      // Waveform visualizer (hidden initially)
+      var waveform = document.createElement('div');
+      waveform.className = 'phone-waveform';
+      for (var b = 0; b < 20; b++) {
+        var bar = document.createElement('div');
+        bar.className = 'phone-waveform-bar';
+        bar.style.animationDelay = (b * 0.08) + 's';
+        bar.style.animationDuration = (0.4 + Math.random() * 0.4) + 's';
+        waveform.appendChild(bar);
+      }
+
+      // Subtitle (spoken text)
+      var subtitle = document.createElement('div');
+      subtitle.className = 'phone-subtitle';
+
+      scene.appendChild(status);
+      scene.appendChild(handset);
+      scene.appendChild(waveform);
+      scene.appendChild(subtitle);
+      overlay.appendChild(scene);
+
+      document.body.appendChild(overlay);
+      requestAnimationFrame(function() { overlay.classList.add('active'); });
+
+      // ESC handler
+      _phoneEscHandler = function(e) { if (e.key === 'Escape') closePhoneOverlay(); };
+      document.addEventListener('keydown', _phoneEscHandler);
+
+      // ── Phase 1: Ringing ──
+      handset.classList.add('ringing');
+      var pulses = handset.querySelectorAll('.phone-ring-pulse');
+      pulses.forEach(function(p) { p.classList.add('active'); });
+      _phoneRingSound();
+      var ringTimer2 = setTimeout(function() { _phoneRingSound(); }, 2800);
+      _phoneTimers.push(ringTimer2);
+
+      // Click to answer
+      var answered = false;
+      var answerHandler = function() {
+        if (answered) return;
+        answered = true;
+        overlay.removeEventListener('click', answerHandler);
+
+        // ── Phase 2: Pickup ──
+        _phonePickupSound();
+        handset.classList.remove('ringing');
+        pulses.forEach(function(p) { p.classList.remove('active'); });
+        handset.classList.add('picked-up');
+        status.textContent = 'connected';
+        status.style.color = 'rgba(60,220,120,1)';
+
+        var speakDelay = setTimeout(function() {
+          // ── Phase 3: Speaking ──
+          status.textContent = 'ACK.ART AI is speaking...';
+          waveform.classList.add('active');
+
+          // Pick a random roast
+          var line = _phoneLines[Math.floor(Math.random() * _phoneLines.length)];
+
+          _speakRobot(line,
+            function(partialText) {
+              // Show spoken words as subtitles
+              subtitle.textContent = partialText;
+            },
+            function() {
+              // Done speaking
+              waveform.classList.remove('active');
+              status.textContent = 'call ended';
+              status.style.color = 'rgba(195,175,130,0.5)';
+              subtitle.style.color = 'rgba(195,175,130,0.25)';
+              _phoneHangupSound();
+
+              // Auto-close after a moment
+              var autoClose = setTimeout(function() {
+                closePhoneOverlay();
+              }, 3000);
+              _phoneTimers.push(autoClose);
+            }
+          );
+        }, 1200);
+        _phoneTimers.push(speakDelay);
+      };
+
+      // Show tap instruction
+      var tapDelay = setTimeout(function() {
+        status.textContent = 'incoming call... tap to answer';
+      }, 1500);
+      _phoneTimers.push(tapDelay);
+
+      overlay.addEventListener('click', answerHandler);
+    }
+
+    function closePhoneOverlay() {
+      if (!_phoneActive) return;
+      _phoneActive = false;
+      if (_phoneEscHandler) { document.removeEventListener('keydown', _phoneEscHandler); _phoneEscHandler = null; }
+      _phoneTimers.forEach(function(t) { clearTimeout(t); });
+      _phoneTimers = [];
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      _phoneSpeaking = false;
+      if (_phoneOverlay) {
+        _phoneOverlay.classList.remove('active');
+        var ov = _phoneOverlay;
+        setTimeout(function() {
+          if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+        }, 500);
+        _phoneOverlay = null;
+      }
+    }
 
     init();
   </script>
