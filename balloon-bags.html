@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balloon Bags</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1e;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    font-family: 'Cormorant Garamond', serif;
+    cursor: default;
+    user-select: none;
+  }
+
+  /* ── Balloon + bag unit ── */
+  .balloon-unit {
+    position: absolute;
+    pointer-events: none;
+    z-index: 100;
+    transition: none;
+  }
+
+  .balloon-hitbox {
+    position: absolute;
+    pointer-events: all;
+    cursor: crosshair;
+  }
+
+  /* SVG balloon */
+  .balloon-svg {
+    display: block;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+    transition: filter 0.2s ease;
+  }
+  .balloon-hitbox:hover .balloon-svg {
+    filter: drop-shadow(0 2px 10px rgba(255,255,255,0.12));
+  }
+
+  /* String from balloon to bag */
+  .balloon-string {
+    position: absolute;
+    width: 1px;
+    background: rgba(160,155,140,0.3);
+    transform-origin: top center;
+  }
+
+  /* Bag image */
+  .balloon-bag {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    image-rendering: auto;
+  }
+
+  /* ── Pop effect ── */
+  .pop-particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 101;
+  }
+
+  /* ── Falling bag ── */
+  .falling-bag {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    pointer-events: none;
+    z-index: 99;
+    image-rendering: auto;
+  }
+
+  /* ── Basket ── */
+  .bag-basket {
+    position: fixed;
+    bottom: 16px;
+    right: 24px;
+    z-index: 102;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .bag-basket.visible { opacity: 1; }
+
+  .basket-bowl {
+    width: 72px;
+    height: 44px;
+    border: 1.5px solid rgba(160,150,120,0.35);
+    border-top: none;
+    border-radius: 0 0 18px 18px;
+    background: rgba(40,36,28,0.6);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 4px;
+    gap: 2px;
+  }
+
+  .basket-count {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 10px;
+    font-style: italic;
+    color: rgba(195,175,130,0.45);
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .basket-bag-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.7;
+    animation: basketBagDrop 0.4s ease-out;
+  }
+
+  @keyframes basketBagDrop {
+    0% { transform: translateY(-10px) scale(0.5); opacity: 0; }
+    60% { transform: translateY(2px) scale(1.05); opacity: 0.8; }
+    100% { transform: translateY(0) scale(1); opacity: 0.7; }
+  }
+
+  /* ── Collect flash ── */
+  .collect-flash {
+    position: fixed;
+    pointer-events: none;
+    z-index: 103;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px;
+    font-style: italic;
+    color: rgba(195,175,130,0.6);
+    white-space: nowrap;
+    animation: collectFloat 1.2s ease-out forwards;
+  }
+
+  @keyframes collectFloat {
+    0% { opacity: 0.7; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-30px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Basket -->
+<div class="bag-basket" id="bagBasket">
+  <div class="basket-bowl" id="basketBowl"></div>
+  <div class="basket-count" id="basketCount"></div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const BAG_IMG = 'my_bags_decoration_web.png';
+  const BALLOON_INTERVAL_MIN = 6000;   // min ms between spawns
+  const BALLOON_INTERVAL_MAX = 14000;  // max ms between spawns
+  const BALLOON_SPEED_MIN = 0.4;       // px per frame
+  const BALLOON_SPEED_MAX = 0.9;
+  const BALLOON_SIZE = 40;             // px width of balloon SVG
+  const BAG_SIZE = 36;
+  const STRING_LEN = 28;
+  const GRAVITY = 0.35;
+  const BOUNCE_DAMPEN = 0.4;
+  const MAX_ACTIVE = 3;                // max balloons on screen
+
+  // Muted, translucent balloon colors — dark gallery aesthetic
+  const BALLOON_COLORS = [
+    { body: 'rgba(90,70,110,0.55)',  highlight: 'rgba(140,120,170,0.3)',  pop: 'rgba(90,70,110,' },
+    { body: 'rgba(70,95,110,0.55)',  highlight: 'rgba(110,150,170,0.3)',  pop: 'rgba(70,95,110,' },
+    { body: 'rgba(110,85,70,0.55)',  highlight: 'rgba(170,140,110,0.3)',  pop: 'rgba(110,85,70,' },
+    { body: 'rgba(80,100,75,0.55)',  highlight: 'rgba(130,160,120,0.3)',  pop: 'rgba(80,100,75,' },
+    { body: 'rgba(100,75,85,0.55)',  highlight: 'rgba(160,120,140,0.3)',  pop: 'rgba(100,75,85,' },
+    { body: 'rgba(85,85,100,0.55)',  highlight: 'rgba(135,135,160,0.3)',  pop: 'rgba(85,85,100,' },
+  ];
+
+  let activeBalloons = [];
+  let fallingBags = [];
+  let collected = 0;
+  let animFrame = null;
+  let basketEl = document.getElementById('bagBasket');
+  let basketBowl = document.getElementById('basketBowl');
+  let basketCount = document.getElementById('basketCount');
+
+  // ── Create SVG balloon ──
+  function createBalloonSVG(color, size) {
+    const w = size;
+    const h = size * 1.2;
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', h);
+    svg.setAttribute('viewBox', '0 0 40 48');
+    svg.classList.add('balloon-svg');
+
+    // Balloon body
+    const body = document.createElementNS(ns, 'ellipse');
+    body.setAttribute('cx', '20');
+    body.setAttribute('cy', '18');
+    body.setAttribute('rx', '15');
+    body.setAttribute('ry', '18');
+    body.setAttribute('fill', color.body);
+    body.setAttribute('stroke', 'rgba(255,255,255,0.06)');
+    body.setAttribute('stroke-width', '0.5');
+    svg.appendChild(body);
+
+    // Highlight
+    const hl = document.createElementNS(ns, 'ellipse');
+    hl.setAttribute('cx', '14');
+    hl.setAttribute('cy', '12');
+    hl.setAttribute('rx', '5');
+    hl.setAttribute('ry', '7');
+    hl.setAttribute('fill', color.highlight);
+    hl.setAttribute('transform', 'rotate(-15 14 12)');
+    svg.appendChild(hl);
+
+    // Knot
+    const knot = document.createElementNS(ns, 'polygon');
+    knot.setAttribute('points', '18,36 22,36 20,40');
+    knot.setAttribute('fill', color.body);
+    svg.appendChild(knot);
+
+    return svg;
+  }
+
+  // ── Spawn a balloon ──
+  function spawnBalloon() {
+    if (activeBalloons.length >= MAX_ACTIVE) return;
+
+    const color = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
+    const fromLeft = Math.random() > 0.5;
+    const startX = fromLeft ? -80 : window.innerWidth + 80;
+    const startY = window.innerHeight * (0.15 + Math.random() * 0.55);
+    const speed = BALLOON_SPEED_MIN + Math.random() * (BALLOON_SPEED_MAX - BALLOON_SPEED_MIN);
+    const dir = fromLeft ? 1 : -1;
+    const wobbleAmp = 8 + Math.random() * 12;
+    const wobbleFreq = 0.008 + Math.random() * 0.008;
+    const wobblePhase = Math.random() * Math.PI * 2;
+
+    // Container
+    const unit = document.createElement('div');
+    unit.className = 'balloon-unit';
+
+    // Balloon hitbox (clickable area)
+    const hitbox = document.createElement('div');
+    hitbox.className = 'balloon-hitbox';
+    hitbox.style.width = BALLOON_SIZE + 'px';
+    hitbox.style.height = (BALLOON_SIZE * 1.2) + 'px';
+    hitbox.style.left = '0px';
+    hitbox.style.top = '0px';
+
+    const svg = createBalloonSVG(color, BALLOON_SIZE);
+    hitbox.appendChild(svg);
+    unit.appendChild(hitbox);
+
+    // String
+    const string = document.createElement('div');
+    string.className = 'balloon-string';
+    string.style.height = STRING_LEN + 'px';
+    string.style.left = (BALLOON_SIZE / 2) + 'px';
+    string.style.top = (BALLOON_SIZE * 1.2) + 'px';
+    unit.appendChild(string);
+
+    // Bag
+    const bag = document.createElement('img');
+    bag.className = 'balloon-bag';
+    bag.src = BAG_IMG;
+    bag.style.width = BAG_SIZE + 'px';
+    bag.style.height = BAG_SIZE + 'px';
+    bag.style.left = ((BALLOON_SIZE - BAG_SIZE) / 2) + 'px';
+    bag.style.top = (BALLOON_SIZE * 1.2 + STRING_LEN - 4) + 'px';
+    unit.appendChild(bag);
+
+    document.body.appendChild(unit);
+
+    const data = {
+      el: unit,
+      hitbox: hitbox,
+      x: startX,
+      y: startY,
+      speed: speed,
+      dir: dir,
+      wobbleAmp: wobbleAmp,
+      wobbleFreq: wobbleFreq,
+      wobblePhase: wobblePhase,
+      tick: 0,
+      color: color,
+      popped: false
+    };
+
+    // Pop on click
+    hitbox.addEventListener('click', function(e) {
+      e.stopPropagation();
+      popBalloon(data);
+    });
+
+    activeBalloons.push(data);
+  }
+
+  // ── Pop a balloon ──
+  function popBalloon(b) {
+    if (b.popped) return;
+    b.popped = true;
+
+    const rect = b.hitbox.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    // Spawn particles
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('div');
+      p.className = 'pop-particle';
+      const size = 3 + Math.random() * 5;
+      const angle = (Math.PI * 2 / 8) * i + Math.random() * 0.4;
+      const dist = 20 + Math.random() * 30;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      p.style.background = b.color.pop + (0.4 + Math.random() * 0.3) + ')';
+      p.style.transition = 'all 0.5s ease-out';
+      p.style.opacity = '1';
+      document.body.appendChild(p);
+
+      requestAnimationFrame(() => {
+        p.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(0.2)';
+        p.style.opacity = '0';
+      });
+      setTimeout(() => p.remove(), 600);
+    }
+
+    // Drop the bag
+    const bagRect = b.el.querySelector('.balloon-bag').getBoundingClientRect();
+    const fallingBag = document.createElement('img');
+    fallingBag.className = 'falling-bag';
+    fallingBag.src = BAG_IMG;
+    fallingBag.style.left = bagRect.left + 'px';
+    fallingBag.style.top = bagRect.top + 'px';
+    document.body.appendChild(fallingBag);
+
+    fallingBags.push({
+      el: fallingBag,
+      x: bagRect.left,
+      y: bagRect.top,
+      vx: b.dir * b.speed * 0.5,
+      vy: 0,
+      rotation: 0,
+      rotSpeed: (Math.random() - 0.5) * 4,
+      bounces: 0
+    });
+
+    // Remove balloon unit
+    b.el.remove();
+  }
+
+  // ── Collect a bag ──
+  function collectBag(fb) {
+    collected++;
+    fb.el.remove();
+
+    // Show basket on first collect
+    if (collected === 1) basketEl.classList.add('visible');
+
+    // Add mini bag icon to basket
+    const icon = document.createElement('img');
+    icon.className = 'basket-bag-icon';
+    icon.src = BAG_IMG;
+    basketBowl.appendChild(icon);
+
+    // Update count
+    const msgs = [
+      '', 'nice catch', 'bag secured', 'another one', 'bags on bags',
+      'you\'re stacking', 'collector', 'bag holder', 'whale alert',
+      'diamond hands', 'wen moon', 'this is the way'
+    ];
+    basketCount.textContent = collected + (collected <= msgs.length - 1 ? ' · ' + msgs[collected] : ' bags');
+
+    // Float text
+    const flash = document.createElement('div');
+    flash.className = 'collect-flash';
+    flash.textContent = '+1 bag';
+    flash.style.right = '48px';
+    flash.style.bottom = '68px';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 1300);
+  }
+
+  // ── Animation loop ──
+  function tick() {
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const basketRect = basketBowl.getBoundingClientRect();
+
+    // Move balloons
+    for (let i = activeBalloons.length - 1; i >= 0; i--) {
+      const b = activeBalloons[i];
+      if (b.popped) { activeBalloons.splice(i, 1); continue; }
+
+      b.tick++;
+      b.x += b.speed * b.dir;
+      const wobbleY = Math.sin(b.tick * b.wobbleFreq + b.wobblePhase) * b.wobbleAmp;
+
+      b.el.style.transform = 'translate(' + b.x + 'px,' + (b.y + wobbleY) + 'px)';
+
+      // Off screen?
+      if ((b.dir > 0 && b.x > W + 100) || (b.dir < 0 && b.x < -100)) {
+        b.el.remove();
+        activeBalloons.splice(i, 1);
+      }
+    }
+
+    // Falling bags — gravity + bounce + collect
+    for (let i = fallingBags.length - 1; i >= 0; i--) {
+      const fb = fallingBags[i];
+      fb.vy += GRAVITY;
+      fb.x += fb.vx;
+      fb.y += fb.vy;
+      fb.rotation += fb.rotSpeed;
+
+      fb.el.style.left = fb.x + 'px';
+      fb.el.style.top = fb.y + 'px';
+      fb.el.style.transform = 'rotate(' + fb.rotation + 'deg)';
+
+      // Bounce off bottom
+      if (fb.y + BAG_SIZE >= H - 10) {
+        fb.y = H - 10 - BAG_SIZE;
+        fb.vy = -Math.abs(fb.vy) * BOUNCE_DAMPEN;
+        fb.vx *= 0.7;
+        fb.rotSpeed *= 0.6;
+        fb.bounces++;
+      }
+
+      // Check if bag reached basket area
+      const bagCX = fb.x + BAG_SIZE / 2;
+      const bagCY = fb.y + BAG_SIZE / 2;
+      if (bagCX >= basketRect.left - 20 && bagCX <= basketRect.right + 20 &&
+          bagCY >= basketRect.top - 20 && bagCY <= basketRect.bottom + 10) {
+        collectBag(fb);
+        fallingBags.splice(i, 1);
+        continue;
+      }
+
+      // If bounced enough times and settled, slide toward basket
+      if (fb.bounces >= 2 && Math.abs(fb.vy) < 2) {
+        const targetX = basketRect.left + basketRect.width / 2 - BAG_SIZE / 2;
+        const targetY = basketRect.top;
+        fb.x += (targetX - fb.x) * 0.04;
+        fb.y += (targetY - fb.y) * 0.04;
+        fb.rotation *= 0.95;
+
+        // Close enough? Collect it
+        if (Math.abs(fb.x - targetX) < 5 && Math.abs(fb.y - targetY) < 10) {
+          collectBag(fb);
+          fallingBags.splice(i, 1);
+          continue;
+        }
+      }
+
+      // Safety: remove if way off screen
+      if (fb.y > H + 200 || fb.x < -200 || fb.x > W + 200) {
+        fb.el.remove();
+        fallingBags.splice(i, 1);
+      }
+    }
+
+    animFrame = requestAnimationFrame(tick);
+  }
+
+  // ── Spawn timer ──
+  function scheduleNext() {
+    const delay = BALLOON_INTERVAL_MIN + Math.random() * (BALLOON_INTERVAL_MAX - BALLOON_INTERVAL_MIN);
+    setTimeout(() => {
+      spawnBalloon();
+      scheduleNext();
+    }, delay);
+  }
+
+  // ── Init ──
+  tick();
+  // Spawn first one quickly so you don't wait long
+  setTimeout(spawnBalloon, 1500);
+  scheduleNext();
+
+})();
+</script>
+</body>
+</html>
