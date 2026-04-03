@@ -3557,6 +3557,7 @@
       top: -16px;
       left: 50%;
       transform: translateX(-50%);
+      transform-origin: center bottom;
       font-family: 'Cormorant Garamond', serif;
       font-size: 7px;
       font-style: italic;
@@ -20673,8 +20674,11 @@
                 _whisperEl.className = 'focus-loading-whisper';
                 _whisperEl.textContent = _whisperMsgs[0]; // always start with "this artwork is loading"
                 // Scale font to artwork width — small works get tiny text, large works get slightly bigger
-                var _wFontSize = Math.max(6, Math.min(8, finalW * 0.012));
-                _whisperEl.style.fontSize = _wFontSize + 'px';
+                // Counter-scale so the whisper appears at a fixed screen size
+                // regardless of how much the node is scaled up in focus mode
+                var _invS = _isRealMobile ? 1 : (1 / scaleFactor);
+                _whisperEl.style.transform = 'translateX(-50%) scale(' + _invS + ')';
+                _whisperEl.style.top = (-14 * _invS) + 'px';
                 // Tint whisper to match artwork/collection frame color
                 var _wPal = (artData && ARTWORK_PALETTES[artData.image]) || COLLECTION_PALETTES[_focusColName] || null;
                 if (_wPal && _wPal.accentDim) {
