@@ -3554,14 +3554,14 @@
     /* ── Focus loading whisper message ── */
     .focus-loading-whisper {
       position: absolute;
-      top: -28px;
+      top: -22px;
       left: 50%;
       transform: translateX(-50%);
       font-family: 'Cormorant Garamond', serif;
-      font-size: 11px;
+      font-size: 9px;
       font-style: italic;
-      color: rgba(195,175,130,0.55);
-      letter-spacing: 0.5px;
+      color: rgba(160,155,140,0.4);
+      letter-spacing: 0.4px;
       white-space: nowrap;
       pointer-events: none;
       z-index: 20;
@@ -20671,6 +20671,16 @@
                 _whisperEl = document.createElement('div');
                 _whisperEl.className = 'focus-loading-whisper';
                 _whisperEl.textContent = _whisperMsgs[0]; // always start with "this artwork is loading"
+                // Scale font to artwork width — small works get tiny text, large works get slightly bigger
+                var _wFontSize = Math.max(7.5, Math.min(11, finalW * 0.018));
+                _whisperEl.style.fontSize = _wFontSize + 'px';
+                // Tint whisper to match artwork/collection frame color
+                var _wPal = (artData && ARTWORK_PALETTES[artData.image]) || COLLECTION_PALETTES[_focusColName] || null;
+                if (_wPal && _wPal.accentDim) {
+                  // Extract rgb values from accentDim and apply at low opacity
+                  var _aMatch = _wPal.accentDim.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+                  if (_aMatch) _whisperEl.style.color = 'rgba(' + _aMatch[1] + ',' + _aMatch[2] + ',' + _aMatch[3] + ',0.45)';
+                }
                 node.appendChild(_whisperEl);
                 node._whisperCleanup.el = _whisperEl;
                 // Fade in
