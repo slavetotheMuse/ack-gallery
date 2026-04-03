@@ -25034,7 +25034,7 @@
     function generateOrnateFrame(imgW, imgH) {
       // imgW/imgH = LOCAL dimensions of the preview (before parent scale)
       const ns = 'http://www.w3.org/2000/svg';
-      const pad = 14; // frame extends outside image area
+      const pad = 6; // frame extends outside image area
 
       // SVG viewBox covers the image area with padding
       const svg = document.createElementNS(ns, 'svg');
@@ -25561,7 +25561,7 @@
     // ══════════════════════════════════════════════════════════════════
     function generateBlossomFrame(imgW, imgH, palette, title, focusMode) {
       const ns = 'http://www.w3.org/2000/svg';
-      const pad = 18;
+      const pad = 6;
       const svg = document.createElementNS(ns, 'svg');
       svg.setAttribute('viewBox', '0 0 ' + (imgW + pad * 2) + ' ' + (imgH + pad * 2));
       svg.classList.add('blossom-frame-svg');
@@ -25932,7 +25932,7 @@
     // ══════════════════════════════════════════════════════════════════
     function generateClownFrame(imgW, imgH, palette, title, focusMode) {
       const ns = 'http://www.w3.org/2000/svg';
-      const pad = 18;
+      const pad = 6;
       const svg = document.createElementNS(ns, 'svg');
       svg.setAttribute('viewBox', '0 0 ' + (imgW + pad * 2) + ' ' + (imgH + pad * 2));
       svg.classList.add('clown-frame-svg');
