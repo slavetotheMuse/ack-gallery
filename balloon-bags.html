@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Balloon Bags</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: #1a1a1e;
@@ -17,20 +18,8 @@
   }
 
   /* ── Balloon + bag unit ── */
-  .balloon-unit {
-    position: absolute;
-    pointer-events: none;
-    z-index: 100;
-    transition: none;
-  }
-
-  .balloon-hitbox {
-    position: absolute;
-    pointer-events: all;
-    cursor: crosshair;
-  }
-
-  /* SVG balloon */
+  .balloon-unit { position: absolute; pointer-events: none; z-index: 100; }
+  .balloon-hitbox { position: absolute; pointer-events: all; cursor: crosshair; }
   .balloon-svg {
     display: block;
     filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
@@ -39,120 +28,159 @@
   .balloon-hitbox:hover .balloon-svg {
     filter: drop-shadow(0 2px 10px rgba(255,255,255,0.12));
   }
-
-  /* String from balloon to bag */
   .balloon-string {
-    position: absolute;
-    width: 1px;
+    position: absolute; width: 1px;
     background: rgba(160,155,140,0.3);
     transform-origin: top center;
   }
-
-  /* Bag image */
-  .balloon-bag {
-    position: absolute;
-    width: 36px;
-    height: 36px;
-    image-rendering: auto;
-  }
-
-  /* ── Pop effect ── */
-  .pop-particle {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 101;
-  }
+  .balloon-bag { position: absolute; image-rendering: auto; }
+  .pop-particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 101; }
 
   /* ── Falling bag ── */
   .falling-bag {
-    position: absolute;
-    width: 36px;
-    height: 36px;
-    pointer-events: none;
-    z-index: 99;
-    image-rendering: auto;
+    position: absolute; width: 48px; height: 48px;
+    pointer-events: none; z-index: 99; image-rendering: auto;
   }
 
   /* ── Basket ── */
   .bag-basket {
-    position: fixed;
-    bottom: 16px;
-    right: 24px;
-    z-index: 102;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.6s ease;
+    position: fixed; bottom: 16px; right: 24px; z-index: 102;
+    display: flex; flex-direction: column; align-items: center;
+    pointer-events: none; opacity: 0; transition: opacity 0.6s ease;
   }
   .bag-basket.visible { opacity: 1; }
-
   .basket-bowl {
-    width: 72px;
-    height: 44px;
-    border: 1.5px solid rgba(160,150,120,0.35);
-    border-top: none;
-    border-radius: 0 0 18px 18px;
-    background: rgba(40,36,28,0.6);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 4px;
-    gap: 2px;
+    width: 88px; height: 52px;
+    border: 1.5px solid rgba(160,150,120,0.35); border-top: none;
+    border-radius: 0 0 18px 18px; background: rgba(40,36,28,0.6);
+    position: relative; overflow: hidden;
+    display: flex; align-items: flex-end; justify-content: center;
+    flex-wrap: wrap; padding: 4px; gap: 2px;
+    transition: all 0.5s ease;
   }
-
+  .basket-bowl.upgraded { border-color: rgba(200,170,90,0.5); box-shadow: 0 0 12px rgba(200,170,90,0.15); }
   .basket-count {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 10px;
-    font-style: italic;
+    font-size: 10px; font-style: italic;
     color: rgba(195,175,130,0.45);
-    margin-top: 4px;
-    letter-spacing: 0.3px;
+    margin-top: 4px; letter-spacing: 0.3px;
   }
-
   .basket-bag-icon {
-    width: 14px;
-    height: 14px;
-    opacity: 0.7;
+    width: 14px; height: 14px; opacity: 0.7;
     animation: basketBagDrop 0.4s ease-out;
   }
-
   @keyframes basketBagDrop {
     0% { transform: translateY(-10px) scale(0.5); opacity: 0; }
     60% { transform: translateY(2px) scale(1.05); opacity: 0.8; }
     100% { transform: translateY(0) scale(1); opacity: 0.7; }
   }
 
-  /* ── Collect flash ── */
+  /* ── Collect / steal flash ── */
   .collect-flash {
-    position: fixed;
-    pointer-events: none;
-    z-index: 103;
+    position: fixed; pointer-events: none; z-index: 103;
     font-family: 'Cormorant Garamond', serif;
-    font-size: 12px;
-    font-style: italic;
-    color: rgba(195,175,130,0.6);
-    white-space: nowrap;
+    font-size: 12px; font-style: italic;
+    color: rgba(195,175,130,0.6); white-space: nowrap;
     animation: collectFloat 1.2s ease-out forwards;
   }
-
+  .steal-flash {
+    position: fixed; pointer-events: none; z-index: 103;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-style: italic;
+    color: rgba(200,80,70,0.7); white-space: nowrap;
+    animation: collectFloat 1.4s ease-out forwards;
+  }
   @keyframes collectFloat {
-    0% { opacity: 0.7; transform: translateY(0); }
+    0% { opacity: 0.8; transform: translateY(0); }
     100% { opacity: 0; transform: translateY(-30px); }
+  }
+
+  /* ── Milestone banner ── */
+  .milestone-banner {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-style: italic;
+    color: rgba(195,175,130,0.8);
+    letter-spacing: 1px; white-space: nowrap;
+    pointer-events: none; z-index: 200;
+    text-align: center;
+    animation: milestonePulse 2.5s ease-out forwards;
+  }
+  .milestone-sub {
+    font-size: 11px; color: rgba(195,175,130,0.5);
+    margin-top: 4px; letter-spacing: 0.5px;
+  }
+  @keyframes milestonePulse {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    15% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+    70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  /* ── Thief ── */
+  .thief-unit {
+    position: absolute; bottom: 0; z-index: 98;
+    pointer-events: all; cursor: pointer;
+    transition: filter 0.2s ease;
+  }
+  .thief-unit:hover { filter: brightness(1.3); }
+  .thief-unit.stunned {
+    filter: brightness(0.5) saturate(0.3);
+    pointer-events: none;
+  }
+  .thief-svg { display: block; }
+  .stun-stars {
+    position: absolute; top: -12px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px; letter-spacing: 2px;
+    animation: spinStars 0.8s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes spinStars {
+    0% { transform: translateX(-50%) rotate(0deg); }
+    100% { transform: translateX(-50%) rotate(360deg); }
+  }
+
+  /* ── Scoreboard ── */
+  .scoreboard {
+    position: fixed; top: 16px; right: 24px; z-index: 200;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; text-align: right;
+    opacity: 0; transition: opacity 0.6s ease;
+  }
+  .scoreboard.visible { opacity: 1; }
+  .score-collected { font-size: 13px; color: rgba(195,175,130,0.6); }
+  .score-stolen { font-size: 11px; color: rgba(200,80,70,0.45); margin-top: 2px; }
+  .score-powerup { font-size: 10px; color: rgba(130,200,170,0.5); margin-top: 4px; }
+
+  /* ── Auto-collect radius indicator ── */
+  .auto-collect-ring {
+    position: fixed; border: 1px solid rgba(130,200,170,0.15);
+    border-radius: 50%; pointer-events: none; z-index: 101;
+    transition: opacity 0.4s ease;
+  }
+
+  /* ── Golden balloon shimmer ── */
+  .balloon-hitbox.golden .balloon-svg {
+    filter: drop-shadow(0 2px 8px rgba(220,190,80,0.3));
+  }
+  .balloon-hitbox.golden:hover .balloon-svg {
+    filter: drop-shadow(0 2px 14px rgba(220,190,80,0.5));
   }
 </style>
 </head>
 <body>
 
-<!-- Basket -->
 <div class="bag-basket" id="bagBasket">
   <div class="basket-bowl" id="basketBowl"></div>
   <div class="basket-count" id="basketCount"></div>
+</div>
+
+<div class="scoreboard" id="scoreboard">
+  <div class="score-collected" id="scoreCollected"></div>
+  <div class="score-stolen" id="scoreStolen"></div>
+  <div class="score-powerup" id="scorePowerup"></div>
 </div>
 
 <script>
@@ -160,107 +188,390 @@
   'use strict';
 
   const BAG_IMG = 'my_bags_decoration_web.png';
-  const BALLOON_INTERVAL_MIN = 6000;   // min ms between spawns
-  const BALLOON_INTERVAL_MAX = 14000;  // max ms between spawns
-  const BALLOON_SPEED_MIN = 0.4;       // px per frame
-  const BALLOON_SPEED_MAX = 0.9;
-  const BALLOON_SIZE = 40;             // px width of balloon SVG
-  const BAG_SIZE = 36;
-  const STRING_LEN = 28;
+  const BALLOON_SIZE = 44;
+  const BAG_SIZE = 48;
+  const STRING_LEN = 32;
   const GRAVITY = 0.35;
   const BOUNCE_DAMPEN = 0.4;
-  const MAX_ACTIVE = 3;                // max balloons on screen
+  const MAX_ACTIVE = 12;
 
-  // Muted, translucent balloon colors — dark gallery aesthetic
-  const BALLOON_COLORS = [
-    { body: 'rgba(90,70,110,0.55)',  highlight: 'rgba(140,120,170,0.3)',  pop: 'rgba(90,70,110,' },
-    { body: 'rgba(70,95,110,0.55)',  highlight: 'rgba(110,150,170,0.3)',  pop: 'rgba(70,95,110,' },
-    { body: 'rgba(110,85,70,0.55)',  highlight: 'rgba(170,140,110,0.3)',  pop: 'rgba(110,85,70,' },
-    { body: 'rgba(80,100,75,0.55)',  highlight: 'rgba(130,160,120,0.3)',  pop: 'rgba(80,100,75,' },
-    { body: 'rgba(100,75,85,0.55)',  highlight: 'rgba(160,120,140,0.3)',  pop: 'rgba(100,75,85,' },
-    { body: 'rgba(85,85,100,0.55)',  highlight: 'rgba(135,135,160,0.3)',  pop: 'rgba(85,85,100,' },
-  ];
-
+  // ── State ──
   let activeBalloons = [];
   let fallingBags = [];
+  let activeThieves = [];
   let collected = 0;
-  let animFrame = null;
-  let basketEl = document.getElementById('bagBasket');
-  let basketBowl = document.getElementById('basketBowl');
-  let basketCount = document.getElementById('basketCount');
+  let stolen = 0;
+  let hasAutoCollect = false;
+  let autoCollectRadius = 0;
+  let hasGoldenBalloons = false;
+  let stunDuration = 2000;
+  let spawnMin = 1800;
+  let spawnMax = 4500;
+  let thiefSpawnMin = 8000;
+  let thiefSpawnMax = 15000;
 
-  // ── Create SVG balloon ──
-  function createBalloonSVG(color, size) {
-    const w = size;
-    const h = size * 1.2;
+  const basketEl = document.getElementById('bagBasket');
+  const basketBowl = document.getElementById('basketBowl');
+  const basketCount = document.getElementById('basketCount');
+  const scoreboard = document.getElementById('scoreboard');
+  const scoreCollected = document.getElementById('scoreCollected');
+  const scoreStolen = document.getElementById('scoreStolen');
+  const scorePowerup = document.getElementById('scorePowerup');
+
+  // ── Pretty palette balloon colors ──
+  const BALLOON_COLORS = [
+    { body:'rgba(130,60,90,0.6)',   hl:'rgba(200,110,150,0.35)', pop:'rgba(130,60,90,' },
+    { body:'rgba(55,90,140,0.6)',   hl:'rgba(100,150,210,0.35)', pop:'rgba(55,90,140,' },
+    { body:'rgba(140,85,45,0.6)',   hl:'rgba(210,150,90,0.35)',  pop:'rgba(140,85,45,' },
+    { body:'rgba(60,120,100,0.6)',  hl:'rgba(110,190,160,0.35)', pop:'rgba(60,120,100,' },
+    { body:'rgba(110,65,130,0.6)',  hl:'rgba(170,120,200,0.35)', pop:'rgba(110,65,130,' },
+    { body:'rgba(180,140,160,0.5)', hl:'rgba(220,190,210,0.4)',  pop:'rgba(180,140,160,' },
+    { body:'rgba(140,170,190,0.5)', hl:'rgba(190,215,235,0.4)',  pop:'rgba(140,170,190,' },
+    { body:'rgba(190,175,140,0.5)', hl:'rgba(230,215,180,0.4)',  pop:'rgba(190,175,140,' },
+    { body:'rgba(150,185,155,0.5)', hl:'rgba(195,225,200,0.4)',  pop:'rgba(150,185,155,' },
+    { body:'rgba(175,155,185,0.5)', hl:'rgba(215,200,225,0.4)',  pop:'rgba(175,155,185,' },
+    { body:'rgba(185,155,95,0.55)', hl:'rgba(230,205,145,0.4)',  pop:'rgba(185,155,95,' },
+    { body:'rgba(160,140,130,0.5)', hl:'rgba(210,195,185,0.35)', pop:'rgba(160,140,130,' },
+    { body:'rgba(150,110,100,0.55)',hl:'rgba(210,170,155,0.35)', pop:'rgba(150,110,100,' },
+    { body:'rgba(85,65,95,0.6)',    hl:'rgba(140,115,155,0.35)', pop:'rgba(85,65,95,' },
+    { body:'rgba(65,85,75,0.6)',    hl:'rgba(115,145,130,0.35)', pop:'rgba(65,85,75,' },
+    { body:'rgba(95,75,65,0.6)',    hl:'rgba(155,130,110,0.35)', pop:'rgba(95,75,65,' },
+  ];
+  const GOLDEN_COLOR = { body:'rgba(220,190,80,0.65)', hl:'rgba(255,235,140,0.5)', pop:'rgba(220,190,80,' };
+
+  // ══════════════════════════════════════════
+  //  THIEF TYPES — SVG character generators
+  // ══════════════════════════════════════════
+
+  const THIEF_TYPES = [
+    {
+      name: 'right-click pirate',
+      stealMsg: 'right-clicked your bag',
+      createSVG: function(size) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const s = document.createElementNS(ns, 'svg');
+        s.setAttribute('width', size); s.setAttribute('height', size);
+        s.setAttribute('viewBox', '0 0 40 44'); s.classList.add('thief-svg');
+        // Hooded figure
+        const hood = document.createElementNS(ns, 'path');
+        hood.setAttribute('d', 'M12,18 Q12,4 20,4 Q28,4 28,18 L28,28 Q28,34 24,36 L16,36 Q12,34 12,28 Z');
+        hood.setAttribute('fill', 'rgba(45,40,50,0.85)');
+        hood.setAttribute('stroke', 'rgba(80,70,90,0.5)'); hood.setAttribute('stroke-width', '0.5');
+        s.appendChild(hood);
+        // Eyes (glowing)
+        const eyeL = document.createElementNS(ns, 'circle');
+        eyeL.setAttribute('cx', '16'); eyeL.setAttribute('cy', '18');
+        eyeL.setAttribute('r', '1.5'); eyeL.setAttribute('fill', 'rgba(200,60,60,0.8)');
+        s.appendChild(eyeL);
+        const eyeR = document.createElementNS(ns, 'circle');
+        eyeR.setAttribute('cx', '24'); eyeR.setAttribute('cy', '18');
+        eyeR.setAttribute('r', '1.5'); eyeR.setAttribute('fill', 'rgba(200,60,60,0.8)');
+        s.appendChild(eyeR);
+        // Body
+        const body = document.createElementNS(ns, 'path');
+        body.setAttribute('d', 'M14,36 L10,44 L30,44 L26,36 Z');
+        body.setAttribute('fill', 'rgba(35,30,40,0.8)');
+        s.appendChild(body);
+        return s;
+      },
+      speed: 2.5
+    },
+    {
+      name: 'laser-eyed frog',
+      stealMsg: 'zapped your bag',
+      createSVG: function(size) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const s = document.createElementNS(ns, 'svg');
+        s.setAttribute('width', size); s.setAttribute('height', size);
+        s.setAttribute('viewBox', '0 0 40 36'); s.classList.add('thief-svg');
+        // Body
+        const body = document.createElementNS(ns, 'ellipse');
+        body.setAttribute('cx', '20'); body.setAttribute('cy', '24');
+        body.setAttribute('rx', '14'); body.setAttribute('ry', '10');
+        body.setAttribute('fill', 'rgba(50,90,50,0.75)');
+        s.appendChild(body);
+        // Eyes (bulging)
+        const eyeL = document.createElementNS(ns, 'circle');
+        eyeL.setAttribute('cx', '12'); eyeL.setAttribute('cy', '12');
+        eyeL.setAttribute('r', '6'); eyeL.setAttribute('fill', 'rgba(60,100,60,0.8)');
+        s.appendChild(eyeL);
+        const eyeR = document.createElementNS(ns, 'circle');
+        eyeR.setAttribute('cx', '28'); eyeR.setAttribute('cy', '12');
+        eyeR.setAttribute('r', '6'); eyeR.setAttribute('fill', 'rgba(60,100,60,0.8)');
+        s.appendChild(eyeR);
+        // Laser pupils
+        const pL = document.createElementNS(ns, 'circle');
+        pL.setAttribute('cx', '12'); pL.setAttribute('cy', '12');
+        pL.setAttribute('r', '2.5'); pL.setAttribute('fill', 'rgba(255,40,40,0.9)');
+        s.appendChild(pL);
+        const pR = document.createElementNS(ns, 'circle');
+        pR.setAttribute('cx', '28'); pR.setAttribute('cy', '12');
+        pR.setAttribute('r', '2.5'); pR.setAttribute('fill', 'rgba(255,40,40,0.9)');
+        s.appendChild(pR);
+        // Mouth
+        const mouth = document.createElementNS(ns, 'path');
+        mouth.setAttribute('d', 'M12,28 Q20,34 28,28');
+        mouth.setAttribute('stroke', 'rgba(30,60,30,0.6)'); mouth.setAttribute('fill', 'none');
+        mouth.setAttribute('stroke-width', '1');
+        s.appendChild(mouth);
+        // Legs
+        const legL = document.createElementNS(ns, 'ellipse');
+        legL.setAttribute('cx', '10'); legL.setAttribute('cy', '33');
+        legL.setAttribute('rx', '5'); legL.setAttribute('ry', '3');
+        legL.setAttribute('fill', 'rgba(50,90,50,0.6)');
+        s.appendChild(legL);
+        const legR = document.createElementNS(ns, 'ellipse');
+        legR.setAttribute('cx', '30'); legR.setAttribute('cy', '33');
+        legR.setAttribute('rx', '5'); legR.setAttribute('ry', '3');
+        legR.setAttribute('fill', 'rgba(50,90,50,0.6)');
+        s.appendChild(legR);
+        return s;
+      },
+      speed: 3.2
+    },
+    {
+      name: 'shadow hand',
+      stealMsg: 'snatched your bag from the shadows',
+      createSVG: function(size) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const s = document.createElementNS(ns, 'svg');
+        s.setAttribute('width', size); s.setAttribute('height', size * 1.3);
+        s.setAttribute('viewBox', '0 0 36 48'); s.classList.add('thief-svg');
+        // Palm
+        const palm = document.createElementNS(ns, 'ellipse');
+        palm.setAttribute('cx', '18'); palm.setAttribute('cy', '32');
+        palm.setAttribute('rx', '10'); palm.setAttribute('ry', '12');
+        palm.setAttribute('fill', 'rgba(20,15,25,0.8)');
+        s.appendChild(palm);
+        // Fingers
+        const fingers = [
+          'M8,24 Q6,10 10,6 Q12,4 13,8 L12,22',
+          'M13,20 Q13,4 16,2 Q18,0 18,6 L16,20',
+          'M18,20 Q20,2 22,2 Q24,2 22,8 L20,20',
+          'M23,22 Q26,8 28,8 Q30,10 27,14 L24,24',
+          'M26,30 Q32,26 33,28 Q34,32 30,32 L26,32',
+        ];
+        fingers.forEach(d => {
+          const f = document.createElementNS(ns, 'path');
+          f.setAttribute('d', d);
+          f.setAttribute('fill', 'rgba(20,15,25,0.75)');
+          f.setAttribute('stroke', 'rgba(50,40,60,0.3)'); f.setAttribute('stroke-width', '0.3');
+          s.appendChild(f);
+        });
+        return s;
+      },
+      speed: 2.0
+    },
+    {
+      name: 'rug pull snake',
+      stealMsg: 'rugged your bag',
+      createSVG: function(size) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const s = document.createElementNS(ns, 'svg');
+        s.setAttribute('width', size * 1.5); s.setAttribute('height', size * 0.6);
+        s.setAttribute('viewBox', '0 0 60 24'); s.classList.add('thief-svg');
+        // Body
+        const body = document.createElementNS(ns, 'path');
+        body.setAttribute('d', 'M4,18 Q10,6 18,14 Q26,22 34,10 Q42,0 50,12 Q54,18 56,14');
+        body.setAttribute('stroke', 'rgba(80,120,60,0.7)'); body.setAttribute('fill', 'none');
+        body.setAttribute('stroke-width', '5'); body.setAttribute('stroke-linecap', 'round');
+        s.appendChild(body);
+        // Head
+        const head = document.createElementNS(ns, 'circle');
+        head.setAttribute('cx', '4'); head.setAttribute('cy', '18');
+        head.setAttribute('r', '4'); head.setAttribute('fill', 'rgba(80,120,60,0.8)');
+        s.appendChild(head);
+        // Eye
+        const eye = document.createElementNS(ns, 'circle');
+        eye.setAttribute('cx', '3'); eye.setAttribute('cy', '17');
+        eye.setAttribute('r', '1'); eye.setAttribute('fill', 'rgba(255,200,50,0.9)');
+        s.appendChild(eye);
+        // Tongue
+        const tongue = document.createElementNS(ns, 'path');
+        tongue.setAttribute('d', 'M1,19 L-3,17 M1,19 L-3,21');
+        tongue.setAttribute('stroke', 'rgba(200,60,60,0.7)'); tongue.setAttribute('fill', 'none');
+        tongue.setAttribute('stroke-width', '0.8');
+        s.appendChild(tongue);
+        return s;
+      },
+      speed: 3.8
+    },
+    {
+      name: 'the IRS',
+      stealMsg: 'audited your bag',
+      createSVG: function(size) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const s = document.createElementNS(ns, 'svg');
+        s.setAttribute('width', size); s.setAttribute('height', size);
+        s.setAttribute('viewBox', '0 0 40 44'); s.classList.add('thief-svg');
+        // Body (suit)
+        const suit = document.createElementNS(ns, 'path');
+        suit.setAttribute('d', 'M12,20 L10,44 L30,44 L28,20 Z');
+        suit.setAttribute('fill', 'rgba(30,30,35,0.85)');
+        s.appendChild(suit);
+        // Tie
+        const tie = document.createElementNS(ns, 'path');
+        tie.setAttribute('d', 'M19,20 L20,32 L21,20 Z');
+        tie.setAttribute('fill', 'rgba(140,30,30,0.7)');
+        s.appendChild(tie);
+        // Head
+        const head = document.createElementNS(ns, 'circle');
+        head.setAttribute('cx', '20'); head.setAttribute('cy', '12');
+        head.setAttribute('r', '8'); head.setAttribute('fill', 'rgba(180,160,140,0.6)');
+        s.appendChild(head);
+        // Sunglasses
+        const glassL = document.createElementNS(ns, 'rect');
+        glassL.setAttribute('x', '12'); glassL.setAttribute('y', '9');
+        glassL.setAttribute('width', '7'); glassL.setAttribute('height', '5');
+        glassL.setAttribute('rx', '1'); glassL.setAttribute('fill', 'rgba(10,10,15,0.9)');
+        s.appendChild(glassL);
+        const glassR = document.createElementNS(ns, 'rect');
+        glassR.setAttribute('x', '21'); glassR.setAttribute('y', '9');
+        glassR.setAttribute('width', '7'); glassR.setAttribute('height', '5');
+        glassR.setAttribute('rx', '1'); glassR.setAttribute('fill', 'rgba(10,10,15,0.9)');
+        s.appendChild(glassR);
+        // Bridge
+        const bridge = document.createElementNS(ns, 'line');
+        bridge.setAttribute('x1', '19'); bridge.setAttribute('y1', '11');
+        bridge.setAttribute('x2', '21'); bridge.setAttribute('y2', '11');
+        bridge.setAttribute('stroke', 'rgba(10,10,15,0.9)'); bridge.setAttribute('stroke-width', '1');
+        s.appendChild(bridge);
+        // Briefcase
+        const bc = document.createElementNS(ns, 'rect');
+        bc.setAttribute('x', '30'); bc.setAttribute('y', '32');
+        bc.setAttribute('width', '10'); bc.setAttribute('height', '8');
+        bc.setAttribute('rx', '1'); bc.setAttribute('fill', 'rgba(60,50,35,0.7)');
+        bc.setAttribute('stroke', 'rgba(100,85,60,0.4)'); bc.setAttribute('stroke-width', '0.5');
+        s.appendChild(bc);
+        // "IRS" text
+        const txt = document.createElementNS(ns, 'text');
+        txt.setAttribute('x', '20'); txt.setAttribute('y', '42');
+        txt.setAttribute('text-anchor', 'middle');
+        txt.setAttribute('font-size', '5'); txt.setAttribute('font-family', 'monospace');
+        txt.setAttribute('fill', 'rgba(200,200,200,0.4)');
+        txt.textContent = 'IRS';
+        s.appendChild(txt);
+        return s;
+      },
+      speed: 1.8
+    }
+  ];
+
+  // ══════════════════════
+  //  MILESTONES
+  // ══════════════════════
+  const MILESTONES = [
+    { at: 3,  msg: 'not bad', sub: null },
+    { at: 5,  msg: 'your bags are sick bro', sub: 'stun duration increased' },
+    { at: 8,  msg: 'bag connoisseur', sub: null },
+    { at: 10, msg: 'whale status', sub: 'auto-collect unlocked' },
+    { at: 15, msg: 'She sees your devotion', sub: null },
+    { at: 20, msg: 'golden balloons unlocked', sub: 'worth 3 bags each' },
+    { at: 30, msg: 'bag deity', sub: null },
+    { at: 40, msg: 'your bags transcend mortality', sub: null },
+    { at: 50, msg: 'the Muse is pleased', sub: 'you are worthy' },
+    { at: 75, msg: 'S tier bags', sub: 'the thieves fear you' },
+    { at: 100,msg: 'you win. your bags are eternal.', sub: 'go outside.' },
+  ];
+
+  function checkMilestones() {
+    const m = MILESTONES.find(m => m.at === collected);
+    if (!m) return;
+
+    // Show banner
+    const banner = document.createElement('div');
+    banner.className = 'milestone-banner';
+    banner.innerHTML = m.msg + (m.sub ? '<div class="milestone-sub">' + m.sub + '</div>' : '');
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 3000);
+
+    // Power-ups
+    if (collected >= 5) stunDuration = 3500;
+    if (collected >= 10 && !hasAutoCollect) {
+      hasAutoCollect = true;
+      autoCollectRadius = 120;
+      scorePowerup.textContent = 'auto-collect active';
+    }
+    if (collected >= 20 && !hasGoldenBalloons) {
+      hasGoldenBalloons = true;
+      scorePowerup.textContent = 'golden balloons active';
+    }
+    if (collected >= 20) {
+      basketBowl.classList.add('upgraded');
+    }
+  }
+
+  // ══════════════════════
+  //  BALLOON CREATION
+  // ══════════════════════
+  function createBalloonSVG(color, size, golden) {
+    const w = size, h = size * 1.2;
     const ns = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('width', w);
-    svg.setAttribute('height', h);
-    svg.setAttribute('viewBox', '0 0 40 48');
-    svg.classList.add('balloon-svg');
+    svg.setAttribute('width', w); svg.setAttribute('height', h);
+    svg.setAttribute('viewBox', '0 0 40 48'); svg.classList.add('balloon-svg');
 
-    // Balloon body
-    const body = document.createElementNS(ns, 'ellipse');
-    body.setAttribute('cx', '20');
-    body.setAttribute('cy', '18');
-    body.setAttribute('rx', '15');
-    body.setAttribute('ry', '18');
-    body.setAttribute('fill', color.body);
-    body.setAttribute('stroke', 'rgba(255,255,255,0.06)');
-    body.setAttribute('stroke-width', '0.5');
-    svg.appendChild(body);
+    if (golden) {
+      const defs = document.createElementNS(ns, 'defs');
+      const grad = document.createElementNS(ns, 'radialGradient');
+      grad.setAttribute('id', 'gold' + Math.random().toString(36).substr(2,5));
+      grad.setAttribute('cx', '35%'); grad.setAttribute('cy', '35%');
+      const s1 = document.createElementNS(ns, 'stop');
+      s1.setAttribute('offset', '0%'); s1.setAttribute('stop-color', 'rgba(255,240,150,0.7)');
+      const s2 = document.createElementNS(ns, 'stop');
+      s2.setAttribute('offset', '100%'); s2.setAttribute('stop-color', 'rgba(180,150,50,0.6)');
+      grad.appendChild(s1); grad.appendChild(s2);
+      defs.appendChild(grad); svg.appendChild(defs);
 
-    // Highlight
+      const body = document.createElementNS(ns, 'ellipse');
+      body.setAttribute('cx', '20'); body.setAttribute('cy', '18');
+      body.setAttribute('rx', '15'); body.setAttribute('ry', '18');
+      body.setAttribute('fill', 'url(#' + grad.getAttribute('id') + ')');
+      body.setAttribute('stroke', 'rgba(255,220,100,0.3)'); body.setAttribute('stroke-width', '0.8');
+      svg.appendChild(body);
+    } else {
+      const body = document.createElementNS(ns, 'ellipse');
+      body.setAttribute('cx', '20'); body.setAttribute('cy', '18');
+      body.setAttribute('rx', '15'); body.setAttribute('ry', '18');
+      body.setAttribute('fill', color.body);
+      body.setAttribute('stroke', 'rgba(255,255,255,0.06)'); body.setAttribute('stroke-width', '0.5');
+      svg.appendChild(body);
+    }
+
     const hl = document.createElementNS(ns, 'ellipse');
-    hl.setAttribute('cx', '14');
-    hl.setAttribute('cy', '12');
-    hl.setAttribute('rx', '5');
-    hl.setAttribute('ry', '7');
-    hl.setAttribute('fill', color.highlight);
+    hl.setAttribute('cx', '14'); hl.setAttribute('cy', '12');
+    hl.setAttribute('rx', '5'); hl.setAttribute('ry', '7');
+    hl.setAttribute('fill', golden ? 'rgba(255,250,200,0.4)' : color.hl);
     hl.setAttribute('transform', 'rotate(-15 14 12)');
     svg.appendChild(hl);
 
-    // Knot
     const knot = document.createElementNS(ns, 'polygon');
     knot.setAttribute('points', '18,36 22,36 20,40');
-    knot.setAttribute('fill', color.body);
+    knot.setAttribute('fill', golden ? 'rgba(180,150,50,0.6)' : color.body);
     svg.appendChild(knot);
 
     return svg;
   }
 
-  // ── Spawn a balloon ──
   function spawnBalloon() {
     if (activeBalloons.length >= MAX_ACTIVE) return;
-
-    const color = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
+    const isGolden = hasGoldenBalloons && Math.random() < 0.15;
+    const color = isGolden ? GOLDEN_COLOR : BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
     const fromLeft = Math.random() > 0.5;
     const startX = fromLeft ? -80 : window.innerWidth + 80;
-    const startY = window.innerHeight * (0.15 + Math.random() * 0.55);
-    const speed = BALLOON_SPEED_MIN + Math.random() * (BALLOON_SPEED_MAX - BALLOON_SPEED_MIN);
+    const startY = window.innerHeight * (0.1 + Math.random() * 0.55);
+    const speed = 0.35 + Math.random() * 0.75;
     const dir = fromLeft ? 1 : -1;
-    const wobbleAmp = 8 + Math.random() * 12;
-    const wobbleFreq = 0.008 + Math.random() * 0.008;
-    const wobblePhase = Math.random() * Math.PI * 2;
 
-    // Container
     const unit = document.createElement('div');
     unit.className = 'balloon-unit';
-
-    // Balloon hitbox (clickable area)
     const hitbox = document.createElement('div');
-    hitbox.className = 'balloon-hitbox';
+    hitbox.className = 'balloon-hitbox' + (isGolden ? ' golden' : '');
     hitbox.style.width = BALLOON_SIZE + 'px';
     hitbox.style.height = (BALLOON_SIZE * 1.2) + 'px';
-    hitbox.style.left = '0px';
-    hitbox.style.top = '0px';
+    const svg = createBalloonSVG(color, BALLOON_SIZE, isGolden);
+    hitbox.appendChild(svg); unit.appendChild(hitbox);
 
-    const svg = createBalloonSVG(color, BALLOON_SIZE);
-    hitbox.appendChild(svg);
-    unit.appendChild(hitbox);
-
-    // String
     const string = document.createElement('div');
     string.className = 'balloon-string';
     string.style.height = STRING_LEN + 'px';
@@ -268,227 +579,342 @@
     string.style.top = (BALLOON_SIZE * 1.2) + 'px';
     unit.appendChild(string);
 
-    // Bag
     const bag = document.createElement('img');
     bag.className = 'balloon-bag';
     bag.src = BAG_IMG;
-    bag.style.width = BAG_SIZE + 'px';
-    bag.style.height = BAG_SIZE + 'px';
+    bag.style.width = BAG_SIZE + 'px'; bag.style.height = BAG_SIZE + 'px';
     bag.style.left = ((BALLOON_SIZE - BAG_SIZE) / 2) + 'px';
     bag.style.top = (BALLOON_SIZE * 1.2 + STRING_LEN - 4) + 'px';
     unit.appendChild(bag);
-
     document.body.appendChild(unit);
 
     const data = {
-      el: unit,
-      hitbox: hitbox,
-      x: startX,
-      y: startY,
-      speed: speed,
-      dir: dir,
-      wobbleAmp: wobbleAmp,
-      wobbleFreq: wobbleFreq,
-      wobblePhase: wobblePhase,
-      tick: 0,
-      color: color,
-      popped: false
+      el: unit, hitbox: hitbox,
+      x: startX, y: startY, speed: speed, dir: dir,
+      wobbleAmp: 8 + Math.random() * 12,
+      wobbleFreq: 0.008 + Math.random() * 0.008,
+      wobblePhase: Math.random() * Math.PI * 2,
+      tick: 0, color: color, popped: false,
+      golden: isGolden, value: isGolden ? 3 : 1
     };
-
-    // Pop on click
-    hitbox.addEventListener('click', function(e) {
-      e.stopPropagation();
-      popBalloon(data);
-    });
-
+    hitbox.addEventListener('click', function(e) { e.stopPropagation(); popBalloon(data); });
     activeBalloons.push(data);
   }
 
-  // ── Pop a balloon ──
   function popBalloon(b) {
     if (b.popped) return;
     b.popped = true;
-
     const rect = b.hitbox.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
+    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
 
-    // Spawn particles
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < (b.golden ? 12 : 8); i++) {
       const p = document.createElement('div');
       p.className = 'pop-particle';
       const size = 3 + Math.random() * 5;
       const angle = (Math.PI * 2 / 8) * i + Math.random() * 0.4;
       const dist = 20 + Math.random() * 30;
-      const tx = Math.cos(angle) * dist;
-      const ty = Math.sin(angle) * dist;
-      p.style.width = size + 'px';
-      p.style.height = size + 'px';
-      p.style.left = cx + 'px';
-      p.style.top = cy + 'px';
+      p.style.width = size + 'px'; p.style.height = size + 'px';
+      p.style.left = cx + 'px'; p.style.top = cy + 'px';
       p.style.background = b.color.pop + (0.4 + Math.random() * 0.3) + ')';
-      p.style.transition = 'all 0.5s ease-out';
-      p.style.opacity = '1';
+      p.style.transition = 'all 0.5s ease-out'; p.style.opacity = '1';
       document.body.appendChild(p);
-
       requestAnimationFrame(() => {
-        p.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(0.2)';
+        p.style.transform = 'translate(' + Math.cos(angle)*dist + 'px,' + Math.sin(angle)*dist + 'px) scale(0.2)';
         p.style.opacity = '0';
       });
       setTimeout(() => p.remove(), 600);
     }
 
-    // Drop the bag
     const bagRect = b.el.querySelector('.balloon-bag').getBoundingClientRect();
-    const fallingBag = document.createElement('img');
-    fallingBag.className = 'falling-bag';
-    fallingBag.src = BAG_IMG;
-    fallingBag.style.left = bagRect.left + 'px';
-    fallingBag.style.top = bagRect.top + 'px';
-    document.body.appendChild(fallingBag);
-
+    const fb = document.createElement('img');
+    fb.className = 'falling-bag';
+    fb.src = BAG_IMG;
+    fb.style.left = bagRect.left + 'px'; fb.style.top = bagRect.top + 'px';
+    document.body.appendChild(fb);
     fallingBags.push({
-      el: fallingBag,
-      x: bagRect.left,
-      y: bagRect.top,
-      vx: b.dir * b.speed * 0.5,
-      vy: 0,
-      rotation: 0,
-      rotSpeed: (Math.random() - 0.5) * 4,
-      bounces: 0
+      el: fb, x: bagRect.left, y: bagRect.top,
+      vx: b.dir * b.speed * 0.5, vy: 0,
+      rotation: 0, rotSpeed: (Math.random() - 0.5) * 4,
+      bounces: 0, value: b.value
     });
-
-    // Remove balloon unit
     b.el.remove();
   }
 
-  // ── Collect a bag ──
-  function collectBag(fb) {
-    collected++;
-    fb.el.remove();
+  // ══════════════════════
+  //  THIEF SYSTEM
+  // ══════════════════════
+  let thiefTypeIndex = 0;
 
-    // Show basket on first collect
-    if (collected === 1) basketEl.classList.add('visible');
+  function spawnThief() {
+    const type = THIEF_TYPES[thiefTypeIndex % THIEF_TYPES.length];
+    thiefTypeIndex++;
+    const thiefSize = 36;
+    const fromLeft = Math.random() > 0.5;
+    const startX = fromLeft ? -50 : window.innerWidth + 50;
 
-    // Add mini bag icon to basket
-    const icon = document.createElement('img');
-    icon.className = 'basket-bag-icon';
-    icon.src = BAG_IMG;
-    basketBowl.appendChild(icon);
+    const unit = document.createElement('div');
+    unit.className = 'thief-unit';
+    unit.style.left = startX + 'px';
+    const svg = type.createSVG(thiefSize);
+    if (!fromLeft) svg.style.transform = 'scaleX(-1)';
+    unit.appendChild(svg);
+    document.body.appendChild(unit);
 
-    // Update count
-    const msgs = [
-      '', 'nice catch', 'bag secured', 'another one', 'bags on bags',
-      'you\'re stacking', 'collector', 'bag holder', 'whale alert',
-      'diamond hands', 'wen moon', 'this is the way'
-    ];
-    basketCount.textContent = collected + (collected <= msgs.length - 1 ? ' · ' + msgs[collected] : ' bags');
+    const data = {
+      el: unit, type: type,
+      x: startX, dir: fromLeft ? 1 : -1,
+      speed: type.speed, stunned: false, stunTimer: 0,
+      targetBag: null, carrying: null, fleeing: false
+    };
 
-    // Float text
-    const flash = document.createElement('div');
-    flash.className = 'collect-flash';
-    flash.textContent = '+1 bag';
-    flash.style.right = '48px';
-    flash.style.bottom = '68px';
-    document.body.appendChild(flash);
-    setTimeout(() => flash.remove(), 1300);
+    unit.addEventListener('click', function(e) {
+      e.stopPropagation();
+      stunThief(data);
+    });
+
+    activeThieves.push(data);
   }
 
-  // ── Animation loop ──
-  function tick() {
-    const W = window.innerWidth;
-    const H = window.innerHeight;
-    const basketRect = basketBowl.getBoundingClientRect();
+  function stunThief(t) {
+    if (t.stunned) return;
+    t.stunned = true;
+    t.stunTimer = stunDuration;
+    t.el.classList.add('stunned');
 
-    // Move balloons
+    // If carrying a bag, drop it
+    if (t.carrying) {
+      const fb = document.createElement('img');
+      fb.className = 'falling-bag';
+      fb.src = BAG_IMG;
+      fb.style.left = t.x + 'px';
+      fb.style.top = (window.innerHeight - 60) + 'px';
+      document.body.appendChild(fb);
+      fallingBags.push({
+        el: fb, x: t.x, y: window.innerHeight - 60,
+        vx: 0, vy: -3, rotation: 0, rotSpeed: (Math.random()-0.5)*3,
+        bounces: 0, value: t.carrying.value || 1
+      });
+      t.carrying = null;
+      t.fleeing = false;
+    }
+
+    // Stars
+    const stars = document.createElement('div');
+    stars.className = 'stun-stars';
+    stars.textContent = '\u2729 \u2729 \u2729';
+    t.el.appendChild(stars);
+    setTimeout(() => {
+      t.stunned = false;
+      t.el.classList.remove('stunned');
+      if (stars.parentNode) stars.remove();
+    }, stunDuration);
+  }
+
+  function stealBag(thief, fb) {
+    stolen++;
+    fb.el.remove();
+    thief.carrying = { value: fb.value || 1 };
+    thief.fleeing = true;
+    thief.dir = thief.x < window.innerWidth / 2 ? -1 : 1;
+
+    // Steal flash
+    const flash = document.createElement('div');
+    flash.className = 'steal-flash';
+    flash.textContent = thief.type.stealMsg;
+    flash.style.left = thief.x + 'px';
+    flash.style.bottom = '60px';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 1500);
+
+    updateScoreboard();
+  }
+
+  // ══════════════════════
+  //  COLLECT + SCORE
+  // ══════════════════════
+  function collectBag(fb) {
+    const val = fb.value || 1;
+    collected += val;
+    fb.el.remove();
+
+    if (collected >= 1) {
+      basketEl.classList.add('visible');
+      scoreboard.classList.add('visible');
+    }
+
+    for (let v = 0; v < val; v++) {
+      const icon = document.createElement('img');
+      icon.className = 'basket-bag-icon'; icon.src = BAG_IMG;
+      basketBowl.appendChild(icon);
+    }
+
+    const flash = document.createElement('div');
+    flash.className = 'collect-flash';
+    flash.textContent = val > 1 ? '+' + val + ' bags!' : '+1 bag';
+    flash.style.right = '48px'; flash.style.bottom = '68px';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 1300);
+
+    updateScoreboard();
+    checkMilestones();
+  }
+
+  function updateScoreboard() {
+    scoreCollected.textContent = collected + ' bags collected';
+    scoreStolen.textContent = stolen > 0 ? stolen + ' stolen' : '';
+  }
+
+  // ══════════════════════
+  //  MAIN LOOP
+  // ══════════════════════
+  function tick() {
+    const W = window.innerWidth, H = window.innerHeight;
+    const basketRect = basketBowl.getBoundingClientRect();
+    const basketCX = basketRect.left + basketRect.width / 2;
+    const basketCY = basketRect.top + basketRect.height / 2;
+
+    // ── Balloons ──
     for (let i = activeBalloons.length - 1; i >= 0; i--) {
       const b = activeBalloons[i];
       if (b.popped) { activeBalloons.splice(i, 1); continue; }
-
       b.tick++;
       b.x += b.speed * b.dir;
-      const wobbleY = Math.sin(b.tick * b.wobbleFreq + b.wobblePhase) * b.wobbleAmp;
-
-      b.el.style.transform = 'translate(' + b.x + 'px,' + (b.y + wobbleY) + 'px)';
-
-      // Off screen?
+      const wy = Math.sin(b.tick * b.wobbleFreq + b.wobblePhase) * b.wobbleAmp;
+      b.el.style.transform = 'translate(' + b.x + 'px,' + (b.y + wy) + 'px)';
       if ((b.dir > 0 && b.x > W + 100) || (b.dir < 0 && b.x < -100)) {
-        b.el.remove();
-        activeBalloons.splice(i, 1);
+        b.el.remove(); activeBalloons.splice(i, 1);
       }
     }
 
-    // Falling bags — gravity + bounce + collect
+    // ── Falling bags ──
     for (let i = fallingBags.length - 1; i >= 0; i--) {
       const fb = fallingBags[i];
       fb.vy += GRAVITY;
-      fb.x += fb.vx;
-      fb.y += fb.vy;
+      fb.x += fb.vx; fb.y += fb.vy;
       fb.rotation += fb.rotSpeed;
-
       fb.el.style.left = fb.x + 'px';
       fb.el.style.top = fb.y + 'px';
       fb.el.style.transform = 'rotate(' + fb.rotation + 'deg)';
 
-      // Bounce off bottom
       if (fb.y + BAG_SIZE >= H - 10) {
         fb.y = H - 10 - BAG_SIZE;
         fb.vy = -Math.abs(fb.vy) * BOUNCE_DAMPEN;
-        fb.vx *= 0.7;
-        fb.rotSpeed *= 0.6;
-        fb.bounces++;
+        fb.vx *= 0.7; fb.rotSpeed *= 0.6; fb.bounces++;
       }
 
-      // Check if bag reached basket area
-      const bagCX = fb.x + BAG_SIZE / 2;
-      const bagCY = fb.y + BAG_SIZE / 2;
-      if (bagCX >= basketRect.left - 20 && bagCX <= basketRect.right + 20 &&
-          bagCY >= basketRect.top - 20 && bagCY <= basketRect.bottom + 10) {
-        collectBag(fb);
-        fallingBags.splice(i, 1);
-        continue;
-      }
-
-      // If bounced enough times and settled, slide toward basket
-      if (fb.bounces >= 2 && Math.abs(fb.vy) < 2) {
-        const targetX = basketRect.left + basketRect.width / 2 - BAG_SIZE / 2;
-        const targetY = basketRect.top;
-        fb.x += (targetX - fb.x) * 0.04;
-        fb.y += (targetY - fb.y) * 0.04;
-        fb.rotation *= 0.95;
-
-        // Close enough? Collect it
-        if (Math.abs(fb.x - targetX) < 5 && Math.abs(fb.y - targetY) < 10) {
-          collectBag(fb);
-          fallingBags.splice(i, 1);
-          continue;
+      // Auto-collect radius
+      if (hasAutoCollect) {
+        const dx = (fb.x + BAG_SIZE/2) - basketCX;
+        const dy = (fb.y + BAG_SIZE/2) - basketCY;
+        if (Math.sqrt(dx*dx + dy*dy) < autoCollectRadius) {
+          collectBag(fb); fallingBags.splice(i, 1); continue;
         }
       }
 
-      // Safety: remove if way off screen
+      // Basket collision
+      const bagCX = fb.x + BAG_SIZE / 2, bagCY = fb.y + BAG_SIZE / 2;
+      if (bagCX >= basketRect.left - 20 && bagCX <= basketRect.right + 20 &&
+          bagCY >= basketRect.top - 20 && bagCY <= basketRect.bottom + 10) {
+        collectBag(fb); fallingBags.splice(i, 1); continue;
+      }
+
+      // Settle → slide to basket
+      if (fb.bounces >= 2 && Math.abs(fb.vy) < 2) {
+        const tx = basketRect.left + basketRect.width/2 - BAG_SIZE/2;
+        const ty = basketRect.top;
+        fb.x += (tx - fb.x) * 0.04; fb.y += (ty - fb.y) * 0.04;
+        fb.rotation *= 0.95;
+        if (Math.abs(fb.x - tx) < 5 && Math.abs(fb.y - ty) < 10) {
+          collectBag(fb); fallingBags.splice(i, 1); continue;
+        }
+      }
+
       if (fb.y > H + 200 || fb.x < -200 || fb.x > W + 200) {
-        fb.el.remove();
-        fallingBags.splice(i, 1);
+        fb.el.remove(); fallingBags.splice(i, 1);
       }
     }
 
-    animFrame = requestAnimationFrame(tick);
+    // ── Thieves ──
+    for (let i = activeThieves.length - 1; i >= 0; i--) {
+      const t = activeThieves[i];
+      if (t.stunned) continue;
+
+      if (t.fleeing) {
+        // Run away with the bag
+        t.x += t.dir * (t.speed + 1.5);
+        t.el.style.left = t.x + 'px';
+        if (t.x < -80 || t.x > W + 80) {
+          t.el.remove(); activeThieves.splice(i, 1);
+        }
+        continue;
+      }
+
+      // Find nearest grounded bag
+      let nearest = null, nearDist = Infinity;
+      for (let j = 0; j < fallingBags.length; j++) {
+        const fb = fallingBags[j];
+        if (fb.bounces < 1) continue; // only go after landed bags
+        const dist = Math.abs(fb.x - t.x);
+        if (dist < nearDist) { nearDist = dist; nearest = fb; }
+      }
+
+      if (nearest && nearDist < 300) {
+        // Chase the bag
+        const bagDir = nearest.x > t.x ? 1 : -1;
+        t.x += bagDir * t.speed;
+        t.el.style.left = t.x + 'px';
+
+        // Close enough to grab?
+        if (Math.abs(t.x - nearest.x) < 20) {
+          const idx = fallingBags.indexOf(nearest);
+          if (idx !== -1) {
+            stealBag(t, nearest);
+            fallingBags.splice(idx, 1);
+          }
+        }
+      } else {
+        // Patrol
+        t.x += t.dir * t.speed * 0.4;
+        t.el.style.left = t.x + 'px';
+        if (t.x < -60 || t.x > W + 60) {
+          // Turn around if no bags and wandered off
+          if (!nearest) t.dir *= -1;
+        }
+      }
+
+      // Remove if way off screen while not fleeing
+      if (t.x < -150 || t.x > W + 150) {
+        t.el.remove(); activeThieves.splice(i, 1);
+      }
+    }
+
+    requestAnimationFrame(tick);
   }
 
-  // ── Spawn timer ──
-  function scheduleNext() {
-    const delay = BALLOON_INTERVAL_MIN + Math.random() * (BALLOON_INTERVAL_MAX - BALLOON_INTERVAL_MIN);
+  // ── Spawn timers ──
+  function scheduleBalloon() {
+    const delay = spawnMin + Math.random() * (spawnMax - spawnMin);
+    setTimeout(() => { spawnBalloon(); scheduleBalloon(); }, delay);
+  }
+
+  function scheduleThief() {
+    const delay = thiefSpawnMin + Math.random() * (thiefSpawnMax - thiefSpawnMin);
     setTimeout(() => {
-      spawnBalloon();
-      scheduleNext();
+      if (collected >= 1 || fallingBags.length > 0) spawnThief();
+      scheduleThief();
     }, delay);
   }
 
   // ── Init ──
   tick();
-  // Spawn first one quickly so you don't wait long
-  setTimeout(spawnBalloon, 1500);
-  scheduleNext();
+  setTimeout(spawnBalloon, 600);
+  setTimeout(spawnBalloon, 1400);
+  setTimeout(spawnBalloon, 2200);
+  setTimeout(spawnBalloon, 3000);
+  setTimeout(spawnBalloon, 4000);
+  scheduleBalloon();
+  // First thief appears after ~10s
+  setTimeout(() => { spawnThief(); scheduleThief(); }, 10000);
 
 })();
 </script>
