@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>NOCTURNE RUN</title>
+<title>SERVANT RUN</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap');
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -15,9 +15,9 @@
 <canvas id="gc"></canvas>
 <script>
 /* ═══════════════════════════════════════════════════════
-   NOCTURNE RUN — Side-scroll tap-to-jump collector
+   SERVANT RUN — Side-scroll tap-to-jump collector
    The servant coin runs through the ACK world,
-   collecting bags, artworks, and lost relics.
+   collecting bags, artworks, and shitcoin prizes.
    ═══════════════════════════════════════════════════════ */
 
 (function(){
@@ -35,7 +35,7 @@ var score = 0;
 var bestScore = 0;
 var distance = 0;
 var coins = 0;
-var relicsCollected = [];
+var shitcoinsCollected = [];
 var artworksCollected = [];
 var servantCoins = 0;
 var speed = 4.5;
@@ -47,7 +47,7 @@ var flashColor = '';
 
 // ── Galaxy Boost ──
 var boostMeter = 0;
-var BOOST_THRESHOLD = 30; // collect 30 items to trigger — takes longer to level up
+var BOOST_THRESHOLD = 15; // collect 15 items to trigger
 var boostState = 'none'; // none | launching | galaxy | reentry
 var boostTimer = 0;
 var boostDuration = 480; // ~8 seconds at 60fps
@@ -79,17 +79,13 @@ var player = {
   x: 0, y: 0, w: 100, h: 62,  // wider for piano sprite
   vy: 0, onGround: true,
   jumpCount: 0,
-  maxJumps: 99,  // flappy-bird style: unlimited taps
+  maxJumps: 2,
   squash: 1, stretch: 1,
-  tilt: 0,  // slight tilt when jumping
-  flapEnergy: 100,  // energy for flapping
-  maxFlapEnergy: 100
+  tilt: 0  // slight tilt when jumping
 };
 var GRAVITY = 0.55;
-var JUMP_FORCE = -9;       // lighter first tap
-var FLAP_FORCE = -7;       // each subsequent tap — lighter flap
-var FLAP_ENERGY_COST = 8;  // energy per flap
-var FLAP_REGEN_RATE = 0.15; // energy regen on ground per frame
+var JUMP_FORCE = -11.5;
+var DOUBLE_JUMP_FORCE = -10;
 
 // ── Obstacles / Collectibles ──
 var obstacles = [];
@@ -113,23 +109,42 @@ var artworkPool = [
 ];
 var artworkImages = {};
 
-// ── Coin pool ──
-var coinPool = [
-  // Bitcoin — most common
-  { ticker:'BTC', color:'#F7931A', desc:'digital gold', style:'btc' },
-  { ticker:'BTC', color:'#F7931A', desc:'number go up', style:'btc' },
-  { ticker:'BTC', color:'#F7931A', desc:'21 million', style:'btc' },
-  { ticker:'BTC', color:'#F7931A', desc:'the orange pill', style:'btc' },
-  // Servant coins — frequent
-  { ticker:'SERVANT', color:'#C9A84C', desc:'the one true coin', style:'servant' },
-  { ticker:'SERVANT', color:'#C9A84C', desc:'a faithful return', style:'servant' },
-  { ticker:'SERVANT', color:'#C9A84C', desc:'always in service', style:'servant' },
-  { ticker:'SERVANT', color:'#C9A84C', desc:'the servant provides', style:'servant' },
-  // ETH
-  { ticker:'ETH', color:'#627EEA', desc:'the world computer', style:'eth' },
-  { ticker:'ETH', color:'#627EEA', desc:'ultra sound money', style:'eth' },
-  // Occasional Mario nod
-  { ticker:'1-UP', color:'#44DD44', desc:'one more try', style:'mario' }
+// ── Fake shitcoin prize pool ──
+var shitcoinPool = [
+  // Real-ish coins
+  { ticker:'$BTC', color:'#F7931A', desc:'Digital gold baby' },
+  { ticker:'$ETH', color:'#627EEA', desc:'Ultra sound money' },
+  { ticker:'$SOL', color:'#9945FF', desc:'Fast and sometimes online' },
+  { ticker:'$DOGE', color:'#C3A634', desc:'Much wow, very coin' },
+  { ticker:'$PEPE', color:'#4CAF50', desc:'Feels good man' },
+  { ticker:'$SHIB', color:'#E42D04', desc:'The DOGE killer (allegedly)' },
+  // Rekt culture
+  { ticker:'$REKT', color:'#FF0000', desc:'Buy high sell low master' },
+  { ticker:'$REKTGUY', color:'#E84040', desc:'He bought? DUMP IT' },
+  { ticker:'$NGMI', color:'#DC143C', desc:'Not gonna make it (but styled)' },
+  { ticker:'$COPIUM', color:'#4169E1', desc:'For when your portfolio dips' },
+  { ticker:'$HOPIUM', color:'#00BFFF', desc:'Tomorrow is always green' },
+  // ACK-themed
+  { ticker:'$SERCOIN', color:'#C9A84C', desc:'The one true servant coin' },
+  { ticker:'$MUSEWIF', color:'#FF69B4', desc:'Muse with hat' },
+  { ticker:'$PIANOBROKE', color:'#F5F5DC', desc:'48 keys, all broken' },
+  { ticker:'$CLOWNINU', color:'#FF4500', desc:'Honk honk to the moon' },
+  { ticker:'$SKELEPUMP', color:'#DDD', desc:'Dead cat bounce specialist' },
+  { ticker:'$DEATHFLIP', color:'#808080', desc:'Memento mori, memento profit' },
+  // Degen classics
+  { ticker:'$FARTCOIN', color:'#8B4513', desc:'The gas fee is literal' },
+  { ticker:'$RUGSWORTH', color:'#8B0000', desc:'Guaranteed 100x (downward)' },
+  { ticker:'$WENLAMBO', color:'#DAA520', desc:'Any day now...' },
+  { ticker:'$BAGHODLR', color:'#B8860B', desc:'Diamond hands, paper gains' },
+  { ticker:'$APEING', color:'#228B22', desc:'FOMO is a feature' },
+  { ticker:'$MOONTARD', color:'#9370DB', desc:'To the moon (wrong direction)' },
+  { ticker:'$PONZI', color:'#FFD700', desc:'Sustainable tokenomics' },
+  { ticker:'$DEVSDOXX', color:'#2F4F4F', desc:'Team fully doxxed (trust us)' },
+  { ticker:'$GWEI', color:'#5B7FA6', desc:'Gas fees are a feature' },
+  { ticker:'$LIQUIDATED', color:'#B22222', desc:'Leveraged to the tits' },
+  { ticker:'$WAGMI', color:'#32CD32', desc:'We are all gonna make it' },
+  { ticker:'$SAYLOR', color:'#FF8C00', desc:'Never selling. NEVER.' },
+  { ticker:'$PAPRHANDS', color:'#D2B48C', desc:'Sold the bottom, congrats' }
 ];
 
 // ── Image loading ──
@@ -213,18 +228,26 @@ function playArtworkSound(){
   });
 }
 
-function playCoinCollectSound(){
+function playShitcoinSound(){
   if(!audioCtx) return;
-  // Classic coin ding — warm, satisfying
-  var t = audioCtx.currentTime;
+  // Goofy descending bloop
   var o = audioCtx.createOscillator(), g = audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
-  o.type = 'sine';
-  o.frequency.setValueAtTime(988, t);
-  o.frequency.setValueAtTime(1319, t + 0.07);
-  g.gain.setValueAtTime(0.12, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-  o.start(t); o.stop(t + 0.25);
+  o.type = 'square';
+  o.frequency.setValueAtTime(600, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.2);
+  g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+  o.start(); o.stop(audioCtx.currentTime + 0.25);
+  // Second bloop
+  var o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.type = 'square';
+  o2.frequency.setValueAtTime(400, audioCtx.currentTime + 0.08);
+  o2.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+  g2.gain.setValueAtTime(0.06, audioCtx.currentTime + 0.08);
+  g2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+  o2.start(audioCtx.currentTime+0.08); o2.stop(audioCtx.currentTime+0.3);
 }
 
 function playServantCoinSound(){
@@ -516,7 +539,7 @@ function updateGalaxyBoost(){
       boostInvulnTimer = 90; // ~1.5s invulnerability after landing
       boostFlashAlpha = 0.5;
       // Increase threshold for next boost
-      BOOST_THRESHOLD = Math.min(50, BOOST_THRESHOLD + 5);
+      BOOST_THRESHOLD = Math.min(25, BOOST_THRESHOLD + 3);
 
       // Landing particles
       for(var k=0;k<15;k++){
@@ -963,67 +986,6 @@ function ghostSwell(freq, startT, dur, vol){
   musicNodes.push(osc);
 }
 
-// ── Procedural melody generator — same vibe, different notes each game ──
-var melodyRng = 1;
-function melodyRand(){ melodyRng=(melodyRng*16807+0)%2147483647; return melodyRng/2147483647; }
-
-function generateMelody(){
-  melodyRng = Date.now() % 2147483647; // seed from current time = new melody each game
-  var piano = [];
-
-  // Choose from several minor-key chord progressions
-  var progressions = [
-    // Am - Dm - Em - Am
-    [[N.A3,N.C4,N.E4],[N.D3,N.F4,N.A4],[N.E3,N.G4,N.B4],[N.A3,N.E4,N.A4]],
-    // Am - F - G - Em
-    [[N.A3,N.C4,N.E4],[N.F3,N.A4,N.C5],[N.G3,N.B4,N.D5],[N.E3,N.G4,N.B4]],
-    // Dm - Am - Em - Dm
-    [[N.D3,N.F4,N.A4],[N.A3,N.C4,N.E4],[N.E3,N.B4,N.E5],[N.D3,N.F4,N.D5]],
-    // Am - G - F - E
-    [[N.A3,N.E4,N.A4],[N.G3,N.B4,N.D5],[N.F3,N.A4,N.C5],[N.E3,N.G4,N.B4]],
-    // Em - Am - Dm - G
-    [[N.E3,N.G4,N.B4],[N.A3,N.C4,N.E4],[N.D3,N.F4,N.A4],[N.G3,N.B4,N.D5]],
-    // Am - Dm - F - Em
-    [[N.A3,N.C5,N.E5],[N.D3,N.F4,N.A4],[N.F3,N.C5,N.A4],[N.E3,N.G4,N.B4]]
-  ];
-
-  var prog = progressions[Math.floor(melodyRand()*progressions.length)];
-
-  // Two passes through the progression (8 phrases = 32 bars)
-  for(var pass=0; pass<2; pass++){
-    for(var ci=0; ci<prog.length; ci++){
-      var chord = prog[ci];
-      var barStart = (pass*4+ci)*4; // 4 beats per chord, 4 chords per pass
-      var noteCount = 2 + Math.floor(melodyRand()*2); // 2-3 notes per chord
-
-      for(var ni=0; ni<noteCount; ni++){
-        var noteIdx = Math.floor(melodyRand()*chord.length);
-        var freq = chord[noteIdx];
-
-        // Occasional octave shift for variation
-        if(melodyRand()>0.75 && pass===1) freq *= 2;
-        if(melodyRand()>0.85) freq *= 0.5;
-
-        var beatOffset = ni * (1 + melodyRand()*1.5);
-        var dur = 2.5 + melodyRand()*2;
-        var vol = 0.06 + melodyRand()*0.06;
-        // Second pass slightly quieter
-        if(pass===1) vol *= 0.85;
-
-        piano.push([freq, barStart+beatOffset, dur, vol]);
-      }
-
-      // Occasional high lonely note
-      if(melodyRand()>0.6){
-        var highNote = chord[chord.length-1] * (melodyRand()>0.5 ? 2 : 1);
-        piano.push([highNote, barStart+2.5+melodyRand()*1.5, 2+melodyRand()*1.5, 0.04+melodyRand()*0.03]);
-      }
-    }
-  }
-
-  return piano;
-}
-
 function startMusic(){
   if(!audioCtx || musicPlaying) return;
   musicPlaying = true;
@@ -1057,22 +1019,62 @@ function scheduleMusicLoop(){
   cosmicShimmer(now + 2*B, 12*B, 0.03);
   cosmicShimmer(now + 18*B, 10*B, 0.025);
 
-  // ═══ LAYER 3: HAUNTING PIANO — procedurally generated each game ═══
-  var piano = generateMelody();
+  // ═══ LAYER 3: HAUNTING PIANO ═══
+  // Sparse, slow, melancholic — each note rings out alone in the void
+  // Am - Dm - Em - Am progression, broken chords
+
+  var piano = [
+    // Bar 1-4: opening — Am broken chord, very sparse
+    [N.A3, 0, 4, 0.12],
+    [N.C4, 1, 3.5, 0.09],
+    [N.E4, 2.5, 3, 0.08],
+
+    // Bar 5-8: Dm — shifts the mood
+    [N.D3, 5, 4, 0.11],
+    [N.F4, 6, 3, 0.08],
+    [N.A4, 7.5, 3, 0.07],
+
+    // Bar 9-12: Em — tension
+    [N.E3, 9, 4, 0.11],
+    [N.G4, 10, 3, 0.08],
+    [N.B4, 11.5, 3, 0.07],
+    [N.E5, 12.5, 2.5, 0.05],  // high note — aching
+
+    // Bar 13-16: Am resolve — but sadder
+    [N.A3, 14, 4, 0.12],
+    [N.E4, 15, 3, 0.08],
+    [N.A4, 16, 3.5, 0.06],
+
+    // Bar 17-20: second pass — Fmaj, more space between
+    [N.F3, 18, 4, 0.10],
+    [N.A4, 19.5, 3, 0.07],
+    [N.C5, 20.5, 3, 0.06],
+
+    // Bar 21-24: G — reaching upward
+    [N.G3, 22, 4, 0.10],
+    [N.B4, 23, 3, 0.07],
+    [N.D5, 24.5, 2.5, 0.06],
+
+    // Bar 25-28: Am again — the return
+    [N.A3, 26, 4, 0.11],
+    [N.C5, 27, 3, 0.07],
+    [N.E5, 28, 3, 0.05],  // highest point — lonely
+
+    // Bar 29-32: final descent — E alone
+    [N.E3, 29.5, 4, 0.10],
+    [N.B3, 30.5, 3, 0.07]
+  ];
 
   piano.forEach(function(p){
     pianoNote(p[0], now + p[1]*B, p[2]*B, p[3]);
   });
 
-  // ═══ LAYER 4: GHOST SWELLS — randomized ═══
-  var swellNotes = [N.A3, N.C4, N.E4, N.F3, N.G3, N.A4, N.D4, N.B3];
-  var swellBeats = [4,10,16,22,28];
-  for(var si=0;si<swellBeats.length;si++){
-    if(melodyRand()>0.3){
-      var sn = swellNotes[Math.floor(melodyRand()*swellNotes.length)];
-      ghostSwell(sn, now+swellBeats[si]*B, 4*B+melodyRand()*3*B, 0.025+melodyRand()*0.02);
-    }
-  }
+  // ═══ LAYER 4: GHOST SWELLS ═══
+  // Occasional reverse-style pads that bloom from silence
+  ghostSwell(N.A3, now + 4*B, 6*B, 0.04);
+  ghostSwell(N.E4, now + 13*B, 5*B, 0.03);
+  ghostSwell(N.A4, now + 22*B, 6*B, 0.035);
+  ghostSwell(N.C4, now + 28*B, 4*B, 0.03);
 
   // Schedule next loop
   musicLoopTimer = setTimeout(function(){
@@ -1109,13 +1111,8 @@ window.addEventListener('resize', resize);
 
 // ── Input ──
 var jumpPressed = false;
-var lastFlapTime = 0;
-var FLAP_COOLDOWN = 80; // ms between flaps
 
 function doJump(){
-  var now = Date.now();
-  if(now - lastFlapTime < FLAP_COOLDOWN) return;
-  lastFlapTime = now;
   ensureAudio();
   if(STATE === 'menu'){
     startGame();
@@ -1134,29 +1131,26 @@ function doJump(){
   // During launch/reentry, ignore taps
   if(boostState === 'launching' || boostState === 'reentry') return;
 
-  if(player.jumpCount === 0){
-    // First tap — full jump off ground
-    player.vy = JUMP_FORCE * SCALE;
-    player.squash = 0.7; player.stretch = 1.3;
-    playJumpSound();
+  if(player.jumpCount < player.maxJumps){
+    if(player.jumpCount === 0){
+      player.vy = JUMP_FORCE * SCALE;
+      player.squash = 0.7; player.stretch = 1.3;
+      playJumpSound();
+    } else {
+      player.vy = DOUBLE_JUMP_FORCE * SCALE;
+      player.squash = 0.6; player.stretch = 1.4;
+      playDoubleJumpSound();
+      for(var i=0;i<8;i++){
+        particles.push({
+          x: player.x + player.w*SCALE/2, y: player.y + player.h*SCALE,
+          vx: (Math.random()-0.5)*3*SCALE, vy: Math.random()*2*SCALE,
+          life: 20+Math.random()*15, maxLife: 35, size: 3+Math.random()*4,
+          color: 'rgba(220,170,60,'
+        });
+      }
+    }
     player.jumpCount++;
     player.onGround = false;
-  } else if(player.flapEnergy >= FLAP_ENERGY_COST){
-    // Subsequent taps — flappy bird flaps
-    player.vy = FLAP_FORCE * SCALE;
-    player.squash = 0.75; player.stretch = 1.25;
-    player.flapEnergy -= FLAP_ENERGY_COST;
-    playDoubleJumpSound();
-    player.jumpCount++;
-    // Feather-like particles for each flap
-    for(var i=0;i<5;i++){
-      particles.push({
-        x: player.x + player.w*SCALE/2, y: player.y + player.h*SCALE,
-        vx: (Math.random()-0.5)*2.5*SCALE, vy: Math.random()*3*SCALE,
-        life: 15+Math.random()*12, maxLife: 27, size: 2+Math.random()*3,
-        color: player.flapEnergy > 30 ? 'rgba(220,170,60,' : 'rgba(180,100,80,'
-      });
-    }
   }
 }
 
@@ -1197,17 +1191,16 @@ function spawnCollectible(){
   if(roll < 0.45){
     // Bag (45%)
     c.type = 'bag';
-    c.w = 42*SCALE; c.h = 42*SCALE;
+    c.w = 32*SCALE; c.h = 32*SCALE;
     c.y = Math.random()<0.4 ? GROUND_Y - c.h - (80+Math.random()*60)*SCALE : GROUND_Y - c.h - 5*SCALE;
     c.value = 1;
   } else if(roll < 0.72){
-    // Coin (27%)
-    c.type = 'coin';
-    var cc = coinPool[Math.floor(Math.random()*coinPool.length)];
-    c.ticker = cc.ticker;
-    c.coinColor = cc.color;
-    c.coinStyle = cc.style;
-    c.desc = cc.desc;
+    // Shitcoin prize (27%)
+    c.type = 'shitcoin';
+    var sc = shitcoinPool[Math.floor(Math.random()*shitcoinPool.length)];
+    c.ticker = sc.ticker;
+    c.coinColor = sc.color;
+    c.desc = sc.desc;
     c.w = 30*SCALE; c.h = 30*SCALE;
     c.y = GROUND_Y - c.h - (40+Math.random()*100)*SCALE;
     c.value = 2;
@@ -1309,19 +1302,18 @@ function startGame(){
   score=0; distance=0; coins=0;
   speed = 4.5*SCALE;
   frameCount=0; difficultyLevel=0;
-  artworksCollected=[]; relicsCollected=[]; servantCoins=0;
+  artworksCollected=[]; shitcoinsCollected=[]; servantCoins=0;
   obstacles=[]; collectibles=[]; particles=[];
   boostMeter=0; boostState='none'; boostTimer=0;
   galaxyCollectibles=[]; galaxyStars=[]; galaxyScore=0;
   boostFlashAlpha=0; boostCombo=0; boostInvulnTimer=0; boostThemeIndex=0;
-  BOOST_THRESHOLD=30;
+  BOOST_THRESHOLD=15;
 
   player.x = 80*SCALE;
   player.y = GROUND_Y - player.h*SCALE;
   player.vy=0; player.onGround=true;
   player.jumpCount=0; player.tilt=0;
   player.squash=1; player.stretch=1;
-  player.flapEnergy=player.maxFlapEnergy;
 
   spawnTimer=0; collectibleTimer=0;
   initBackground();
@@ -1333,7 +1325,7 @@ function die(){
   frameCount = 0;
   shakeTimer = 15;
   flashTimer = 8;
-  flashColor = 'rgba(100,80,60,0.25)';
+  flashColor = 'rgba(200,50,40,0.3)';
   playDeathSound();
   stopMusic();
 
@@ -1344,7 +1336,7 @@ function die(){
       x: player.x+player.w*SCALE/2, y: player.y+player.h*SCALE/2,
       vx: Math.cos(angle)*spd*SCALE, vy: Math.sin(angle)*spd*SCALE-2*SCALE,
       life: 30+Math.random()*20, maxLife:50, size: 3+Math.random()*5,
-      color: i%2===0?'rgba(140,120,100,':'rgba(180,170,150,'
+      color: i%2===0?'rgba(200,50,40,':'rgba(220,170,60,'
     });
   }
 
@@ -1402,83 +1394,34 @@ function drawBag(cx, cy, w, h){
   }
 }
 
-function drawGameCoin(cx, cy, w, h, color, ticker, spinAngle, coinStyle){
+function drawShitcoin(cx, cy, w, h, color, ticker, spinAngle){
   X.save();
   X.translate(cx+w/2, cy+h/2);
-  var t = Date.now()/1000;
 
-  // 3D spin effect
-  var cosA = Math.cos(spinAngle);
-  var scaleX = Math.abs(cosA);
+  // 3D spin effect — scale X based on cos of angle
+  var scaleX = Math.abs(Math.cos(spinAngle));
   if(scaleX < 0.05) scaleX = 0.05;
-
-  // Outer glow — pulsing halo
-  var glowAlpha = 0.15+Math.sin(t*3+spinAngle)*0.1;
-  var glowR = w*0.9;
-  var glow = X.createRadialGradient(0,0,w*0.3, 0,0,glowR);
-  glow.addColorStop(0, color.replace(')', ','+glowAlpha+')').replace('rgb','rgba'));
-  glow.addColorStop(1, 'rgba(0,0,0,0)');
-  X.fillStyle = glow;
-  X.fillRect(-glowR,-glowR,glowR*2,glowR*2);
-
   X.scale(scaleX, 1);
 
-  // Edge/rim — thicker, metallic
-  X.beginPath(); X.arc(0, 0, w/2+2*SCALE, 0, Math.PI*2);
-  var rimGrad = X.createLinearGradient(0,-w/2,0,w/2);
-  rimGrad.addColorStop(0,'rgba(255,255,240,0.5)');
-  rimGrad.addColorStop(0.5, color);
-  rimGrad.addColorStop(1,'rgba(80,60,20,0.6)');
-  X.fillStyle=rimGrad; X.fill();
+  // Coin body
+  X.fillStyle = color;
+  X.beginPath(); X.arc(0, 0, w/2, 0, Math.PI*2); X.fill();
 
-  // Coin body — richer gradient
-  X.beginPath(); X.arc(0, 0, w/2, 0, Math.PI*2);
-  var cGrad = X.createRadialGradient(-w*0.15, -w*0.15, w*0.05, w*0.05, w*0.05, w/2);
-  cGrad.addColorStop(0, '#fffbe0');
-  cGrad.addColorStop(0.25, color);
-  cGrad.addColorStop(0.7, color);
-  cGrad.addColorStop(1, 'rgba(60,40,10,0.3)');
-  X.fillStyle = cGrad; X.fill();
+  // Highlight
+  X.fillStyle = 'rgba(255,255,255,0.2)';
+  X.beginPath(); X.arc(-w*0.1, -h*0.1, w*0.3, 0, Math.PI*2); X.fill();
 
-  // Inner ring detail
-  X.beginPath(); X.arc(0, 0, w*0.38, 0, Math.PI*2);
-  X.strokeStyle='rgba(255,255,255,0.15)'; X.lineWidth=1*SCALE; X.stroke();
-
-  // Specular highlight — moving with spin
-  var hlX = Math.sin(spinAngle*0.7)*w*0.15;
-  var hlGrad = X.createRadialGradient(hlX,-w*0.12, w*0.02, hlX,-w*0.1, w*0.25);
-  hlGrad.addColorStop(0,'rgba(255,255,255,0.5)');
-  hlGrad.addColorStop(1,'rgba(255,255,255,0)');
-  X.fillStyle=hlGrad;
-  X.beginPath(); X.arc(0,0,w/2,0,Math.PI*2); X.fill();
-
-  // Symbol when facing enough
-  if(scaleX > 0.3){
-    var symAlpha = Math.min(1, (scaleX-0.3)/0.3);
-    X.textAlign='center'; X.textBaseline='middle';
-    // Shadow
-    X.fillStyle='rgba(0,0,0,'+(0.4*symAlpha)+')';
-    if(coinStyle === 'mario'){
-      X.font='bold '+(w*0.5/scaleX)+'px serif';
-      X.fillText('\u2605', 1*SCALE, 1*SCALE);
-      X.fillStyle='rgba(255,255,220,'+(0.9*symAlpha)+')';
-      X.fillText('\u2605', 0, 0);
-    } else if(coinStyle === 'btc'){
-      X.font='bold '+(w*0.45/scaleX)+'px JetBrains Mono';
-      X.fillText('\u20BF', 1*SCALE, 1*SCALE+1*SCALE);
-      X.fillStyle='rgba(255,255,255,'+(0.8*symAlpha)+')';
-      X.fillText('\u20BF', 0, 1*SCALE);
-    } else if(coinStyle === 'eth'){
-      X.font='bold '+(w*0.4/scaleX)+'px JetBrains Mono';
-      X.fillText('\u039E', 1*SCALE, 1*SCALE+1*SCALE);
-      X.fillStyle='rgba(255,255,255,'+(0.8*symAlpha)+')';
-      X.fillText('\u039E', 0, 1*SCALE);
-    } else {
-      X.font='bold '+(w*0.5/scaleX)+'px EB Garamond';
-      X.fillText('S', 1*SCALE, 1*SCALE+1*SCALE);
-      X.fillStyle='rgba(255,248,200,'+(0.9*symAlpha)+')';
-      X.fillText('S', 0, 1*SCALE);
-    }
+  // Ticker text (only show when facing enough)
+  if(scaleX > 0.4){
+    X.fillStyle = 'rgba(0,0,0,0.7)';
+    X.font = 'bold '+(7*SCALE/scaleX)+'px JetBrains Mono';
+    X.textAlign = 'center'; X.textBaseline = 'middle';
+    // Truncate ticker for fit
+    var label = ticker.replace('$','');
+    if(label.length > 5) label = label.substring(0,5);
+    X.fillText('$', 0, -3*SCALE);
+    X.font = 'bold '+(5*SCALE/scaleX)+'px JetBrains Mono';
+    X.fillText(label, 0, 4*SCALE);
   }
 
   X.restore();
@@ -1875,9 +1818,9 @@ function drawHUD(){
     X.fillText('SERVANT COINS  '+servantCoins, 20*SCALE, hudY);
     hudY += 20*SCALE;
   }
-  if(relicsCollected.length > 0){
-    X.fillStyle='rgba(255,220,80,0.6)';
-    X.fillText('COINS  '+relicsCollected.length, 20*SCALE, hudY);
+  if(shitcoinsCollected.length > 0){
+    X.fillStyle='rgba(180,140,60,0.6)';
+    X.fillText('SHITCOINS  '+shitcoinsCollected.length, 20*SCALE, hudY);
     hudY += 20*SCALE;
   }
   if(artworksCollected.length > 0){
@@ -1888,22 +1831,6 @@ function drawHUD(){
   X.font=(12*SCALE)+'px JetBrains Mono';
   X.fillStyle='rgba(225,215,195,0.4)'; X.textAlign='right';
   X.fillText(Math.floor(distance)+'m', W-20*SCALE, 35*SCALE);
-
-  // Flap energy bar (top right, below distance)
-  if(boostState==='none'){
-    var feBarW=80*SCALE, feBarH=5*SCALE;
-    var feBarX=W-20*SCALE-feBarW, feBarY=45*SCALE;
-    var feFill=player.flapEnergy/player.maxFlapEnergy;
-    X.fillStyle='rgba(30,25,20,0.5)';
-    X.fillRect(feBarX-1*SCALE,feBarY-1*SCALE,feBarW+2*SCALE,feBarH+2*SCALE);
-    var feColor = feFill>0.3 ? 'rgba(200,170,100,0.6)' : 'rgba(180,80,60,0.7)';
-    X.fillStyle=feColor;
-    X.fillRect(feBarX,feBarY,feBarW*feFill,feBarH);
-    X.font=(8*SCALE)+'px JetBrains Mono';
-    X.fillStyle='rgba(225,215,195,0.3)'; X.textAlign='right';
-    X.fillText('FLAP',feBarX-4*SCALE,feBarY+feBarH-1*SCALE);
-  }
-
   X.restore();
 }
 
@@ -1920,11 +1847,11 @@ function drawMenu(){
 
   X.font='700 '+(36*SCALE)+'px EB Garamond';
   X.fillStyle='#c9a84c'; X.textAlign='center';
-  X.fillText('NOCTURNE RUN', W/2, H*0.38);
+  X.fillText('SERVANT RUN', W/2, H*0.38);
 
   X.font='italic '+(16*SCALE)+'px EB Garamond';
   X.fillStyle='rgba(225,215,195,0.6)';
-  X.fillText('collect bags \u00b7 gather art \u00b7 find coins', W/2, H*0.44);
+  X.fillText('collect bags \u00b7 gather art \u00b7 stack shitcoins', W/2, H*0.44);
 
   var pulse = 0.5+Math.sin(Date.now()/500)*0.3;
   X.font=(14*SCALE)+'px JetBrains Mono';
@@ -1939,7 +1866,7 @@ function drawMenu(){
 
   X.font=(11*SCALE)+'px JetBrains Mono';
   X.fillStyle='rgba(225,215,195,0.25)';
-  X.fillText('tap / space / \u2191  to flap \u00b7 keep tapping to stay airborne', W/2, H*0.82);
+  X.fillText('tap / space / \u2191  to jump \u00b7 double tap for double jump', W/2, H*0.82);
   X.restore();
 }
 
@@ -1952,7 +1879,7 @@ function spawnDeathParticles(){
       x: Math.random()*W, y: Math.random()*H,
       vx: (Math.random()-0.5)*0.5*SCALE, vy: -0.3*SCALE-Math.random()*0.7*SCALE,
       size: 1+Math.random()*3, alpha: 0.2+Math.random()*0.5,
-      color: Math.random()>0.5 ? '180,170,150' : '140,120,100',
+      color: Math.random()>0.5 ? '201,168,76' : '200,50,40',
       life: 200+Math.random()*200
     });
   }
@@ -1987,38 +1914,41 @@ function drawDeathScreen(){
     X.globalAlpha = ta;
     X.textAlign='center';
 
-    // "GONE" title — melancholic, fading
-    var goneSize = 48*SCALE;
-    var goneY = H*0.22;
+    // Big "REKT" title with glow and glitch
+    var rektSize = 48*SCALE;
+    var rektY = H*0.22;
     var t = Date.now()/1000;
 
-    // Faint breath effect
-    var breathAlpha = 0.15 + Math.sin(t*0.8)*0.08;
+    // Glitch offset every ~2 seconds
+    var glitchX = 0, glitchY = 0;
+    if(Math.sin(t*3.7)>0.92){ glitchX = (Math.random()-0.5)*6*SCALE; glitchY = (Math.random()-0.5)*3*SCALE; }
 
-    // Shadow layers — muted, not aggressive
-    X.font='700 '+goneSize+'px EB Garamond';
-    X.fillStyle='rgba(140,120,100,'+breathAlpha+')';
-    X.fillText('GONE', W/2-2*SCALE, goneY+2*SCALE);
+    // Red shadow layers
+    X.font='700 '+rektSize+'px EB Garamond';
+    X.fillStyle='rgba(200,40,40,0.3)';
+    X.fillText('REKT', W/2-3*SCALE+glitchX, rektY+2*SCALE+glitchY);
+    X.fillStyle='rgba(160,30,30,0.2)';
+    X.fillText('REKT', W/2+4*SCALE-glitchX, rektY-1*SCALE-glitchY);
 
-    // Main text with gradient — faded gold to ash
-    var goneGrad = X.createLinearGradient(W/2-80*SCALE, goneY-30*SCALE, W/2+80*SCALE, goneY+10*SCALE);
-    goneGrad.addColorStop(0,'#a09080');
-    goneGrad.addColorStop(0.5,'#c9a84c');
-    goneGrad.addColorStop(1,'#8a7a6a');
-    X.fillStyle = goneGrad;
-    X.fillText('GONE', W/2, goneY);
+    // Main REKT with gradient
+    var rektGrad = X.createLinearGradient(W/2-80*SCALE, rektY-30*SCALE, W/2+80*SCALE, rektY+10*SCALE);
+    rektGrad.addColorStop(0,'#e84040');
+    rektGrad.addColorStop(0.5,'#ff6b6b');
+    rektGrad.addColorStop(1,'#c93030');
+    X.fillStyle = rektGrad;
+    X.fillText('REKT', W/2, rektY);
 
-    // Soft glow — warm, not harsh
-    X.shadowColor='rgba(200,180,140,0.3)'; X.shadowBlur=20*SCALE;
-    X.fillText('GONE', W/2, goneY);
+    // Subtle glow
+    X.shadowColor='rgba(230,60,60,0.6)'; X.shadowBlur=20*SCALE;
+    X.fillText('REKT', W/2, rektY);
     X.shadowColor='transparent'; X.shadowBlur=0;
 
-    // Subtext — melancholic
+    // Subtext
     X.font='italic '+(11*SCALE)+'px EB Garamond';
     X.fillStyle='rgba(225,215,195,0.35)';
-    var subtexts = ['everything fades eventually','the piano plays itself now','dust returns to dust','nothing was ever really held','the last note hangs in the air','even the echoes are quiet now'];
+    var subtexts = ['the void claims another','dust to dust','not your keys, not your run','gg no re','the piano plays itself now','back to the shadow realm'];
     var subIdx = Math.floor((score+coins+Math.floor(distance))%subtexts.length);
-    X.fillText(subtexts[subIdx], W/2, goneY+18*SCALE);
+    X.fillText(subtexts[subIdx], W/2, rektY+18*SCALE);
   }
 
   // Stats panel with decorative border
@@ -2100,7 +2030,7 @@ function drawDeathScreen(){
     }
 
     drawStatBox(col1, gridY1, coins, 'BAGS', 'rgba(201,168,76,0.9)');
-    drawStatBox(col2, gridY1, relicsCollected.length, 'COINS', 'rgba(255,220,80,0.8)');
+    drawStatBox(col2, gridY1, shitcoinsCollected.length, 'SHITCOINS', 'rgba(180,140,60,0.8)');
     drawStatBox(col3, gridY1, artworksCollected.length, 'ARTWORKS', 'rgba(220,170,100,0.8)');
     drawStatBox(col1, gridY2, Math.floor(distance)+'m', 'DISTANCE', 'rgba(160,140,120,0.7)');
     if(servantCoins>0){
@@ -2158,13 +2088,14 @@ function drawDeathScreen(){
       }
     }
 
-    // Collected coins scrolling ticker
-    if(relicsCollected.length > 0){
+    // Collected shitcoins scrolling ticker
+    if(shitcoinsCollected.length > 0){
       var tickerY = panelY + (hasBags?158:118)*SCALE;
       X.font='700 '+(9*SCALE)+'px JetBrains Mono';
-      X.fillStyle='rgba(255,220,80,0.4)';
-      var tickerStr = relicsCollected.join('   ');
-      if(relicsCollected.length > 4){
+      X.fillStyle='rgba(200,170,60,0.45)';
+      var tickerStr = shitcoinsCollected.join('   ');
+      // Scroll if many coins
+      if(shitcoinsCollected.length > 4){
         var scrollOffset = ((Date.now()/30)%(tickerStr.length*6*SCALE));
         X.save();
         X.beginPath();X.rect(panelX+10*SCALE,tickerY-10*SCALE,panelW-20*SCALE,16*SCALE);X.clip();
@@ -2220,7 +2151,7 @@ function drawDeathScreen(){
     // "nah... try again" with styling
     X.font='700 '+(13*SCALE)+'px JetBrains Mono';
     X.fillStyle='rgba(225,215,195,'+pulse+')';
-    X.fillText('tap to try again', W/2, H*0.88);
+    X.fillText('tap to run it back', W/2, H*0.88);
 
     // Small skull doodles flanking
     var skY = H*0.88-4*SCALE;
@@ -2281,7 +2212,7 @@ function update(){
     if(boostState === 'none'){
       speed += speedIncrement * SCALE;
       distance += speed / (3*SCALE);
-      difficultyLevel = Math.floor(distance/400);
+      difficultyLevel = Math.floor(distance/200);
 
       // Player physics
       player.vy += GRAVITY * SCALE;
@@ -2291,13 +2222,6 @@ function update(){
         if(!player.onGround) playLandSound();
         player.y = groundLevel; player.vy = 0;
         player.onGround = true; player.jumpCount = 0;
-      }
-
-      // Flap energy regen on ground, slow regen in air
-      if(player.onGround){
-        player.flapEnergy = Math.min(player.maxFlapEnergy, player.flapEnergy + FLAP_REGEN_RATE * 8);
-      } else {
-        player.flapEnergy = Math.min(player.maxFlapEnergy, player.flapEnergy + FLAP_REGEN_RATE);
       }
 
       player.squash += (1-player.squash)*0.15;
@@ -2363,7 +2287,7 @@ function update(){
         var bobY = Math.sin(Date.now()/300+c.bobOffset)*5*SCALE;
         var cy = c.y + bobY;
         if(c.type==='artwork') c.glow = Date.now()/400;
-        if(c.type==='coin') c.spinAngle += 0.08;
+        if(c.type==='shitcoin') c.spinAngle += 0.08;
         if(c.type==='servant') c.spinAngle += 0.06;
 
         if(rectsOverlap(px,py,pw,ph, c.x, cy, c.w, c.h)){
@@ -2380,19 +2304,19 @@ function update(){
                 color:'rgba(220,170,60,'
               });
             }
-          } else if(c.type==='coin'){
-            relicsCollected.push(c.ticker);
+          } else if(c.type==='shitcoin'){
+            shitcoinsCollected.push(c.ticker);
             score += c.value;
             boostMeter++;
-            playCoinCollectSound();
-            flashTimer=4; flashColor='rgba(255,220,80,0.1)';
+            playShitcoinSound();
+            flashTimer=4; flashColor='rgba(180,140,60,0.12)';
             showNotification(c.ticker + ' \u2014 ' + c.desc, c.coinColor);
             for(var k=0;k<8;k++){
               particles.push({
                 x:c.x+c.w/2, y:cy+c.h/2,
-                vx:(Math.random()-0.5)*4*SCALE, vy:-Math.random()*4*SCALE,
+                vx:(Math.random()-0.5)*5*SCALE, vy:-Math.random()*4*SCALE,
                 life:18+Math.random()*12, maxLife:30, size:2+Math.random()*3,
-                color:'rgba(255,220,80,'
+                color:'rgba(180,140,60,'
               });
             }
           } else if(c.type==='servant'){
@@ -2480,7 +2404,7 @@ function render(){
         if(c.collected) return;
         var bobY = Math.sin(Date.now()/300+c.bobOffset)*5*SCALE;
         if(c.type==='bag') drawBag(c.x, c.y+bobY, c.w, c.h);
-        else if(c.type==='coin') drawGameCoin(c.x, c.y+bobY, c.w, c.h, c.coinColor, c.ticker, c.spinAngle, c.coinStyle);
+        else if(c.type==='shitcoin') drawShitcoin(c.x, c.y+bobY, c.w, c.h, c.coinColor, c.ticker, c.spinAngle);
         else if(c.type==='servant') drawServantCoin(c.x, c.y+bobY, c.w, c.h, c.spinAngle);
         else drawArtworkCollectible(c.x, c.y+bobY, c.w, c.h, c.artName, c.glow||0);
       });
@@ -2496,21 +2420,20 @@ function render(){
     if(STATE==='playing'||(STATE==='dead'&&frameCount<5)){
       var pw=player.w*SCALE, ph=player.h*SCALE;
 
-      // Boost aura — ring effect around player, not overlapping sprite
+      // Boost aura around player — themed
       if(boostState!=='none'){
         X.save();
         var btc = THEME_COLORS[boostTheme];
-        var auraAlpha = 0.12+Math.sin(Date.now()/200)*0.08;
-        var cx = player.x+pw/2, cy = player.y+ph/2;
-        var innerR = Math.max(pw,ph)*0.7;
-        var outerR = Math.max(pw,ph)*1.4;
-        var aura = X.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
-        aura.addColorStop(0,'rgba('+btc.accent+',0)');
-        aura.addColorStop(0.3,'rgba('+btc.accent+','+auraAlpha+')');
-        aura.addColorStop(0.6,'rgba('+btc.accent2+','+(auraAlpha*0.4)+')');
+        var auraAlpha = 0.15+Math.sin(Date.now()/200)*0.1;
+        var aura = X.createRadialGradient(
+          player.x+pw/2, player.y+ph/2, pw*0.3,
+          player.x+pw/2, player.y+ph/2, pw*1.2
+        );
+        aura.addColorStop(0,'rgba('+btc.accent+','+auraAlpha+')');
+        aura.addColorStop(0.5,'rgba('+btc.accent2+','+(auraAlpha*0.5)+')');
         aura.addColorStop(1,'rgba('+btc.accent+',0)');
         X.fillStyle=aura;
-        X.fillRect(cx-outerR, cy-outerR, outerR*2, outerR*2);
+        X.fillRect(player.x-pw*0.5,player.y-ph*0.5,pw*2,ph*2);
         X.restore();
       }
 

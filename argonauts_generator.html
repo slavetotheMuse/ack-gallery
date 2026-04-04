@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JASON & THE ARGONAUTS — PFP Forge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            background:#080604;
+            color:#d4c8a8;
+            font-family:'EB Garamond', serif;
+            line-height:1.6;
+            min-height:100vh;
+            overflow-x:hidden;
+        }
+
+        /* Subtle parchment texture overlay */
+        body::before {
+            content:'';
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(160,120,50,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 30%, rgba(100,80,40,0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 90%, rgba(80,60,30,0.05) 0%, transparent 40%);
+            pointer-events:none;
+            z-index:0;
+        }
+
+        /* Greek key border pattern (top) */
+        body::after {
+            content:'';
+            position:fixed; top:0; left:0; width:100%; height:4px;
+            background: repeating-linear-gradient(90deg,
+                #8b7340 0px, #8b7340 8px,
+                transparent 8px, transparent 12px,
+                #8b7340 12px, #8b7340 16px,
+                transparent 16px, transparent 24px
+            );
+            z-index:100;
+        }
+
+        .container {
+            max-width:1250px;
+            margin:0 auto;
+            padding:30px 20px;
+            position:relative;
+            z-index:1;
+        }
+
+        header {
+            text-align:center;
+            margin-bottom:35px;
+        }
+
+        .subtitle {
+            font-style:italic;
+            color:rgba(180,160,120,0.5);
+            font-size:0.95em;
+            margin-bottom:6px;
+            letter-spacing:1px;
+        }
+
+        h1 {
+            font-size:2.8em;
+            font-weight:700;
+            color:#c9a84c;
+            letter-spacing:4px;
+            text-shadow: 0 0 40px rgba(180,140,50,0.15);
+            margin-bottom:4px;
+        }
+
+        .tagline {
+            font-style:italic;
+            color:rgba(180,160,120,0.35);
+            font-size:0.85em;
+            letter-spacing:2px;
+        }
+
+        .stats {
+            font-family:'JetBrains Mono', monospace;
+            font-size:0.85em;
+            margin-top:20px;
+        }
+
+        .stats-row {
+            display:flex;
+            justify-content:center;
+            gap:40px;
+            flex-wrap:wrap;
+        }
+
+        .stat-item {
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+        }
+
+        .stat-label {
+            color:rgba(180,160,120,0.4);
+            font-size:0.8em;
+            text-transform:uppercase;
+            letter-spacing:1px;
+            margin-bottom:4px;
+        }
+
+        .stat-value {
+            color:#c9a84c;
+            font-weight:600;
+            font-size:1.2em;
+        }
+
+        /* ── Main Layout ── */
+        .main-content {
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:40px;
+            margin-bottom:40px;
+            align-items:start;
+        }
+
+        /* ── Preview Section ── */
+        .preview-section {
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+        }
+
+        .preview-frame {
+            position:relative;
+            margin-bottom:20px;
+            padding:12px;
+            background: linear-gradient(135deg, #1a1508 0%, #0d0b06 50%, #1a1508 100%);
+            border:2px solid rgba(140,110,50,0.4);
+            box-shadow:
+                0 0 30px rgba(140,110,50,0.08),
+                inset 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        /* Corner ornaments */
+        .preview-frame::before,
+        .preview-frame::after {
+            content:'⚜';
+            position:absolute;
+            color:rgba(140,110,50,0.25);
+            font-size:18px;
+        }
+        .preview-frame::before { top:2px; left:6px; }
+        .preview-frame::after { bottom:2px; right:6px; }
+
+        #previewCanvas {
+            display:block;
+            image-rendering:pixelated;
+            image-rendering:crisp-edges;
+            width:400px;
+            height:400px;
+        }
+
+        .traits-display {
+            width:100%;
+            max-width:424px;
+            background:rgba(15,12,8,0.8);
+            border:1px solid rgba(140,110,50,0.2);
+            padding:16px 20px;
+            margin-bottom:20px;
+            font-family:'JetBrains Mono', monospace;
+            font-size:0.82em;
+        }
+
+        .trait-row {
+            display:flex;
+            gap:12px;
+            margin-bottom:6px;
+            padding-bottom:6px;
+            border-bottom:1px solid rgba(140,110,50,0.08);
+        }
+
+        .trait-row:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+
+        .trait-label {
+            color:rgba(180,150,80,0.7);
+            min-width:100px;
+            font-weight:600;
+            font-size:0.9em;
+        }
+
+        .trait-value {
+            color:rgba(200,180,140,0.5);
+        }
+
+        .button-group {
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+            justify-content:center;
+        }
+
+        button {
+            padding:11px 22px;
+            background:transparent;
+            color:#b49a50;
+            border:1px solid rgba(140,110,50,0.4);
+            font-family:'EB Garamond', serif;
+            font-size:0.95em;
+            cursor:pointer;
+            transition:all 0.3s ease;
+            font-weight:700;
+            letter-spacing:2px;
+            text-transform:uppercase;
+        }
+
+        button:hover {
+            background:rgba(140,110,50,0.15);
+            border-color:rgba(180,150,80,0.6);
+            color:#c9a84c;
+            box-shadow:0 0 20px rgba(140,110,50,0.1);
+        }
+
+        button:active { transform:scale(0.98); }
+
+        button.active {
+            background:rgba(140,110,50,0.2);
+            border-color:#c9a84c;
+            color:#c9a84c;
+        }
+
+        /* ── Controls (trait selectors) ── */
+        .controls-section {
+            display:flex;
+            flex-direction:column;
+            gap:16px;
+        }
+
+        .trait-selector {
+            border:1px solid rgba(140,110,50,0.15);
+            background:rgba(15,12,8,0.6);
+            padding:14px;
+        }
+
+        .trait-category-title {
+            color:rgba(180,150,80,0.7);
+            font-weight:700;
+            margin-bottom:10px;
+            font-size:1.05em;
+            letter-spacing:1px;
+        }
+
+        .trait-thumbnails {
+            display:grid;
+            grid-template-columns:repeat(auto-fill, minmax(72px, 1fr));
+            gap:8px;
+        }
+
+        .trait-thumbnail {
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            cursor:pointer;
+            transition:all 0.2s ease;
+            padding:4px;
+        }
+
+        .thumbnail-img {
+            width:62px;
+            height:62px;
+            background:rgba(10,8,5,0.8);
+            border:2px solid rgba(100,80,40,0.25);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin-bottom:4px;
+            transition:all 0.2s ease;
+            image-rendering:pixelated;
+            image-rendering:crisp-edges;
+            overflow:hidden;
+        }
+
+        .thumbnail-img img {
+            max-width:100%;
+            max-height:100%;
+            image-rendering:pixelated;
+            image-rendering:crisp-edges;
+        }
+
+        .thumbnail-label {
+            font-family:'JetBrains Mono', monospace;
+            font-size:0.65em;
+            text-align:center;
+            color:rgba(180,160,120,0.35);
+            word-break:break-word;
+            width:100%;
+        }
+
+        .trait-thumbnail:hover .thumbnail-img {
+            border-color:rgba(180,150,80,0.5);
+        }
+
+        .trait-thumbnail.selected .thumbnail-img {
+            border:2px solid #c9a84c;
+            background:rgba(140,110,50,0.1);
+            box-shadow:0 0 12px rgba(140,110,50,0.15);
+        }
+
+        .trait-thumbnail.selected .thumbnail-label {
+            color:rgba(200,170,80,0.6);
+        }
+
+        /* ── Gallery Mode ── */
+        .gallery-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+            gap:16px;
+            margin:30px 0;
+        }
+
+        .gallery-item {
+            border:1px solid rgba(140,110,50,0.15);
+            padding:8px;
+            background:rgba(15,12,8,0.6);
+            text-align:center;
+            cursor:pointer;
+            transition:all 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            border-color:rgba(180,150,80,0.4);
+            box-shadow:0 0 20px rgba(140,110,50,0.08);
+        }
+
+        .gallery-item canvas {
+            width:100%;
+            height:auto;
+            display:block;
+            margin-bottom:8px;
+            image-rendering:pixelated;
+            image-rendering:crisp-edges;
+        }
+
+        .gallery-item-label {
+            font-family:'JetBrains Mono', monospace;
+            font-size:0.7em;
+            color:rgba(180,160,120,0.3);
+        }
+
+        #galleryMode {
+            display:none;
+            margin-top:20px;
+        }
+
+        .gallery-header {
+            text-align:center;
+            margin-bottom:30px;
+        }
+
+        .gallery-header h2 {
+            color:#c9a84c;
+            font-size:1.8em;
+            letter-spacing:3px;
+            margin-bottom:6px;
+        }
+
+        .gallery-header .gallery-sub {
+            font-style:italic;
+            color:rgba(180,160,120,0.3);
+            font-size:0.85em;
+            margin-bottom:18px;
+        }
+
+        .gallery-controls {
+            display:flex;
+            justify-content:center;
+            gap:12px;
+            margin-bottom:25px;
+            flex-wrap:wrap;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width:1024px) {
+            .main-content { grid-template-columns:1fr; }
+            h1 { font-size:2.2em; }
+            #previewCanvas { width:300px; height:300px; }
+        }
+
+        @media (max-width:768px) {
+            .stats-row { flex-direction:column; gap:12px; }
+            .trait-thumbnails { grid-template-columns:repeat(auto-fill, minmax(60px, 1fr)); }
+            .button-group { flex-direction:column; }
+            button { width:100%; }
+            .gallery-grid { grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); }
+            #previewCanvas { width:260px; height:260px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="subtitle">forged in the fires of Colchis</div>
+            <h1>JASON &amp; THE ARGONAUTS</h1>
+            <div class="tagline">the golden fleece collection &mdash; 43,200 voyagers</div>
+            <div class="stats">
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Voyagers</div>
+                        <div class="stat-value" id="totalCombos">43,200</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Trait Layers</div>
+                        <div class="stat-value">7</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Forged</div>
+                        <div class="stat-value" id="forgedCount">0</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content" id="generatorMode">
+            <div class="preview-section">
+                <div class="preview-frame">
+                    <canvas id="previewCanvas" width="400" height="400"></canvas>
+                </div>
+
+                <div class="traits-display" id="traitsDisplay">
+                    <div class="trait-row">
+                        <div class="trait-label">Realm:</div>
+                        <div class="trait-value" id="traitBackground">&mdash;</div>
+                    </div>
+                    <div class="trait-row">
+                        <div class="trait-label">Form:</div>
+                        <div class="trait-value" id="traitBody">&mdash;</div>
+                    </div>
+                    <div class="trait-row">
+                        <div class="trait-label">Cloak:</div>
+                        <div class="trait-value" id="traitHoodie">&mdash;</div>
+                    </div>
+                    <div class="trait-row">
+                        <div class="trait-label">Relic:</div>
+                        <div class="trait-value" id="traitNeck">&mdash;</div>
+                    </div>
+                    <div class="trait-row">
+                        <div class="trait-label">Sight:</div>
+                        <div class="trait-value" id="traitEyes">&mdash;</div>
+                    </div>
+                    <div class="trait-row">
+                        <div class="trait-label">Artifact:</div>
+                        <div class="trait-value" id="traitMouth">&mdash;</div>
+                    </div>
+                    <div class="trait-row">
+                        <div class="trait-label">Crown:</div>
+                        <div class="trait-value" id="traitHead">&mdash;</div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="randomizeTraits()">FORGE</button>
+                    <button onclick="downloadPFP()">CLAIM</button>
+                    <button onclick="toggleGalleryMode()">CREW</button>
+                    <button id="rapidFireBtn" onclick="toggleRapidFire()">RAPID FORGE</button>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="trait-selector">
+                    <div class="trait-category-title">Realm</div>
+                    <div class="trait-thumbnails" id="traitBackgroundSelector"></div>
+                </div>
+                <div class="trait-selector">
+                    <div class="trait-category-title">Form</div>
+                    <div class="trait-thumbnails" id="traitBodySelector"></div>
+                </div>
+                <div class="trait-selector">
+                    <div class="trait-category-title">Cloak</div>
+                    <div class="trait-thumbnails" id="traitHoodieSelector"></div>
+                </div>
+                <div class="trait-selector">
+                    <div class="trait-category-title">Relic</div>
+                    <div class="trait-thumbnails" id="traitNeckSelector"></div>
+                </div>
+                <div class="trait-selector">
+                    <div class="trait-category-title">Sight</div>
+                    <div class="trait-thumbnails" id="traitEyesSelector"></div>
+                </div>
+                <div class="trait-selector">
+                    <div class="trait-category-title">Artifact</div>
+                    <div class="trait-thumbnails" id="traitMouthSelector"></div>
+                </div>
+                <div class="trait-selector">
+                    <div class="trait-category-title">Crown</div>
+                    <div class="trait-thumbnails" id="traitHeadSelector"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="galleryMode">
+            <div class="gallery-header">
+                <h2>THE CREW OF THE ARGO</h2>
+                <div class="gallery-sub">each one called by fate to sail beyond the known world</div>
+                <div class="gallery-controls">
+                    <button onclick="generateGallery()">SUMMON NEW CREW</button>
+                    <button onclick="toggleGalleryMode()">RETURN TO FORGE</button>
+                </div>
+            </div>
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════
+        //  JASON & THE ARGONAUTS — PFP Forge Engine
+        // ═══════════════════════════════════════════════
+
+        var traits = {
+            background: {
+                folder: '../../argonauts_new/background/',
+                files: ['BLUSH.png','OFFWHITE.png','PUNKBLUE.png','YELLOW.png','ancient.png','blackgrey.png'],
+                optional: false
+            },
+            body: {
+                folder: '../../argonauts_new/BODY/',
+                files: ['alienfixed.png','ape.png','common bone.png','coral.png','flowers.png','flowers2.png','gold.png','petrified.png','radioactive.png','silver.png'],
+                optional: false
+            },
+            hoodie: {
+                folder: '../../argonauts_new/Hoodie/',
+                files: ['Black.png','servant.png'],
+                optional: true
+            },
+            neck: {
+                folder: '../../argonauts_new/neck/',
+                files: ['gold.png'],
+                optional: true
+            },
+            eyes: {
+                folder: '../../argonauts_new/eyes/',
+                files: ['3D GLASSES.png','Alien_eyepatch.png','Glasses.png','LASER.png','cozomo.png','eyepatch.png','shades.png','solarglow.png'],
+                optional: true
+            },
+            mouth: {
+                folder: '../../argonauts_new/mouth/',
+                files: ['VAPE.png','cigarette.png','goldtooth.png','vape2.png','woodpipe.png'],
+                optional: true
+            },
+            head: {
+                folder: '../../argonauts_new/Head/',
+                files: ['Orange Beanie.png','bandana.png','golden_fleece.png','headband.png','purphat.png'],
+                optional: true
+            }
+        };
+
+        var currentTraits = {
+            background:null, body:null,
+            hoodie:'none', neck:'none', eyes:'none', mouth:'none', head:'none'
+        };
+
+        var imageCache = {};
+        var isRapidFireMode = false;
+        var rapidFireInterval = null;
+        var forgedCount = 0;
+
+        // ── Argonaut crew names for gallery ──
+        var crewNames = [
+            'Heracles','Orpheus','Castor','Pollux','Atalanta','Peleus',
+            'Telamon','Admetus','Acastus','Meleager','Idmon','Tiphys',
+            'Zetes','Calais','Euphemus','Periclymenus','Ancaeus','Erginus',
+            'Laertes','Autolycus','Iphitus','Mopsus','Eurytus','Echion'
+        ];
+
+        // ── Init ──
+        async function init(){
+            for(var tn in traits){
+                if(traits.hasOwnProperty(tn)) initTraitSelector(tn, traits[tn]);
+            }
+            await preloadAllImages();
+            randomizeTraits();
+        }
+
+        function initTraitSelector(traitName, traitData){
+            var sel = document.getElementById('trait'+capitalize(traitName)+'Selector');
+            if(!sel) return;
+            if(traitData.optional){
+                sel.appendChild(createThumbnail(traitName,'none'));
+            }
+            for(var i=0;i<traitData.files.length;i++){
+                sel.appendChild(createThumbnail(traitName, traitData.files[i]));
+            }
+        }
+
+        function createThumbnail(traitName, file){
+            var div = document.createElement('div');
+            div.className = 'trait-thumbnail';
+            div.onclick = (function(tn,f){ return function(){ selectTrait(tn,f); }; })(traitName,file);
+
+            var imgC = document.createElement('div');
+            imgC.className = 'thumbnail-img';
+
+            if(file !== 'none'){
+                var img = document.createElement('img');
+                img.src = traits[traitName].folder + file;
+                img.alt = file;
+                imgC.appendChild(img);
+            } else {
+                imgC.textContent = '\u2014';
+                imgC.style.color = 'rgba(140,110,50,0.3)';
+                imgC.style.fontSize = '20px';
+            }
+
+            var label = document.createElement('div');
+            label.className = 'thumbnail-label';
+            label.textContent = file === 'none' ? 'bare' : file.replace('.png','').substring(0,12);
+
+            div.appendChild(imgC);
+            div.appendChild(label);
+            div.dataset.trait = traitName;
+            div.dataset.file = file;
+            return div;
+        }
+
+        function selectTrait(traitName, file){
+            currentTraits[traitName] = file;
+            applyTraitRules();
+            updateSelectors();
+            renderPreview();
+        }
+
+        function updateSelectors(){
+            for(var tn in currentTraits){
+                if(!currentTraits.hasOwnProperty(tn)) continue;
+                var thumbs = document.querySelectorAll('[data-trait="'+tn+'"]');
+                for(var i=0;i<thumbs.length;i++){
+                    if(thumbs[i].dataset.file === currentTraits[tn]){
+                        thumbs[i].classList.add('selected');
+                    } else {
+                        thumbs[i].classList.remove('selected');
+                    }
+                }
+            }
+        }
+
+        function randomizeTraits(){
+            currentTraits.background = rnd(traits.background.files);
+            currentTraits.body = rnd(traits.body.files);
+            currentTraits.hoodie = rnd(traits.hoodie.files.concat(['none']));
+            currentTraits.neck = rnd(traits.neck.files.concat(['none']));
+            currentTraits.eyes = rnd(traits.eyes.files.concat(['none']));
+            currentTraits.mouth = rnd(traits.mouth.files.concat(['none']));
+            currentTraits.head = rnd(traits.head.files.concat(['none']));
+            applyTraitRules();
+            forgedCount++;
+            document.getElementById('forgedCount').textContent = forgedCount;
+            updateSelectors();
+            renderPreview();
+        }
+
+        // ── Trait conflict rules ──
+        function applyTraitRules(){
+            // Hat and hoodie are mutually exclusive
+            if(currentTraits.hoodie !== 'none' && currentTraits.head !== 'none'){
+                // One or the other — coin flip keeps whichever was more likely intended
+                if(Math.random() > 0.5){
+                    currentTraits.head = 'none';
+                } else {
+                    currentTraits.hoodie = 'none';
+                }
+            }
+        }
+
+        function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+        // ── Image loading ──
+        async function preloadAllImages(){
+            var promises = [];
+            for(var tn in traits){
+                if(!traits.hasOwnProperty(tn)) continue;
+                for(var i=0;i<traits[tn].files.length;i++){
+                    promises.push(loadImage(traits[tn].folder + traits[tn].files[i]));
+                }
+            }
+            await Promise.all(promises);
+        }
+
+        function loadImage(src){
+            return new Promise(function(resolve){
+                if(imageCache[src]){ resolve(imageCache[src]); return; }
+                var img = new Image();
+                img.onload = function(){ imageCache[src] = img; resolve(img); };
+                img.onerror = function(){ console.warn('Failed: '+src); resolve(null); };
+                img.src = src;
+            });
+        }
+
+        // ── Render ──
+        async function renderPreview(){
+            var canvas = document.getElementById('previewCanvas');
+            var ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.fillStyle = '#080604';
+            ctx.fillRect(0,0,400,400);
+
+            var order = ['background','body','head','eyes','hoodie','neck','mouth'];
+            for(var i=0;i<order.length;i++){
+                var file = currentTraits[order[i]];
+                if(file === 'none') continue;
+                var path = traits[order[i]].folder + file;
+                var img = await loadImage(path);
+                if(img) ctx.drawImage(img,0,0,400,400);
+            }
+            updateTraitsDisplay();
+        }
+
+        function updateTraitsDisplay(){
+            var friendly = function(f){ return f==='none'?'\u2014':f.replace('.png',''); };
+            document.getElementById('traitBackground').textContent = friendly(currentTraits.background);
+            document.getElementById('traitBody').textContent = friendly(currentTraits.body);
+            document.getElementById('traitHoodie').textContent = friendly(currentTraits.hoodie);
+            document.getElementById('traitNeck').textContent = friendly(currentTraits.neck);
+            document.getElementById('traitEyes').textContent = friendly(currentTraits.eyes);
+            document.getElementById('traitMouth').textContent = friendly(currentTraits.mouth);
+            document.getElementById('traitHead').textContent = friendly(currentTraits.head);
+        }
+
+        // ── Download ──
+        function downloadPFP(){
+            var canvas = document.getElementById('previewCanvas');
+            canvas.toBlob(function(blob){
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement('a');
+                link.href = url;
+                var name = (currentTraits.body||'argonaut').replace('.png','');
+                link.download = 'argonaut_'+name+'_'+Date.now()+'.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            },'image/png');
+        }
+
+        // ── Gallery ──
+        function toggleGalleryMode(){
+            var gen = document.getElementById('generatorMode');
+            var gal = document.getElementById('galleryMode');
+            if(gen.style.display === 'none'){
+                gen.style.display = 'grid';
+                gal.style.display = 'none';
+            } else {
+                gen.style.display = 'none';
+                gal.style.display = 'block';
+                generateGallery();
+            }
+        }
+
+        async function generateGallery(){
+            var grid = document.getElementById('galleryGrid');
+            grid.innerHTML = '';
+
+            for(var i=0;i<12;i++){
+                var item = document.createElement('div');
+                item.className = 'gallery-item';
+
+                var canvas = document.createElement('canvas');
+                canvas.width = 200; canvas.height = 200;
+
+                var ts = {
+                    background:rnd(traits.background.files),
+                    body:rnd(traits.body.files),
+                    hoodie:rnd(traits.hoodie.files.concat(['none'])),
+                    neck:rnd(traits.neck.files.concat(['none'])),
+                    eyes:rnd(traits.eyes.files.concat(['none'])),
+                    mouth:rnd(traits.mouth.files.concat(['none'])),
+                    head:rnd(traits.head.files.concat(['none']))
+                };
+                // Enforce rules — hat and hoodie mutually exclusive
+                if(ts.hoodie !== 'none' && ts.head !== 'none'){
+                    if(Math.random() > 0.5) ts.head = 'none'; else ts.hoodie = 'none';
+                }
+
+                await renderToCanvas(canvas, ts);
+
+                var label = document.createElement('div');
+                label.className = 'gallery-item-label';
+                label.textContent = crewNames[i % crewNames.length];
+
+                item.appendChild(canvas);
+                item.appendChild(label);
+
+                // Click to load into forge
+                item.onclick = (function(t){ return function(){
+                    currentTraits = t;
+                    toggleGalleryMode();
+                    updateSelectors();
+                    renderPreview();
+                }; })(ts);
+
+                grid.appendChild(item);
+            }
+        }
+
+        async function renderToCanvas(canvas, ts){
+            var ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.fillStyle = '#080604';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            var order = ['background','body','head','eyes','hoodie','neck','mouth'];
+            for(var i=0;i<order.length;i++){
+                var f = ts[order[i]];
+                if(f === 'none') continue;
+                var img = await loadImage(traits[order[i]].folder + f);
+                if(img) ctx.drawImage(img,0,0,canvas.width,canvas.height);
+            }
+        }
+
+        // ── Rapid forge ──
+        function toggleRapidFire(){
+            var btn = document.getElementById('rapidFireBtn');
+            isRapidFireMode = !isRapidFireMode;
+            if(isRapidFireMode){
+                btn.classList.add('active');
+                btn.textContent = 'STOP FORGE';
+                rapidFireInterval = setInterval(randomizeTraits, 400);
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = 'RAPID FORGE';
+                clearInterval(rapidFireInterval);
+                rapidFireInterval = null;
+            }
+        }
+
+        // ── Keys ──
+        document.addEventListener('keydown', function(e){
+            if(e.key === 'Escape'){
+                var gal = document.getElementById('galleryMode');
+                if(gal.style.display !== 'none') toggleGalleryMode();
+            }
+            if(e.key === ' ' || e.key === 'r'){
+                e.preventDefault();
+                randomizeTraits();
+            }
+        });
+
+        function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
