@@ -400,12 +400,12 @@
         <header>
             <div class="subtitle">forged in the fires of Colchis</div>
             <h1>JASON &amp; THE ARGONAUTS</h1>
-            <div class="tagline">the golden fleece collection &mdash; 43,200 voyagers</div>
+            <div class="tagline">the golden fleece collection &mdash; 22,680 voyagers</div>
             <div class="stats">
                 <div class="stats-row">
                     <div class="stat-item">
                         <div class="stat-label">Total Voyagers</div>
-                        <div class="stat-value" id="totalCombos">43,200</div>
+                        <div class="stat-value" id="totalCombos">22,680</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Trait Layers</div>
@@ -517,12 +517,12 @@
         var traits = {
             background: {
                 folder: '../../argonauts_new/background/',
-                files: ['BLUSH.png','OFFWHITE.png','PUNKBLUE.png','YELLOW.png','ancient.png','blackgrey.png'],
+                files: ['BLUSH.png','OFFWHITE.png','PUNKBLUE.png','yellow_new.png','ancient.png','blackgrey.png'],
                 optional: false
             },
             body: {
                 folder: '../../argonauts_new/BODY/',
-                files: ['alienfixed.png','ape.png','common bone.png','coral.png','flowers.png','flowers2.png','gold.png','petrified.png','radioactive.png','silver.png'],
+                files: ['alienfixed.png','ape.png','common bone.png','coral.png','flowers2.png','gold.png','petrified.png','radioactive.png','silver.png'],
                 optional: false
             },
             hoodie: {
@@ -537,17 +537,17 @@
             },
             eyes: {
                 folder: '../../argonauts_new/eyes/',
-                files: ['3D GLASSES.png','Alien_eyepatch.png','Glasses.png','LASER.png','cozomo.png','eyepatch.png','shades.png','solarglow.png'],
+                files: ['3D GLASSES.png','Alien_eyepatch.png','Glasses.png','LASER.png','cozomo.png','cyberglasses.png','eyepatch.png','shades.png','solarglow.png'],
                 optional: true
             },
             mouth: {
                 folder: '../../argonauts_new/mouth/',
-                files: ['VAPE.png','cigarette.png','goldtooth.png','vape2.png','woodpipe.png'],
+                files: ['vape2.png','woodpipe.png'],
                 optional: true
             },
             head: {
                 folder: '../../argonauts_new/Head/',
-                files: ['Orange Beanie.png','bandana.png','golden_fleece.png','headband.png','purphat.png'],
+                files: ['Orange Beanie.png','bandana.png','cowboy.png','golden_fleece.png','headband.png','purphat.png'],
                 optional: true
             }
         };
@@ -642,13 +642,13 @@
         }
 
         function randomizeTraits(){
-            currentTraits.background = rnd(traits.background.files);
-            currentTraits.body = rnd(traits.body.files);
-            currentTraits.hoodie = rnd(traits.hoodie.files.concat(['none']));
-            currentTraits.neck = rnd(traits.neck.files.concat(['none']));
-            currentTraits.eyes = rnd(traits.eyes.files.concat(['none']));
-            currentTraits.mouth = rnd(traits.mouth.files.concat(['none']));
-            currentTraits.head = rnd(traits.head.files.concat(['none']));
+            currentTraits.background = weightedRoll('background');
+            currentTraits.body = weightedRoll('body');
+            currentTraits.hoodie = weightedRoll('hoodie');
+            currentTraits.neck = weightedRoll('neck');
+            currentTraits.eyes = weightedRoll('eyes');
+            currentTraits.mouth = weightedRoll('mouth');
+            currentTraits.head = weightedRoll('head');
             applyTraitRules();
             forgedCount++;
             document.getElementById('forgedCount').textContent = forgedCount;
@@ -660,16 +660,103 @@
         function applyTraitRules(){
             // Hat and hoodie are mutually exclusive
             if(currentTraits.hoodie !== 'none' && currentTraits.head !== 'none'){
-                // One or the other — coin flip keeps whichever was more likely intended
                 if(Math.random() > 0.5){
                     currentTraits.head = 'none';
                 } else {
                     currentTraits.hoodie = 'none';
                 }
             }
+            // Coral body — no hoodie
+            if(currentTraits.body === 'coral.png'){
+                currentTraits.hoodie = 'none';
+            }
         }
 
         function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+        // ── Rarity system — CryptoPunks-style distribution per 10,000 ──
+        // Modeled on how punks distribute: most slots empty, accessories rare
+        var traitRarity = {
+            // Body — type rarity (like Alien/Ape/Zombie/Human in punks)
+            body: {
+                'alienfixed.png':   { weight:7,    tier:'Legendary',  color:'#00ffcc' },  // ~7/10K — rarer than punk aliens (9)
+                'radioactive.png':  { weight:24,   tier:'Mythic',     color:'#66ff66' },  // ~24/10K — like punk apes
+                'gold.png':         { weight:88,   tier:'Ultra Rare', color:'#ffd700' },  // ~88/10K — like punk zombies
+                'petrified.png':    { weight:300,  tier:'Rare',       color:'#b0a090' },
+                'flowers2.png':     { weight:500,  tier:'Uncommon+',  color:'#ff88aa' },
+                'coral.png':        { weight:800,  tier:'Uncommon',   color:'#ff7766' },
+                'silver.png':       { weight:1300, tier:'Common+',    color:'#c0c0c0' },
+                'ape.png':          { weight:2500, tier:'Common',     color:'#aa8855' },
+                'common bone.png':  { weight:4481, tier:'Base',       color:'#e0d5c0' }
+            },
+            // Background — fairly even, slight variation
+            background: {
+                'ancient.png':    { weight:10, tier:'Rare',    color:'#8a7a5a' },
+                'PUNKBLUE.png':   { weight:14, tier:'Uncommon', color:'#5588cc' },
+                'BLUSH.png':      { weight:16, tier:'Common',  color:'#cc8888' },
+                'yellow_new.png': { weight:18, tier:'Common',  color:'#ccaa44' },
+                'OFFWHITE.png':   { weight:20, tier:'Common',  color:'#ddd8cc' },
+                'blackgrey.png':  { weight:22, tier:'Base',    color:'#888888' }
+            },
+            // Hoodie — most punks bare (~82% none)
+            hoodie: {
+                'none':         { weight:820, tier:null, color:null },
+                'servant.png':  { weight:78,  tier:'Rare',   color:'#c9a84c' },  // ~780/10K
+                'Black.png':    { weight:102, tier:'Common', color:'#444444' }    // ~1020/10K
+            },
+            // Neck — gold chain is uncommon (~12% have it)
+            neck: {
+                'none':      { weight:880, tier:null, color:null },
+                'gold.png':  { weight:120, tier:'Uncommon', color:'#ffd700' }
+            },
+            // Eyes — ~58% have no eye accessory
+            eyes: {
+                'none':                 { weight:580, tier:null, color:null },
+                'shades.png':           { weight:70,  tier:'Common',     color:'#333333' },  // most common eye acc
+                'Glasses.png':          { weight:60,  tier:'Common',     color:'#8888aa' },
+                'cyberglasses.png':     { weight:55,  tier:'Common+',    color:'#44ccff' },
+                'eyepatch.png':         { weight:50,  tier:'Uncommon',   color:'#554433' },
+                '3D GLASSES.png':       { weight:45,  tier:'Uncommon',   color:'#ff4444' },
+                'solarglow.png':        { weight:40,  tier:'Uncommon+',  color:'#ffcc44' },
+                'cozomo.png':           { weight:35,  tier:'Rare',       color:'#aa66dd' },
+                'LASER.png':            { weight:35,  tier:'Rare',       color:'#ff2222' },
+                'Alien_eyepatch.png':   { weight:30,  tier:'Ultra Rare', color:'#00ffcc' }   // alien-themed = rarest eye
+            },
+            // Mouth — ~78% have nothing (pipe is ~3% in punks)
+            mouth: {
+                'none':          { weight:780, tier:null, color:null },
+                'woodpipe.png':  { weight:130, tier:'Uncommon', color:'#8B6914' },  // classic pipe
+                'vape2.png':     { weight:90,  tier:'Rare',     color:'#aaddff' }   // modern = rarer
+            },
+            // Head — ~68% have no head accessory
+            head: {
+                'none':               { weight:680, tier:null, color:null },
+                'headband.png':       { weight:65,  tier:'Common',     color:'#cc4444' },
+                'bandana.png':        { weight:55,  tier:'Common+',    color:'#4466aa' },
+                'Orange Beanie.png':  { weight:50,  tier:'Uncommon',   color:'#ff8833' },
+                'cowboy.png':         { weight:50,  tier:'Uncommon',   color:'#aa8855' },
+                'purphat.png':        { weight:50,  tier:'Uncommon+',  color:'#8844cc' },
+                'golden_fleece.png':  { weight:50,  tier:'Rare',       color:'#ffd700' }   // signature piece
+            }
+        };
+
+        function weightedRoll(category){
+            var table = traitRarity[category];
+            if(!table) return 'none';
+            var totalWeight = 0;
+            for(var k in table) totalWeight += table[k].weight;
+            var roll = Math.random() * totalWeight;
+            var cumulative = 0;
+            for(var k in table){
+                cumulative += table[k].weight;
+                if(roll < cumulative) return k;
+            }
+            return Object.keys(table)[0];
+        }
+
+        // Keep backward compat
+        var bodyRarity = traitRarity.body;
+        function weightedBodyRoll(){ return weightedRoll('body'); }
 
         // ── Image loading ──
         async function preloadAllImages(){
@@ -715,12 +802,24 @@
         function updateTraitsDisplay(){
             var friendly = function(f){ return f==='none'?'\u2014':f.replace('.png',''); };
             document.getElementById('traitBackground').textContent = friendly(currentTraits.background);
-            document.getElementById('traitBody').textContent = friendly(currentTraits.body);
-            document.getElementById('traitHoodie').textContent = friendly(currentTraits.hoodie);
-            document.getElementById('traitNeck').textContent = friendly(currentTraits.neck);
-            document.getElementById('traitEyes').textContent = friendly(currentTraits.eyes);
-            document.getElementById('traitMouth').textContent = friendly(currentTraits.mouth);
-            document.getElementById('traitHead').textContent = friendly(currentTraits.head);
+            var traitIds = {
+                body:'traitBody', background:'traitBackground',
+                hoodie:'traitHoodie', neck:'traitNeck',
+                eyes:'traitEyes', mouth:'traitMouth', head:'traitHead'
+            };
+            for(var cat in traitIds){
+                var el = document.getElementById(traitIds[cat]);
+                var val = currentTraits[cat];
+                var name = friendly(val);
+                var r = traitRarity[cat] && traitRarity[cat][val];
+                if(r && r.tier){
+                    el.textContent = name + '  [' + r.tier + ']';
+                    el.style.color = r.color;
+                } else {
+                    el.textContent = name;
+                    el.style.color = '';
+                }
+            }
         }
 
         // ── Download ──
@@ -765,18 +864,20 @@
                 canvas.width = 200; canvas.height = 200;
 
                 var ts = {
-                    background:rnd(traits.background.files),
-                    body:rnd(traits.body.files),
-                    hoodie:rnd(traits.hoodie.files.concat(['none'])),
-                    neck:rnd(traits.neck.files.concat(['none'])),
-                    eyes:rnd(traits.eyes.files.concat(['none'])),
-                    mouth:rnd(traits.mouth.files.concat(['none'])),
-                    head:rnd(traits.head.files.concat(['none']))
+                    background:weightedRoll('background'),
+                    body:weightedRoll('body'),
+                    hoodie:weightedRoll('hoodie'),
+                    neck:weightedRoll('neck'),
+                    eyes:weightedRoll('eyes'),
+                    mouth:weightedRoll('mouth'),
+                    head:weightedRoll('head')
                 };
                 // Enforce rules — hat and hoodie mutually exclusive
                 if(ts.hoodie !== 'none' && ts.head !== 'none'){
                     if(Math.random() > 0.5) ts.head = 'none'; else ts.hoodie = 'none';
                 }
+                // Coral body — no hoodie
+                if(ts.body === 'coral.png') ts.hoodie = 'none';
 
                 await renderToCanvas(canvas, ts);
 
