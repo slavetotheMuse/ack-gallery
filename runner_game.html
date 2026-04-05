@@ -27,7 +27,8 @@ var C = document.getElementById('gc');
 var X = C.getContext('2d');
 var W, H, SCALE;
 var GROUND_Y;
-var BASE_W = 800;
+var IS_MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (window.innerWidth < 600 && 'ontouchstart' in window);
+var BASE_W = IS_MOBILE ? 480 : 800;
 
 // ── State ──
 var STATE = 'menu'; // menu | playing | dead
@@ -73,6 +74,84 @@ var THEME_COLORS = {
 };
 
 try { bestScore = parseInt(localStorage.getItem('ack_servant_run_best') || '0', 10); } catch(e){}
+
+// ── WORLD / BIOME SYSTEM ──
+// Every ~800 distance, transition to the next world
+var WORLD_TRANSITION_DIST = 800;
+var currentWorldIndex = 0;
+var worldTransitionAlpha = 0; // 0 = current world, 1 = transitioning
+var worldTransitioning = false;
+var lastWorldCheck = 0;
+
+var WORLDS = [
+  {
+    name: 'THE VOID',
+    // Original deep space (default)
+    skyGrad: ['#030008','#0a0318','#100520','#180818','#1a0a10'],
+    groundGrad: ['#2a1525','#1a0a15','#0a0008'],
+    groundLine: 'rgba(200,100,180,0.4)',
+    tileLight: 'rgba(60,30,50,0.8)', tileDark: 'rgba(35,15,30,0.8)',
+    nebulaColors: ['rgba(100,30,80,','rgba(30,50,120,','rgba(80,20,60,','rgba(20,60,90,','rgba(60,10,40,'],
+    structures: ['staircase_escher','mario_pipe','alice_door','piano_spiral','clock_tower','floating_island','impossible_triangle','giant_key','mushroom','portal','blossom_tree']
+  },
+  {
+    name: 'ANCIENT GALLERY',
+    // Warm museum tones — terracotta, gold, candlelight
+    skyGrad: ['#1a1008','#221810','#2a1c12','#1e1208','#140c04'],
+    groundGrad: ['#3a2a18','#2a1a0c','#1a0e06'],
+    groundLine: 'rgba(200,160,80,0.4)',
+    tileLight: 'rgba(70,50,30,0.8)', tileDark: 'rgba(45,30,18,0.8)',
+    nebulaColors: ['rgba(150,100,40,','rgba(120,80,30,','rgba(180,120,50,','rgba(100,70,20,','rgba(140,90,40,'],
+    structures: ['staircase_escher','alice_door','piano_spiral','clock_tower','blossom_tree','giant_key','portal']
+  },
+  {
+    name: 'CORAL DEPTHS',
+    // Deep ocean — teal, aqua, bioluminescent
+    skyGrad: ['#020c14','#041820','#082028','#061418','#040e12'],
+    groundGrad: ['#0c2a28','#081a18','#04100e'],
+    groundLine: 'rgba(80,200,180,0.4)',
+    tileLight: 'rgba(20,60,55,0.8)', tileDark: 'rgba(12,38,35,0.8)',
+    nebulaColors: ['rgba(30,120,100,','rgba(20,80,120,','rgba(40,140,110,','rgba(15,60,80,','rgba(50,160,130,'],
+    structures: ['floating_island','portal','blossom_tree','mushroom','impossible_triangle','alice_door','piano_spiral']
+  },
+  {
+    name: 'GOLDEN FLEECE',
+    // Mythological gold — the Argo's final quest
+    skyGrad: ['#14100a','#201a0e','#2a2010','#1c160a','#100c06'],
+    groundGrad: ['#3a3018','#2a200c','#1a1406'],
+    groundLine: 'rgba(220,190,80,0.5)',
+    tileLight: 'rgba(80,65,30,0.8)', tileDark: 'rgba(50,40,18,0.8)',
+    nebulaColors: ['rgba(180,150,50,','rgba(200,170,60,','rgba(160,130,40,','rgba(140,110,30,','rgba(220,190,70,'],
+    structures: ['staircase_escher','clock_tower','giant_key','impossible_triangle','portal','floating_island','blossom_tree']
+  },
+  {
+    name: 'NEON CRYPT',
+    // Cyberpunk underground — hot pink, electric blue
+    skyGrad: ['#0a0012','#10041a','#140620','#0c0218','#080010'],
+    groundGrad: ['#1a0830','#120420','#0a0214'],
+    groundLine: 'rgba(255,50,200,0.4)',
+    tileLight: 'rgba(50,15,60,0.8)', tileDark: 'rgba(30,8,40,0.8)',
+    nebulaColors: ['rgba(200,30,150,','rgba(50,100,255,','rgba(255,50,100,','rgba(100,30,200,','rgba(0,200,200,'],
+    structures: ['mario_pipe','impossible_triangle','portal','staircase_escher','piano_spiral','mushroom','giant_key']
+  },
+  {
+    name: 'STARSFELL',
+    // Ethereal twilight — soft purples, silvers, falling stars
+    skyGrad: ['#08041a','#0e0828','#140c30','#100824','#0a0618'],
+    groundGrad: ['#201838','#181028','#100a1a'],
+    groundLine: 'rgba(180,160,220,0.4)',
+    tileLight: 'rgba(45,35,65,0.8)', tileDark: 'rgba(28,20,42,0.8)',
+    nebulaColors: ['rgba(140,100,200,','rgba(100,80,180,','rgba(180,140,220,','rgba(80,60,160,','rgba(160,120,200,'],
+    structures: ['blossom_tree','floating_island','portal','clock_tower','piano_spiral','alice_door','staircase_escher']
+  }
+];
+
+function getCurrentWorld() {
+  return WORLDS[currentWorldIndex % WORLDS.length];
+}
+function getNextWorld() {
+  return WORLDS[(currentWorldIndex + 1) % WORLDS.length];
+}
 
 // ── Player (piano man) ──
 var player = {
@@ -462,7 +541,7 @@ function updateGalaxyBoost(){
 
       if(!gc.collected){
         var bobY = Math.sin(Date.now()/250+gc.bobOffset)*8*SCALE;
-        if(rectsOverlap(px,py,pw,ph, gc.x, gc.y+bobY, gc.w, gc.h)){
+        if(collectibleHit(px,py,pw,ph, gc.x, gc.y+bobY, gc.w, gc.h)){
           gc.collected = true;
           galaxyScore += gc.value;
           score += gc.value;
@@ -1102,7 +1181,7 @@ function resize(){
   C.style.height = H + 'px';
   X.setTransform(dpr, 0, 0, dpr, 0, 0);
   SCALE = W / BASE_W;
-  GROUND_Y = H - 80 * SCALE;
+  GROUND_Y = H - (IS_MOBILE ? 60 : 80) * SCALE;
 }
 resize();
 window.addEventListener('resize', resize);
@@ -1315,6 +1394,7 @@ function startGame(){
   galaxyCollectibles=[]; galaxyStars=[]; galaxyScore=0;
   boostFlashAlpha=0; boostCombo=0; boostInvulnTimer=0; boostThemeIndex=0;
   BOOST_THRESHOLD=30;
+  currentWorldIndex=0; worldTransitionAlpha=0; worldTransitioning=false; lastWorldCheck=0;
 
   player.x = 80*SCALE;
   player.y = GROUND_Y - player.h*SCALE;
@@ -1357,6 +1437,19 @@ function die(){
 
 function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){
   return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by;
+}
+// Mobile-forgiving variants: shrink obstacle hitbox, expand collectible pickup
+function obstacleHit(px,py,pw,ph,ox,oy,ow,oh){
+  if(!IS_MOBILE) return rectsOverlap(px,py,pw,ph,ox,oy,ow,oh);
+  // Shrink obstacle hitbox by 20% on each side
+  var pad = ow*0.2;
+  return rectsOverlap(px,py,pw,ph, ox+pad, oy+pad, ow-pad*2, oh-pad*2);
+}
+function collectibleHit(px,py,pw,ph,cx,cy,cw,ch){
+  if(!IS_MOBILE) return rectsOverlap(px,py,pw,ph,cx,cy,cw,ch);
+  // Expand collectible hitbox by 30% on each side
+  var pad = cw*0.3;
+  return rectsOverlap(px,py,pw,ph, cx-pad, cy-pad, cw+pad*2, ch+pad*2);
 }
 
 // ── Draw helpers ──
@@ -1575,14 +1668,21 @@ function drawHero(px, py, pw, ph, sq, st, tilt){
 
 // ── Draw ──
 function drawBackground(){
-  // Deep space gradient — purple/indigo void
+  // Dynamic sky gradient — from current world
+  var w = getCurrentWorld();
   var grad = X.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,'#030008');
-  grad.addColorStop(0.2,'#0a0318');
-  grad.addColorStop(0.5,'#100520');
-  grad.addColorStop(0.7,'#180818');
-  grad.addColorStop(1,'#1a0a10');
+  grad.addColorStop(0, w.skyGrad[0]);
+  grad.addColorStop(0.2, w.skyGrad[1]);
+  grad.addColorStop(0.5, w.skyGrad[2]);
+  grad.addColorStop(0.7, w.skyGrad[3]);
+  grad.addColorStop(1, w.skyGrad[4]);
   X.fillStyle=grad; X.fillRect(0,0,W,H);
+
+  // World transition flash overlay
+  if(worldTransitioning && worldTransitionAlpha > 0){
+    X.fillStyle = 'rgba(255,255,255,' + (worldTransitionAlpha * 0.15) + ')';
+    X.fillRect(0,0,W,H);
+  }
 
   var t = Date.now()/1000;
 
@@ -1811,11 +1911,12 @@ function drawGround(){
   // Surreal ground — checkerboard fading into void, Mario-style blocks
   var t = Date.now()/1000;
 
-  // Main ground body — dark with purple tint
+  // Main ground body — uses world colors
+  var w = getCurrentWorld();
   var gGrad = X.createLinearGradient(0, GROUND_Y, 0, H);
-  gGrad.addColorStop(0, '#2a1525');
-  gGrad.addColorStop(0.3, '#1a0a15');
-  gGrad.addColorStop(1, '#0a0008');
+  gGrad.addColorStop(0, w.groundGrad[0]);
+  gGrad.addColorStop(0.3, w.groundGrad[1]);
+  gGrad.addColorStop(1, w.groundGrad[2]);
   X.fillStyle = gGrad;
   X.fillRect(0, GROUND_Y, W, H-GROUND_Y);
 
@@ -1829,15 +1930,15 @@ function drawGround(){
       var tx = col*tileW - offset;
       var ty = GROUND_Y + row*tileH;
       var isLight = (col+row)%2===0;
-      X.fillStyle = isLight ? 'rgba(60,30,50,0.8)' : 'rgba(35,15,30,0.8)';
+      X.fillStyle = isLight ? w.tileLight : w.tileDark;
       X.fillRect(tx, ty, tileW, tileH);
     }
   }
 
   // Glowing surface line
-  X.strokeStyle = 'rgba(200,100,180,0.4)';
+  X.strokeStyle = w.groundLine;
   X.lineWidth = 2*SCALE;
-  X.shadowColor = 'rgba(200,100,180,0.3)';
+  X.shadowColor = w.groundLine;
   X.shadowBlur = 8*SCALE;
   X.beginPath(); X.moveTo(0,GROUND_Y); X.lineTo(W,GROUND_Y); X.stroke();
   X.shadowBlur = 0;
@@ -1904,6 +2005,19 @@ function drawHUD(){
     X.fillText('FLAP',feBarX-4*SCALE,feBarY+feBarH-1*SCALE);
   }
 
+  // ── World name banner on transition ──
+  if(worldTransitioning && worldTransitionAlpha > 0.3){
+    var bannerAlpha = Math.min(1, (worldTransitionAlpha - 0.3) / 0.4);
+    X.font = '700 '+(22*SCALE)+'px EB Garamond';
+    X.fillStyle = 'rgba(225,215,195,' + (bannerAlpha*0.7) + ')';
+    X.textAlign = 'center';
+    X.fillText(getCurrentWorld().name, W/2, H*0.45);
+    X.font = (9*SCALE)+'px JetBrains Mono';
+    X.fillStyle = 'rgba(200,170,90,' + (bannerAlpha*0.4) + ')';
+    X.fillText('W O R L D  ' + (currentWorldIndex+1), W/2, H*0.45 + 20*SCALE);
+    X.textAlign = 'left';
+  }
+
   X.restore();
 }
 
@@ -1927,19 +2041,19 @@ function drawMenu(){
   X.fillText('collect bags \u00b7 gather art \u00b7 find coins', W/2, H*0.44);
 
   var pulse = 0.5+Math.sin(Date.now()/500)*0.3;
-  X.font=(14*SCALE)+'px JetBrains Mono';
+  X.font=(IS_MOBILE ? 18 : 14)*SCALE+'px JetBrains Mono';
   X.fillStyle='rgba(220,170,60,'+pulse+')';
-  X.fillText('TAP  OR  SPACE  TO  START', W/2, H*0.58);
+  X.fillText(IS_MOBILE ? 'TAP  TO  START' : 'TAP  OR  SPACE  TO  START', W/2, H*0.58);
 
   if(bestScore>0){
-    X.font=(12*SCALE)+'px JetBrains Mono';
+    X.font=(IS_MOBILE ? 14 : 12)*SCALE+'px JetBrains Mono';
     X.fillStyle='rgba(225,215,195,0.4)';
     X.fillText('BEST: '+bestScore, W/2, H*0.66);
   }
 
-  X.font=(11*SCALE)+'px JetBrains Mono';
+  X.font=(IS_MOBILE ? 13 : 11)*SCALE+'px JetBrains Mono';
   X.fillStyle='rgba(225,215,195,0.25)';
-  X.fillText('tap / space / \u2191  to flap \u00b7 keep tapping to stay airborne', W/2, H*0.82);
+  X.fillText(IS_MOBILE ? 'keep tapping to stay airborne' : 'tap / space / \u2191  to flap \u00b7 keep tapping to stay airborne', W/2, H*0.82);
   X.restore();
 }
 
@@ -2283,6 +2397,22 @@ function update(){
       distance += speed / (3*SCALE);
       difficultyLevel = Math.floor(distance/400);
 
+      // ── World transitions ──
+      var worldCheck = Math.floor(distance / WORLD_TRANSITION_DIST);
+      if(worldCheck > lastWorldCheck){
+        lastWorldCheck = worldCheck;
+        currentWorldIndex = worldCheck % WORLDS.length;
+        worldTransitioning = true;
+        worldTransitionAlpha = 1;
+      }
+      if(worldTransitioning){
+        worldTransitionAlpha -= 0.015;
+        if(worldTransitionAlpha <= 0){
+          worldTransitionAlpha = 0;
+          worldTransitioning = false;
+        }
+      }
+
       // Player physics
       player.vy += GRAVITY * SCALE;
       player.y += player.vy;
@@ -2351,7 +2481,7 @@ function update(){
     // Obstacles
     for(var i=obstacles.length-1;i>=0;i--){
       var ob=obstacles[i]; ob.x -= speed;
-      if(boostState==='none' && boostInvulnTimer<=0 && rectsOverlap(px,py,pw,ph,ob.x,ob.y,ob.w,ob.h)){ die(); break; }
+      if(boostState==='none' && boostInvulnTimer<=0 && obstacleHit(px,py,pw,ph,ob.x,ob.y,ob.w,ob.h)){ die(); break; }
       if(!ob.passed && ob.x+ob.w<player.x){ ob.passed=true; score+=1; }
       if(ob.x+ob.w < -20) obstacles.splice(i,1);
     }
@@ -2366,7 +2496,7 @@ function update(){
         if(c.type==='coin') c.spinAngle += 0.08;
         if(c.type==='servant') c.spinAngle += 0.06;
 
-        if(rectsOverlap(px,py,pw,ph, c.x, cy, c.w, c.h)){
+        if(collectibleHit(px,py,pw,ph, c.x, cy, c.w, c.h)){
           c.collected = true;
           if(c.type==='bag'){
             coins++; playCoinSound();

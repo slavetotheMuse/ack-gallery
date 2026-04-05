@@ -3782,7 +3782,7 @@
       font-family: 'Cormorant Garamond', serif;
       font-size: 11px;
       font-style: italic;
-      color: rgba(180,175,160,0.55);
+      color: rgba(255,255,255,0.7);
       letter-spacing: 0.3px;
       white-space: nowrap;
       pointer-events: none;
@@ -21715,13 +21715,7 @@
                 _whisperEl.style.fontSize = (_whisperScreenSize * _invS) + 'px';
                 _whisperEl.style.top = '-' + (_whisperTopScreen * _invS) + 'px';
                 _whisperEl.style.transform = 'translateX(-50%)';
-                // Tint whisper to match artwork/collection frame color
-                var _wPal = (artData && ARTWORK_PALETTES[artData.image]) || COLLECTION_PALETTES[_focusColName] || null;
-                if (_wPal && _wPal.accentDim) {
-                  // Extract rgb values from accentDim and apply at low opacity
-                  var _aMatch = _wPal.accentDim.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
-                  if (_aMatch) _whisperEl.style.color = 'rgba(' + _aMatch[1] + ',' + _aMatch[2] + ',' + _aMatch[3] + ',0.3)';
-                }
+                // Keep whisper white for readability (no palette tint)
                 node.appendChild(_whisperEl);
                 node._whisperCleanup.el = _whisperEl;
                 // Fade in
