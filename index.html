@@ -842,7 +842,6 @@
       z-index: 3001;
       pointer-events: none;
       opacity: 0;
-      will-change: transform, left;
     }
     #navFlyingLogo img {
       width: 100%;
@@ -1673,7 +1672,6 @@
       cursor: pointer;
       opacity: 0;
       transform: translateY(30px);
-      will-change: transform, opacity;
       perspective: 900px;
     }
 
@@ -2765,11 +2763,11 @@
       z-index: 2;
       cursor: pointer;
       transform-style: preserve-3d;
-      will-change: transform, opacity;
       transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                   opacity 0.5s ease;
     }
     .node-card.hovered {
+      will-change: transform, opacity;
       opacity: 1 !important;
       z-index: 20;
     }
@@ -3782,9 +3780,9 @@
       transform: translateX(-50%);
       transform-origin: center bottom;
       font-family: 'Cormorant Garamond', serif;
-      font-size: 7px;
+      font-size: 11px;
       font-style: italic;
-      color: rgba(160,155,140,0.28);
+      color: rgba(180,175,160,0.55);
       letter-spacing: 0.3px;
       white-space: nowrap;
       pointer-events: none;
@@ -14016,9 +14014,9 @@
         });
       });
 
-      /* ── ARCADE NODE — temporarily hidden while building out ──
+      /* ── ARCADE NODE ── */
       (function() {
-        const arcadeSlot = { x: 8.5, y: 42, w: 4.2, ar: 610/923 };
+        const arcadeSlot = { x: 8.5, y: 42, w: 3.0, ar: 610/923 };
         const aw = Math.floor((arcadeSlot.w / 100) * layoutW);
         const ah = Math.floor(aw / arcadeSlot.ar);
         const acx = layoutOffX + (arcadeSlot.x / 100) * layoutW;
@@ -14087,7 +14085,6 @@
           node: arcadeNode, size: aw, origIndex: -1,
         });
       })();
-      */
 
       /* ── PHONE NODE — temporarily hidden while building out ──
       (function() {
@@ -15801,23 +15798,23 @@
       var grid = document.createElement('div');
       grid.style.cssText = 'display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;justify-content:center;';
 
-      // ── Game Card: Balloon Bags ──
+      // ── Game Card: Nocturne Run ──
       var card1 = _createGameCard({
+        title: 'Nocturne Run',
+        subtitle: 'tap to jump \u2022 collect bags \u2022 chase the night',
+        thumbType: 'nocturneRun',
+        onClick: function() { _launchNocturneRun(); }
+      });
+      grid.appendChild(card1);
+
+      // ── Game Card: Balloon Bags ──
+      var card3 = _createGameCard({
         title: 'Balloon Bags',
         subtitle: 'pop balloons \u2022 collect bags \u2022 dodge thieves',
         thumbType: 'balloonBags',
         onClick: function() { _launchBalloonBags(); }
       });
-      grid.appendChild(card1);
-
-      // ── Game Card: Aerial Screw ──
-      var card2 = _createGameCard({
-        title: 'Aerial Screw',
-        subtitle: 'tap to glide \u2022 collect coins \u2022 avoid obstacles',
-        thumbType: 'aerialScrew',
-        onClick: function() { _launchAerialScrew(); }
-      });
-      grid.appendChild(card2);
+      grid.appendChild(card3);
 
       lobby.appendChild(grid);
 
@@ -15858,85 +15855,170 @@
       var thumbWrap = document.createElement('div');
       thumbWrap.style.cssText = 'width:220px;height:160px;border:1px solid rgba(195,175,130,0.2);border-radius:4px;overflow:hidden;background:rgba(20,18,25,0.5);display:flex;align-items:center;justify-content:center;position:relative;';
 
-      if (opts.thumbType === 'balloonBags') {
-        // Canvas-drawn scene with balloons + bag
+      if (opts.thumbType === 'nocturneRun') {
+        // Matches actual game: deep space void with surreal structures
         var cv = document.createElement('canvas');
         cv.width = 440; cv.height = 320;
         cv.style.cssText = 'width:100%;height:100%;';
         var cx = cv.getContext('2d');
-        // Dark bg
-        cx.fillStyle = '#1e1e22';
+        // Deep space gradient — matching game bg
+        var nightG = cx.createLinearGradient(0,0,0,320);
+        nightG.addColorStop(0,'#030008');
+        nightG.addColorStop(0.3,'#0a0318');
+        nightG.addColorStop(0.6,'#100520');
+        nightG.addColorStop(1,'#1a0a10');
+        cx.fillStyle = nightG;
         cx.fillRect(0,0,440,320);
-        // Grid lines
-        cx.strokeStyle = 'rgba(40,40,45,0.5)';
+        // Stars
+        cx.fillStyle = 'rgba(255,255,255,0.5)';
+        var stars = [{x:30,y:18},{x:95,y:42},{x:160,y:12},{x:230,y:55},{x:310,y:20},{x:380,y:38},{x:55,y:75},{x:270,y:72},{x:410,y:65},{x:140,y:90},{x:350,y:85},{x:200,y:35},{x:420,y:15},{x:75,y:55},{x:315,y:105}];
+        stars.forEach(function(s){ cx.beginPath(); cx.arc(s.x,s.y,0.6+Math.random()*1,0,Math.PI*2); cx.fill(); });
+        // Nebula glow — soft purple/indigo
+        cx.globalAlpha = 0.08;
+        var nGrd = cx.createRadialGradient(300,80,0,300,80,120);
+        nGrd.addColorStop(0,'rgba(120,60,180,1)');
+        nGrd.addColorStop(1,'rgba(120,60,180,0)');
+        cx.fillStyle = nGrd; cx.fillRect(180,0,240,200);
+        cx.globalAlpha = 0.06;
+        var nGrd2 = cx.createRadialGradient(100,140,0,100,140,90);
+        nGrd2.addColorStop(0,'rgba(60,100,180,1)');
+        nGrd2.addColorStop(1,'rgba(60,100,180,0)');
+        cx.fillStyle = nGrd2; cx.fillRect(10,60,180,160);
+        cx.globalAlpha = 1;
+        // Escher staircase silhouette (bg structure)
+        cx.strokeStyle = 'rgba(180,160,140,0.12)';
+        cx.lineWidth = 1.2;
+        var stX=310, stY=130, stSz=60;
+        for(var si=0;si<7;si++){
+          cx.strokeRect(stX+si*8, stY-si*6, 10, 8);
+        }
+        // Alice door
+        cx.fillStyle = 'rgba(139,90,43,0.15)';
+        cx.fillRect(85, 135, 14, 30);
+        cx.beginPath(); cx.arc(92, 135, 7, Math.PI, 0); cx.fill();
+        cx.fillStyle = 'rgba(255,220,100,0.2)';
+        cx.beginPath(); cx.arc(92, 148, 1.5, 0, Math.PI*2); cx.fill();
+        // Piano keys floating
+        cx.strokeStyle = 'rgba(220,200,180,0.1)';
         cx.lineWidth = 1;
-        for (var gx=0;gx<440;gx+=20){cx.beginPath();cx.moveTo(gx,0);cx.lineTo(gx,320);cx.stroke();}
-        for (var gy=0;gy<320;gy+=20){cx.beginPath();cx.moveTo(0,gy);cx.lineTo(440,gy);cx.stroke();}
-        // Draw some balloons
-        var balloonColors = ['#c75b7a','#6ba5d7','#d4a843','#8ec07c','#c490d1','#e8937a'];
-        var balloonPositions = [{x:90,y:80},{x:180,y:120},{x:290,y:70},{x:360,y:140},{x:140,y:180},{x:320,y:200}];
-        balloonPositions.forEach(function(bp,i){
-          // String
-          cx.strokeStyle = 'rgba(160,155,140,0.3)';
-          cx.lineWidth = 1;
-          cx.beginPath(); cx.moveTo(bp.x,bp.y+22); cx.lineTo(bp.x,bp.y+52); cx.stroke();
-          // Balloon
-          cx.fillStyle = balloonColors[i % balloonColors.length];
-          cx.globalAlpha = 0.7;
-          cx.beginPath(); cx.ellipse(bp.x,bp.y,16,22,0,0,Math.PI*2); cx.fill();
-          cx.globalAlpha = 1;
-          // Highlight
-          cx.fillStyle = 'rgba(255,255,255,0.15)';
-          cx.beginPath(); cx.ellipse(bp.x-5,bp.y-8,5,8,0,0,Math.PI*2); cx.fill();
+        [{x:180,y:100,a:0.3},{x:210,y:115,a:0.5},{x:235,y:105,a:0.7}].forEach(function(k){
+          cx.save(); cx.translate(k.x,k.y); cx.rotate(k.a);
+          cx.strokeRect(-8,-3,16,6);
+          cx.fillStyle='rgba(40,35,30,0.15)'; cx.fillRect(-4,-3,4,4);
+          cx.fillRect(2,-3,4,4);
+          cx.restore();
         });
-        // Central bag
+        // Ground
+        cx.fillStyle = 'rgba(35,28,22,0.9)';
+        cx.fillRect(0,250,440,70);
+        cx.strokeStyle = 'rgba(140,120,80,0.3)';
+        cx.lineWidth = 1;
+        cx.beginPath(); cx.moveTo(0,250); cx.lineTo(440,250); cx.stroke();
+        // Ground bricks
+        cx.strokeStyle = 'rgba(100,85,60,0.15)';
+        cx.lineWidth = 0.8;
+        for(var gbi=0;gbi<14;gbi++){
+          cx.strokeRect(gbi*34, 254, 32, 16);
+          cx.fillStyle = 'rgba(80,70,50,0.08)'; cx.fillRect(gbi*34+1, 255, 30, 14);
+        }
+        // Piano hero (the player character)
+        var pianoImg = new Image();
+        pianoImg.onload = function(){
+          cx.drawImage(pianoImg, 100, 210, 60, 38);
+        };
+        pianoImg.src = 'piano.png';
+        // Skull obstacle
+        cx.fillStyle = 'rgba(200,180,160,0.5)';
+        cx.beginPath(); cx.arc(290,232,14,0,Math.PI*2); cx.fill();
+        cx.fillStyle = 'rgba(20,10,30,0.7)';
+        cx.beginPath(); cx.arc(285,230,3,0,Math.PI*2); cx.fill();
+        cx.beginPath(); cx.arc(295,230,3,0,Math.PI*2); cx.fill();
+        cx.fillStyle = 'rgba(200,180,160,0.5)';
+        cx.fillRect(282,238,16,8);
+        // Floating collectibles
         var bagImg = new Image();
-        bagImg.onload = function(){ cx.drawImage(bagImg, 190, 140, 60, 60); };
+        bagImg.onload = function(){
+          cx.globalAlpha = 0.6; cx.drawImage(bagImg, 210, 180, 28, 28);
+          cx.globalAlpha = 0.45; cx.drawImage(bagImg, 350, 160, 24, 24);
+          cx.globalAlpha = 1;
+        };
         bagImg.src = 'my_bags_decoration_web.png';
+        // BTC coin
+        cx.fillStyle = 'rgba(247,147,26,0.5)';
+        cx.beginPath(); cx.arc(260,195,10,0,Math.PI*2); cx.fill();
+        cx.fillStyle = 'rgba(255,255,255,0.4)';
+        cx.font = 'bold 11px JetBrains Mono';
+        cx.textAlign = 'center'; cx.textBaseline = 'middle';
+        cx.fillText('\u20BF', 260, 195);
+        // Boost meter hint — small bar
+        cx.fillStyle = 'rgba(60,50,40,0.4)';
+        cx.fillRect(18, 280, 60, 5);
+        cx.fillStyle = 'rgba(100,200,255,0.35)';
+        cx.fillRect(18, 280, 36, 5);
         thumbWrap.appendChild(cv);
       } else if (opts.thumbType === 'aerialScrew') {
-        // Sky background with screw silhouette
         var cv2 = document.createElement('canvas');
         cv2.width = 440; cv2.height = 320;
         cv2.style.cssText = 'width:100%;height:100%;';
         var cx2 = cv2.getContext('2d');
-        // Sky gradient
         var skyG = cx2.createLinearGradient(0,0,0,320);
         skyG.addColorStop(0,'#5b7fa6');
         skyG.addColorStop(0.5,'#a8b8c4');
         skyG.addColorStop(1,'#8a7e6a');
         cx2.fillStyle = skyG;
         cx2.fillRect(0,0,440,320);
-        // Grid overlay
         cx2.strokeStyle = 'rgba(60,80,110,0.1)';
         cx2.lineWidth = 1;
         for (var gx2=0;gx2<440;gx2+=25){cx2.beginPath();cx2.moveTo(gx2,0);cx2.lineTo(gx2,320);cx2.stroke();}
         for (var gy2=0;gy2<320;gy2+=25){cx2.beginPath();cx2.moveTo(0,gy2);cx2.lineTo(440,gy2);cx2.stroke();}
-        // Mountains
         cx2.fillStyle = 'rgba(100,115,135,0.3)';
         cx2.beginPath(); cx2.moveTo(0,260);
         for (var mm=0;mm<=440;mm+=4){cx2.lineTo(mm, 220 - Math.sin(mm*0.015)*30 - Math.sin(mm*0.04)*15);}
         cx2.lineTo(440,260); cx2.closePath(); cx2.fill();
-        // Clouds
         cx2.fillStyle = 'rgba(240,238,232,0.35)';
         [{x:80,y:60},{x:250,y:90},{x:380,y:50}].forEach(function(cl){
           cx2.beginPath(); cx2.ellipse(cl.x,cl.y,50,14,0,0,Math.PI*2); cx2.fill();
           cx2.beginPath(); cx2.ellipse(cl.x+30,cl.y+5,30,10,0,0,Math.PI*2); cx2.fill();
         });
-        // Aerial screw image
         var screwImg = new Image();
         screwImg.onload = function(){ cx2.drawImage(screwImg, 0, 0, 200, 214, 150, 80, 140, 150); };
         screwImg.src = 'aerialscrew_sprite_strip.png';
-        // Coin
-        var coinImg = new Image();
-        coinImg.onload = function(){
+        var coinImg2 = new Image();
+        coinImg2.onload = function(){
           cx2.beginPath(); cx2.arc(340,160,18,0,Math.PI*2); cx2.closePath(); cx2.save(); cx2.clip();
-          cx2.drawImage(coinImg, 322, 142, 36, 36); cx2.restore();
+          cx2.drawImage(coinImg2, 322, 142, 36, 36); cx2.restore();
           cx2.strokeStyle='rgba(200,160,60,0.5)'; cx2.lineWidth=1.5;
           cx2.beginPath(); cx2.arc(340,160,18,0,Math.PI*2); cx2.stroke();
         };
-        coinImg.src = 'servant_face_web.png';
+        coinImg2.src = 'servant_face_web.png';
         thumbWrap.appendChild(cv2);
+      } else if (opts.thumbType === 'balloonBags') {
+        var cv3 = document.createElement('canvas');
+        cv3.width = 440; cv3.height = 320;
+        cv3.style.cssText = 'width:100%;height:100%;';
+        var cx3 = cv3.getContext('2d');
+        cx3.fillStyle = '#1e1e22';
+        cx3.fillRect(0,0,440,320);
+        cx3.strokeStyle = 'rgba(40,40,45,0.5)';
+        cx3.lineWidth = 1;
+        for (var gx3=0;gx3<440;gx3+=20){cx3.beginPath();cx3.moveTo(gx3,0);cx3.lineTo(gx3,320);cx3.stroke();}
+        for (var gy3=0;gy3<320;gy3+=20){cx3.beginPath();cx3.moveTo(0,gy3);cx3.lineTo(440,gy3);cx3.stroke();}
+        var balloonColors = ['#c75b7a','#6ba5d7','#d4a843','#8ec07c','#c490d1','#e8937a'];
+        var balloonPositions = [{x:90,y:80},{x:180,y:120},{x:290,y:70},{x:360,y:140},{x:140,y:180},{x:320,y:200}];
+        balloonPositions.forEach(function(bp,i){
+          cx3.strokeStyle = 'rgba(160,155,140,0.3)'; cx3.lineWidth = 1;
+          cx3.beginPath(); cx3.moveTo(bp.x,bp.y+22); cx3.lineTo(bp.x,bp.y+52); cx3.stroke();
+          cx3.fillStyle = balloonColors[i % balloonColors.length];
+          cx3.globalAlpha = 0.7;
+          cx3.beginPath(); cx3.ellipse(bp.x,bp.y,16,22,0,0,Math.PI*2); cx3.fill();
+          cx3.globalAlpha = 1;
+          cx3.fillStyle = 'rgba(255,255,255,0.15)';
+          cx3.beginPath(); cx3.ellipse(bp.x-5,bp.y-8,5,8,0,0,Math.PI*2); cx3.fill();
+        });
+        var bagImg3 = new Image();
+        bagImg3.onload = function(){ cx3.drawImage(bagImg3, 190, 140, 60, 60); };
+        bagImg3.src = 'my_bags_decoration_web.png';
+        thumbWrap.appendChild(cv3);
       }
 
       card.appendChild(thumbWrap);
@@ -16033,6 +16115,18 @@
       _arcadeGameFrame = document.createElement('iframe');
       _arcadeGameFrame.src = 'aerialscrew_game.html';
       _arcadeGameFrame.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:10;background:transparent;';
+      _arcadeGameFrame.setAttribute('allowfullscreen','');
+      _arcadeOverlay.appendChild(_arcadeGameFrame);
+    }
+
+    function _launchNocturneRun() {
+      var lobby = document.getElementById('arcadeLobby');
+      if (lobby) lobby.style.display = 'none';
+
+      // Launch Nocturne Run as fullscreen iframe within the overlay
+      _arcadeGameFrame = document.createElement('iframe');
+      _arcadeGameFrame.src = 'runner_game.html';
+      _arcadeGameFrame.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:10;background:#0a0a0c;';
       _arcadeGameFrame.setAttribute('allowfullscreen','');
       _arcadeOverlay.appendChild(_arcadeGameFrame);
     }
@@ -21669,8 +21763,11 @@
                 nodeImg.src = _focusSrc;
                 _clearLoading();
                 // ── After crisp JPG is displayed, load animated GIF over it ──
-                // Skip if _focusSrc is already the GIF (no need to re-assign same src)
-                const _desktopGifSrc = (artData && artData.webGif) ? artData.webGif
+                // Skip entirely if _focusSrc is already a GIF (e.g. Warothy focusImage
+                // is the high-res GIF — don't downgrade it with a smaller web GIF)
+                const _focusSrcIsGif = _focusSrc && _focusSrc.endsWith('.gif');
+                const _desktopGifSrc = _focusSrcIsGif ? null
+                  : (artData && artData.webGif) ? artData.webGif
                   : (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
                   : (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image : null;
                 if (_desktopGifSrc && _desktopGifSrc !== _focusSrc) {
@@ -37390,6 +37487,170 @@
     }
 
     init();
+
+    // ═══════════════════════════════════════════════════════════════
+    // ██  PERFORMANCE OPTIMIZATIONS — GIF FREEZING & RAF CONTROL  ██
+    // ═══════════════════════════════════════════════════════════════
+
+    (function perfBoost() {
+
+      // ── 1. GIF FREEZE SYSTEM ──
+      // Animated GIFs eat memory/GPU even when off-screen.
+      // Strategy: observe all <img> with .gif src; when off-screen,
+      // replace src with a single-frame canvas snapshot (data URL).
+      // Restore original GIF src when back in viewport.
+
+      const GIF_MARGIN = '200px'; // pre-load zone
+      const _gifOriginals = new WeakMap(); // img → original gif src
+      const _gifFrozen    = new WeakMap(); // img → frozen data-url
+
+      function freezeGif(img) {
+        if (_gifOriginals.has(img) && img.src !== _gifOriginals.get(img)) return; // already frozen
+        // Never freeze a GIF inside a focused node — it's the hi-res version the user is viewing
+        const parentNode = img.closest('.node-card');
+        if (parentNode && parentNode.classList.contains('focused')) return;
+        const src = img.src;
+        if (!src || !src.match(/\.gif/i)) return;
+
+        _gifOriginals.set(img, src);
+
+        // If we already have a frozen frame, reuse it
+        if (_gifFrozen.has(img)) {
+          img.src = _gifFrozen.get(img);
+          return;
+        }
+
+        // Draw current frame to canvas → dataURL
+        try {
+          const c = document.createElement('canvas');
+          const w = img.naturalWidth  || img.width  || 200;
+          const h = img.naturalHeight || img.height || 200;
+          // Cap snapshot resolution to save memory
+          const maxDim = 400;
+          const scale = Math.min(1, maxDim / Math.max(w, h));
+          c.width  = Math.round(w * scale);
+          c.height = Math.round(h * scale);
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          const dataUrl = c.toDataURL('image/jpeg', 0.75);
+          _gifFrozen.set(img, dataUrl);
+          img.src = dataUrl;
+        } catch(e) {
+          // Cross-origin or not-loaded — just leave it
+        }
+      }
+
+      function thawGif(img) {
+        if (!_gifOriginals.has(img)) return;
+        const original = _gifOriginals.get(img);
+        if (img.src !== original) {
+          img.src = original;
+        }
+      }
+
+      // Observe all current and future GIF images
+      const gifObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            thawGif(entry.target);
+          } else {
+            // Small delay so quick scrolls don't thrash
+            setTimeout(function() {
+              if (!entry.isIntersecting) freezeGif(entry.target);
+            }, 150);
+          }
+        });
+      }, { rootMargin: GIF_MARGIN });
+
+      function observeGifs() {
+        document.querySelectorAll('img').forEach(function(img) {
+          const src = img.src || img.getAttribute('data-src') || '';
+          if (src.match(/\.gif/i)) {
+            img.decoding = 'async';
+            gifObserver.observe(img);
+          }
+        });
+      }
+
+      // Run once now, then periodically catch dynamically-added images
+      observeGifs();
+      const _gifScanInterval = setInterval(observeGifs, 3000);
+
+      // ── 2. PAGE VISIBILITY — pause ALL RAF loops when tab is hidden ──
+      let _pageHidden = false;
+      document.addEventListener('visibilitychange', function() {
+        _pageHidden = document.hidden;
+        if (_pageHidden) {
+          // Pause background grid
+          if (typeof bgGridPaused !== 'undefined') bgGridPaused = true;
+          // Freeze every GIF on page immediately
+          document.querySelectorAll('img').forEach(function(img) {
+            if ((img.src || '').match(/\.gif/i)) freezeGif(img);
+          });
+        } else {
+          // Resume background grid (only if not in a collection view on mobile)
+          if (typeof bgGridPaused !== 'undefined' && typeof bgGridAnimFrame !== 'undefined') {
+            bgGridPaused = false;
+            if (!bgGridAnimFrame && typeof initBgGrid === 'function') {
+              // Restart grid loop
+              try { initBgGrid(); } catch(e) {}
+            }
+          }
+          // Thaw visible GIFs
+          document.querySelectorAll('img').forEach(function(img) {
+            if ((img.src || '').match(/\.gif/i) || _gifOriginals.has(img)) {
+              // Let IntersectionObserver handle thaw on next cycle
+            }
+          });
+          observeGifs();
+        }
+      });
+
+      // ── 3. STRIP UNNECESSARY will-change ON SCROLL-IDLE ──
+      // Many elements have will-change set permanently which forces GPU layers.
+      // After initial animations settle, strip them from non-animating elements.
+      setTimeout(function() {
+        document.querySelectorAll('.node-card, .node-preview, .gallery-node').forEach(function(el) {
+          // Only strip if element isn't actively transitioning
+          if (!el.classList.contains('focused') && !el.classList.contains('transitioning')) {
+            el.style.willChange = 'auto';
+          }
+        });
+      }, 8000); // Wait 8s for intro animations to finish
+
+      // ── 4. ASYNC DECODING FOR ALL THUMBNAIL IMAGES ──
+      document.querySelectorAll('.node-preview img, .node-card img').forEach(function(img) {
+        img.decoding = 'async';
+      });
+
+      // ── 5. REDUCE ANIMATION FRAME BUDGET ON LOW-END DEVICES ──
+      // If frame rate drops below 20fps for sustained period, throttle bg grid
+      let _fpsFrames = 0, _fpsLast = performance.now(), _lowFpsCount = 0;
+      function fpsMonitor() {
+        _fpsFrames++;
+        const now = performance.now();
+        if (now - _fpsLast >= 2000) {
+          const fps = _fpsFrames / ((now - _fpsLast) / 1000);
+          _fpsFrames = 0;
+          _fpsLast = now;
+          if (fps < 20) {
+            _lowFpsCount++;
+            if (_lowFpsCount >= 2 && typeof bgGridPaused !== 'undefined') {
+              // Sustained low FPS — pause the grid to free resources
+              bgGridPaused = true;
+              console.log('[perf] Background grid paused — low FPS detected (' + Math.round(fps) + ')');
+              return; // Stop monitoring
+            }
+          } else {
+            _lowFpsCount = 0;
+          }
+        }
+        if (!_pageHidden) requestAnimationFrame(fpsMonitor);
+      }
+      requestAnimationFrame(fpsMonitor);
+
+    })();
+
   </script>
 </body>
 </html>
