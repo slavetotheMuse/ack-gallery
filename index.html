@@ -8126,6 +8126,8 @@
             if (accounts && accounts.length > 0) {
               _connectedWallet = accounts[0];
               _notifyWallet();
+              // ── Analytics: track wallet connect ──
+              if (window.ACK_ANALYTICS) ACK_ANALYTICS.walletConnect(_connectedWallet);
               return _connectedWallet;
             }
             return null;
@@ -16427,6 +16429,10 @@
       if (_colCheck && (_colCheck.comingSoon || _colCheck.omDisabled) && window.location.protocol !== 'file:') {
         return;
       }
+      // ── Analytics: track collection open ──
+      if (_colCheck && _colCheck.name && window.ACK_ANALYTICS) {
+        ACK_ANALYTICS.collectionOpen(_colCheck.name);
+      }
       if (!skipTransition) ACK_SFX.click();
 
       // If we're already building a detail view (e.g. resize fired during construction),
@@ -21209,6 +21215,11 @@
       // Resolve effective collection name early — for My Bags clones, use the source collection
       const _earlyArt = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks ? COLLECTIONS[collectionIndex].artworks[artworkIndex] : null;
       const _focusColNameEarly = (_earlyArt && _earlyArt._sourceCollection) ? _earlyArt._sourceCollection : (COLLECTIONS[collectionIndex] ? COLLECTIONS[collectionIndex].name : '');
+
+      // ── Analytics: track artwork focus start ──
+      if (window.ACK_ANALYTICS && _earlyArt) {
+        ACK_ANALYTICS.artworkFocusStart(_focusColNameEarly, _earlyArt.title || 'untitled');
+      }
 
       // Update header center title with artwork name
       var _navCtFocus = document.getElementById('navCenterTitle');
@@ -35556,6 +35567,8 @@
     function exitFocusMode() {
       const inner = document.querySelector('.node-graph-inner.focus-mode');
       if (!inner || !focusedNode) return;
+      // ── Analytics: track artwork focus end ──
+      if (window.ACK_ANALYTICS) ACK_ANALYTICS.artworkFocusEnd();
       ACK_SFX.close();
       hideEscHint();
       // Re-show nav esc hint — still inside collection view
@@ -36153,6 +36166,8 @@
 
     function closeDetail() {
       _openDetailBusy = false; // clear re-entrancy guard
+      // ── Analytics: track collection close ──
+      if (window.ACK_ANALYTICS) ACK_ANALYTICS.collectionClose();
       ACK_SFX.close();
       hideEscHint();
       // Clear header center title
@@ -36500,6 +36515,7 @@
       const om = document.getElementById('catalogOM');
       catalogOMOpen = !catalogOMOpen;
       if (catalogOMOpen) {
+        if (window.ACK_ANALYTICS) ACK_ANALYTICS.interaction('catalog_open');
         if (!catalogOMBuilt) buildCatalogOM();
         om.classList.add('visible');
       } else {
@@ -36570,7 +36586,10 @@
         '<div class="obj-controls"><div class="obj-eye">·</div><div class="obj-check">·</div></div>';
       _voidRow.addEventListener('mouseenter', function() { _voidRow.style.opacity = '0.3'; });
       _voidRow.addEventListener('mouseleave', function() { _voidRow.style.opacity = '0.06'; });
-      _voidRow.addEventListener('click', function() { window.location.href = '/void/'; });
+      _voidRow.addEventListener('click', function() {
+        if (window.ACK_ANALYTICS) ACK_ANALYTICS.easterEgg('void_ghost_row');
+        window.location.href = '/void/';
+      });
       list.appendChild(_voidRow);
     }
 
@@ -36724,7 +36743,10 @@
     }
 
     function toggleAbout() {
-      document.getElementById('aboutDropdown').classList.toggle('active');
+      var _aboutEl = document.getElementById('aboutDropdown');
+      var _wasOpen = _aboutEl.classList.contains('active');
+      _aboutEl.classList.toggle('active');
+      if (!_wasOpen && window.ACK_ANALYTICS) ACK_ANALYTICS.interaction('about_open');
     }
 
     function switchAboutTab(tab) {
@@ -37590,6 +37612,7 @@
         _v.textContent = '⧫';
       });
       _v.addEventListener('click', function() {
+        if (window.ACK_ANALYTICS) ACK_ANALYTICS.easterEgg('void_glyph');
         window.location.href = '/void/';
       });
       var _introOv = document.getElementById('intro-overlay');
@@ -37756,6 +37779,229 @@
         if (!_pageHidden) requestAnimationFrame(fpsMonitor);
       }
       requestAnimationFrame(fpsMonitor);
+
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    // ── ACK ANALYTICS — Lightweight Event Tracking via Supabase
+    // ═══════════════════════════════════════════════════════════════
+    (function() {
+      var _SUPABASE_URL = 'https://bzsiasyqafosujjpublc.supabase.co';
+      var _SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6c2lhc3lxYWZvc3VqanB1YmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTYxNDQsImV4cCI6MjA5MTM5MjE0NH0.TemX_Sav96uaDA2eA6b7T7wAXzFKg6f5gPuIPU0hrhM';
+      var _ENDPOINT = _SUPABASE_URL + '/rest/v1/ack_events';
+      var _BATCH_INTERVAL = 5000; // flush every 5 seconds
+      var _queue = [];
+      var _sessionId = '';
+      var _visitorId = '';
+      var _pageLoadTime = Date.now();
+      var _focusStartTime = null;
+      var _focusedArt = null;
+      var _focusedCol = null;
+      var _lastCollectionOpenTime = null;
+      var _lastCollectionName = null;
+      var _maxScrollDepth = 0;
+
+      // ── Generate IDs ──
+      function _uid() {
+        return 'xxxxxxxx-xxxx'.replace(/x/g, function() {
+          return (Math.random() * 16 | 0).toString(16);
+        });
+      }
+      _sessionId = _uid() + '-' + Date.now().toString(36);
+      try {
+        _visitorId = localStorage.getItem('ack_vid');
+        if (!_visitorId) {
+          _visitorId = _uid() + _uid();
+          localStorage.setItem('ack_vid', _visitorId);
+        }
+      } catch(e) { _visitorId = _sessionId; }
+
+      // ── Device detection ──
+      var _ua = navigator.userAgent || '';
+      function _detectDevice() {
+        if (/Mobi|Android|iPhone|iPad|iPod/i.test(_ua)) {
+          return /iPad|tablet/i.test(_ua) ? 'tablet' : 'mobile';
+        }
+        return 'desktop';
+      }
+      function _detectBrowser() {
+        if (/Edg\//i.test(_ua)) return 'edge';
+        if (/OPR|Opera/i.test(_ua)) return 'opera';
+        if (/Chrome/i.test(_ua)) return 'chrome';
+        if (/Safari/i.test(_ua)) return 'safari';
+        if (/Firefox/i.test(_ua)) return 'firefox';
+        return 'other';
+      }
+      function _detectOS() {
+        if (/Mac/i.test(_ua)) return 'mac';
+        if (/Win/i.test(_ua)) return 'windows';
+        if (/Linux/i.test(_ua) && !/Android/i.test(_ua)) return 'linux';
+        if (/iPhone|iPad|iPod/i.test(_ua)) return 'ios';
+        if (/Android/i.test(_ua)) return 'android';
+        return 'other';
+      }
+
+      // ── UTM params ──
+      var _params = {};
+      try {
+        var sp = new URLSearchParams(window.location.search);
+        _params.utm_source = sp.get('utm_source') || '';
+        _params.utm_medium = sp.get('utm_medium') || '';
+        _params.utm_campaign = sp.get('utm_campaign') || '';
+      } catch(e) {}
+
+      // ── Core: queue an event ──
+      function _track(event, data) {
+        var row = {
+          session_id: _sessionId,
+          visitor_id: _visitorId,
+          event: event,
+          collection: (data && data.collection) || null,
+          artwork: (data && data.artwork) || null,
+          detail: (data && data.detail) || null,
+          value: (data && data.value !== undefined) ? data.value : null,
+          path: window.location.pathname
+        };
+        // Attach visitor info only on page_load
+        if (event === 'page_load') {
+          row.referrer = document.referrer || null;
+          row.utm_source = _params.utm_source || null;
+          row.utm_medium = _params.utm_medium || null;
+          row.utm_campaign = _params.utm_campaign || null;
+          row.screen_w = screen.width;
+          row.screen_h = screen.height;
+          row.viewport_w = window.innerWidth;
+          row.viewport_h = window.innerHeight;
+          row.device = _detectDevice();
+          row.browser = _detectBrowser();
+          row.os = _detectOS();
+          row.language = (navigator.language || '').slice(0, 10);
+        }
+        _queue.push(row);
+      }
+
+      // ── Flush queue to Supabase ──
+      function _flush() {
+        if (_queue.length === 0) return;
+        var batch = _queue.splice(0, _queue.length);
+        try {
+          var body = JSON.stringify(batch);
+          if (navigator.sendBeacon) {
+            var blob = new Blob([body], { type: 'application/json' });
+            // sendBeacon doesn't support custom headers, use fetch
+          }
+          fetch(_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': _SUPABASE_KEY,
+              'Authorization': 'Bearer ' + _SUPABASE_KEY,
+              'Prefer': 'return=minimal'
+            },
+            body: body,
+            keepalive: true
+          }).catch(function() {
+            // Re-queue on failure (will retry next flush)
+            _queue = batch.concat(_queue);
+          });
+        } catch(e) {}
+      }
+
+      // Flush periodically
+      setInterval(_flush, _BATCH_INTERVAL);
+
+      // Flush on page leave
+      window.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+          // Send session duration
+          var duration = Math.round((Date.now() - _pageLoadTime) / 1000);
+          _track('session_end', { value: duration, detail: 'scroll:' + _maxScrollDepth + '%' });
+          _flush();
+        }
+      });
+      window.addEventListener('beforeunload', function() {
+        var duration = Math.round((Date.now() - _pageLoadTime) / 1000);
+        _track('session_end', { value: duration, detail: 'scroll:' + _maxScrollDepth + '%' });
+        _flush();
+      });
+
+      // ── Track page load ──
+      _track('page_load');
+
+      // ── Track scroll depth (on home/vortex page) ──
+      var _scrollThrottled = false;
+      window.addEventListener('scroll', function() {
+        if (_scrollThrottled) return;
+        _scrollThrottled = true;
+        setTimeout(function() { _scrollThrottled = false; }, 500);
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        var winHeight = window.innerHeight;
+        var depth = Math.round((scrollTop / (docHeight - winHeight)) * 100);
+        if (depth > _maxScrollDepth) _maxScrollDepth = depth;
+      });
+
+      // ── Expose tracking API globally ──
+      window.ACK_ANALYTICS = {
+        track: _track,
+        flush: _flush,
+
+        // Called when a collection is opened
+        collectionOpen: function(name) {
+          // Close previous collection timing if any
+          if (_lastCollectionName && _lastCollectionOpenTime) {
+            var dur = Math.round((Date.now() - _lastCollectionOpenTime) / 1000);
+            _track('collection_close', { collection: _lastCollectionName, value: dur });
+          }
+          _lastCollectionName = name;
+          _lastCollectionOpenTime = Date.now();
+          _track('collection_open', { collection: name });
+        },
+
+        // Called when collection is closed
+        collectionClose: function(name) {
+          if (_lastCollectionOpenTime) {
+            var dur = Math.round((Date.now() - _lastCollectionOpenTime) / 1000);
+            _track('collection_close', { collection: name || _lastCollectionName, value: dur });
+          }
+          _lastCollectionName = null;
+          _lastCollectionOpenTime = null;
+        },
+
+        // Called when artwork enters focus mode
+        artworkFocusStart: function(collection, artwork) {
+          _focusStartTime = Date.now();
+          _focusedCol = collection;
+          _focusedArt = artwork;
+          _track('artwork_focus_start', { collection: collection, artwork: artwork });
+        },
+
+        // Called when artwork exits focus mode
+        artworkFocusEnd: function() {
+          if (_focusStartTime && _focusedArt) {
+            var dur = Math.round((Date.now() - _focusStartTime) / 1000);
+            _track('artwork_focus', { collection: _focusedCol, artwork: _focusedArt, value: dur });
+          }
+          _focusStartTime = null;
+          _focusedArt = null;
+          _focusedCol = null;
+        },
+
+        // Called when wallet connects
+        walletConnect: function(addr) {
+          _track('wallet_connect', { detail: addr ? addr.slice(0, 10) + '...' : 'unknown' });
+        },
+
+        // Called when easter egg is found
+        easterEgg: function(name) {
+          _track('easter_egg', { detail: name });
+        },
+
+        // Generic interaction tracking
+        interaction: function(action, detail) {
+          _track(action, { detail: detail });
+        }
+      };
 
     })();
 

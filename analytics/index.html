@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACK Gallery — Analytics</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #c8c0b4;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    min-height: 100vh;
+  }
+  .auth-gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .auth-gate h1 {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(220,150,50,0.6);
+  }
+  .auth-gate input {
+    width: 500px;
+    max-width: 90vw;
+    padding: 10px 14px;
+    background: #141414;
+    border: 1px solid rgba(220,150,50,0.2);
+    color: #c8c0b4;
+    font-family: inherit;
+    font-size: 11px;
+    border-radius: 3px;
+    outline: none;
+  }
+  .auth-gate input:focus { border-color: rgba(220,150,50,0.5); }
+  .auth-gate button {
+    padding: 8px 24px;
+    background: rgba(220,150,50,0.15);
+    border: 1px solid rgba(220,150,50,0.3);
+    color: rgba(220,150,50,0.8);
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.3s;
+  }
+  .auth-gate button:hover { background: rgba(220,150,50,0.25); border-color: rgba(220,150,50,0.5); }
+  .auth-gate .hint {
+    font-size: 9px;
+    color: rgba(200,200,200,0.3);
+    max-width: 400px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .dashboard { display: none; padding: 30px; max-width: 1400px; margin: 0 auto; }
+  .dashboard.active { display: block; }
+
+  .dash-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(220,150,50,0.1);
+  }
+  .dash-header h1 {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(220,150,50,0.6);
+  }
+  .dash-header .refresh-btn {
+    padding: 6px 16px;
+    background: rgba(220,150,50,0.1);
+    border: 1px solid rgba(220,150,50,0.2);
+    color: rgba(220,150,50,0.7);
+    font-family: inherit;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .dash-header .refresh-btn:hover { background: rgba(220,150,50,0.2); }
+  .dash-period {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .dash-period button {
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid rgba(200,200,200,0.1);
+    color: rgba(200,200,200,0.4);
+    font-family: inherit;
+    font-size: 9px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .dash-period button.active, .dash-period button:hover {
+    border-color: rgba(220,150,50,0.3);
+    color: rgba(220,150,50,0.8);
+    background: rgba(220,150,50,0.08);
+  }
+
+  /* KPI Cards */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+  }
+  .kpi-card {
+    background: #111;
+    border: 1px solid rgba(220,150,50,0.08);
+    border-radius: 4px;
+    padding: 16px;
+  }
+  .kpi-label {
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(200,200,200,0.35);
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: rgba(220,150,50,0.85);
+  }
+  .kpi-sub {
+    font-size: 9px;
+    color: rgba(200,200,200,0.3);
+    margin-top: 4px;
+  }
+
+  /* Tables */
+  .section { margin-bottom: 30px; }
+  .section-title {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(220,150,50,0.5);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(220,150,50,0.08);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #111;
+    border: 1px solid rgba(220,150,50,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  th {
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(200,200,200,0.35);
+    text-align: left;
+    padding: 10px 12px;
+    background: rgba(220,150,50,0.03);
+    border-bottom: 1px solid rgba(220,150,50,0.06);
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    color: rgba(200,200,200,0.7);
+    font-size: 11px;
+  }
+  tr:hover td { background: rgba(220,150,50,0.03); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .gold { color: rgba(220,150,50,0.8); }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: rgba(200,200,200,0.25);
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  /* Two-column grid for tables */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <h1>ACK Analytics</h1>
+  <input type="password" id="keyInput" placeholder="Paste your Supabase service_role key..." autofocus>
+  <button onclick="authenticate()">Enter</button>
+  <div class="hint">This dashboard reads directly from your Supabase database. Paste your service_role (secret) key — it stays in your browser session only and is never stored.</div>
+</div>
+
+<div class="dashboard" id="dashboard">
+  <div class="dash-header">
+    <h1>ACK Gallery — Analytics</h1>
+    <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+  </div>
+  <div class="dash-period" id="periodBar">
+    <button data-days="1">Today</button>
+    <button data-days="7" class="active">7 Days</button>
+    <button data-days="30">30 Days</button>
+    <button data-days="90">90 Days</button>
+    <button data-days="0">All Time</button>
+  </div>
+
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpiSessions">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Unique Visitors</div><div class="kpi-value" id="kpiVisitors">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Session</div><div class="kpi-value" id="kpiAvgSession">—</div><div class="kpi-sub">seconds</div></div>
+    <div class="kpi-card"><div class="kpi-label">Collections Opened</div><div class="kpi-value" id="kpiCollections">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Artworks Focused</div><div class="kpi-value" id="kpiArtworks">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Easter Eggs Found</div><div class="kpi-value" id="kpiEggs">—</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="section">
+      <div class="section-title">Top Collections</div>
+      <table id="tableCollections"><thead><tr><th>Collection</th><th class="num">Opens</th><th class="num">Unique</th><th class="num">Avg Duration</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="section">
+      <div class="section-title">Top Artworks</div>
+      <table id="tableArtworks"><thead><tr><th>Artwork</th><th>Collection</th><th class="num">Focuses</th><th class="num">Avg Sec</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="section">
+      <div class="section-title">Referrers</div>
+      <table id="tableReferrers"><thead><tr><th>Source</th><th class="num">Sessions</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="section">
+      <div class="section-title">Devices</div>
+      <table id="tableDevices"><thead><tr><th>Device</th><th>Browser</th><th>OS</th><th class="num">Sessions</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="section">
+      <div class="section-title">Recent Sessions</div>
+      <table id="tableSessions"><thead><tr><th>Arrived</th><th class="num">Duration</th><th class="num">Events</th><th class="num">Collections</th><th class="num">Artworks</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="section">
+      <div class="section-title">Easter Eggs</div>
+      <table id="tableEggs"><thead><tr><th>Easter Egg</th><th class="num">Discoveries</th><th class="num">Unique</th><th>First Found</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Raw Event Stream (last 50)</div>
+    <table id="tableRaw"><thead><tr><th>Time</th><th>Event</th><th>Collection</th><th>Artwork</th><th>Detail</th><th class="num">Value</th><th>Device</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://bzsiasyqafosujjpublc.supabase.co';
+var API_KEY = '';
+var DAYS = 7;
+
+function authenticate() {
+  API_KEY = document.getElementById('keyInput').value.trim();
+  if (!API_KEY) return;
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('dashboard').classList.add('active');
+  loadAll();
+}
+
+// Enter key on input
+document.getElementById('keyInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') authenticate();
+});
+
+// Period selector
+document.getElementById('periodBar').addEventListener('click', function(e) {
+  if (e.target.tagName !== 'BUTTON') return;
+  document.querySelectorAll('.dash-period button').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  DAYS = parseInt(e.target.dataset.days);
+  loadAll();
+});
+
+function query(sql) {
+  return fetch(SUPABASE_URL + '/rest/v1/rpc', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': API_KEY,
+      'Authorization': 'Bearer ' + API_KEY
+    },
+    body: JSON.stringify({ query: sql })
+  }).then(r => r.json());
+}
+
+// Direct REST API queries with filters
+function fetchTable(table, params) {
+  var qs = params || '';
+  return fetch(SUPABASE_URL + '/rest/v1/' + table + '?' + qs, {
+    headers: {
+      'apikey': API_KEY,
+      'Authorization': 'Bearer ' + API_KEY
+    }
+  }).then(r => r.json());
+}
+
+function dateFilter() {
+  if (DAYS === 0) return '';
+  var d = new Date();
+  d.setDate(d.getDate() - DAYS);
+  return 'created_at=gte.' + d.toISOString();
+}
+
+function loadAll() {
+  loadKPIs();
+  loadCollections();
+  loadArtworks();
+  loadReferrers();
+  loadDevices();
+  loadSessions();
+  loadEggs();
+  loadRaw();
+}
+
+function loadKPIs() {
+  var df = dateFilter();
+  var base = 'select=session_id,visitor_id,event,value' + (df ? '&' + df : '');
+  fetchTable('ack_events', base + '&limit=10000').then(function(rows) {
+    if (!Array.isArray(rows)) { console.error('KPI fetch failed', rows); return; }
+    var sessions = new Set();
+    var visitors = new Set();
+    var collOpens = 0;
+    var artFocuses = 0;
+    var eggs = 0;
+    var sessionDurations = [];
+
+    rows.forEach(function(r) {
+      sessions.add(r.session_id);
+      if (r.visitor_id) visitors.add(r.visitor_id);
+      if (r.event === 'collection_open') collOpens++;
+      if (r.event === 'artwork_focus') artFocuses++;
+      if (r.event === 'easter_egg') eggs++;
+      if (r.event === 'session_end' && r.value) sessionDurations.push(parseFloat(r.value));
+    });
+
+    var avgSess = sessionDurations.length > 0
+      ? Math.round(sessionDurations.reduce(function(a,b){return a+b;}, 0) / sessionDurations.length)
+      : 0;
+
+    document.getElementById('kpiSessions').textContent = sessions.size;
+    document.getElementById('kpiVisitors').textContent = visitors.size;
+    document.getElementById('kpiAvgSession').textContent = avgSess > 0 ? avgSess : '—';
+    document.getElementById('kpiCollections').textContent = collOpens;
+    document.getElementById('kpiArtworks').textContent = artFocuses;
+    document.getElementById('kpiEggs').textContent = eggs;
+  });
+}
+
+function loadCollections() {
+  var df = dateFilter();
+  var params = 'select=collection,session_id,value&event=eq.collection_open&collection=not.is.null' + (df ? '&' + df : '') + '&limit=5000';
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    var map = {};
+    rows.forEach(function(r) {
+      if (!map[r.collection]) map[r.collection] = { opens: 0, sessions: new Set(), durations: [] };
+      map[r.collection].opens++;
+      map[r.collection].sessions.add(r.session_id);
+    });
+    // Get close events for duration
+    var params2 = 'select=collection,value&event=eq.collection_close&collection=not.is.null' + (df ? '&' + df : '') + '&limit=5000';
+    fetchTable('ack_events', params2).then(function(closeRows) {
+      if (Array.isArray(closeRows)) {
+        closeRows.forEach(function(r) {
+          if (map[r.collection] && r.value) map[r.collection].durations.push(parseFloat(r.value));
+        });
+      }
+      var sorted = Object.keys(map).sort(function(a,b) { return map[b].opens - map[a].opens; });
+      var tbody = document.querySelector('#tableCollections tbody');
+      tbody.innerHTML = sorted.slice(0, 20).map(function(name) {
+        var d = map[name];
+        var avgDur = d.durations.length > 0 ? Math.round(d.durations.reduce(function(a,b){return a+b;},0)/d.durations.length) + 's' : '—';
+        return '<tr><td class="gold">' + name + '</td><td class="num">' + d.opens + '</td><td class="num">' + d.sessions.size + '</td><td class="num">' + avgDur + '</td></tr>';
+      }).join('');
+    });
+  });
+}
+
+function loadArtworks() {
+  var df = dateFilter();
+  var params = 'select=collection,artwork,session_id,value&event=eq.artwork_focus&artwork=not.is.null' + (df ? '&' + df : '') + '&limit=5000';
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    var map = {};
+    rows.forEach(function(r) {
+      var key = r.artwork + '|||' + r.collection;
+      if (!map[key]) map[key] = { artwork: r.artwork, collection: r.collection, count: 0, sessions: new Set(), durations: [] };
+      map[key].count++;
+      map[key].sessions.add(r.session_id);
+      if (r.value) map[key].durations.push(parseFloat(r.value));
+    });
+    var sorted = Object.values(map).sort(function(a,b) { return b.count - a.count; });
+    var tbody = document.querySelector('#tableArtworks tbody');
+    tbody.innerHTML = sorted.slice(0, 20).map(function(d) {
+      var avgSec = d.durations.length > 0 ? Math.round(d.durations.reduce(function(a,b){return a+b;},0)/d.durations.length) + 's' : '—';
+      return '<tr><td class="gold">' + d.artwork + '</td><td>' + (d.collection||'') + '</td><td class="num">' + d.count + '</td><td class="num">' + avgSec + '</td></tr>';
+    }).join('');
+  });
+}
+
+function loadReferrers() {
+  var df = dateFilter();
+  var params = 'select=referrer,session_id&event=eq.page_load' + (df ? '&' + df : '') + '&limit=5000';
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    var map = {};
+    rows.forEach(function(r) {
+      var src = r.referrer || 'direct';
+      try { src = new URL(src).hostname; } catch(e) {}
+      if (!map[src]) map[src] = new Set();
+      map[src].add(r.session_id);
+    });
+    var sorted = Object.keys(map).sort(function(a,b) { return map[b].size - map[a].size; });
+    var tbody = document.querySelector('#tableReferrers tbody');
+    tbody.innerHTML = sorted.slice(0, 15).map(function(src) {
+      return '<tr><td>' + src + '</td><td class="num">' + map[src].size + '</td></tr>';
+    }).join('');
+  });
+}
+
+function loadDevices() {
+  var df = dateFilter();
+  var params = 'select=device,browser,os,session_id&event=eq.page_load' + (df ? '&' + df : '') + '&limit=5000';
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    var map = {};
+    rows.forEach(function(r) {
+      var key = (r.device||'?') + '|' + (r.browser||'?') + '|' + (r.os||'?');
+      if (!map[key]) map[key] = { device: r.device, browser: r.browser, os: r.os, sessions: new Set() };
+      map[key].sessions.add(r.session_id);
+    });
+    var sorted = Object.values(map).sort(function(a,b) { return b.sessions.size - a.sessions.size; });
+    var tbody = document.querySelector('#tableDevices tbody');
+    tbody.innerHTML = sorted.slice(0, 15).map(function(d) {
+      return '<tr><td>' + (d.device||'') + '</td><td>' + (d.browser||'') + '</td><td>' + (d.os||'') + '</td><td class="num">' + d.sessions.size + '</td></tr>';
+    }).join('');
+  });
+}
+
+function loadSessions() {
+  var df = dateFilter();
+  var params = 'select=session_id,event,value,created_at' + (df ? '&' + df : '') + '&order=created_at.desc&limit=5000';
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    var map = {};
+    rows.forEach(function(r) {
+      if (!map[r.session_id]) map[r.session_id] = { arrived: r.created_at, events: 0, collections: 0, artworks: 0, duration: 0 };
+      var s = map[r.session_id];
+      s.events++;
+      if (r.created_at < s.arrived) s.arrived = r.created_at;
+      if (r.event === 'collection_open') s.collections++;
+      if (r.event === 'artwork_focus') s.artworks++;
+      if (r.event === 'session_end' && r.value) s.duration = Math.round(parseFloat(r.value));
+    });
+    var sorted = Object.values(map).sort(function(a,b) { return b.arrived > a.arrived ? 1 : -1; });
+    var tbody = document.querySelector('#tableSessions tbody');
+    tbody.innerHTML = sorted.slice(0, 25).map(function(s) {
+      var t = new Date(s.arrived);
+      var timeStr = t.toLocaleDateString() + ' ' + t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      return '<tr><td>' + timeStr + '</td><td class="num">' + (s.duration ? s.duration + 's' : '—') + '</td><td class="num">' + s.events + '</td><td class="num">' + s.collections + '</td><td class="num">' + s.artworks + '</td></tr>';
+    }).join('');
+  });
+}
+
+function loadEggs() {
+  var df = dateFilter();
+  var params = 'select=detail,session_id,created_at&event=eq.easter_egg' + (df ? '&' + df : '') + '&limit=1000';
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    var map = {};
+    rows.forEach(function(r) {
+      if (!map[r.detail]) map[r.detail] = { count: 0, sessions: new Set(), first: r.created_at };
+      map[r.detail].count++;
+      map[r.detail].sessions.add(r.session_id);
+      if (r.created_at < map[r.detail].first) map[r.detail].first = r.created_at;
+    });
+    var sorted = Object.keys(map).sort(function(a,b) { return map[b].count - map[a].count; });
+    var tbody = document.querySelector('#tableEggs tbody');
+    tbody.innerHTML = sorted.map(function(name) {
+      var d = map[name];
+      var t = new Date(d.first);
+      return '<tr><td class="gold">' + name + '</td><td class="num">' + d.count + '</td><td class="num">' + d.sessions.size + '</td><td>' + t.toLocaleDateString() + '</td></tr>';
+    }).join('');
+  });
+}
+
+function loadRaw() {
+  var df = dateFilter();
+  var params = 'select=created_at,event,collection,artwork,detail,value,device' + (df ? '&' + df : '') + '&order=created_at.desc&limit=50';
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    var tbody = document.querySelector('#tableRaw tbody');
+    tbody.innerHTML = rows.map(function(r) {
+      var t = new Date(r.created_at);
+      var timeStr = t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      return '<tr><td>' + timeStr + '</td><td class="gold">' + r.event + '</td><td>' + (r.collection||'') + '</td><td>' + (r.artwork||'') + '</td><td>' + (r.detail||'') + '</td><td class="num">' + (r.value!==null ? r.value : '') + '</td><td>' + (r.device||'') + '</td></tr>';
+    }).join('');
+  });
+}
+</script>
+</body>
+</html>
