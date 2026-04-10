@@ -37925,8 +37925,9 @@
         _flush();
       });
 
-      // ── Track page load ──
+      // ── Track page load (flush immediately so first event doesn't wait 5s) ──
       _track('page_load');
+      setTimeout(_flush, 500);
 
       // ── Track scroll depth (on home/vortex page) ──
       var _scrollThrottled = false;
