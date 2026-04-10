@@ -24501,7 +24501,7 @@
             ${physicalPrintLine}
             <div class="node-info-line">
               <div class="node-info-label">Collection</div>
-              <div class="node-info-value">${_displayColName}</div>
+              <div class="node-info-value"><a href="#" class="collection-link" data-collection-name="${_displayColName}" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(220,150,50,0.25);transition:all 0.3s ease;cursor:pointer;" onmouseover="this.style.color='rgba(220,150,50,0.9)';this.style.borderBottomColor='rgba(220,150,50,0.6)'" onmouseout="this.style.color='inherit';this.style.borderBottomColor='rgba(220,150,50,0.25)'">${_displayColName}</a></div>
             </div>
             <div class="node-info-line">
               <div class="node-info-label">Artist</div>
@@ -24540,6 +24540,28 @@
             const panel = infoPanel.querySelector(`.coa-info-tabpanel[data-coa-panel="${tab.dataset.coaTab}"]`);
             if (panel) panel.classList.add('active');
           });
+        });
+      }
+
+      // ── Collection link — click to navigate to that collection ──
+      const _colLink = infoPanel.querySelector('.collection-link');
+      if (_colLink) {
+        _colLink.addEventListener('click', function(ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          const targetName = this.dataset.collectionName;
+          // Find collection index by name
+          let targetIdx = -1;
+          for (let ci = 0; ci < COLLECTIONS.length; ci++) {
+            if (COLLECTIONS[ci].name === targetName) { targetIdx = ci; break; }
+          }
+          if (targetIdx === -1) return;
+          // Exit focus mode first, then navigate to collection
+          if (typeof exitFocusMode === 'function') exitFocusMode();
+          setTimeout(function() {
+            if (targetIdx === currentCollectionIndex) return; // already viewing this collection
+            openDetail(targetIdx);
+          }, 400);
         });
       }
 
