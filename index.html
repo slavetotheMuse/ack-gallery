@@ -3389,6 +3389,35 @@
       transition: opacity 0.4s ease;
     }
 
+    /* ── My Bags: Full Set Holder stamp badge node ── */
+    .bags-fullset-badge {
+      cursor: default !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: 6px;
+      box-shadow: none !important;
+      overflow: visible;
+    }
+    .bags-fullset-badge .node-preview {
+      background: transparent !important;
+    }
+    .bags-fullset-badge .node-preview img {
+      object-fit: contain !important;
+      filter: drop-shadow(0 0 10px rgba(255,200,50,0.25)) drop-shadow(0 0 25px rgba(255,180,30,0.1));
+    }
+    .bags-fullset-badge .node-title-tag {
+      font-size: 0.38rem !important;
+      color: rgba(255,200,50,0.7) !important;
+      letter-spacing: 0.12em;
+    }
+    .bags-fullset-badge .node-focus-hint { display: none !important; }
+    .bags-fullset-badge .node-port { display: none !important; }
+    .bags-fullset-badge .node-frame-ticks { display: none !important; }
+    .node-graph-inner.focus-mode .bags-fullset-badge {
+      opacity: 0 !important;
+      transition: opacity 0.4s ease;
+    }
+
     /* ── Servant frame (focus only) ── */
     .servant-frame-svg {
       position: absolute;
@@ -16917,6 +16946,10 @@
                   if (_circusBoost && (artworks[idx].title || '').toLowerCase() === 'circus elephant') {
                     w = Math.round(cardW * 1.5);
                   }
+                  // Full Set Holder badge: slightly smaller than regular art
+                  if (artworks[idx] && artworks[idx]._isBadge) {
+                    w = Math.round(cardW * 0.72);
+                  }
                   const h = Math.round(w * ar);
                   cards.push({ idx, w, h, ar });
                 });
@@ -19781,6 +19814,12 @@
             if (bagNode.classList.contains('info-card-node')) return;
             const bagArt = collection.artworks[bagIdx];
             if (!bagArt || !bagArt._sourceCollection) return;
+            // ── Full Set Holder badge: apply special styling, skip frame ──
+            if (bagArt._isBadge) {
+              bagNode.classList.add('bags-fullset-badge');
+              bagNode.dataset.isBadge = 'true';
+              return;
+            }
             const srcCol = bagArt._sourceCollection;
             const _applyBagFrame = () => {
               const preview = bagNode.querySelector('.node-preview');
@@ -21164,8 +21203,9 @@
     function handleNodeClick(e, node, inner, collectionIndex, artworkIndex) {
       e.stopPropagation();
 
-      // Info cards are non-interactive — no focus view
+      // Info cards and badge nodes are non-interactive — no focus view
       if (node.classList.contains('info-card-node')) return;
+      if (node.classList.contains('bags-fullset-badge')) return;
 
       // If already in focus mode, clicking the focused artwork opens full-res in new tab
       // On mobile: skip full-res open — touch is reserved for swipe between artworks
@@ -24373,6 +24413,8 @@
 
       const collection = COLLECTIONS[collectionIndex];
       const artwork = collection.artworks[artworkIndex];
+      // Track currently selected edition's tokenId (mutated by edition picker)
+      var _currentEditionTokenId = artwork.tokenId;
       // Resolve display name — for My Bags clones, show the source collection
       const _displayColName = (artwork && artwork._sourceCollection) ? artwork._sourceCollection : collection.name;
 
@@ -24621,6 +24663,8 @@
           function _rcpSelectEdition(num) {
             const ed = artwork.editions.find(function(e) { return e.num === num; });
             if (!ed) return;
+            // Track current edition's tokenId for collector lookups
+            _currentEditionTokenId = ed.tokenId;
             _rcpBadge.dataset.current = num;
             // Update badge label
             var numLabel = document.getElementById('rcpEditionNumLabel');
@@ -24671,6 +24715,27 @@
                 _liveDiv.innerHTML = sections.length > 0 ? sections.join('') : '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.42rem;color:rgba(220,150,50,0.2);letter-spacing:0.06em;">on-chain ✓</div>';
               }).catch(function() { _liveDiv.innerHTML = ''; });
             }
+            // ── Update PCB left ticker token # (handles both 'token #' and 'Token #' formats) ──
+            var leftTicker = document.querySelector('#masterNode .pcb-ticker.left .pcb-ticker-inner');
+            if (leftTicker) {
+              var tokenLines = leftTicker.querySelectorAll('.pcb-ticker-line');
+              tokenLines.forEach(function(line) {
+                var t = line.textContent.toLowerCase();
+                if (t.indexOf('token #') === 0) {
+                  // Preserve original casing
+                  line.textContent = line.textContent.charAt(0) === 'T' ? 'Token #' + ed.tokenId : 'token #' + ed.tokenId;
+                }
+              });
+            }
+            // ── Close any open collector popup so stale data isn't shown ──
+            var existingCollector = document.getElementById('collectorNode');
+            var existingCollectorWire = document.getElementById('collectorWireSvg');
+            if (existingCollector) { existingCollector.remove(); }
+            if (existingCollectorWire) { existingCollectorWire.remove(); }
+            var existingCollectors = document.getElementById('collectorsPopup');
+            var existingCollectorsWire = document.getElementById('collectorsWireSvg');
+            if (existingCollectors) { existingCollectors.remove(); }
+            if (existingCollectorsWire) { existingCollectorsWire.remove(); }
           }
 
           function _rcpSwapMedia(ed) {
@@ -24885,8 +24950,9 @@
           ev.stopPropagation();
           ACK_SFX.micro();
           // Check if this is an ERC-1155 edition — use multi-collector popup
+          // Use _currentEditionTokenId so switching editions shows the correct collector
           if (_collectorLink.dataset.edition === 'true') {
-            _buildCollectorsPopupGlobal(artwork.contract || collection.contract, artwork.tokenId, infoPanel, artwork.tokenIds);
+            _buildCollectorsPopupGlobal(artwork.contract || collection.contract, _currentEditionTokenId, infoPanel, artwork.tokenIds);
             return;
           }
           // Toggle — if already showing, remove it
@@ -25183,16 +25249,16 @@
 
           // ── ERC-1155: Multi-collector popup — delegates to global function ──
           const _buildCollectorsPopup = () => {
-            _buildCollectorsPopupGlobal(collection.contract, artwork.tokenId, infoPanel, artwork.tokenIds);
+            _buildCollectorsPopupGlobal(collection.contract, _currentEditionTokenId, infoPanel, artwork.tokenIds);
           };
 
           // ── Resolve owner: for editions just show COLLECTORS link, for 1-of-1 resolve single owner ──
           if (_collectorLink.dataset.edition === 'true') {
             // ERC-1155 editions: no single owner display, just the clickable COLLECTORS link
             _collectorLink.textContent = '> COLLECTORS';
-          } else if (ACK_CHAIN.hasKey() && _artContract && artwork.tokenId !== undefined) {
+          } else if (ACK_CHAIN.hasKey() && _artContract && _currentEditionTokenId !== undefined) {
             _collectorLink.textContent = '> LOADING...';
-            ACK_CHAIN.getOwners(_artContract, artwork.tokenId).then(function(data) {
+            ACK_CHAIN.getOwners(_artContract, _currentEditionTokenId).then(function(data) {
               const liveOwner = (data && data.owners && data.owners[0]) ? data.owners[0] : _collectorName;
               _collectorLink.textContent = '> COLLECTOR';
               _buildCollectorPopup(liveOwner || _collectorName);
@@ -36054,6 +36120,9 @@
                 if (!_tokenMatch && art.tokenIds) {
                   _tokenMatch = art.tokenIds.indexOf(nftTokenId) !== -1;
                 }
+                if (!_tokenMatch && art.editions) {
+                  _tokenMatch = art.editions.some(function(ed) { return parseInt(ed.tokenId) === nftTokenId; });
+                }
                 if (_tokenMatch || art.title === nftTitle) {
                   var clone = Object.assign({}, art);
                   clone._sourceCollection = col.name;
@@ -36094,6 +36163,39 @@
           var aiB = b._sourceArtworkIndex !== undefined ? b._sourceArtworkIndex : 999;
           return aiA - aiB;
         });
+
+        // ── Full Set Holder badge detection ──
+        // Check if collector owns all 10 Color Studies and/or pale blue death
+        (function() {
+          var _csNames = ['Pollen','Algae','Asphalt','Blue','Brick','Coral','Dark Red Death','Electric Gray','Royalty','Stardust'];
+          var _ownedCS = {};
+          var _hasPBD = false;
+          bagsArtworks.forEach(function(ba) {
+            if (ba._sourceCollection !== 'The Great Color Study') return;
+            if (_csNames.indexOf(ba.title) !== -1) _ownedCS[ba.title] = true;
+            if (ba.title === 'pale blue death (a color study)') _hasPBD = true;
+          });
+          var _csCount = Object.keys(_ownedCS).length;
+          var _hasFullCS = _csCount === 10;
+
+          if (_hasFullCS) {
+            // Find insertion point: right after the last Color Study artwork
+            var _lastCSIdx = -1;
+            for (var bi = 0; bi < bagsArtworks.length; bi++) {
+              if (bagsArtworks[bi]._sourceCollection === 'The Great Color Study') _lastCSIdx = bi;
+            }
+            if (_lastCSIdx !== -1) {
+              var badgeEntry = {
+                title: _hasPBD ? 'Full Set + PBD Holder' : 'Full Set Holder',
+                image: _hasPBD ? 'pbdfullsetholder.png' : 'fullsetholder.png',
+                _sourceCollection: 'The Great Color Study',
+                _isBadge: true,
+                _badgeType: _hasPBD ? 'pbd_full_set' : 'full_set'
+              };
+              bagsArtworks.splice(_lastCSIdx + 1, 0, badgeEntry);
+            }
+          }
+        })();
 
         // If wallet holds nothing by ACK, show a friendly empty state
         if (bagsArtworks.length === 0) {
