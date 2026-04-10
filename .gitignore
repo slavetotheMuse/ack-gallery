@@ -25,7 +25,7 @@ but_wait.gif
 but_wait_resized.gif
 curation_of_saints.jpg
 foryourgirl.gif
-selfreflect.gif
+/selfreflect.gif
 servant_muse.mp4
 starsfell.png
 tinman.jpg
@@ -103,3 +103,5 @@ right_click_print/final assets/**/*.mp4
 starrynights/elephants.jpg
 starrynights/elephantssmall.png
 starrynights/elephantssmallnew.png
+.vercel
+.env*.local

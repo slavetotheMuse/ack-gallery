@@ -1,0 +1,122 @@
+# === OS junk ===
+.DS_Store
+Icon*
+Thumbs.db
+
+# === Backups ===
+index_backup_*.html
+
+# === Large non-web formats ===
+*.MOV
+*.mov
+*.tif
+*.tiff
+*.psd
+
+# === Root-level large files ===
+/1.Wicked.gif
+/aerialscrew_sprite.png
+/backgroundtest.png
+/but_wait.gif
+/but_wait_resized.gif
+/curation_of_saints.jpg
+/curation_of_saints_animated.mp4
+/foryourgirl.gif
+/selfreflect.gif
+/servant_muse.mp4
+/starsfell.png
+/tinman.jpg
+/voidengine.gif
+/pollen.gif
+
+# === ACK Editions full-res ===
+ackeditions_gallery/aerial_screw.gif
+ackeditions_gallery/burntoredeem.png
+ackeditions_gallery/circus_elephant.gif
+ackeditions_gallery/exodus.gif
+ackeditions_gallery/lisan.gif
+ackeditions_gallery/majestic_white_elephant.gif
+ackeditions_gallery/ngmi_bottle.gif
+ackeditions_gallery/pink_elephant_on_parade.gif
+ackeditions_gallery/skelekart.gif
+ackeditions_gallery/Specchio_Vortice.gif
+ackeditions_gallery/void_engine.gif
+ackeditions_gallery/wagmi_bottle.gif
+
+# === ACKstract full-res originals ===
+ackstract/starsfell.png
+ackstract/boywithmuse.png
+ackstract/creationfull.jpeg
+ackstract/youwillnot.png
+
+# === Broken Keys full-res ===
+broken-keys/*.png
+broken-keys/*.jpg
+broken-keys/*.gif
+broken-keys/*.mp4
+
+# === Clown Party full-res ===
+clownparty/*.jpg
+clownparty/*.jpeg
+clownparty/*.png
+
+# === Color Study full-res ===
+colorstudys/pbd.gif
+
+# === Her Favorite Flowers full-res ===
+her_favorite_flowers/made_these_for_my_girl.png
+her_favorite_flowers/kissed_by_the_moonlight.jpeg
+
+# === Last Orders full-res ===
+lastorders/lastorders2023.mp4
+
+# === 1of1s full-res originals ===
+1of1s/expulsion_from_heaven/expulsion_from_heaven.jpeg
+1of1s/riddikulus/riddikulus.mp4
+1of1s/relativity/relativity.jpeg
+
+# === Opepen full-res ===
+opepen/*.png
+
+# === Piano Blossoms full-res + raw photos ===
+piano_blossoms/flower_demons/Flower_Demons.jpg
+piano_blossoms/golden_afternoon/Golden_Afternoon.jpg
+piano_blossoms/interblossom/interblossom.png
+piano_blossoms/muse_blossoms/Muse_blossoms.jpg
+piano_blossoms/self_portrait_in_the_garden_of_the_Muse/self_portrait_in_the_garden_of_the_Muse.jpg
+piano_blossoms/self_portrait_in_the_garden_of_the_Muse/self_portrait_physical.png
+piano_blossoms/self_portrait_in_the_garden_of_the_Muse/self_portrait_physical_new.png
+piano_blossoms/wonderland/Wonderland.jpg
+piano_blossoms/wonderland/wonderland.png
+piano_blossoms/tempted/tempted.jpg
+piano_blossoms/tempted/temptedredddd.png
+piano_blossoms/tempted/ack_avant_tempted.mp4
+piano_blossoms/pianoblossoms_carnegie.png
+piano_blossoms/IMG_*.jpeg
+piano_blossoms/IMG_*.MOV
+
+# === Right Click Print full-res (108MB+ each) ===
+right_click_print/rcp.mp4
+right_click_print/final assets/**/*.mp4
+
+# === SuperRare full-res originals ===
+superrare/butwait/butwait_fullres.gif
+superrare/6942/6942_fullres.png
+superrare/6942/asset%*
+superrare/all time high on centauri/asset%*
+superrare/alltimehigh/alltimehigh.mp4
+superrare/ctrlaltgen/1080rcp.mp4
+superrare/ctrlaltgen/ctrl.png
+
+# === Starry Nights large originals ===
+starrynights/elephants.jpg
+starrynights/elephantssmall.png
+starrynights/elephantssmallnew.png
+
+# === Warothy full-res (focus versions in warothy-focus/ are kept) ===
+warothy/*.gif
+!warothy/web/
+
+# === Build artifacts ===
+.vercel
+.env*.local

@@ -6690,6 +6690,13 @@
         narration: "",
         audio: '',
         artworks: {}
+      },
+
+      // ── NOTXCOPY ──────────────────────────────────────
+      'notxcopy': {
+        narration: "notxcopy was an alt account a.c.k. used to release a few artworks anonymously to see if people would recognize his \"style\".\n\nsure enough, people did.",
+        audio: '',
+        artworks: {}
       }
     };
 
@@ -8653,7 +8660,15 @@
           artworks: [
             {title:"made these for your girl",image:"foryourgirl/web/foryourgirl_web.gif",fullRes:"https://raw2.seadn.io/ethereum/0xd78afb925a21f87fa0e35abae2aead3f70ced96b/1d61e472b7f942c7b89e689e11857f75.gif",edition:"Edition of 39",description:"PROOF Grails Season II. 39 owners. Highest sale: $16,079."}
         ]},
-        { name: "notxcopy", image: "selfreflect_thumb.jpg", omDisabled: true, artworks: [] },
+        { name: "notxcopy", image: "notxcopy/selfreflect_web.jpg",
+          wallLayout: true,
+          description: "Two works released anonymously on SuperRare under the alias notxcopy.",
+          lore: "notxcopy was an alt account a.c.k. used to release a few artworks anonymously to see if people would recognize his \"style\".\n\nsure enough, people did.",
+          token: "ERC-721", chain: "Ethereum", contract: "0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0",
+          artworks: [
+            {title:"a moment of self reflection",image:"notxcopy/selfreflect_web.jpg",fullRes:"https://ipfs.pixura.io/ipfs/QmbFB9oaEV82qFzUxm2y6dwE2FzTBz9cjXDkjNjtvZNaFs/selfreflect.gif",webGif:"notxcopy/selfreflect.gif",superrare:"https://dev-mainnet.superrare.co/artwork/eth/0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0/36696",tokenId:36696,description:"don't trust it",collector:"CuratedVault",medium:"Image (GIF)"},
+            {title:"mona with green eyes",image:"notxcopy/monagreeneyes_web.jpg",fullRes:"https://arweave.net/JE49aSXkiUYZFOzMGa9rapJdDjTZDwjjRnM3KUiTaJo",webGif:"notxcopy/monagreeneyes.gif",superrare:"https://dev-mainnet.superrare.co/artwork/eth/0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0/33363",tokenId:33363,description:"if you stare long enough she will inherit your soul",collector:"vincentvandough",medium:"Image (GIF)"}
+        ]},
         { name: "ACKek", image: "https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/0bbf510c1386d63e21a473910f6f1efd.png?w=500", omDisabled: true, artworks: [
             {title:"William Shakespepe",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/857b5e4d57e7a2f8a13a7e859dff3236.png?w=500"},
             {title:"the social assassin",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/5edb04a6ecbaddec0209243c1ebbe54c.png?w=500"},
@@ -8882,6 +8897,13 @@
         refW: 2560, refH: 1294,
         nodes: [
           { x: 1037, y: 294, w: 477 },   // 0  made these for your girl
+        ]
+      },
+      "notxcopy": {
+        refW: 2560, refH: 1294,
+        nodes: [
+          { x: 1277, y: 475, w: 548 },   // 0  a moment of self reflection
+          { x: 729,  y: 243, w: 441 },   // 1  mona with green eyes
         ]
       },
       "Warothys": {
@@ -9731,19 +9753,24 @@
     }
 
     function init() {
-      // ── Pre-intro whispers page → vortex intro (mobile gets warning popup overlaid) ──
-      _showWhispersPreIntro(function() {
-        if (_isRealMobile) {
-          runIntroSequence();
-          // Show warning as a popup overlay after user has been on vortex for a few seconds
-          setTimeout(function() { _showMobileWarningOverlay(); }, 3500);
-          // Start periodic roast timer — first one after 2–5 min
-          var _firstRoast = (120 + Math.floor(Math.random() * 180)) * 1000;
-          setTimeout(_showMobileRoast, _firstRoast);
-        } else {
-          runIntroSequence();
-        }
-      });
+      // ── Skip whispers pre-intro — land straight on vortex field ──
+      // Remove whispers overlay if present
+      var _wpi = document.getElementById('whispersPreIntro');
+      if (_wpi) _wpi.remove();
+      // Hide the intro overlay's initial state
+      var _introOvr = document.getElementById('intro-overlay');
+      if (_introOvr) _introOvr.classList.add('fade-out');
+      // Mark intro as seen so it never replays
+      try { localStorage.setItem('ack_intro_seen', Date.now().toString()); } catch(e) {}
+
+      if (_isRealMobile) {
+        runIntroSequence();
+        setTimeout(function() { _showMobileWarningOverlay(); }, 3500);
+        var _firstRoast = (120 + Math.floor(Math.random() * 180)) * 1000;
+        setTimeout(_showMobileRoast, _firstRoast);
+      } else {
+        runIntroSequence();
+      }
       renderCollections();
       initScrollScaling();
       buildPersistentGrid();
@@ -12507,6 +12534,10 @@
         '6529': '🔢',
         'Noble Gallery': '🏛',
         'ACKek': '🐸',
+        'Starry Nights': '🌙',
+        'SuperRare': '⭐',
+        'Opepen': '◎',
+        'notxcopy': '🔄',
       };
 
       // Build collection rows in Object Manager
