@@ -437,12 +437,12 @@
       var cfg = alienGlowConfig[bgKey];
       if(cfg.bgType === 'file'){
         var bgB64 = getB64('background', cfg.bgFile);
-        if(bgB64) images.push('<image href="'+bgB64+'" width="24" height="24" style="image-rendering:pixelated"/>');
+        if(bgB64) images.push('<image href="'+bgB64+'" width="24" height="24" style="image-rendering:-webkit-optimize-contrast;image-rendering:pixelated"/>');
       } else if(cfg.bgType === 'solid'){
         images.push('<rect width="24" height="24" fill="rgb('+cfg.bgColor.join(',')+')"/>');
       } else if(cfg.bgType === 'vignette'){
         var vigB64 = vignetteCache[bgKey];
-        if(vigB64) images.push('<image href="'+vigB64+'" width="24" height="24" style="image-rendering:pixelated"/>');
+        if(vigB64) images.push('<image href="'+vigB64+'" width="24" height="24" style="image-rendering:-webkit-optimize-contrast;image-rendering:pixelated"/>');
       }
       var gc = cfg.glowColor;
       defs = '<defs><filter id="genglow" x="-80%" y="-80%" width="260%" height="260%">' +
@@ -456,7 +456,7 @@
       for(var i=0;i<co.length;i++){
         var f=ts[co[i]]; if(f==='none') continue;
         var b = getB64(co[i], f);
-        if(b) layerImgs.push('<image href="'+b+'" width="24" height="24" style="image-rendering:pixelated"/>');
+        if(b) layerImgs.push('<image href="'+b+'" width="24" height="24" style="image-rendering:-webkit-optimize-contrast;image-rendering:pixelated"/>');
       }
       images.push('<g filter="url(#genglow)">'+layerImgs.join('')+'</g>');
       images.push('<g>'+layerImgs.join('')+'</g>');
@@ -466,12 +466,12 @@
         var f2 = ts[order[j]];
         if(f2 === 'none') continue;
         var b2 = getB64(order[j], f2);
-        if(b2) images.push('<image href="'+b2+'" width="24" height="24" style="image-rendering:pixelated"/>');
+        if(b2) images.push('<image href="'+b2+'" width="24" height="24" style="image-rendering:-webkit-optimize-contrast;image-rendering:pixelated"/>');
       }
     }
 
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="480" height="480" ' +
-      'style="image-rendering:pixelated;image-rendering:crisp-edges;-webkit-image-rendering:pixelated">' +
+      'style="image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;image-rendering:pixelated">' +
       defs + images.join('') + '</svg>';
   }
 
