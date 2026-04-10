@@ -5986,6 +5986,7 @@
     </svg>
   </div>
 
+  <!-- There is a door at the edge of everything. Those who find it call it /void -->
   <!-- Intro Overlay -->
   <div id="intro-overlay">
     <div class="viewport-grid" id="viewportGrid"></div>
@@ -9207,6 +9208,8 @@
       'The longer you stare, the more it consumes you',
       // Artist identity
       'AlphaCentauriKid', 'ACK', 'α Centauri',
+      // Breadcrumbs
+      'the void remembers', '10,000 ÷ 1',
     ];
 
     // ── Mobile: skip intro entirely, show brief message, then gallery ──
@@ -36516,6 +36519,20 @@
         }
         list.appendChild(row);
       });
+
+      // Ghost row — the void
+      var _voidRow = document.createElement('div');
+      _voidRow.className = 'obj-row obj-row-collection';
+      _voidRow.style.opacity = '0.06';
+      _voidRow.style.transition = 'opacity 0.8s ease';
+      _voidRow.innerHTML = '<div class="obj-indent"></div>' +
+        '<div class="obj-icon" style="color:#333;">⧫</div>' +
+        '<div class="obj-label" style="color:#444;">void</div>' +
+        '<div class="obj-controls"><div class="obj-eye">·</div><div class="obj-check">·</div></div>';
+      _voidRow.addEventListener('mouseenter', function() { _voidRow.style.opacity = '0.3'; });
+      _voidRow.addEventListener('mouseleave', function() { _voidRow.style.opacity = '0.06'; });
+      _voidRow.addEventListener('click', function() { window.location.href = '/void/'; });
+      list.appendChild(_voidRow);
     }
 
     // Close catalog OM when clicking outside
@@ -37510,6 +37527,35 @@
     }
 
     init();
+
+    // ── The void ──
+    (function() {
+      // Layer 3: console breadcrumb — visible to anyone who opens dev tools
+      setTimeout(function() {
+        console.log('%c⧫ the void remembers ⧫', 'color:#3a3a3a;font-size:11px;font-style:italic;');
+      }, 12000);
+
+      // Layer 4: hidden glyph in the vortex — bottom-right corner, nearly invisible
+      var _v = document.createElement('div');
+      _v.style.cssText = 'position:fixed;bottom:8px;right:12px;z-index:10000;font-size:9px;' +
+        'color:rgba(100,100,100,0.08);letter-spacing:0.3em;cursor:default;' +
+        'font-family:monospace;transition:color 1.2s ease;user-select:none;';
+      _v.textContent = '⧫';
+      _v.title = '';
+      _v.addEventListener('mouseenter', function() {
+        _v.style.color = 'rgba(180,140,80,0.25)';
+        _v.textContent = '/void';
+      });
+      _v.addEventListener('mouseleave', function() {
+        _v.style.color = 'rgba(100,100,100,0.08)';
+        _v.textContent = '⧫';
+      });
+      _v.addEventListener('click', function() {
+        window.location.href = '/void/';
+      });
+      var _introOv = document.getElementById('intro-overlay');
+      if (_introOv) _introOv.appendChild(_v);
+    })();
 
     // ═══════════════════════════════════════════════════════════════
     // ██  PERFORMANCE OPTIMIZATIONS — GIF FREEZING & RAF CONTROL  ██

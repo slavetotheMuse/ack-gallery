@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10K PFP — Argonauts</title>
+<link rel="stylesheet" href="generator_embed.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@300;400&display=swap');
+
+:root {
+  --parchment: #f0e8d8;
+  --parchment-dark: #e4d9c4;
+  --parchment-deep: #d8cab0;
+  --ink: #1a1610;
+  --ink-light: #3d352a;
+  --ink-mid: #6b5d4d;
+  --ink-faint: #9c8d7a;
+  --gold: #dfb747;
+  --gold-dark: #be8c25;
+  --gold-light: #f0d06a;
+  --gold-pale: #f5e6b8;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: 'EB Garamond', 'Georgia', serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Parchment texture */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* ═══ NAV (minimal) ═══ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 14px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(240,232,216,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--gold-pale);
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-brand img { height: 32px; opacity: 0.8; }
+.nav-brand span {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+.nav-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.nav-meta .token-num { color: var(--gold-dark); }
+
+/* ═══ TAB BAR (top-center, below nav) ═══ */
+.tab-bar {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 950;
+  display: flex;
+  gap: 0;
+  background: rgba(245, 238, 220, 0.92);
+  border: 1px solid var(--parchment-deep);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(40, 30, 10, 0.07);
+}
+.tab-bar button {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--ink-faint);
+  border: none;
+  padding: 12px 26px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.tab-bar button + button { border-left: 1px solid var(--parchment-deep); }
+.tab-bar button:hover { color: var(--ink); }
+.tab-bar button.active {
+  color: var(--gold-dark);
+  background: rgba(223, 183, 71, 0.08);
+}
+
+/* ═══ PANES ═══ */
+.pane { display: none; }
+.pane.active { display: block; }
+
+/* ═══ STAGE — centered in viewport ═══ */
+.stage {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 110px 40px 60px;
+}
+.stage-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 72px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ═══ EXPLAINER CARD (left) ═══ */
+.explainer {
+  flex: 0 0 340px;
+  max-width: 340px;
+  padding: 30px 32px;
+  background: rgba(245, 238, 220, 0.72);
+  border: 1px solid var(--parchment-deep);
+  box-shadow: 0 2px 22px rgba(60, 45, 15, 0.05);
+  position: relative;
+}
+.explainer::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 22px; height: 22px;
+  border-top: 2px solid var(--gold);
+  border-left: 2px solid var(--gold);
+  opacity: 0.55;
+}
+.explainer::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 22px; height: 22px;
+  border-bottom: 2px solid var(--gold);
+  border-right: 2px solid var(--gold);
+  opacity: 0.55;
+}
+.explainer .eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+  margin-bottom: 10px;
+}
+.explainer h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.explainer .title-italic {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--ink-mid);
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+}
+.explainer .rule {
+  width: 46px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.55;
+  margin-bottom: 18px;
+}
+.explainer p {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink-light);
+  margin-bottom: 12px;
+}
+.explainer p em {
+  color: var(--gold-dark);
+  font-style: italic;
+}
+.explainer p:last-of-type { margin-bottom: 0; }
+
+.explainer .pillars {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--parchment-deep);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.explainer .pillar {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.explainer .pillar .k {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.explainer .pillar .v {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  color: var(--gold-dark);
+  font-weight: 600;
+}
+
+/* ═══ FRAME (right) ═══ */
+.frame-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.frame {
+  width: 480px;
+  height: 480px;
+  position: relative;
+  padding: 6px;
+  background: linear-gradient(135deg,
+    rgba(223,183,71,0.45) 0%,
+    rgba(200,180,140,0.12) 25%,
+    rgba(223,183,71,0.28) 50%,
+    rgba(200,180,140,0.12) 75%,
+    rgba(223,183,71,0.45) 100%);
+  box-shadow: 0 6px 36px rgba(0,0,0,0.08), 0 0 80px rgba(223,183,71,0.07);
+}
+.frame::before, .frame::after {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.6;
+}
+.frame::before { top: -3px; left: -3px; border-width: 2px 0 0 2px; }
+.frame::after  { bottom: -3px; right: -3px; border-width: 0 2px 2px 0; }
+.frame .inner {
+  width: 100%;
+  height: 100%;
+  background: var(--parchment-dark);
+  position: relative;
+  overflow: hidden;
+}
+.frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  -webkit-image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+.frame-meta {
+  margin-top: 22px;
+  display: flex;
+  gap: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.frame-meta span.label { color: var(--ink-faint); }
+.frame-meta span.val { color: var(--ink-mid); margin-left: 6px; }
+
+/* ═══ EXHIBITION PANE ═══ */
+.exhibition-wrap {
+  padding: 140px 32px 80px;
+  max-width: 1600px;
+  margin: 0 auto;
+  text-align: center;
+}
+.exhibition-wrap .eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+.exhibition-wrap h2 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.exhibition-wrap .sub {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  color: var(--ink-mid);
+  font-size: 14px;
+  margin-bottom: 36px;
+}
+.crew-wall {
+  display: grid;
+  /* columns set inline by JS so rows * cols always fills perfectly */
+  grid-template-columns: repeat(9, 1fr);
+  gap: 16px;
+  margin: 0 auto 32px;
+  max-width: 1400px;
+}
+.crew-cell {
+  aspect-ratio: 1;
+  background: var(--parchment-dark);
+  border: 1px solid var(--parchment-deep);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+.crew-cell:hover {
+  transform: translateY(-3px);
+  border-color: var(--gold);
+}
+.crew-cell img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  -webkit-image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+.crew-controls {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+.crew-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--ink-mid);
+  border: 1px solid var(--parchment-deep);
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.crew-btn:hover { color: var(--gold-dark); border-color: var(--gold); }
+
+/* ═══ GENERATOR PANE — constrains the overlay inline ═══
+   Important: the base .gen-overlay uses `inset: 0` — we override
+   top explicitly (inset: auto would clobber !important top). */
+body.gen-inline .gen-overlay {
+  position: fixed !important;
+  top: 120px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 90 !important;
+}
+body.gen-inline .gen-overlay .gen-nav { display: none !important; }
+body.gen-inline .gen-overlay .gen-fixed-close { display: none !important; }
+body.gen-inline .gen-overlay .gen-header {
+  padding: 34px 24px 20px !important;
+}
+/* Center the generator like the 1-of-1 — narrower container */
+body.gen-inline .gen-overlay .gen-container {
+  max-width: 1060px !important;
+  margin: 0 auto !important;
+  padding: 16px 32px 60px !important;
+}
+body.gen-inline .gen-overlay .gen-main {
+  gap: 48px !important;
+}
+
+/* ═══ ENTRANCE FADE ═══ */
+.explainer, .frame-wrap {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: reveal 1.6s cubic-bezier(.2,.6,.2,1) forwards;
+}
+.frame-wrap { animation-delay: 0.15s; }
+.explainer { animation-delay: 0.45s; }
+@keyframes reveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 1060px) {
+  .stage-grid { gap: 48px; }
+  .explainer { flex: 0 0 320px; max-width: 320px; padding: 26px 28px; }
+}
+@media (max-width: 920px) {
+  .stage { padding: 100px 20px 60px; }
+  .stage-grid {
+    flex-direction: column;
+    gap: 36px;
+  }
+  .explainer {
+    flex: 0 1 auto;
+    max-width: 520px;
+    width: 100%;
+    order: 2;
+  }
+  .frame-wrap { order: 1; }
+  .frame {
+    width: min(90vw, 480px);
+    height: min(90vw, 480px);
+  }
+}
+@media (max-width: 520px) {
+  nav { padding: 12px 18px; }
+  .nav-brand span { font-size: 13px; letter-spacing: 4px; }
+  .nav-meta { font-size: 9px; letter-spacing: 2px; }
+  .explainer h1 { font-size: 22px; letter-spacing: 3px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <img src="ack_logo.png" alt="ACK">
+    <span>Argonauts</span>
+  </div>
+  <div class="nav-meta">The One &middot; <span class="token-num">#0</span></div>
+</nav>
+
+<div class="tab-bar" id="tabBar">
+  <button class="active" data-tab="one">1 of 1</button>
+  <button data-tab="exhibition">Exhibition</button>
+  <button data-tab="generator">Generator</button>
+</div>
+
+<section class="pane active" id="paneOne">
+<main class="stage">
+  <div class="stage-grid">
+
+    <aside class="explainer">
+      <div class="eyebrow">Edition 1 of 1</div>
+      <h1>The 10K PFP</h1>
+      <div class="title-italic">a.c.k. &mdash; 2026</div>
+      <div class="rule"></div>
+      <p>
+        A single ERC-721 whose image is all 10,000 possible Argonauts
+        collapsed into one. 37 traits across 7 layers cycle forever via
+        pure SVG/SMIL keyframes &mdash; <em>no HTML, no JavaScript, no
+        IPFS.</em> The entire animation lives inside the contract as
+        bytecode. What renders in your wallet is exactly what renders
+        here.
+      </p>
+      <p>
+        The collector controls the tempo. A <em>setSpeed(1..4)</em>
+        call toggles between four pre-rendered speed slots, callable
+        by the artist or the current holder. Every bid placed on the
+        initial auction is recorded as a <em>witness</em> &mdash; the
+        token's description updates live and crystallizes forever with
+        the winning bid at settlement.
+      </p>
+
+      <div class="pillars">
+        <div class="pillar"><span class="k">Storage</span><span class="v">100% on-chain</span></div>
+        <div class="pillar"><span class="k">Speed</span><span class="v">Collector toggled</span></div>
+        <div class="pillar"><span class="k">Witnesses</span><span class="v">Live metadata</span></div>
+      </div>
+    </aside>
+
+    <div class="frame-wrap">
+      <div class="frame">
+        <div class="inner">
+          <img src="tenkpfp.svg" alt="10K PFP">
+        </div>
+      </div>
+      <div class="frame-meta">
+        <div><span class="label">Token</span><span class="val">#0</span></div>
+        <div><span class="label">Format</span><span class="val">SVG / SMIL</span></div>
+        <div><span class="label">Chain</span><span class="val">Ethereum</span></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</section>
+
+<section class="pane" id="paneExhibition">
+  <div class="exhibition-wrap">
+    <div class="eyebrow">The 9,999 That Weren't</div>
+    <h2>Exhibition</h2>
+    <div class="sub">A momentary capture of what could have been</div>
+    <div class="crew-wall" id="crewWall"></div>
+    <div class="crew-controls">
+      <button class="crew-btn" id="reshuffleBtn">Reshuffle</button>
+    </div>
+  </div>
+</section>
+
+<section class="pane" id="paneGenerator">
+  <!-- generator_embed mounts its own overlay on demand -->
+</section>
+
+<script src="trait_data_24.js"></script>
+<script src="generator_embed.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var tabs  = document.querySelectorAll('#tabBar button');
+  var panes = {
+    one:        document.getElementById('paneOne'),
+    exhibition: document.getElementById('paneExhibition'),
+    generator:  document.getElementById('paneGenerator')
+  };
+  var CREW_ROWS = 5;   // always exactly 5 full rows, no orphans
+  var crewBuilt = false;
+  var currentCols = 0;
+
+  // Cols scale with viewport so the grid fills cleanly at any size.
+  function pickCols(){
+    var w = window.innerWidth;
+    if (w >= 1500) return 9;
+    if (w >= 1300) return 8;
+    if (w >= 1100) return 7;
+    if (w >= 900)  return 6;
+    if (w >= 720)  return 5;
+    if (w >= 560)  return 4;
+    if (w >= 400)  return 3;
+    return 2;
+  }
+
+  function showTab(name){
+    tabs.forEach(function(b){
+      b.classList.toggle('active', b.dataset.tab === name);
+    });
+    Object.keys(panes).forEach(function(k){
+      panes[k].classList.toggle('active', k === name);
+    });
+
+    if (name === 'exhibition' && !crewBuilt) buildCrew();
+
+    if (name === 'generator') {
+      document.body.classList.add('gen-inline');
+      if (typeof window.openGenerator === 'function') window.openGenerator();
+    } else {
+      document.body.classList.remove('gen-inline');
+      if (typeof window.closeGenerator === 'function') {
+        var ov = document.getElementById('genOverlay');
+        if (ov && ov.classList.contains('show')) window.closeGenerator();
+      }
+    }
+  }
+
+  tabs.forEach(function(b){
+    b.addEventListener('click', function(){ showTab(b.dataset.tab); });
+  });
+
+  // Set of data URIs currently on the wall — no two cells may be
+  // the same argonaut. Re-rolls on conflict (bounded attempts).
+  var seenSvgs = null;
+
+  function uniqueSvg(){
+    var tries = 0;
+    var uri;
+    do {
+      uri = window.genRandomSVG();
+      tries++;
+    } while (seenSvgs.has(uri) && tries < 40);
+    seenSvgs.add(uri);
+    return uri;
+  }
+
+  function buildCrew(){
+    if (typeof window.genRandomSVG !== 'function') {
+      // generator not yet ready — try again shortly
+      setTimeout(buildCrew, 80);
+      return;
+    }
+    var cols = pickCols();
+    var size = cols * CREW_ROWS;
+    var wall = document.getElementById('crewWall');
+    wall.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+    wall.innerHTML = '';
+    seenSvgs = new Set();
+    for (var i = 0; i < size; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'crew-cell';
+      var img = document.createElement('img');
+      img.src = uniqueSvg();
+      img.alt = 'Argonaut';
+      cell.appendChild(img);
+      // Click to re-roll this cell to a different unique argonaut
+      cell.addEventListener('click', (function(im){
+        return function(){
+          seenSvgs.delete(im.src);
+          im.src = uniqueSvg();
+        };
+      })(img));
+      wall.appendChild(cell);
+    }
+    currentCols = cols;
+    crewBuilt = true;
+  }
+
+  document.getElementById('reshuffleBtn').addEventListener('click', function(){
+    crewBuilt = false;
+    buildCrew();
+  });
+
+  // Rebuild only when the column count actually changes, to keep
+  // resize behavior calm and avoid reshuffling on every pixel tick.
+  var resizeTimer = null;
+  window.addEventListener('resize', function(){
+    if (!crewBuilt) return;
+    if (!panes.exhibition.classList.contains('active')) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){
+      if (pickCols() !== currentCols) buildCrew();
+    }, 120);
+  });
+
+  // ESC returns to 1-of-1 from generator or exhibition
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !document.getElementById('paneOne').classList.contains('active')) {
+      showTab('one');
+    }
+  });
+
+  // ───────────────────────── ON-CHAIN LOADER ─────────────────────────
+  // Pulls the real tokenURI(0) from the deployed TenKPFP contract and
+  // swaps the local preview SVG for the on-chain render. Until mainnet
+  // deploy, CONTRACT_ADDRESS is null and this is a no-op — the static
+  // local tenkpfp.svg stays in place so the page never looks broken.
+  //
+  // States:
+  //   1. CONTRACT_ADDRESS null        → keep local SVG (dev / pre-deploy)
+  //   2. eth_call reverts              → keep local SVG ("Awaiting reveal")
+  //   3. eth_call succeeds              → decode + inject real on-chain SVG
+  //   4. RPC fails / network down       → keep local SVG
+  //
+  // TODO (mainnet day): paste deployed TenKPFP address into CONTRACT_ADDRESS.
+  // TODO (mainnet day): optionally swap RPC_URL for your own provider.
+  var CONTRACT_ADDRESS = null;                       // e.g. '0xABCD…'
+  var RPC_URL          = 'https://cloudflare-eth.com'; // public fallback
+  var TOKEN_ID         = 0;
+
+  function loadOnChain(){
+    if (!CONTRACT_ADDRESS) return; // dev / pre-deploy: keep local preview
+
+    // eth_call: tokenURI(uint256) selector = 0xc87b56dd
+    // abi-encoded arg = 32-byte big-endian tokenId
+    var selector = '0xc87b56dd';
+    var arg = TOKEN_ID.toString(16).padStart(64, '0');
+    var data = selector + arg;
+
+    var body = {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'eth_call',
+      params: [
+        { to: CONTRACT_ADDRESS, data: data },
+        'latest'
+      ]
+    };
+
+    fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res || res.error || !res.result || res.result === '0x') {
+        // State 2: pre-reveal (tokenURI reverts) — keep local preview
+        return;
+      }
+      var uri = decodeAbiString(res.result);
+      if (!uri) return;
+
+      // tokenURI is `data:application/json;base64,...` — decode JSON,
+      // pull .image (which is itself `data:image/svg+xml;base64,...`),
+      // and drop it directly into the frame as an <img> src.
+      var meta = null;
+      try {
+        if (uri.indexOf('data:application/json;base64,') === 0) {
+          meta = JSON.parse(atob(uri.slice(29)));
+        } else if (uri.indexOf('data:application/json,') === 0) {
+          meta = JSON.parse(decodeURIComponent(uri.slice(23)));
+        }
+      } catch (e) { return; }
+      if (!meta || !meta.image) return;
+
+      var frameImg = document.querySelector('.frame-wrap .inner img');
+      if (frameImg) frameImg.src = meta.image;
+    })
+    .catch(function(){ /* State 4: network fail — keep local preview */ });
+  }
+
+  // Minimal ABI string decoder for a single `string` return value.
+  // Input is hex (with 0x prefix): 32 bytes offset, 32 bytes length,
+  // then UTF-8 bytes padded to 32.
+  function decodeAbiString(hex){
+    if (!hex || hex.length < 2 + 64 + 64) return '';
+    var h = hex.slice(2);
+    var len = parseInt(h.slice(64, 128), 16);
+    if (!len) return '';
+    var bytesHex = h.slice(128, 128 + len * 2);
+    var out = '';
+    for (var i = 0; i < bytesHex.length; i += 2) {
+      out += String.fromCharCode(parseInt(bytesHex.substr(i, 2), 16));
+    }
+    try { return decodeURIComponent(escape(out)); } catch (e) { return out; }
+  }
+
+  loadOnChain();
+})();
+</script>
+
+</body>
+</html>
