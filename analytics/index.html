@@ -80,7 +80,7 @@
     text-transform: uppercase;
     color: rgba(220,150,50,0.6);
   }
-  .dash-header .refresh-btn {
+  .dash-header .refresh-btn, .dash-header .export-btn {
     padding: 6px 16px;
     background: rgba(220,150,50,0.1);
     border: 1px solid rgba(220,150,50,0.2);
@@ -93,7 +93,31 @@
     border-radius: 2px;
     transition: all 0.3s;
   }
-  .dash-header .refresh-btn:hover { background: rgba(220,150,50,0.2); }
+  .dash-header .refresh-btn:hover, .dash-header .export-btn:hover { background: rgba(220,150,50,0.2); }
+  .dash-header-actions { display: flex; gap: 8px; }
+
+  /* Active viewers pulse */
+  .active-viewers {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: rgba(40,180,80,0.06);
+    border: 1px solid rgba(40,180,80,0.15);
+    border-radius: 4px;
+    font-size: 11px;
+    color: rgba(40,180,80,0.8);
+  }
+  .active-viewers .pulse {
+    width: 8px; height: 8px;
+    background: rgba(40,180,80,0.9);
+    border-radius: 50%;
+    animation: livePulse 2s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+  .active-viewers .count { font-weight: 700; font-size: 16px; }
+  .active-viewers .label { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: rgba(40,180,80,0.5); }
   .dash-period {
     display: flex;
     gap: 8px;
@@ -216,7 +240,15 @@
 <div class="dashboard" id="dashboard">
   <div class="dash-header">
     <h1>ACK Gallery — Analytics</h1>
-    <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+    <div class="dash-header-actions">
+      <div class="active-viewers" id="activeViewers" style="display:none;">
+        <div class="pulse"></div>
+        <span class="count" id="activeCount">0</span>
+        <span class="label">viewing now</span>
+      </div>
+      <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+      <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+    </div>
   </div>
   <div class="dash-period" id="periodBar">
     <button data-days="1">Today</button>
@@ -340,7 +372,15 @@ function loadAll() {
   loadSessions();
   loadEggs();
   loadRaw();
+  loadActiveViewers();
 }
+
+// Auto-refresh active viewers every 30 seconds
+setInterval(function() {
+  if (API_KEY && document.getElementById('dashboard').classList.contains('active')) {
+    loadActiveViewers();
+  }
+}, 30000);
 
 function loadKPIs() {
   var df = dateFilter();
@@ -511,6 +551,59 @@ function loadEggs() {
       var t = new Date(d.first);
       return '<tr><td class="gold">' + name + '</td><td class="num">' + d.count + '</td><td class="num">' + d.sessions.size + '</td><td>' + t.toLocaleDateString() + '</td></tr>';
     }).join('');
+  });
+}
+
+// ── Export all events as CSV ──
+function exportCSV() {
+  var df = dateFilter();
+  var params = 'select=created_at,session_id,visitor_id,event,collection,artwork,detail,value,referrer,utm_source,utm_medium,utm_campaign,device,browser,os,screen_w,screen_h,viewport_w,viewport_h,language,path' + (df ? '&' + df : '') + '&order=created_at.desc&limit=50000';
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows) || rows.length === 0) { alert('No data to export'); return; }
+    var headers = Object.keys(rows[0]);
+    var csv = headers.join(',') + '\n';
+    rows.forEach(function(r) {
+      csv += headers.map(function(h) {
+        var v = r[h];
+        if (v === null || v === undefined) return '';
+        v = String(v).replace(/"/g, '""');
+        if (v.indexOf(',') !== -1 || v.indexOf('"') !== -1 || v.indexOf('\n') !== -1) v = '"' + v + '"';
+        return v;
+      }).join(',') + '\n';
+    });
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var periodLabel = DAYS === 0 ? 'all-time' : DAYS + 'days';
+    a.download = 'ack-analytics-' + periodLabel + '-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+// ── Active Viewers (sessions in last 5 min with no session_end) ──
+function loadActiveViewers() {
+  var fiveAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  // Get all page_loads in last 5 minutes
+  var loadParams = 'select=session_id&event=eq.page_load&created_at=gte.' + fiveAgo + '&limit=500';
+  // Get all session_ends in last 5 minutes
+  var endParams = 'select=session_id&event=eq.session_end&created_at=gte.' + fiveAgo + '&limit=500';
+  Promise.all([
+    fetchTable('ack_events', loadParams),
+    fetchTable('ack_events', endParams)
+  ]).then(function(results) {
+    var loads = results[0], ends = results[1];
+    if (!Array.isArray(loads)) loads = [];
+    if (!Array.isArray(ends)) ends = [];
+    var activeSessions = new Set();
+    loads.forEach(function(r) { activeSessions.add(r.session_id); });
+    ends.forEach(function(r) { activeSessions.delete(r.session_id); });
+    var count = activeSessions.size;
+    var el = document.getElementById('activeViewers');
+    var countEl = document.getElementById('activeCount');
+    countEl.textContent = count;
+    el.style.display = count > 0 ? 'flex' : 'none';
   });
 }
 

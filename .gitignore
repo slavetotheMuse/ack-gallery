@@ -103,5 +103,56 @@ right_click_print/final assets/**/*.mp4
 starrynights/elephants.jpg
 starrynights/elephantssmall.png
 starrynights/elephantssmallnew.png
+# === Backup HTML files ===
+index.backup*.html
+index-backup*.html
+runner_game_backup_*.html
+
+# === Prototype / test pages ===
+alien_picker.html
+blue_alternatives.html
+yellow_alternatives.html
+mint_simulation.html
+onchain_*.html
+radioactive_preview.html
+trait_naming.html
+curation_of_saints_enhanced.html
+
+# === Generated thumbnails (not referenced in code) ===
+ackeditions_gallery/web/*_thumb.jpg
+ackpfp/*_thumb.jpg
+warothy/web/*_thumb.jpg
+notxcopy/*_thumb.jpg
+superrare/**/*_thumb.jpg
+foryourgirl/web/*_thumb.jpg
+colorstudys/*_thumb.jpg
+!colorstudys/thumbs/
+
+# === Stray root-level thumbs ===
+pollen_thumb.jpg
+selfreflect_thumb.jpg
+starsfell_thumb.jpg
+voidengine_thumb.jpg
+wicked_thumb.jpg
+
+# === Misc junk ===
+*.pages
+Screenshot*.png
+error.txt
+deployment-url.txt
+fullsetholder.png
+pbdfullsetholder.png
+legophone.png
+womanrider.png
+curation_of_saints_animated.mp4
+curation_of_saints_web.jpg
+
+# === Scratch / working images ===
+ackstract/Hurley_International-Logo.wine.png
+ackstract/boywithmuse.png
+ackstract/creation_small.avif
+ackstract/creationfull.jpeg
+ackstract/youwillnot.png
+
 .vercel
 .env*.local
