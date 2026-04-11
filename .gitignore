@@ -84,6 +84,11 @@ warothy/*.gif
 # Keep web/ subfolder (re-include)
 !warothy/web/
 
+# Heart You full-res (10-87MB each from Arweave)
+heartyou/*.gif
+# Keep web/ subfolder (re-include)
+!heartyou/web/
+
 # Color Study full-res
 colorstudys/pbd.gif
 
