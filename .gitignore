@@ -145,6 +145,11 @@ starsfell_thumb.jpg
 voidengine_thumb.jpg
 wicked_thumb.jpg
 
+# === Her Favorite Flowers (full-res too large, web/ versions deployed) ===
+her_favorite_flowers/*.png
+her_favorite_flowers/*.jpeg
+!her_favorite_flowers/web/
+
 # === Misc junk ===
 *.pages
 Screenshot*.png
