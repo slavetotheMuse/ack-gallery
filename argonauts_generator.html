@@ -10,8 +10,8 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
 
-        body {
-            background:#080604;
+        html, body {
+            background:#030008;
             color:#d4c8a8;
             font-family:'EB Garamond', serif;
             line-height:1.6;
@@ -19,28 +19,29 @@
             overflow-x:hidden;
         }
 
-        /* Subtle parchment texture overlay */
+        /* Animated nebula background */
+        #nebulaCanvas {
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            z-index:0; pointer-events:none;
+        }
+
+        /* Vignette overlay */
         body::before {
             content:'';
             position:fixed; top:0; left:0; width:100%; height:100%;
-            background:
-                radial-gradient(ellipse at 20% 50%, rgba(160,120,50,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 30%, rgba(100,80,40,0.03) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 90%, rgba(80,60,30,0.05) 0%, transparent 40%);
+            background: radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(3,0,8,0.85) 100%);
             pointer-events:none;
-            z-index:0;
+            z-index:1;
         }
 
-        /* Greek key border pattern (top) */
+        /* Top accent line */
         body::after {
             content:'';
-            position:fixed; top:0; left:0; width:100%; height:4px;
-            background: repeating-linear-gradient(90deg,
-                #8b7340 0px, #8b7340 8px,
-                transparent 8px, transparent 12px,
-                #8b7340 12px, #8b7340 16px,
-                transparent 16px, transparent 24px
-            );
+            position:fixed; top:0; left:0; width:100%; height:2px;
+            background: linear-gradient(90deg,
+                transparent 0%, rgba(200,168,76,0.6) 20%,
+                rgba(200,168,76,0.8) 50%,
+                rgba(200,168,76,0.6) 80%, transparent 100%);
             z-index:100;
         }
 
@@ -49,7 +50,7 @@
             margin:0 auto;
             padding:30px 20px;
             position:relative;
-            z-index:1;
+            z-index:2;
         }
 
         header {
@@ -59,24 +60,24 @@
 
         .subtitle {
             font-style:italic;
-            color:rgba(180,160,120,0.5);
+            color:rgba(200,160,120,0.35);
             font-size:0.95em;
             margin-bottom:6px;
-            letter-spacing:1px;
+            letter-spacing:2px;
         }
 
         h1 {
             font-size:2.8em;
             font-weight:700;
             color:#c9a84c;
-            letter-spacing:4px;
-            text-shadow: 0 0 40px rgba(180,140,50,0.15);
+            letter-spacing:6px;
+            text-shadow: 0 0 60px rgba(200,168,76,0.2), 0 0 120px rgba(200,168,76,0.08);
             margin-bottom:4px;
         }
 
         .tagline {
             font-style:italic;
-            color:rgba(180,160,120,0.35);
+            color:rgba(180,160,120,0.25);
             font-size:0.85em;
             letter-spacing:2px;
         }
@@ -101,7 +102,7 @@
         }
 
         .stat-label {
-            color:rgba(180,160,120,0.4);
+            color:rgba(180,140,200,0.35);
             font-size:0.8em;
             text-transform:uppercase;
             letter-spacing:1px;
@@ -112,6 +113,7 @@
             color:#c9a84c;
             font-weight:600;
             font-size:1.2em;
+            text-shadow: 0 0 20px rgba(200,168,76,0.15);
         }
 
         /* ── Main Layout ── */
@@ -133,24 +135,21 @@
         .preview-frame {
             position:relative;
             margin-bottom:20px;
-            padding:12px;
-            background: linear-gradient(135deg, #1a1508 0%, #0d0b06 50%, #1a1508 100%);
-            border:2px solid rgba(140,110,50,0.4);
+            padding:3px;
+            background: linear-gradient(135deg,
+                rgba(200,168,76,0.3) 0%, rgba(80,60,30,0.1) 25%,
+                rgba(200,168,76,0.15) 50%, rgba(80,60,30,0.1) 75%,
+                rgba(200,168,76,0.3) 100%);
             box-shadow:
-                0 0 30px rgba(140,110,50,0.08),
-                inset 0 0 30px rgba(0,0,0,0.5);
+                0 0 50px rgba(200,168,76,0.06),
+                0 0 100px rgba(100,50,180,0.04),
+                inset 0 0 30px rgba(0,0,0,0.3);
         }
 
-        /* Corner ornaments */
-        .preview-frame::before,
-        .preview-frame::after {
-            content:'⚜';
-            position:absolute;
-            color:rgba(140,110,50,0.25);
-            font-size:18px;
+        .preview-inner {
+            background: #060410;
+            padding: 10px;
         }
-        .preview-frame::before { top:2px; left:6px; }
-        .preview-frame::after { bottom:2px; right:6px; }
 
         #previewCanvas {
             display:block;
@@ -163,12 +162,14 @@
         .traits-display {
             width:100%;
             max-width:424px;
-            background:rgba(15,12,8,0.8);
-            border:1px solid rgba(140,110,50,0.2);
+            background:rgba(8,4,16,0.8);
+            border:1px solid rgba(200,168,76,0.12);
+            border-left:2px solid rgba(200,168,76,0.25);
             padding:16px 20px;
             margin-bottom:20px;
             font-family:'JetBrains Mono', monospace;
             font-size:0.82em;
+            backdrop-filter: blur(8px);
         }
 
         .trait-row {
@@ -176,13 +177,13 @@
             gap:12px;
             margin-bottom:6px;
             padding-bottom:6px;
-            border-bottom:1px solid rgba(140,110,50,0.08);
+            border-bottom:1px solid rgba(200,168,76,0.05);
         }
 
         .trait-row:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
 
         .trait-label {
-            color:rgba(180,150,80,0.7);
+            color:rgba(180,140,200,0.5);
             min-width:100px;
             font-weight:600;
             font-size:0.9em;
@@ -201,9 +202,9 @@
 
         button {
             padding:11px 22px;
-            background:transparent;
+            background:rgba(200,168,76,0.04);
             color:#b49a50;
-            border:1px solid rgba(140,110,50,0.4);
+            border:1px solid rgba(200,168,76,0.25);
             font-family:'EB Garamond', serif;
             font-size:0.95em;
             cursor:pointer;
@@ -211,21 +212,23 @@
             font-weight:700;
             letter-spacing:2px;
             text-transform:uppercase;
+            backdrop-filter: blur(4px);
         }
 
         button:hover {
-            background:rgba(140,110,50,0.15);
-            border-color:rgba(180,150,80,0.6);
+            background:rgba(200,168,76,0.12);
+            border-color:rgba(200,168,76,0.5);
             color:#c9a84c;
-            box-shadow:0 0 20px rgba(140,110,50,0.1);
+            box-shadow:0 0 30px rgba(200,168,76,0.08), 0 0 60px rgba(100,50,180,0.04);
         }
 
         button:active { transform:scale(0.98); }
 
         button.active {
-            background:rgba(140,110,50,0.2);
+            background:rgba(200,168,76,0.15);
             border-color:#c9a84c;
             color:#c9a84c;
+            box-shadow:0 0 20px rgba(200,168,76,0.12);
         }
 
         /* ── Controls (trait selectors) ── */
@@ -236,13 +239,14 @@
         }
 
         .trait-selector {
-            border:1px solid rgba(140,110,50,0.15);
-            background:rgba(15,12,8,0.6);
+            border:1px solid rgba(200,168,76,0.08);
+            background:rgba(8,4,16,0.6);
             padding:14px;
+            backdrop-filter: blur(4px);
         }
 
         .trait-category-title {
-            color:rgba(180,150,80,0.7);
+            color:rgba(200,168,76,0.5);
             font-weight:700;
             margin-bottom:10px;
             font-size:1.05em;
@@ -267,8 +271,8 @@
         .thumbnail-img {
             width:62px;
             height:62px;
-            background:rgba(10,8,5,0.8);
-            border:2px solid rgba(100,80,40,0.25);
+            background:rgba(6,2,12,0.9);
+            border:2px solid rgba(200,168,76,0.12);
             display:flex;
             align-items:center;
             justify-content:center;
@@ -290,23 +294,24 @@
             font-family:'JetBrains Mono', monospace;
             font-size:0.65em;
             text-align:center;
-            color:rgba(180,160,120,0.35);
+            color:rgba(180,140,200,0.25);
             word-break:break-word;
             width:100%;
         }
 
         .trait-thumbnail:hover .thumbnail-img {
-            border-color:rgba(180,150,80,0.5);
+            border-color:rgba(200,168,76,0.4);
+            box-shadow:0 0 12px rgba(200,168,76,0.06);
         }
 
         .trait-thumbnail.selected .thumbnail-img {
             border:2px solid #c9a84c;
-            background:rgba(140,110,50,0.1);
-            box-shadow:0 0 12px rgba(140,110,50,0.15);
+            background:rgba(200,168,76,0.06);
+            box-shadow:0 0 16px rgba(200,168,76,0.12);
         }
 
         .trait-thumbnail.selected .thumbnail-label {
-            color:rgba(200,170,80,0.6);
+            color:rgba(200,168,76,0.5);
         }
 
         /* ── Gallery Mode ── */
@@ -318,17 +323,17 @@
         }
 
         .gallery-item {
-            border:1px solid rgba(140,110,50,0.15);
+            border:1px solid rgba(200,168,76,0.08);
             padding:8px;
-            background:rgba(15,12,8,0.6);
+            background:rgba(8,4,16,0.6);
             text-align:center;
             cursor:pointer;
             transition:all 0.3s ease;
         }
 
         .gallery-item:hover {
-            border-color:rgba(180,150,80,0.4);
-            box-shadow:0 0 20px rgba(140,110,50,0.08);
+            border-color:rgba(200,168,76,0.3);
+            box-shadow:0 0 30px rgba(200,168,76,0.06), 0 0 60px rgba(100,50,180,0.03);
         }
 
         .gallery-item canvas {
@@ -343,7 +348,7 @@
         .gallery-item-label {
             font-family:'JetBrains Mono', monospace;
             font-size:0.7em;
-            color:rgba(180,160,120,0.3);
+            color:rgba(180,140,200,0.25);
         }
 
         #galleryMode {
@@ -361,11 +366,12 @@
             font-size:1.8em;
             letter-spacing:3px;
             margin-bottom:6px;
+            text-shadow: 0 0 40px rgba(200,168,76,0.15);
         }
 
         .gallery-header .gallery-sub {
             font-style:italic;
-            color:rgba(180,160,120,0.3);
+            color:rgba(180,140,200,0.25);
             font-size:0.85em;
             margin-bottom:18px;
         }
@@ -396,6 +402,7 @@
     </style>
 </head>
 <body>
+    <canvas id="nebulaCanvas"></canvas>
     <div class="container">
         <header>
             <div class="subtitle">forged in the fires of Colchis</div>
@@ -422,7 +429,9 @@
         <div class="main-content" id="generatorMode">
             <div class="preview-section">
                 <div class="preview-frame">
-                    <canvas id="previewCanvas" width="400" height="400"></canvas>
+                    <div class="preview-inner">
+                        <canvas id="previewCanvas" width="400" height="400"></canvas>
+                    </div>
                 </div>
 
                 <div class="traits-display" id="traitsDisplay">
@@ -517,12 +526,12 @@
         var traits = {
             background: {
                 folder: '../../argonauts_new/background/',
-                files: ['BLUSH.png','OFFWHITE.png','PUNKBLUE.png','yellow_new.png','ancient.png','blackgrey.png'],
+                files: ['BLUSH.png','OFFWHITE.png','PUNKBLUE.png','yellow_new.png','ancient.png','blackgrey.png','bubblegum.png','MuseGreen.png','alien_ice_prism.png','alien_wide_violet.png'],
                 optional: false
             },
             body: {
-                folder: '../../argonauts_new/BODY/',
-                files: ['alienfixed.png','ape.png','common bone.png','coral.png','flowers2.png','gold.png','petrified.png','radioactive.png','silver.png'],
+                folder: '../../argonauts_new/BODY/new_body/',
+                files: ['alienfixed.png','common_bone_2.png','common_bone.png','coral.png','flowers_bare.png','flowers_with.png','gold.png','petrified.png','radioactive.png','silver.png'],
                 optional: false
             },
             hoodie: {
@@ -537,7 +546,7 @@
             },
             eyes: {
                 folder: '../../argonauts_new/eyes/',
-                files: ['3D GLASSES.png','Alien_eyepatch.png','Glasses.png','LASER.png','cozomo.png','cyberglasses.png','eyepatch.png','shades.png','solarglow.png'],
+                files: ['3D GLASSES.png','Alien_eyepatch.png','Glasses.png','cozomo.png','digital_frames.png','eyepatch.png','shades.png'],
                 optional: true
             },
             mouth: {
@@ -547,7 +556,7 @@
             },
             head: {
                 folder: '../../argonauts_new/Head/',
-                files: ['Orange Beanie.png','bandana.png','cowboy.png','golden_fleece.png','headband.png','purphat.png'],
+                files: ['Orange Beanie.png','bandana.png','golden_fleece.png','headband.png','purphat.png'],
                 optional: true
             }
         };
@@ -656,9 +665,63 @@
             renderPreview();
         }
 
+        // ── Alien background pool ──
+        var alienBackgrounds = [
+            'alien_ice_prism_pink','alien_violet_pink','alien_violet_cyan',
+            'alien_navy_pink','alien_void_pink','alien_void_blue',
+            'alien_void_cyan','alien_vig_navy_blue','alien_vig_void_teal'
+        ];
+        var alienBgWeights = [12, 14, 14, 10, 12, 12, 12, 7, 7];
+        var normalBackgrounds = ['BLUSH.png','OFFWHITE.png','PUNKBLUE.png','yellow_new.png','ancient.png','blackgrey.png','bubblegum.png','MuseGreen.png'];
+
+        // Glow config: { bgType, bgParam, glowColor, glowRadius, glowStrength }
+        var alienGlowConfig = {
+            'alien_ice_prism_pink':  { bgType:'file', bgFile:'alien_ice_prism.png',    glowColor:[255,140,180], glowR:14, glowS:0.5 },
+            'alien_violet_pink':     { bgType:'file', bgFile:'alien_wide_violet.png',  glowColor:[255,140,180], glowR:14, glowS:0.5 },
+            'alien_violet_cyan':     { bgType:'file', bgFile:'alien_wide_violet.png',  glowColor:[100,240,220], glowR:14, glowS:0.5 },
+            'alien_navy_pink':       { bgType:'solid', bgColor:[15,18,40],             glowColor:[255,140,180], glowR:14, glowS:0.5 },
+            'alien_void_pink':       { bgType:'solid', bgColor:[8,8,12],               glowColor:[255,140,180], glowR:14, glowS:0.5 },
+            'alien_void_blue':       { bgType:'solid', bgColor:[8,8,12],               glowColor:[120,180,255], glowR:14, glowS:0.5 },
+            'alien_void_cyan':       { bgType:'solid', bgColor:[8,8,12],               glowColor:[100,240,220], glowR:14, glowS:0.5 },
+            'alien_vig_navy_blue':   { bgType:'vignette', bgCenter:[25,30,60], bgEdge:[5,5,15],   glowColor:[120,180,255], glowR:14, glowS:0.5 },
+            'alien_vig_void_teal':   { bgType:'vignette', bgCenter:[20,20,25], bgEdge:[2,2,4],    glowColor:[80,220,200],  glowR:16, glowS:0.6 },
+        };
+
+        // Backgrounds that prohibit black hoodie
+        var alienBgNoBlackHoodie = ['alien_navy_pink','alien_vig_navy_blue','alien_vig_void_teal'];
+
+        function weightedAlienBgRoll(){
+            var total = 0;
+            for(var i=0;i<alienBgWeights.length;i++) total += alienBgWeights[i];
+            var roll = Math.random() * total, cum = 0;
+            for(var i=0;i<alienBackgrounds.length;i++){
+                cum += alienBgWeights[i];
+                if(roll < cum) return alienBackgrounds[i];
+            }
+            return alienBackgrounds[0];
+        }
+
         // ── Trait conflict rules ──
         function applyTraitRules(){
-            // Hat and hoodie are mutually exclusive
+            // Rule 0: Alien background exclusivity
+            if(currentTraits.body === 'alienfixed.png'){
+                if(alienBackgrounds.indexOf(currentTraits.background) === -1){
+                    currentTraits.background = weightedAlienBgRoll();
+                }
+            } else {
+                if(alienBackgrounds.indexOf(currentTraits.background) !== -1){
+                    currentTraits.background = weightedRoll('background');
+                    // Safety: if re-roll still landed on alien bg (shouldn't, weight 0), pick first normal
+                    if(alienBackgrounds.indexOf(currentTraits.background) !== -1){
+                        currentTraits.background = normalBackgrounds[Math.floor(Math.random()*normalBackgrounds.length)];
+                    }
+                }
+            }
+            // Rule 0b: Certain alien backgrounds prohibit black hoodie
+            if(alienBgNoBlackHoodie.indexOf(currentTraits.background) !== -1 && currentTraits.hoodie === 'Black.png'){
+                currentTraits.hoodie = 'none';
+            }
+            // Rule 1: Hat and hoodie are mutually exclusive
             if(currentTraits.hoodie !== 'none' && currentTraits.head !== 'none'){
                 if(Math.random() > 0.5){
                     currentTraits.head = 'none';
@@ -666,9 +729,67 @@
                     currentTraits.hoodie = 'none';
                 }
             }
-            // Coral body — no hoodie
+            // Rule 2: Coral body — no hoodie
             if(currentTraits.body === 'coral.png'){
                 currentTraits.hoodie = 'none';
+            }
+            // Rule 3a: Alien eyepatch is alien-exclusive — non-aliens never get it
+            if(currentTraits.body !== 'alienfixed.png' && currentTraits.eyes === 'Alien_eyepatch.png'){
+                currentTraits.eyes = 'none';
+            }
+            // Rule 3b: Aliens can't wear digital frames
+            if(currentTraits.body === 'alienfixed.png' && currentTraits.eyes === 'digital_frames.png'){
+                currentTraits.eyes = 'none';
+            }
+            // Rule 3c: Aliens can't wear any eyepatch (regular or alien) or shades
+            if(currentTraits.body === 'alienfixed.png' && (currentTraits.eyes === 'eyepatch.png' || currentTraits.eyes === 'Alien_eyepatch.png' || currentTraits.eyes === 'shades.png')){
+                currentTraits.eyes = 'none';
+            }
+            // Rule 4: Radioactive or flowers — no shades
+            if((currentTraits.body === 'radioactive.png' || currentTraits.body === 'flowers_bare.png' || currentTraits.body === 'flowers_with.png') && currentTraits.eyes === 'shades.png'){
+                currentTraits.eyes = 'none';
+            }
+            // Rule 5: Flowers — no digital frames
+            if((currentTraits.body === 'flowers_bare.png' || currentTraits.body === 'flowers_with.png') && currentTraits.eyes === 'digital_frames.png'){
+                currentTraits.eyes = 'none';
+            }
+            // Rule 6: Only gold body can have golden fleece
+            if(currentTraits.body !== 'gold.png' && currentTraits.head === 'golden_fleece.png'){
+                currentTraits.head = 'none';
+            }
+            // Rule 7: Gold or alien body — no necklace
+            if((currentTraits.body === 'gold.png' || currentTraits.body === 'alienfixed.png') && currentTraits.neck === 'gold.png'){
+                currentTraits.neck = 'none';
+            }
+            // Rule 8: Bubblegum background — no radioactive
+            if(currentTraits.background === 'bubblegum.png' && currentTraits.body === 'radioactive.png'){
+                currentTraits.body = 'common_bone.png';
+            }
+            // Rule 9a: Black background — no eyepatch ever
+            if(currentTraits.background === 'blackgrey.png' && currentTraits.eyes === 'eyepatch.png'){
+                currentTraits.eyes = 'none';
+            }
+            // Rule 9b: Black background + no clothes — no shades
+            if(currentTraits.background === 'blackgrey.png' && currentTraits.hoodie === 'none' && currentTraits.eyes === 'shades.png'){
+                currentTraits.eyes = 'none';
+            }
+            // Rule 10: Radioactive — no purple hat
+            if(currentTraits.body === 'radioactive.png' && currentTraits.head === 'purphat.png'){
+                currentTraits.head = 'none';
+            }
+            // (Rule 11 removed — cowboy hat removed from collection)
+            // Rule 12: Flowers — no beanie
+            if((currentTraits.body === 'flowers_bare.png' || currentTraits.body === 'flowers_with.png') && currentTraits.head === 'Orange Beanie.png'){
+                currentTraits.head = 'none';
+            }
+            // (Rule 13 removed — hurley hat removed from collection)
+            // Rule 14: Flowers body — swap file based on clothing
+            // flowers_bare.png = bare bones (no hat, no hoodie)
+            // flowers_with.png = wearing hat or hoodie
+            // Both display as just "flowers" to the collector
+            if(currentTraits.body === 'flowers_bare.png' || currentTraits.body === 'flowers_with.png'){
+                var hasClothing = (currentTraits.hoodie !== 'none' || (currentTraits.head !== 'none' && currentTraits.head !== 'headband.png'));
+                currentTraits.body = hasClothing ? 'flowers_with.png' : 'flowers_bare.png';
             }
         }
 
@@ -679,24 +800,36 @@
         var traitRarity = {
             // Body — type rarity (like Alien/Ape/Zombie/Human in punks)
             body: {
-                'alienfixed.png':   { weight:7,    tier:'Legendary',  color:'#00ffcc' },  // ~7/10K — rarer than punk aliens (9)
-                'radioactive.png':  { weight:24,   tier:'Mythic',     color:'#66ff66' },  // ~24/10K — like punk apes
-                'gold.png':         { weight:88,   tier:'Ultra Rare', color:'#ffd700' },  // ~88/10K — like punk zombies
-                'petrified.png':    { weight:300,  tier:'Rare',       color:'#b0a090' },
-                'flowers2.png':     { weight:500,  tier:'Uncommon+',  color:'#ff88aa' },
-                'coral.png':        { weight:800,  tier:'Uncommon',   color:'#ff7766' },
-                'silver.png':       { weight:1300, tier:'Common+',    color:'#c0c0c0' },
-                'ape.png':          { weight:2500, tier:'Common',     color:'#aa8855' },
-                'common bone.png':  { weight:4481, tier:'Base',       color:'#e0d5c0' }
+                'alienfixed.png':    { weight:7,    tier:'Legendary',  color:'#00ffcc' },
+                'radioactive.png':   { weight:24,   tier:'Mythic',     color:'#66ff66' },
+                'gold.png':          { weight:88,   tier:'Ultra Rare', color:'#ffd700' },
+                'petrified.png':     { weight:300,  tier:'Rare',       color:'#b0a090' },
+                'flowers_bare.png':  { weight:500,  tier:'Uncommon+',  color:'#ff88aa' },
+                'coral.png':         { weight:800,  tier:'Uncommon',   color:'#ff7766' },
+                'silver.png':        { weight:1300, tier:'Common+',    color:'#c0c0c0' },
+                'common_bone_2.png': { weight:2500, tier:'Common',     color:'#aa8855' },
+                'common_bone.png':   { weight:4481, tier:'Base',       color:'#e0d5c0' }
             },
             // Background — fairly even, slight variation
             background: {
-                'ancient.png':    { weight:10, tier:'Rare',    color:'#8a7a5a' },
-                'PUNKBLUE.png':   { weight:14, tier:'Uncommon', color:'#5588cc' },
-                'BLUSH.png':      { weight:16, tier:'Common',  color:'#cc8888' },
-                'yellow_new.png': { weight:18, tier:'Common',  color:'#ccaa44' },
-                'OFFWHITE.png':   { weight:20, tier:'Common',  color:'#ddd8cc' },
-                'blackgrey.png':  { weight:22, tier:'Base',    color:'#888888' }
+                'bubblegum.png':  { weight:4,  tier:'Ultra Rare', color:'#ff66aa' },
+                'yellow_new.png': { weight:6,  tier:'Rare+',      color:'#ccaa44' },
+                'blackgrey.png':  { weight:8,  tier:'Rare',       color:'#888888' },
+                'MuseGreen.png':  { weight:10, tier:'Rare',       color:'#44cc88' },
+                'ancient.png':    { weight:12, tier:'Uncommon',   color:'#8a7a5a' },
+                'PUNKBLUE.png':   { weight:16, tier:'Uncommon',   color:'#5588cc' },
+                'BLUSH.png':      { weight:20, tier:'Common',     color:'#cc8888' },
+                'OFFWHITE.png':   { weight:22, tier:'Common',     color:'#ddd8cc' },
+                // Alien-exclusive glow backgrounds (weight 0 — assigned by rule, not rolled)
+                'alien_ice_prism_pink':  { weight:0, tier:'Legendary', color:'#ffb0c8' },
+                'alien_violet_pink':     { weight:0, tier:'Legendary', color:'#ff8cb4' },
+                'alien_violet_cyan':     { weight:0, tier:'Legendary', color:'#64f0dc' },
+                'alien_navy_pink':       { weight:0, tier:'Legendary', color:'#ff8cb4' },
+                'alien_void_pink':       { weight:0, tier:'Legendary', color:'#ff8cb4' },
+                'alien_void_blue':       { weight:0, tier:'Legendary', color:'#78b4ff' },
+                'alien_void_cyan':       { weight:0, tier:'Legendary', color:'#64f0dc' },
+                'alien_vig_navy_blue':   { weight:0, tier:'Legendary', color:'#78b4ff' },
+                'alien_vig_void_teal':   { weight:0, tier:'Legendary', color:'#50dcc8' },
             },
             // Hoodie — most punks bare (~82% none)
             hoodie: {
@@ -709,18 +842,16 @@
                 'none':      { weight:880, tier:null, color:null },
                 'gold.png':  { weight:120, tier:'Uncommon', color:'#ffd700' }
             },
-            // Eyes — ~58% have no eye accessory
+            // Eyes — ~62% have no eye accessory
             eyes: {
-                'none':                 { weight:580, tier:null, color:null },
-                'shades.png':           { weight:70,  tier:'Common',     color:'#333333' },  // most common eye acc
+                'none':                 { weight:635, tier:null, color:null },
+                'shades.png':           { weight:70,  tier:'Common',     color:'#333333' },
                 'Glasses.png':          { weight:60,  tier:'Common',     color:'#8888aa' },
-                'cyberglasses.png':     { weight:55,  tier:'Common+',    color:'#44ccff' },
+                'digital_frames.png':   { weight:55,  tier:'Common+',    color:'#44ccff' },
                 'eyepatch.png':         { weight:50,  tier:'Uncommon',   color:'#554433' },
                 '3D GLASSES.png':       { weight:45,  tier:'Uncommon',   color:'#ff4444' },
-                'solarglow.png':        { weight:40,  tier:'Uncommon+',  color:'#ffcc44' },
-                'cozomo.png':           { weight:35,  tier:'Rare',       color:'#aa66dd' },
-                'LASER.png':            { weight:35,  tier:'Rare',       color:'#ff2222' },
-                'Alien_eyepatch.png':   { weight:30,  tier:'Ultra Rare', color:'#00ffcc' }   // alien-themed = rarest eye
+                'cozomo.png':           { weight:35,  tier:'Rare',       color:'#aa66dd' },  // Designer
+                'Alien_eyepatch.png':   { weight:30,  tier:'Rare',       color:'#00ffcc' }
             },
             // Mouth — ~78% have nothing (pipe is ~3% in punks)
             mouth: {
@@ -730,13 +861,12 @@
             },
             // Head — ~68% have no head accessory
             head: {
-                'none':               { weight:680, tier:null, color:null },
+                'none':               { weight:630, tier:null, color:null },
                 'headband.png':       { weight:65,  tier:'Common',     color:'#cc4444' },
                 'bandana.png':        { weight:55,  tier:'Common+',    color:'#4466aa' },
                 'Orange Beanie.png':  { weight:50,  tier:'Uncommon',   color:'#ff8833' },
-                'cowboy.png':         { weight:50,  tier:'Uncommon',   color:'#aa8855' },
                 'purphat.png':        { weight:50,  tier:'Uncommon+',  color:'#8844cc' },
-                'golden_fleece.png':  { weight:50,  tier:'Rare',       color:'#ffd700' }   // signature piece
+                'golden_fleece.png':  { weight:50,  tier:'Rare',       color:'#ffd700' }
             }
         };
 
@@ -780,27 +910,99 @@
             });
         }
 
+        // ── Glow helpers for canvas ──
+        function drawVignetteBg(ctx, center, edge){
+            var cx=200, cy=200, maxDist=Math.sqrt(cx*cx+cy*cy);
+            var imgData = ctx.createImageData(400,400);
+            for(var y=0;y<400;y++){
+                for(var x=0;x<400;x++){
+                    var dist = Math.sqrt((x-cx)*(x-cx)+(y-cy)*(y-cy));
+                    var t = Math.min(dist/maxDist, 1.0);
+                    t = Math.pow(t, 1.5);
+                    var idx = (y*400+x)*4;
+                    imgData.data[idx]   = Math.round(center[0]*(1-t)+edge[0]*t);
+                    imgData.data[idx+1] = Math.round(center[1]*(1-t)+edge[1]*t);
+                    imgData.data[idx+2] = Math.round(center[2]*(1-t)+edge[2]*t);
+                    imgData.data[idx+3] = 255;
+                }
+            }
+            ctx.putImageData(imgData,0,0);
+        }
+
         // ── Render ──
         async function renderPreview(){
             var canvas = document.getElementById('previewCanvas');
             var ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled = false;
-            ctx.fillStyle = '#080604';
-            ctx.fillRect(0,0,400,400);
 
-            var order = ['background','body','head','eyes','hoodie','neck','mouth'];
-            for(var i=0;i<order.length;i++){
-                var file = currentTraits[order[i]];
-                if(file === 'none') continue;
-                var path = traits[order[i]].folder + file;
-                var img = await loadImage(path);
-                if(img) ctx.drawImage(img,0,0,400,400);
+            var bgKey = currentTraits.background;
+            var isGlowBg = alienGlowConfig.hasOwnProperty(bgKey);
+
+            if(isGlowBg){
+                // ── Alien glow pipeline (shadow-based, no getImageData) ──
+                var cfg = alienGlowConfig[bgKey];
+
+                // 1. Draw background
+                if(cfg.bgType === 'file'){
+                    var bgPath = traits.background.folder + cfg.bgFile;
+                    var bgImg = await loadImage(bgPath);
+                    if(bgImg) ctx.drawImage(bgImg,0,0,400,400);
+                    else { ctx.fillStyle='#000'; ctx.fillRect(0,0,400,400); }
+                } else if(cfg.bgType === 'solid'){
+                    ctx.fillStyle = 'rgb('+cfg.bgColor.join(',')+')';
+                    ctx.fillRect(0,0,400,400);
+                } else if(cfg.bgType === 'vignette'){
+                    drawVignetteBg(ctx, cfg.bgCenter, cfg.bgEdge);
+                }
+
+                // 2. Composite character layers onto offscreen canvas
+                var charCanvas = document.createElement('canvas');
+                charCanvas.width=400; charCanvas.height=400;
+                var charCtx = charCanvas.getContext('2d');
+                charCtx.imageSmoothingEnabled = false;
+                var charOrder = ['body','eyes','hoodie','neck','mouth','head'];
+                for(var i=0;i<charOrder.length;i++){
+                    var file = currentTraits[charOrder[i]];
+                    if(file === 'none') continue;
+                    var path = traits[charOrder[i]].folder + file;
+                    var img = await loadImage(path);
+                    if(img) charCtx.drawImage(img,0,0,400,400);
+                }
+
+                // 3. Draw glow using canvas shadowBlur (no pixel reads needed)
+                var gc = 'rgb('+cfg.glowColor.join(',')+')';
+                ctx.save();
+                ctx.shadowColor = gc;
+                ctx.shadowBlur = cfg.glowR * 2;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                // Draw multiple passes to build up glow intensity
+                var passes = Math.ceil(cfg.glowS * 6);
+                for(var p=0; p<passes; p++){
+                    ctx.drawImage(charCanvas, 0, 0);
+                }
+                ctx.restore();
+
+                // 4. Draw character on top (clean, no shadow)
+                ctx.drawImage(charCanvas, 0, 0);
+            } else {
+                // ── Standard pipeline ──
+                ctx.fillStyle = '#080604';
+                ctx.fillRect(0,0,400,400);
+                var order = ['background','body','eyes','hoodie','neck','mouth','head'];
+                for(var i=0;i<order.length;i++){
+                    var file = currentTraits[order[i]];
+                    if(file === 'none') continue;
+                    var path = traits[order[i]].folder + file;
+                    var img = await loadImage(path);
+                    if(img) ctx.drawImage(img,0,0,400,400);
+                }
             }
             updateTraitsDisplay();
         }
 
         function updateTraitsDisplay(){
-            var friendly = function(f){ return f==='none'?'\u2014':f.replace('.png',''); };
+            var friendly = function(f){ if(f==='none') return '\u2014'; var n=f.replace('.png',''); if(n==='flowers_bare'||n==='flowers_with') n='flowers'; if(n==='digital_frames') n='digital'; if(n==='common_bone_2') n='common bone 2'; n=n.replace(/_/g,' '); return n; };
             document.getElementById('traitBackground').textContent = friendly(currentTraits.background);
             var traitIds = {
                 body:'traitBody', background:'traitBackground',
@@ -811,7 +1013,9 @@
                 var el = document.getElementById(traitIds[cat]);
                 var val = currentTraits[cat];
                 var name = friendly(val);
-                var r = traitRarity[cat] && traitRarity[cat][val];
+                // flowers2.png shares rarity with flowers.png
+                var lookupVal = (val==='flowers2.png') ? 'flowers.png' : val;
+                var r = traitRarity[cat] && traitRarity[cat][lookupVal];
                 if(r && r.tier){
                     el.textContent = name + '  [' + r.tier + ']';
                     el.style.color = r.color;
@@ -872,12 +1076,10 @@
                     mouth:weightedRoll('mouth'),
                     head:weightedRoll('head')
                 };
-                // Enforce rules — hat and hoodie mutually exclusive
-                if(ts.hoodie !== 'none' && ts.head !== 'none'){
-                    if(Math.random() > 0.5) ts.head = 'none'; else ts.hoodie = 'none';
-                }
-                // Coral body — no hoodie
-                if(ts.body === 'coral.png') ts.hoodie = 'none';
+                // Use same rule engine as the main forge
+                currentTraits = ts;
+                applyTraitRules();
+                ts = Object.assign({}, currentTraits);
 
                 await renderToCanvas(canvas, ts);
 
@@ -902,15 +1104,56 @@
 
         async function renderToCanvas(canvas, ts){
             var ctx = canvas.getContext('2d');
+            var w = canvas.width, h = canvas.height;
             ctx.imageSmoothingEnabled = false;
-            ctx.fillStyle = '#080604';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            var order = ['background','body','head','eyes','hoodie','neck','mouth'];
-            for(var i=0;i<order.length;i++){
-                var f = ts[order[i]];
-                if(f === 'none') continue;
-                var img = await loadImage(traits[order[i]].folder + f);
-                if(img) ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+            var bgKey = ts.background;
+            var isGlowBg = alienGlowConfig.hasOwnProperty(bgKey);
+
+            if(isGlowBg){
+                var cfg = alienGlowConfig[bgKey];
+                // Draw background
+                if(cfg.bgType === 'file'){
+                    var bgImg = await loadImage(traits.background.folder + cfg.bgFile);
+                    if(bgImg) ctx.drawImage(bgImg,0,0,w,h);
+                    else { ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h); }
+                } else if(cfg.bgType === 'solid'){
+                    ctx.fillStyle = 'rgb('+cfg.bgColor.join(',')+')';
+                    ctx.fillRect(0,0,w,h);
+                } else if(cfg.bgType === 'vignette'){
+                    // Simple approximation for gallery thumbnails
+                    ctx.fillStyle = 'rgb('+cfg.bgCenter.join(',')+')';
+                    ctx.fillRect(0,0,w,h);
+                }
+                // Composite character
+                var charC = document.createElement('canvas');
+                charC.width=w; charC.height=h;
+                var charX = charC.getContext('2d');
+                charX.imageSmoothingEnabled = false;
+                var co = ['body','eyes','hoodie','neck','mouth','head'];
+                for(var i=0;i<co.length;i++){
+                    var f=ts[co[i]]; if(f==='none') continue;
+                    var img = await loadImage(traits[co[i]].folder+f);
+                    if(img) charX.drawImage(img,0,0,w,h);
+                }
+                // Simplified glow for thumbnails
+                ctx.shadowColor = 'rgb('+cfg.glowColor.join(',')+')';
+                ctx.shadowBlur = cfg.glowR;
+                ctx.globalAlpha = cfg.glowS;
+                ctx.drawImage(charC,0,0);
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+                ctx.drawImage(charC,0,0);
+            } else {
+                ctx.fillStyle = '#080604';
+                ctx.fillRect(0,0,w,h);
+                var order = ['background','body','eyes','hoodie','neck','mouth','head'];
+                for(var i=0;i<order.length;i++){
+                    var f = ts[order[i]];
+                    if(f === 'none') continue;
+                    var img = await loadImage(traits[order[i]].folder + f);
+                    if(img) ctx.drawImage(img,0,0,w,h);
+                }
             }
         }
 
@@ -945,6 +1188,110 @@
         function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
         window.addEventListener('load', init);
+
+        // ═══════════════════════════════════════════════
+        //  ANIMATED NEBULA BACKGROUND
+        // ═══════════════════════════════════════════════
+        (function(){
+            var nc = document.getElementById('nebulaCanvas');
+            var nx = nc.getContext('2d');
+            var stars = [];
+            var nebulae = [];
+            var driftParticles = [];
+            var t = 0;
+
+            function resize(){
+                nc.width = window.innerWidth;
+                nc.height = window.innerHeight;
+                initElements();
+            }
+
+            function initElements(){
+                stars = [];
+                for(var i=0;i<120;i++){
+                    stars.push({
+                        x:Math.random()*nc.width,
+                        y:Math.random()*nc.height,
+                        r:Math.random()*1.5+0.3,
+                        a:Math.random()*0.6+0.2,
+                        speed:Math.random()*0.003+0.001,
+                        phase:Math.random()*Math.PI*2
+                    });
+                }
+                nebulae = [
+                    { x:nc.width*0.2, y:nc.height*0.3, rx:nc.width*0.35, ry:nc.height*0.25, color:'rgba(80,20,60,', baseA:0.04, speed:0.0003 },
+                    { x:nc.width*0.7, y:nc.height*0.6, rx:nc.width*0.3,  ry:nc.height*0.2,  color:'rgba(20,40,100,', baseA:0.035, speed:0.0004 },
+                    { x:nc.width*0.5, y:nc.height*0.8, rx:nc.width*0.4,  ry:nc.height*0.15, color:'rgba(100,50,20,', baseA:0.025, speed:0.0002 },
+                    { x:nc.width*0.15, y:nc.height*0.7, rx:nc.width*0.2, ry:nc.height*0.3,  color:'rgba(40,10,80,',  baseA:0.03, speed:0.00035 },
+                ];
+                driftParticles = [];
+                for(var i=0;i<25;i++){
+                    driftParticles.push({
+                        x:Math.random()*nc.width,
+                        y:Math.random()*nc.height,
+                        r:Math.random()*30+10,
+                        vx:(Math.random()-0.5)*0.15,
+                        vy:(Math.random()-0.5)*0.08,
+                        color: ['rgba(200,168,76,','rgba(100,60,180,','rgba(80,140,200,','rgba(180,80,120,'][Math.floor(Math.random()*4)],
+                        a:Math.random()*0.015+0.005
+                    });
+                }
+            }
+
+            function draw(){
+                t++;
+                nx.fillStyle='#030008';
+                nx.fillRect(0,0,nc.width,nc.height);
+
+                // Nebulae
+                for(var i=0;i<nebulae.length;i++){
+                    var n = nebulae[i];
+                    var pulse = Math.sin(t*n.speed)*0.3+0.7;
+                    var grad = nx.createRadialGradient(n.x,n.y,0, n.x,n.y, Math.max(n.rx,n.ry));
+                    grad.addColorStop(0, n.color+(n.baseA*pulse)+')');
+                    grad.addColorStop(0.5, n.color+(n.baseA*pulse*0.4)+')');
+                    grad.addColorStop(1, 'transparent');
+                    nx.fillStyle = grad;
+                    nx.beginPath();
+                    nx.ellipse(n.x, n.y, n.rx, n.ry, 0, 0, Math.PI*2);
+                    nx.fill();
+                }
+
+                // Drift particles
+                for(var i=0;i<driftParticles.length;i++){
+                    var p = driftParticles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if(p.x<-50) p.x=nc.width+50;
+                    if(p.x>nc.width+50) p.x=-50;
+                    if(p.y<-50) p.y=nc.height+50;
+                    if(p.y>nc.height+50) p.y=-50;
+                    var grad = nx.createRadialGradient(p.x,p.y,0, p.x,p.y, p.r);
+                    grad.addColorStop(0, p.color+p.a+')');
+                    grad.addColorStop(1, 'transparent');
+                    nx.fillStyle = grad;
+                    nx.beginPath();
+                    nx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                    nx.fill();
+                }
+
+                // Stars
+                for(var i=0;i<stars.length;i++){
+                    var s = stars[i];
+                    var flicker = Math.sin(t*s.speed + s.phase)*0.3 + 0.7;
+                    nx.fillStyle = 'rgba(220,200,180,'+(s.a*flicker)+')';
+                    nx.beginPath();
+                    nx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                    nx.fill();
+                }
+
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            draw();
+        })();
     </script>
 </body>
 </html>

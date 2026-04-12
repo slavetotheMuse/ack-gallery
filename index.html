@@ -7904,26 +7904,38 @@
 
       // ── Get all NFTs owned by an address, filtered to specific contracts ──
       // contracts: array of contract addresses to filter by
+      // Paginates automatically (Alchemy returns max 100 per page)
       function getNFTsForOwner(ownerAddr, contracts) {
         if (!ALCHEMY_API_KEY || !ownerAddr) return Promise.resolve([]);
         var key = ownerAddr.toLowerCase() + ':ownedACK';
         if (_cache[key]) return Promise.resolve(_cache[key]);
-        // Alchemy v3 getNFTsForOwner with contractAddresses filter
-        var params = { owner: ownerAddr, withMetadata: 'true', pageSize: '100' };
         if (contracts && contracts.length > 0) {
           // Alchemy expects contractAddresses[] as repeated params
-          var qs = 'owner=' + encodeURIComponent(ownerAddr) + '&withMetadata=true&pageSize=100';
-          contracts.forEach(function(c) { qs += '&contractAddresses[]=' + encodeURIComponent(c); });
-          var url = ALCHEMY_BASE + ALCHEMY_API_KEY + '/getNFTsForOwner?' + qs;
-          return fetch(url, { headers: { accept: 'application/json' } })
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(data) {
-              var nfts = (data && data.ownedNfts) ? data.ownedNfts : [];
-              _cache[key] = nfts;
-              return nfts;
-            })
+          var baseQs = 'owner=' + encodeURIComponent(ownerAddr) + '&withMetadata=true&pageSize=100';
+          contracts.forEach(function(c) { baseQs += '&contractAddresses[]=' + encodeURIComponent(c); });
+          var allNfts = [];
+          function fetchPage(pageKey) {
+            var qs = baseQs + (pageKey ? '&pageKey=' + encodeURIComponent(pageKey) : '');
+            var url = ALCHEMY_BASE + ALCHEMY_API_KEY + '/getNFTsForOwner?' + qs;
+            return fetch(url, { headers: { accept: 'application/json' } })
+              .then(function(r) { return r.ok ? r.json() : null; })
+              .then(function(data) {
+                if (!data) return allNfts;
+                var nfts = data.ownedNfts || [];
+                allNfts = allNfts.concat(nfts);
+                // Follow pagination if more pages exist (safety cap at 500 tokens)
+                if (data.pageKey && allNfts.length < 500) {
+                  return fetchPage(data.pageKey);
+                }
+                return allNfts;
+              });
+          }
+          return fetchPage(null)
+            .then(function(nfts) { _cache[key] = nfts; return nfts; })
             .catch(function() { return []; });
         }
+        // Fallback: no contract filter — single page only
+        var params = { owner: ownerAddr, withMetadata: 'true', pageSize: '100' };
         return _alchemyGet('getNFTsForOwner', params).then(function(data) {
           var nfts = (data && data.ownedNfts) ? data.ownedNfts : [];
           _cache[key] = nfts;
@@ -25188,21 +25200,35 @@
                   return;
                 }
                 // Match owned NFTs to our local gallery data for navigation
+                const _collectorDedup = {};
                 const workItems = ownedNfts.map(function(nft) {
                   const nftContract = (nft.contract && nft.contract.address) ? nft.contract.address.toLowerCase() : '';
                   const nftTokenId = nft.tokenId ? parseInt(nft.tokenId) : -1;
                   const nftTitle = (nft.name || nft.title || 'Token #' + nft.tokenId);
-                  // Find matching gallery entry
+                  // Find matching gallery entry (check direct tokenId, tokenIds array, and editions)
                   let navData = null;
                   COLLECTIONS.forEach(function(col, ci) {
-                    if (!col.contract || !col.artworks) return;
-                    if (col.contract.toLowerCase() !== nftContract) return;
+                    if (navData || !col.artworks) return;
+                    var colMatch = col.contract && col.contract.toLowerCase() === nftContract;
                     col.artworks.forEach(function(a, ai) {
-                      if (a.tokenId === nftTokenId) {
+                      if (navData) return;
+                      var artMatch = a.contract && a.contract.toLowerCase() === nftContract;
+                      if (!colMatch && !artMatch) return;
+                      var _tok = a.tokenId !== undefined ? parseInt(a.tokenId) : -1;
+                      var _hit = _tok === nftTokenId;
+                      if (!_hit && a.tokenIds) _hit = a.tokenIds.indexOf(nftTokenId) !== -1;
+                      if (!_hit && a.editions) _hit = a.editions.some(function(ed) { return parseInt(ed.tokenId) === nftTokenId; });
+                      if (_hit || a.title === nftTitle) {
                         navData = { colIdx: ci, artIdx: ai, colName: col.name };
                       }
                     });
                   });
+                  // Deduplicate editions — only show one entry per artwork
+                  if (navData) {
+                    var _dk = navData.colIdx + ':' + navData.artIdx;
+                    if (_collectorDedup[_dk]) return '';
+                    _collectorDedup[_dk] = true;
+                  }
                   // Skip the current artwork
                   if (navData && navData.colIdx === collectionIndex && navData.artIdx === artworkIndex) return '';
                   const clickAttr = navData
@@ -36145,6 +36171,7 @@
 
         // Match on-chain NFTs to local gallery data ONLY — skip unrecognized tokens
         var bagsArtworks = [];
+        var _bagsDedup = {}; // track col:art pairs to avoid duplicate cards for editions
         if (ownedNfts && ownedNfts.length > 0) {
           ownedNfts.forEach(function(nft) {
             var nftContract = (nft.contract && nft.contract.address) ? nft.contract.address.toLowerCase() : '';
@@ -36172,11 +36199,16 @@
                   _tokenMatch = art.editions.some(function(ed) { return parseInt(ed.tokenId) === nftTokenId; });
                 }
                 if (_tokenMatch || art.title === nftTitle) {
-                  var clone = Object.assign({}, art);
-                  clone._sourceCollection = col.name;
-                  clone._sourceCollectionIndex = ci;
-                  clone._sourceArtworkIndex = ai;
-                  bagsArtworks.push(clone);
+                  // Deduplicate: only add one card per artwork (editions share the same gallery entry)
+                  var _dedupKey = ci + ':' + ai;
+                  if (!_bagsDedup[_dedupKey]) {
+                    _bagsDedup[_dedupKey] = true;
+                    var clone = Object.assign({}, art);
+                    clone._sourceCollection = col.name;
+                    clone._sourceCollectionIndex = ci;
+                    clone._sourceArtworkIndex = ai;
+                    bagsArtworks.push(clone);
+                  }
                   matched = true;
                 }
               });
