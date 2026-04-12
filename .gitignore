@@ -150,8 +150,8 @@ wicked_thumb.jpg
 Screenshot*.png
 error.txt
 deployment-url.txt
-fullsetholder.png
-pbdfullsetholder.png
+# fullsetholder.png — needed for Color Study badge (removed from ignore)
+# pbdfullsetholder.png — needed for Color Study badge (removed from ignore)
 legophone.png
 womanrider.png
 curation_of_saints_animated.mp4
