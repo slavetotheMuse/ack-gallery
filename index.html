@@ -3400,9 +3400,15 @@
     }
     .bags-fullset-badge .node-preview {
       background: transparent !important;
+      outline: none !important;
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      overflow: visible !important;
     }
     .bags-fullset-badge .node-preview img {
       object-fit: contain !important;
+      background: transparent !important;
       filter: drop-shadow(0 0 10px rgba(255,200,50,0.25)) drop-shadow(0 0 25px rgba(255,180,30,0.1));
     }
     .bags-fullset-badge .node-title-tag {
@@ -16987,6 +16993,10 @@
                 let gy = 0;
                 const groupNodes = [];
 
+                // Compute full row width for centering partial rows
+                const _fullRowW = rows.length > 0 && rows[0].length === maxPR
+                  ? rows[0].reduce((s, c) => s + c.w, 0) + (rows[0].length - 1) * innerGap : 0;
+
                 rows.forEach((row, ri) => {
                   // Total row width
                   let rowW = row.reduce((s, c) => s + c.w, 0) + (row.length - 1) * innerGap;
@@ -16996,7 +17006,11 @@
                   // Add subtle stagger on alternate rows
                   const stagger = (ri % 2 === 1) ? Math.round(row[0].w * 0.08) : 0;
 
-                  let gx = stagger;
+                  // Center partial (last) rows within the full group width
+                  const _isPartialRow = row.length < maxPR && ri === rows.length - 1 && _fullRowW > 0;
+                  const _centerOffset = _isPartialRow ? Math.round((_fullRowW - rowW) / 2) : 0;
+
+                  let gx = stagger + _centerOffset;
                   row.forEach((c, ci) => {
                     // Vertical centering within row + tiny random offset for organic feel
                     const yOff = Math.round((maxH - c.h) / 2) + Math.round((Math.sin(c.idx * 3.7 + ci * 2.1) * 0.03) * maxH);
