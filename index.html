@@ -8759,6 +8759,25 @@
             {title:"oblivion: ACK",image:"https://i2c.seadn.io/ethereum/0x7e9b9ba1a3b4873279857056279cef6a4fcdf340/9f8d04bd45e0b2d8e070b47992c0dc/a19f8d04bd45e0b2d8e070b47992c0dc.gif?w=500"}
         ]},
         /* Opepen duplicate removed — Opepen Set 030: a.c.k. is the official entry */
+        { name: "experimental - foundation", image: "foundation/web/we_deserve_it_web.jpg",
+          catalogOnly: true,
+          description: "Foundation Era (mid to late 2021) — A collection of 1/1 works minted on Foundation by AlphaCentauriKid.",
+          token: "ERC-721", chain: "Ethereum", contract: "0x3B3ee1931Dc30C1957379FAc9aba94D1C48a5405",
+          artworks: [
+            {title:"we deserve it",image:"foundation/web/we_deserve_it_web.jpg",fullRes:"foundation/we_deserve_it.png",tokenId:53174},
+            {title:"ELON DESTROYS BEEPLE",image:"foundation/web/elondestroysbeeple_thumb.jpg",fullRes:"foundation/web/elondestroysbeeple_web.mp4",tokenId:16988},
+            {title:"get in the van!",image:"foundation/web/get_in_the_van!_thumb.jpg",fullRes:"foundation/web/get_in_the_van!_web.mp4",tokenId:55516},
+            {title:"Piano in Paris",image:"foundation/web/Piano_in_Paris_thumb.jpg",fullRes:"foundation/web/Piano_in_Paris_web.mp4",tokenId:46720},
+            {title:"Lonely Neighborhood SpiderPepe",image:"foundation/web/lonely_neighborhood_spiderpepe_thumb.jpg",fullRes:"foundation/web/lonely_neighborhood_spiderpepe_web.mp4",tokenId:70221},
+            {title:"She doesn\u2019t NEED you",image:"foundation/web/we_deserve_it_web.jpg",fullRes:"foundation/web/we_deserve_it_web.jpg",tokenId:47600,placeholder:true},
+            {title:"punkparty gmoney edition",image:"foundation/web/punkparty_web.jpg",fullRes:"foundation/punkparty.png",tokenId:24403},
+            {title:"DECLARATION OF INDEPENDENTcontracts",image:"foundation/web/declaration_of_independentcontracts_web.jpg",fullRes:"foundation/declaration_of_independentcontracts.png",tokenId:56458},
+            {title:"\u201CDraw me like one of your French girls\u201D",image:"foundation/web/draw_me_thumb.jpg",fullRes:"foundation/web/draw_me_web.mp4",tokenId:76353},
+            {title:"Rose De Feu",image:"foundation/web/rosedefeu_web.jpg",fullRes:"foundation/rosedefeu.png",tokenId:62028},
+            {title:"No Time for Caution",image:"foundation/web/no_time_for_caution_thumb.jpg",fullRes:"foundation/web/no_time_for_caution_web.mp4",tokenId:26779},
+            {title:"punk rushmore",image:"foundation/web/punkrushmore_web.jpg",fullRes:"foundation/punkrushmore.png",tokenId:54482},
+            {title:"Wizardry",image:"foundation/web/wizardry_thumb.jpg",fullRes:"foundation/web/wizardry_web.mp4",tokenId:37648}
+        ]},
     ];
     // ── CUSTOM COLLECTION LAYOUTS ──
     // Hand-positioned via layout editor, keyed by collection name.
@@ -12579,6 +12598,7 @@
         'SuperRare': '⭐',
         'Opepen': '◎',
         'notxcopy': '🔄',
+        'experimental - foundation': '🔬',
       };
 
       // Build collection rows in Object Manager
@@ -13704,7 +13724,7 @@
       const displayCollections = [];
       const displayIndexMap = [];
       COLLECTIONS.forEach((c, i) => {
-        if (!c.comingSoon) {
+        if (!c.comingSoon && !c.catalogOnly) {
           displayIndexMap.push(i);
           displayCollections.push(c);
         }
@@ -22870,7 +22890,7 @@
       }
 
       // ── SuperRare video artworks: swap still → video on focus ──
-      if (_focusColName === 'SuperRare' && artData && artData.fullRes && artData.fullRes.endsWith('.mp4')) {
+      if ((_focusColName === 'SuperRare' || _focusColName === 'experimental - foundation') && artData && artData.fullRes && artData.fullRes.endsWith('.mp4')) {
         setTimeout(() => {
           const preview = node.querySelector('.node-preview');
           const img = preview ? preview.querySelector('img') : null;

@@ -84,6 +84,11 @@ warothy/*.gif
 # Keep web/ subfolder (re-include)
 !warothy/web/
 
+# Foundation full-res (15-48MB originals)
+foundation/*.png
+foundation/*.mp4
+!foundation/web/
+
 # Heart You full-res (10-87MB each from Arweave)
 heartyou/*.gif
 # Keep web/ subfolder (re-include)
