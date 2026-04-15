@@ -8651,7 +8651,7 @@
             {title:"majestic white elephant",image:"ackeditions_gallery/web/majestic_white_elephant_web.gif",focusImage:"ackeditions_gallery/web/majestic_white_elephant_preview.gif",fullRes:"https://arweave.net/LGeabOluX7iO7XcHWx5CMz7HdLYkNqTvaqZMGZQff4I",edition:"Edition of 47",tokenId:6,focusScale:1.3},
             {title:"circus elephant",image:"ackeditions_gallery/web/circus_elephant_web.gif",focusImage:"ackeditions_gallery/web/circus_elephant_web.gif",fullRes:"https://arweave.net/ZcwEDRsy7Ie0fUT2jA4SgNcXUAFFMGidSoEui4tE4AI",edition:"Edition of 9",tokenId:11,focusScale:1.3},
             {title:"Skelekart",image:"ackeditions_gallery/web/skelekart_web.gif",focusImage:"ackeditions_gallery/web/skelekart_web.gif",fullRes:"https://arweave.net/OQTf6kIy53YT7x0lnJqFDT6JGFRHdLPYWrWRmu6Ts-M",edition:"Edition of 13",tokenId:18,focusScale:1.3},
-            {title:"la nuit étoilée",image:"ackeditions_gallery/web/lanuit_web.gif",focusImage:"ackeditions_gallery/lanuit.gif",fullRes:"https://arweave.net/yGmovdTJKNtu91z9bK9xHPFCSIaeiu8mseac7rkyaRM",edition:"Edition of 300",tokenId:8},
+            {title:"la nuit étoilée",image:"ackeditions_gallery/web/lanuit_web.gif",focusImage:"ackeditions_gallery/lanuit.gif",fullRes:"https://arweave.net/yGmovdTJKNtu91z9bK9xHPFCSIaeiu8mseac7rkyaRM",edition:"Edition of 189",tokenId:8},
             {title:"max pain v2",image:"ackeditions_gallery/web/maxpainv2_web.gif",focusImage:"ackeditions_gallery/maxpainv2.gif",fullRes:"https://arweave.net/KaHGqy9BHdSlZ5LctCIbBQa15t2gmlcZyLlDI1BcKDI",edition:"Edition of 613",tokenId:14},
             {title:"NGMI Burn Token",image:"ackeditions_gallery/web/ngmi_bottle_web.gif",focusImage:"ackeditions_gallery/web/ngmi_bottle_web.gif",fullRes:"https://arweave.net/mWxN-xqSsuijB7Q3r0xp14njv29knRddC5Dh8XK4exg",edition:"Edition of 8",tokenId:3},
             {title:"WAGMI Burn Token",image:"ackeditions_gallery/web/wagmi_bottle_web.gif",focusImage:"ackeditions_gallery/web/wagmi_bottle_web.gif",fullRes:"https://arweave.net/NVHhw2YvC7HKEgg1l9uTle16DcY1IG8hElcXhUVZXjY",edition:"Edition of 7",tokenId:4},
@@ -22148,6 +22148,8 @@
           }
           // ── MOBILE: Pantone swatch below artwork for Color Study ──
           _addMobilePantoneSwatch(node, _mfColl, _mfArt);
+          // ── MOBILE: Position indicator + first-time swipe hint ──
+          _addMobileFocusIndicator(_mfColl, artworkIndex);
         }, _scatterWait + 200);
       } else {
       // ── DESKTOP: scrolling tickers with artwork data ──
@@ -23163,24 +23165,70 @@
           // But touchstart is registered non-passive so the browser's
           // compositor waits for our touchmove decision before scrolling.
         };
+        let _swipeDirection = null; // 'h' = horizontal (nav), 'v' = vertical (dismiss)
         const onTouchMove = (evt) => {
           if (_swipeTransitioning) return;
           if (!evt.touches || !evt.touches[0]) return;
           _swipeDelta = evt.touches[0].clientX - _swipeStartX;
           _swipeDeltaY = evt.touches[0].clientY - _swipeStartY;
-          // Once horizontal movement exceeds vertical, claim the gesture
-          if (!_swipeActive && Math.abs(_swipeDelta) > 10 && Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY)) {
-            _swipeActive = true;
+          // Once movement exceeds threshold, claim the gesture and lock direction
+          if (!_swipeActive && (Math.abs(_swipeDelta) > 10 || Math.abs(_swipeDeltaY) > 10)) {
+            if (Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY)) {
+              _swipeActive = true;
+              _swipeDirection = 'h';
+            } else if (_swipeDeltaY > 10) {
+              // Vertical DOWN only — swipe-to-dismiss. Upward gestures stay unclaimed (allow native behaviour).
+              _swipeActive = true;
+              _swipeDirection = 'v';
+            }
           }
-          // Prevent scroll/navigation for horizontal swipes in focus mode
+          // Prevent scroll/navigation for claimed swipes in focus mode
           if (_swipeActive && inner.classList.contains('focus-mode') && evt.cancelable) {
             evt.preventDefault();
+          }
+          // Visual feedback: translate focused node on vertical-down drag (swipe-to-dismiss)
+          if (_swipeActive && _swipeDirection === 'v' && _isMobileSwipe && focusedNode && _swipeDeltaY > 0) {
+            var _dragY = Math.min(_swipeDeltaY, 300);
+            var _dragOpacity = Math.max(0.3, 1 - _dragY / 400);
+            focusedNode.style.transition = 'none';
+            // Preserve existing transform (scale + translate) — append a dismiss offset
+            if (!focusedNode._baseTransform) focusedNode._baseTransform = focusedNode.style.transform || '';
+            focusedNode.style.transform = focusedNode._baseTransform + ' translateY(' + _dragY + 'px)';
+            focusedNode.style.opacity = _dragOpacity;
           }
         };
         const onTouchEnd = (evt) => {
           if (_swipeTransitioning) return;
-          if (!inner.classList.contains('focus-mode')) { _swipeActive = false; return; }
-          // Only register horizontal swipe (ignore vertical gestures)
+          if (!inner.classList.contains('focus-mode')) { _swipeActive = false; _swipeDirection = null; return; }
+          // ── VERTICAL SWIPE DOWN → exit focus ──
+          if (_swipeDirection === 'v' && _isMobileSwipe) {
+            var _vThreshold = 80; // require a bit more commitment than horizontal
+            if (_swipeDeltaY > _vThreshold && _swipeDeltaY > Math.abs(_swipeDelta) * 1.2) {
+              // Reset transform tracking and exit
+              if (focusedNode) {
+                focusedNode.style.transition = '';
+                focusedNode.style.opacity = '';
+                delete focusedNode._baseTransform;
+              }
+              _swipeActive = false;
+              _swipeDirection = null;
+              try { ACK_SFX.close && ACK_SFX.close(); } catch(_e) {}
+              exitFocusMode();
+              return;
+            } else {
+              // Snap back — didn't pass threshold
+              if (focusedNode && focusedNode._baseTransform !== undefined) {
+                focusedNode.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+                focusedNode.style.transform = focusedNode._baseTransform;
+                focusedNode.style.opacity = '';
+                delete focusedNode._baseTransform;
+              }
+              _swipeActive = false;
+              _swipeDirection = null;
+              return;
+            }
+          }
+          // Only register horizontal swipe (ignore vertical gestures that didn't cross dismiss threshold)
           if (Math.abs(_swipeDelta) > _swipeThreshold && Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY) * 1.2) {
             const col = COLLECTIONS[focusedCollectionIndex];
             if (!col || !col.artworks) { _swipeActive = false; return; }
@@ -23281,9 +23329,10 @@
                     if (curPreview) {
                       curPreview.style.opacity = '1';
                     }
-                    // 5. Update motherboard + title + pantone swatch
+                    // 5. Update motherboard + title + pantone swatch + position indicator
                     _updateMobileMotherboard(col, nextArt);
                     _addMobilePantoneSwatch(curNode, col, nextArt);
+                    _updateMobileFocusIndicator(nextIdx);
                     // Update floating title if present
                     var _swipeTitleEl = document.getElementById('focusModeTitle');
                     if (_swipeTitleEl && nextArt.title) {
@@ -23339,6 +23388,9 @@
               }
             }
           }
+          // Reset direction lock for next gesture
+          _swipeActive = false;
+          _swipeDirection = null;
         };
         const cleanupSwipe = () => {
           document.removeEventListener('touchstart', onTouchStart);
@@ -23523,6 +23575,72 @@
       swatch.style.top = (bottomEdge + 20) + 'px';
       document.body.appendChild(swatch);
       requestAnimationFrame(function() { swatch.style.opacity = '1'; });
+    }
+
+    // ── Helper: mobile focus position indicator + first-run swipe hint ──
+    function _addMobileFocusIndicator(col, artIdx) {
+      if (!_isRealMobile || !col || !col.artworks) return;
+      var old = document.getElementById('mobileFocusIndicator');
+      if (old) old.remove();
+      var total = col.artworks.length;
+      var position = (artIdx|0) + 1;
+      var indicator = document.createElement('div');
+      indicator.id = 'mobileFocusIndicator';
+      indicator.style.cssText = 'position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2600;' +
+        'display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;' +
+        'transition:opacity 0.45s ease 0.15s;font-family:"JetBrains Mono",monospace;' +
+        'font-size:0.62rem;color:rgba(200,195,185,0.55);letter-spacing:0.12em;' +
+        'background:rgba(12,14,18,0.55);padding:6px 12px;border-radius:14px;' +
+        'border:1px solid rgba(220,150,50,0.15);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);';
+      // Show hint arrows the first time in a session
+      var _hasSeenSwipeHint = false;
+      try { _hasSeenSwipeHint = sessionStorage.getItem('ackSeenSwipeHint') === '1'; } catch(_e) {}
+      var hintHTML = _hasSeenSwipeHint
+        ? ''
+        : '<span id="mfiSwipeHint" style="display:inline-flex;align-items:center;gap:6px;color:rgba(220,150,50,0.65);opacity:0.9;">' +
+          '<span style="animation:mfiArrowL 1.6s ease-in-out infinite;">‹</span>' +
+          '<span style="font-size:0.56rem;letter-spacing:0.08em;">swipe</span>' +
+          '<span style="animation:mfiArrowR 1.6s ease-in-out infinite;">›</span>' +
+          '</span>' +
+          '<span style="width:1px;height:10px;background:rgba(220,150,50,0.2);"></span>';
+      indicator.innerHTML = hintHTML +
+        '<span id="mfiPos">' + position + '</span>' +
+        '<span style="opacity:0.35;">/</span>' +
+        '<span style="opacity:0.7;">' + total + '</span>';
+      document.body.appendChild(indicator);
+      // Inject keyframes once
+      if (!document.getElementById('mfiKeyframes')) {
+        var kf = document.createElement('style');
+        kf.id = 'mfiKeyframes';
+        kf.textContent = '@keyframes mfiArrowL{0%,100%{transform:translateX(0);opacity:0.4}50%{transform:translateX(-3px);opacity:1}}' +
+          '@keyframes mfiArrowR{0%,100%{transform:translateX(0);opacity:0.4}50%{transform:translateX(3px);opacity:1}}';
+        document.head.appendChild(kf);
+      }
+      requestAnimationFrame(function() { indicator.style.opacity = '1'; });
+      // Fade out the hint portion after first swipe (handled via `_markSwipeHintSeen`)
+    }
+
+    // ── Update position indicator during a swipe transition ──
+    function _updateMobileFocusIndicator(artIdx) {
+      var el = document.getElementById('mfiPos');
+      if (el) el.textContent = (artIdx|0) + 1;
+      _markSwipeHintSeen();
+    }
+
+    // ── Mark the swipe hint as seen & fade it out ──
+    function _markSwipeHintSeen() {
+      try { sessionStorage.setItem('ackSeenSwipeHint', '1'); } catch(_e) {}
+      var hint = document.getElementById('mfiSwipeHint');
+      if (hint && hint.parentNode) {
+        hint.style.transition = 'opacity 0.4s ease, width 0.4s ease, margin 0.4s ease';
+        hint.style.opacity = '0';
+        setTimeout(function() {
+          // Also collapse the divider that follows
+          var sib = hint.nextElementSibling;
+          if (hint.parentNode) hint.parentNode.removeChild(hint);
+          if (sib && sib.style && sib.style.width === '1px') sib.parentNode.removeChild(sib);
+        }, 420);
+      }
     }
 
     // ── Helper: update motherboard tickers during mobile focus/swipe ──
@@ -35736,6 +35854,12 @@
       if (focTitle) focTitle.remove();
       const mobPantone = document.getElementById('mobilePantoneSwatch');
       if (mobPantone) mobPantone.remove();
+      const mobFocusInd = document.getElementById('mobileFocusIndicator');
+      if (mobFocusInd) {
+        mobFocusInd.style.transition = 'opacity 0.25s ease';
+        mobFocusInd.style.opacity = '0';
+        setTimeout(function() { if (mobFocusInd.parentNode) mobFocusInd.remove(); }, 260);
+      }
       _removeLoreNode();
 
       // Unlock scroll on mobile (motherboard stays expanded)
