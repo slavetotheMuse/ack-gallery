@@ -9320,6 +9320,253 @@
       if (btn) btn.classList.remove('visible');
     }
 
+    // ── GLOBAL MOBILE SWIPE HANDLER ──
+    // Registered ONCE at page load on document. Checks for focus-mode internally.
+    // This ensures swipe works regardless of errors in handleNodeClick.
+    var _globalSwipeState = {
+      startX: 0, startY: 0, delta: 0, deltaY: 0,
+      active: false, direction: null, transitioning: false
+    };
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+      (function() {
+        var S = _globalSwipeState;
+        var THRESHOLD = 30;
+        var _isMobile = _isRealMobile;
+
+        var onTouchStart = function(evt) {
+          if (S.transitioning) return;
+          if (!evt.touches || !evt.touches[0]) return;
+          S.startX = evt.touches[0].clientX;
+          S.startY = evt.touches[0].clientY;
+          S.delta = 0;
+          S.deltaY = 0;
+          S.active = false;
+          S.direction = null;
+        };
+
+        var onTouchMove = function(evt) {
+          if (S.transitioning) return;
+          if (!evt.touches || !evt.touches[0]) return;
+          // Only handle swipes when in focus mode
+          if (!document.querySelector('.node-graph-inner.focus-mode')) return;
+          S.delta = evt.touches[0].clientX - S.startX;
+          S.deltaY = evt.touches[0].clientY - S.startY;
+          // Direction lock: require 12px movement + 1.3x axis dominance
+          if (!S.active && (Math.abs(S.delta) > 12 || Math.abs(S.deltaY) > 12)) {
+            if (Math.abs(S.delta) > Math.abs(S.deltaY) * 1.3) {
+              S.active = true;
+              S.direction = 'h';
+            } else if (S.deltaY > 12 && Math.abs(S.deltaY) > Math.abs(S.delta) * 1.3) {
+              S.active = true;
+              S.direction = 'v';
+            }
+          }
+          // Prevent scroll/navigation for claimed swipes in focus mode
+          if (S.active && evt.cancelable) {
+            evt.preventDefault();
+          }
+          // Visual feedback: drag-to-dismiss (vertical down)
+          if (S.active && S.direction === 'v' && _isMobile && focusedNode && S.deltaY > 0) {
+            var dragY = Math.min(S.deltaY, 300);
+            var dragOp = Math.max(0.3, 1 - dragY / 400);
+            focusedNode.style.transition = 'none';
+            if (!focusedNode._baseTransform) focusedNode._baseTransform = focusedNode.style.transform || '';
+            focusedNode.style.transform = focusedNode._baseTransform + ' translateY(' + dragY + 'px)';
+            focusedNode.style.opacity = dragOp;
+          }
+        };
+
+        var onTouchEnd = function(evt) {
+          if (S.transitioning) return;
+          // Only handle swipes when in focus mode
+          if (!document.querySelector('.node-graph-inner.focus-mode')) { S.active = false; S.direction = null; return; }
+
+          // ── VERTICAL SWIPE DOWN → exit focus ──
+          if (S.direction === 'v' && _isMobile) {
+            if (S.deltaY > 80 && S.deltaY > Math.abs(S.delta) * 1.2) {
+              if (focusedNode) {
+                focusedNode.style.transition = '';
+                focusedNode.style.opacity = '';
+                delete focusedNode._baseTransform;
+              }
+              S.active = false;
+              S.direction = null;
+              try { ACK_SFX.close && ACK_SFX.close(); } catch(_e) {}
+              exitFocusMode();
+              return;
+            } else {
+              // Snap back
+              if (focusedNode && focusedNode._baseTransform !== undefined) {
+                focusedNode.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+                focusedNode.style.transform = focusedNode._baseTransform;
+                focusedNode.style.opacity = '';
+                delete focusedNode._baseTransform;
+              }
+              S.active = false;
+              S.direction = null;
+              return;
+            }
+          }
+
+          // ── HORIZONTAL SWIPE → navigate artworks ──
+          if (Math.abs(S.delta) > THRESHOLD && Math.abs(S.delta) > Math.abs(S.deltaY) * 1.2) {
+            var col = COLLECTIONS[focusedCollectionIndex];
+            if (!col || !col.artworks) { S.active = false; return; }
+            var dir = S.delta < 0 ? 1 : -1;
+            var nextIdx = focusedArtworkIndex + dir;
+            if (nextIdx >= 0 && nextIdx < col.artworks.length) {
+              if (_isMobile) {
+                // ── MOBILE: lightweight fade swap ──
+                S.transitioning = true;
+                try { ACK_SFX.micro(); } catch(_e) {}
+                var nextArt = col.artworks[nextIdx];
+                var curNode = focusedNode;
+                var curImg = curNode ? (curNode.querySelector('.node-preview img') || curNode.querySelector('.servant-coin-face img')) : null;
+                var curPreview = curNode ? (curNode.querySelector('.node-preview') || curNode.querySelector('.servant-coin-face')) : null;
+                var _safetyTimer = setTimeout(function() { S.transitioning = false; }, 3000);
+
+                // Clean up loading whisper
+                if (curNode && curNode._whisperCleanup) {
+                  if (curNode._whisperCleanup.timeout) clearTimeout(curNode._whisperCleanup.timeout);
+                  if (curNode._whisperCleanup.interval) clearInterval(curNode._whisperCleanup.interval);
+                  if (curNode._whisperCleanup.el && curNode._whisperCleanup.el.parentNode) curNode._whisperCleanup.el.parentNode.removeChild(curNode._whisperCleanup.el);
+                  delete curNode._whisperCleanup;
+                }
+                // Remove wires + panels
+                removeFocusModeWires();
+                var oldInfo = document.getElementById('nodeInfoPanel');
+                if (oldInfo) oldInfo.remove();
+                var oldDock = document.querySelector('.coa-dock');
+                if (oldDock) oldDock.remove();
+                var oldCollector = document.getElementById('collectorNode');
+                if (oldCollector) oldCollector.remove();
+                var oldCollectorWire = document.getElementById('collectorWireSvg');
+                if (oldCollectorWire) oldCollectorWire.remove();
+                _removeAllFocusFrames(curNode);
+
+                // Fade out
+                if (curPreview) {
+                  curPreview.style.transition = 'opacity 0.25s ease';
+                  curPreview.style.opacity = '0';
+                }
+
+                var _isNextGif = (nextArt.fullRes && nextArt.fullRes.endsWith('.gif'))
+                  || (nextArt.image && nextArt.image.endsWith('.gif'))
+                  || nextArt.webGif;
+
+                setTimeout(function() {
+                  // Swap image source
+                  if (curImg) {
+                    var nextImgSrc;
+                    if (_isNextGif) {
+                      nextImgSrc = nextArt.webGif ? nextArt.webGif
+                        : (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
+                        : nextArt.image;
+                      curImg.decoding = 'auto';
+                    } else {
+                      nextImgSrc = _getFocusImageSrc(nextArt);
+                      curImg.decoding = 'sync';
+                    }
+                    curImg.loading = 'eager';
+                    curImg.removeAttribute('width');
+                    curImg.removeAttribute('height');
+                    curImg.src = nextImgSrc;
+                    curImg.onerror = function() {
+                      var fallback = nextArt.image || '';
+                      if (fallback.indexOf('?w=') !== -1) fallback = fallback.replace(/\?w=\d+/, '?w=1400');
+                      curImg.src = fallback;
+                      curImg.onerror = null;
+                    };
+
+                    var _finishSwipe = function() {
+                      if (!S.transitioning) return;
+                      clearTimeout(_safetyTimer);
+                      focusedArtworkIndex = nextIdx;
+                      // Update title
+                      var navCt = document.getElementById('navCenterTitle');
+                      if (navCt) navCt.textContent = nextArt.title || '';
+                      // Resolve collection name for frame
+                      var _nextColName = (nextArt._sourceCollection) ? nextArt._sourceCollection : (col ? col.name : '');
+                      // Fade in
+                      if (curPreview) {
+                        curPreview.style.transition = 'opacity 0.35s ease';
+                        curPreview.style.opacity = '1';
+                      }
+                      // Loading whisper
+                      if (!_isNextGif && curNode && typeof _addLoadingWhisper === 'function') {
+                        _addLoadingWhisper(curNode, nextArt);
+                      }
+                      // Update mobile UI
+                      _updateMobileMotherboard(col, nextArt);
+                      _addMobilePantoneSwatch(curNode, col, nextArt);
+                      _updateMobileFocusIndicator(nextIdx);
+                      // Update floating title if present
+                      var _swipeTitleEl = document.getElementById('focusModeTitle');
+                      if (_swipeTitleEl && nextArt.title) {
+                        _swipeTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + nextArt.title;
+                      }
+                      // Update lore node
+                      _removeLoreNode();
+                      var _swipeLore = _getLore(_nextColName, nextArt.title);
+                      if (_swipeLore) {
+                        setTimeout(function() { _createLoreNode(curNode, _nextColName, nextArt.title, _swipeLore); }, 400);
+                      }
+                      // Frame + wires
+                      setTimeout(function() {
+                        _generateFocusFrameForNode(curNode, _nextColName, nextArt);
+                        drawFocusModeWires(curNode, null);
+                        S.transitioning = false;
+                      }, 200);
+                      // Load GIF if needed
+                      if (!_isNextGif) {
+                        var gifSrc = nextArt.webGif ? nextArt.webGif
+                          : (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
+                          : (nextArt.image && nextArt.image.endsWith('.gif')) ? nextArt.image : null;
+                        if (gifSrc && curImg) {
+                          var gifLoader = new Image();
+                          gifLoader.onload = function() {
+                            if (curNode.classList.contains('focused')) {
+                              curImg.decoding = 'auto';
+                              curImg.onerror = null;
+                              curImg.src = gifSrc;
+                            }
+                          };
+                          gifLoader.src = gifSrc;
+                        }
+                      }
+                    };
+
+                    if (curImg.decode) {
+                      curImg.decode().then(_finishSwipe).catch(_finishSwipe);
+                    } else {
+                      curImg.onload = _finishSwipe;
+                    }
+                    setTimeout(function() { if (S.transitioning) _finishSwipe(); }, 2500);
+                  } else {
+                    S.transitioning = false;
+                  }
+                }, 300);
+              } else {
+                // ── DESKTOP: exit and re-enter focus ──
+                exitFocusMode();
+                var graphInner = document.querySelector('.node-graph-inner');
+                setTimeout(function() {
+                  var cards = graphInner ? graphInner.querySelectorAll('.node-card') : [];
+                  if (cards[nextIdx]) cards[nextIdx].click();
+                }, 400);
+              }
+            }
+          }
+          S.active = false;
+          S.direction = null;
+        };
+
+        document.addEventListener('touchstart', onTouchStart, { passive: false });
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd, { passive: true });
+      })();
+    }
+
     // ── Mobile candle helpers ──
     function _hideCandlesOnMobile() {
       if (!_isRealMobile) return;
@@ -22919,7 +23166,7 @@
       }
 
       // ── SuperRare video artworks: swap still → video on focus ──
-      if ((_focusColName === 'SuperRare' || _focusColName === 'experimental - foundation') && artData && artData.fullRes && artData.fullRes.endsWith('.mp4')) {
+      if ((_focusColName === 'SuperRare' || _focusColName === 'experimental - foundation') && artworkData && artworkData.fullRes && artworkData.fullRes.endsWith('.mp4')) {
         setTimeout(() => {
           const preview = node.querySelector('.node-preview');
           const img = preview ? preview.querySelector('img') : null;
@@ -23145,285 +23392,8 @@
         if (canvas) canvas.addEventListener('click', onBackgroundClick);
       }, 150);
 
-      // ── TOUCH SWIPE: navigate between artworks in focus mode ──
-      // DEBUG: ?swipediag=1 shows live diagnostic overlay on mobile
-      var _swipeDiag = location.search.indexOf('swipediag=1') !== -1;
-      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-        if (_swipeDiag) {
-          var _dd = document.createElement('div');
-          _dd.id = 'swipeDiagPanel';
-          _dd.style.cssText = 'position:fixed;bottom:60px;left:10px;right:10px;z-index:99999;background:rgba(0,0,0,0.9);color:#0f0;font:11px monospace;padding:12px;border-radius:8px;pointer-events:none;line-height:1.6;';
-          _dd.innerHTML = 'SWIPE DIAG ACTIVE<br>handlers: registering...<br>_isRealMobile: ' + _isRealMobile + '<br>_isMobileSwipe: ' + _isRealMobile;
-          document.body.appendChild(_dd);
-        }
-        let _swipeStartX = 0, _swipeStartY = 0, _swipeDelta = 0, _swipeDeltaY = 0;
-        let _swipeTransitioning = false;
-        let _swipeActive = false; // true once we detect horizontal movement
-        const _swipeThreshold = 30; // lowered from 40 for mobile responsiveness
-        const _isMobileSwipe = _isRealMobile;
-        const onTouchStart = (evt) => {
-          if (_swipeTransitioning) return;
-          if (!evt.touches || !evt.touches[0]) return;
-          _swipeStartX = evt.touches[0].clientX;
-          _swipeStartY = evt.touches[0].clientY;
-          _swipeDelta = 0;
-          _swipeDeltaY = 0;
-          _swipeActive = false;
-          _swipeDirection = null;
-          if (_swipeDiag) { var _dd = document.getElementById('swipeDiagPanel'); if (_dd) _dd.innerHTML = 'TOUCH START<br>x:' + Math.round(evt.touches[0].clientX) + ' y:' + Math.round(evt.touches[0].clientY) + '<br>focusMode: ' + !!document.querySelector('.focus-mode') + '<br>transitioning: ' + _swipeTransitioning; }
-          // NOTE: We do NOT call preventDefault() here — this preserves
-          // click synthesis for taps (tap-to-exit, tap-on-buttons, etc.)
-          // But touchstart is registered non-passive so the browser's
-          // compositor waits for our touchmove decision before scrolling.
-        };
-        let _swipeDirection = null; // 'h' = horizontal (nav), 'v' = vertical (dismiss)
-        const onTouchMove = (evt) => {
-          if (_swipeTransitioning) return;
-          if (!evt.touches || !evt.touches[0]) return;
-          _swipeDelta = evt.touches[0].clientX - _swipeStartX;
-          _swipeDeltaY = evt.touches[0].clientY - _swipeStartY;
-          // Once movement exceeds threshold, claim the gesture and lock direction.
-          // Require 1.3x dominance in one axis before committing — prevents diagonal
-          // touches from accidentally locking to the wrong axis.
-          if (!_swipeActive && (Math.abs(_swipeDelta) > 12 || Math.abs(_swipeDeltaY) > 12)) {
-            if (Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY) * 1.3) {
-              // Clearly horizontal — navigate between artworks
-              _swipeActive = true;
-              _swipeDirection = 'h';
-            } else if (_swipeDeltaY > 12 && Math.abs(_swipeDeltaY) > Math.abs(_swipeDelta) * 1.3) {
-              // Clearly vertical DOWN — swipe-to-dismiss. Upward gestures stay unclaimed.
-              _swipeActive = true;
-              _swipeDirection = 'v';
-            }
-            // If neither axis is clearly dominant, wait for more movement data
-          }
-          // Prevent scroll/navigation for claimed swipes in focus mode
-          if (_swipeActive && inner.classList.contains('focus-mode') && evt.cancelable) {
-            evt.preventDefault();
-          }
-          if (_swipeDiag) { var _dd = document.getElementById('swipeDiagPanel'); if (_dd) _dd.innerHTML = 'MOVE dx:' + Math.round(_swipeDelta) + ' dy:' + Math.round(_swipeDeltaY) + '<br>active:' + _swipeActive + ' dir:' + _swipeDirection + '<br>focusMode:' + !!document.querySelector('.focus-mode') + '<br>cancelable:' + !!evt.cancelable + '<br>transitioning:' + _swipeTransitioning; }
-          // Visual feedback: translate focused node on vertical-down drag (swipe-to-dismiss)
-          if (_swipeActive && _swipeDirection === 'v' && _isMobileSwipe && focusedNode && _swipeDeltaY > 0) {
-            var _dragY = Math.min(_swipeDeltaY, 300);
-            var _dragOpacity = Math.max(0.3, 1 - _dragY / 400);
-            focusedNode.style.transition = 'none';
-            // Preserve existing transform (scale + translate) — append a dismiss offset
-            if (!focusedNode._baseTransform) focusedNode._baseTransform = focusedNode.style.transform || '';
-            focusedNode.style.transform = focusedNode._baseTransform + ' translateY(' + _dragY + 'px)';
-            focusedNode.style.opacity = _dragOpacity;
-          }
-        };
-        const onTouchEnd = (evt) => {
-          if (_swipeTransitioning) return;
-          if (!inner.classList.contains('focus-mode')) { _swipeActive = false; _swipeDirection = null; return; }
-          // ── VERTICAL SWIPE DOWN → exit focus ──
-          if (_swipeDirection === 'v' && _isMobileSwipe) {
-            var _vThreshold = 80; // require a bit more commitment than horizontal
-            if (_swipeDeltaY > _vThreshold && _swipeDeltaY > Math.abs(_swipeDelta) * 1.2) {
-              // Reset transform tracking and exit
-              if (focusedNode) {
-                focusedNode.style.transition = '';
-                focusedNode.style.opacity = '';
-                delete focusedNode._baseTransform;
-              }
-              _swipeActive = false;
-              _swipeDirection = null;
-              try { ACK_SFX.close && ACK_SFX.close(); } catch(_e) {}
-              exitFocusMode();
-              return;
-            } else {
-              // Snap back — didn't pass threshold
-              if (focusedNode && focusedNode._baseTransform !== undefined) {
-                focusedNode.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
-                focusedNode.style.transform = focusedNode._baseTransform;
-                focusedNode.style.opacity = '';
-                delete focusedNode._baseTransform;
-              }
-              _swipeActive = false;
-              _swipeDirection = null;
-              return;
-            }
-          }
-          // Only register horizontal swipe (ignore vertical gestures that didn't cross dismiss threshold)
-          if (Math.abs(_swipeDelta) > _swipeThreshold && Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY) * 1.2) {
-            const col = COLLECTIONS[focusedCollectionIndex];
-            if (!col || !col.artworks) { _swipeActive = false; return; }
-            const dir = _swipeDelta < 0 ? 1 : -1; // swipe left = next, right = prev
-            const nextIdx = focusedArtworkIndex + dir;
-            if (nextIdx >= 0 && nextIdx < col.artworks.length) {
-              if (_isMobileSwipe) {
-                // ── MOBILE: lightweight fade swap (no pixel scatter — too heavy on mobile) ──
-                _swipeTransitioning = true;
-                try { ACK_SFX.micro(); } catch(_e) {}
-                const nextArt = col.artworks[nextIdx];
-                const curNode = focusedNode;
-                const curImg = curNode ? (curNode.querySelector('.node-preview img') || curNode.querySelector('.servant-coin-face img')) : null;
-                const curPreview = curNode ? (curNode.querySelector('.node-preview') || curNode.querySelector('.servant-coin-face')) : null;
-
-                // Safety: unlock after 3s no matter what
-                const _swipeSafety = setTimeout(function() { _swipeTransitioning = false; }, 3000);
-
-                // 0. Clean up loading whisper on current node
-                if (curNode && curNode._whisperCleanup) {
-                  if (curNode._whisperCleanup.timeout) clearTimeout(curNode._whisperCleanup.timeout);
-                  if (curNode._whisperCleanup.interval) clearInterval(curNode._whisperCleanup.interval);
-                  if (curNode._whisperCleanup.el && curNode._whisperCleanup.el.parentNode) curNode._whisperCleanup.el.parentNode.removeChild(curNode._whisperCleanup.el);
-                  delete curNode._whisperCleanup;
-                }
-
-                // 1. Remove existing wires + panels
-                removeFocusModeWires();
-                var oldInfo = document.getElementById('nodeInfoPanel');
-                if (oldInfo) oldInfo.remove();
-                var oldDock = document.querySelector('.coa-dock');
-                if (oldDock) oldDock.remove();
-                var oldCollector = document.getElementById('collectorNode');
-                if (oldCollector) oldCollector.remove();
-                var oldCollectorWire = document.getElementById('collectorWireSvg');
-                if (oldCollectorWire) oldCollectorWire.remove();
-
-                // 1b. Remove old artwork frame SVGs
-                _removeAllFocusFrames(curNode);
-
-                // 2. Fade out current
-                if (curPreview) {
-                  curPreview.style.transition = 'opacity 0.25s ease';
-                  curPreview.style.opacity = '0';
-                }
-
-                setTimeout(function() {
-                  // 3. Swap image source — use focus-res or higher-res CDN
-                  //    For GIF artworks, load GIF directly (skip static JPG intermediary)
-                  if (curImg) {
-                    var _isNextGif = (nextArt.fullRes && nextArt.fullRes.endsWith('.gif'))
-                      || (nextArt.image && nextArt.image.endsWith('.gif'))
-                      || nextArt.webGif;
-                    var _nextImgSrc;
-                    if (_isNextGif) {
-                      // GIF artwork — load animated GIF directly, never use static JPG
-                      _nextImgSrc = nextArt.webGif ? nextArt.webGif
-                        : (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
-                        : nextArt.image;
-                      curImg.decoding = 'auto'; // MUST be auto for GIF animation
-                    } else {
-                      _nextImgSrc = _getFocusImageSrc(nextArt);
-                      curImg.decoding = 'sync';
-                    }
-                    curImg.loading = 'eager';
-                    curImg.removeAttribute('width');
-                    curImg.removeAttribute('height');
-                    // DIRECT src swap — no preloader on mobile.
-                    // This ensures the browser decodes the hi-res image
-                    // in-place and re-composites at full resolution.
-                    curImg.src = _nextImgSrc;
-                    curImg.onerror = function() {
-                      var fallback = nextArt.image || '';
-                      if (fallback.indexOf('?w=') !== -1) {
-                        fallback = fallback.replace(/\?w=\d+/, '?w=1400');
-                      }
-                      curImg.src = fallback;
-                      curImg.onerror = null;
-                    };
-                    // Wait for decode then finish (with timeout fallback)
-                    if (curImg.decode) {
-                      curImg.decode().then(_finishSwipe).catch(_finishSwipe);
-                    } else {
-                      curImg.onload = _finishSwipe;
-                    }
-                    setTimeout(function() {
-                      if (_swipeTransitioning) _finishSwipe();
-                    }, 2500);
-                  } else {
-                    _finishSwipe();
-                  }
-
-                  function _finishSwipe() {
-                    if (!_swipeTransitioning) return; // prevent double-fire
-                    clearTimeout(_swipeSafety);
-                    focusedArtworkIndex = nextIdx;
-                    // 4. Fade in new
-                    if (curPreview) {
-                      curPreview.style.opacity = '1';
-                    }
-                    // 5. Update motherboard + title + pantone swatch + position indicator
-                    _updateMobileMotherboard(col, nextArt);
-                    _addMobilePantoneSwatch(curNode, col, nextArt);
-                    _updateMobileFocusIndicator(nextIdx);
-                    // Update floating title if present
-                    var _swipeTitleEl = document.getElementById('focusModeTitle');
-                    if (_swipeTitleEl && nextArt.title) {
-                      _swipeTitleEl.innerHTML = '<span style="display:inline-block;width:22px;height:1.5px;background:rgba(220,150,50,0.4);vertical-align:middle;margin-right:8px;"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(220,150,50,0.55);vertical-align:middle;margin-right:8px;"></span>' + nextArt.title;
-                    }
-                    // Update header center title on swipe
-                    var _swipeNavCt = document.getElementById('navCenterTitle');
-                    if (_swipeNavCt && nextArt.title) _swipeNavCt.textContent = nextArt.title;
-                    // Update lore node for new artwork
-                    _removeLoreNode();
-                    var _swipeColName = (nextArt._sourceCollection) ? nextArt._sourceCollection : col.name;
-                    var _swipeLore = _getLore(_swipeColName, nextArt.title);
-                    if (_swipeLore) {
-                      setTimeout(function() { _createLoreNode(curNode, _swipeColName, nextArt.title, _swipeLore); }, 400);
-                    }
-                    // 6. Generate new frame for the next artwork
-                    var _nextColName = (nextArt._sourceCollection) ? nextArt._sourceCollection : col.name;
-                    setTimeout(function() {
-                      _generateFocusFrameForNode(curNode, _nextColName, nextArt);
-                      // 7. Redraw wires
-                      drawFocusModeWires(curNode, null);
-                      _swipeTransitioning = false;
-                      // 8. Load animated GIF over static JPG (webGif > fullRes GIF > image GIF)
-                      //    Skip if GIF was already loaded directly (no intermediary JPG)
-                      if (!_isNextGif) {
-                        var _swipeGifSrc = nextArt.webGif ? nextArt.webGif
-                          : (nextArt.fullRes && nextArt.fullRes.endsWith('.gif')) ? nextArt.fullRes
-                          : (nextArt.image && nextArt.image.endsWith('.gif')) ? nextArt.image : null;
-                        if (_swipeGifSrc && curImg) {
-                          var _swipeGif = new Image();
-                          _swipeGif.onload = function() {
-                            if (curNode.classList.contains('focused')) {
-                              curImg.decoding = 'auto';
-                              curImg.onerror = null;
-                              curImg.src = _swipeGifSrc;
-                            }
-                          };
-                          _swipeGif.src = _swipeGifSrc;
-                        }
-                      }
-                    }, 200);
-                  }
-                }, 300);
-              } else {
-                // ── DESKTOP: exit and re-enter focus ──
-                exitFocusMode();
-                setTimeout(() => {
-                  const cards = inner.querySelectorAll('.node-card');
-                  if (cards[nextIdx]) {
-                    cards[nextIdx].click();
-                  }
-                }, 400);
-              }
-            }
-          }
-          // Reset direction lock for next gesture
-          _swipeActive = false;
-          _swipeDirection = null;
-        };
-        const cleanupSwipe = () => {
-          document.removeEventListener('touchstart', onTouchStart);
-          document.removeEventListener('touchmove', onTouchMove);
-          document.removeEventListener('touchend', onTouchEnd);
-        };
-        // Store cleanup so exitFocusMode can remove it
-        node._swipeCleanup = cleanupSwipe;
-        // CRITICAL: touchstart MUST be non-passive so iOS Safari's compositor
-        // waits for our touchmove decision before starting a scroll gesture.
-        // We don't call preventDefault in touchstart (preserving tap/click),
-        // but the non-passive flag prevents the compositor from pre-committing.
-        document.addEventListener('touchstart', onTouchStart, { passive: false });
-        document.addEventListener('touchmove', onTouchMove, { passive: false });
-        document.addEventListener('touchend', onTouchEnd, { passive: true });
-        if (_swipeDiag) { var _dd = document.getElementById('swipeDiagPanel'); if (_dd) _dd.innerHTML += '<br><b style="color:#0ff">HANDLERS REGISTERED OK</b>'; }
-      }
+      // Touch swipe handlers are now registered globally at page load (see _globalSwipeState above).
+      // No per-focus registration needed — the global handlers check for focus-mode internally.
     }
 
     // ── Helper: remove ALL focus-mode frame SVGs from a node ──
@@ -35852,10 +35822,11 @@
       // Mobile: switch back button to detail context
       _showMobileBack('detail');
 
-      // Clean up touch swipe listeners
-      if (focusedNode._swipeCleanup) {
-        focusedNode._swipeCleanup();
-        delete focusedNode._swipeCleanup;
+      // Reset global swipe state on focus exit
+      if (typeof _globalSwipeState !== 'undefined') {
+        _globalSwipeState.active = false;
+        _globalSwipeState.direction = null;
+        _globalSwipeState.transitioning = false;
       }
 
       // Restore header center title to collection name
