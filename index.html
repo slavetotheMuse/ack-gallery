@@ -5872,6 +5872,7 @@
       max-height: calc(100vh - 200px) !important;
       overflow-y: auto !important;
       -webkit-overflow-scrolling: touch !important;
+      padding-bottom: 250px !important; /* extra space so bottom collections clear the browser toolbar */
     }
     body.is-real-mobile .c4d-object-manager .obj-row {
       padding: 14px 18px !important;
@@ -8778,7 +8779,7 @@
             {title:"oblivion: ACK",image:"https://i2c.seadn.io/ethereum/0x7e9b9ba1a3b4873279857056279cef6a4fcdf340/9f8d04bd45e0b2d8e070b47992c0dc/a19f8d04bd45e0b2d8e070b47992c0dc.gif?w=500"}
         ]},
         /* Opepen duplicate removed — Opepen Set 030: a.c.k. is the official entry */
-        { name: "experimental - foundation", image: "foundation/web/we_deserve_it_web.jpg",
+        { name: "foundation", image: "foundation/web/we_deserve_it_web.jpg",
           catalogOnly: true,
           description: "Foundation Era (mid to late 2021) — A collection of 1/1 works minted on Foundation by AlphaCentauriKid.",
           token: "ERC-721", chain: "Ethereum", contract: "0x3B3ee1931Dc30C1957379FAc9aba94D1C48a5405",
@@ -9229,7 +9230,7 @@
           { x: 221, y: 457, w: 235 }     // 14
         ]
       },
-      "experimental - foundation": {
+      "foundation": {
         refW: 2560, refH: 1294,
         nodes: [
           { x: 295,  y: 155, w: 449 },  // 0
@@ -12882,7 +12883,7 @@
         'SuperRare': '⭐',
         'Opepen': '◎',
         'notxcopy': '🔄',
-        'experimental - foundation': '🔬',
+        'foundation': '🔬',
       };
 
       // Build collection rows in Object Manager
@@ -23184,7 +23185,7 @@
       }
 
       // ── SuperRare video artworks: swap still → video on focus ──
-      if ((_focusColName === 'SuperRare' || _focusColName === 'experimental - foundation') && artworkData && artworkData.fullRes && artworkData.fullRes.endsWith('.mp4')) {
+      if ((_focusColName === 'SuperRare' || _focusColName === 'foundation') && artworkData && artworkData.fullRes && artworkData.fullRes.endsWith('.mp4')) {
         setTimeout(() => {
           const preview = node.querySelector('.node-preview');
           const img = preview ? preview.querySelector('img') : null;
