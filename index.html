@@ -23160,6 +23160,7 @@
           _swipeDelta = 0;
           _swipeDeltaY = 0;
           _swipeActive = false;
+          _swipeDirection = null;
           // NOTE: We do NOT call preventDefault() here — this preserves
           // click synthesis for taps (tap-to-exit, tap-on-buttons, etc.)
           // But touchstart is registered non-passive so the browser's
@@ -23171,16 +23172,20 @@
           if (!evt.touches || !evt.touches[0]) return;
           _swipeDelta = evt.touches[0].clientX - _swipeStartX;
           _swipeDeltaY = evt.touches[0].clientY - _swipeStartY;
-          // Once movement exceeds threshold, claim the gesture and lock direction
-          if (!_swipeActive && (Math.abs(_swipeDelta) > 10 || Math.abs(_swipeDeltaY) > 10)) {
-            if (Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY)) {
+          // Once movement exceeds threshold, claim the gesture and lock direction.
+          // Require 1.3x dominance in one axis before committing — prevents diagonal
+          // touches from accidentally locking to the wrong axis.
+          if (!_swipeActive && (Math.abs(_swipeDelta) > 12 || Math.abs(_swipeDeltaY) > 12)) {
+            if (Math.abs(_swipeDelta) > Math.abs(_swipeDeltaY) * 1.3) {
+              // Clearly horizontal — navigate between artworks
               _swipeActive = true;
               _swipeDirection = 'h';
-            } else if (_swipeDeltaY > 10) {
-              // Vertical DOWN only — swipe-to-dismiss. Upward gestures stay unclaimed (allow native behaviour).
+            } else if (_swipeDeltaY > 12 && Math.abs(_swipeDeltaY) > Math.abs(_swipeDelta) * 1.3) {
+              // Clearly vertical DOWN — swipe-to-dismiss. Upward gestures stay unclaimed.
               _swipeActive = true;
               _swipeDirection = 'v';
             }
+            // If neither axis is clearly dominant, wait for more movement data
           }
           // Prevent scroll/navigation for claimed swipes in focus mode
           if (_swipeActive && inner.classList.contains('focus-mode') && evt.cancelable) {
