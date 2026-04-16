@@ -23146,7 +23146,16 @@
       }, 150);
 
       // ── TOUCH SWIPE: navigate between artworks in focus mode ──
+      // DEBUG: ?swipediag=1 shows live diagnostic overlay on mobile
+      var _swipeDiag = location.search.indexOf('swipediag=1') !== -1;
       if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        if (_swipeDiag) {
+          var _dd = document.createElement('div');
+          _dd.id = 'swipeDiagPanel';
+          _dd.style.cssText = 'position:fixed;bottom:60px;left:10px;right:10px;z-index:99999;background:rgba(0,0,0,0.9);color:#0f0;font:11px monospace;padding:12px;border-radius:8px;pointer-events:none;line-height:1.6;';
+          _dd.innerHTML = 'SWIPE DIAG ACTIVE<br>handlers: registering...<br>_isRealMobile: ' + _isRealMobile + '<br>_isMobileSwipe: ' + _isRealMobile;
+          document.body.appendChild(_dd);
+        }
         let _swipeStartX = 0, _swipeStartY = 0, _swipeDelta = 0, _swipeDeltaY = 0;
         let _swipeTransitioning = false;
         let _swipeActive = false; // true once we detect horizontal movement
@@ -23161,6 +23170,7 @@
           _swipeDeltaY = 0;
           _swipeActive = false;
           _swipeDirection = null;
+          if (_swipeDiag) { var _dd = document.getElementById('swipeDiagPanel'); if (_dd) _dd.innerHTML = 'TOUCH START<br>x:' + Math.round(evt.touches[0].clientX) + ' y:' + Math.round(evt.touches[0].clientY) + '<br>focusMode: ' + !!document.querySelector('.focus-mode') + '<br>transitioning: ' + _swipeTransitioning; }
           // NOTE: We do NOT call preventDefault() here — this preserves
           // click synthesis for taps (tap-to-exit, tap-on-buttons, etc.)
           // But touchstart is registered non-passive so the browser's
@@ -23191,6 +23201,7 @@
           if (_swipeActive && inner.classList.contains('focus-mode') && evt.cancelable) {
             evt.preventDefault();
           }
+          if (_swipeDiag) { var _dd = document.getElementById('swipeDiagPanel'); if (_dd) _dd.innerHTML = 'MOVE dx:' + Math.round(_swipeDelta) + ' dy:' + Math.round(_swipeDeltaY) + '<br>active:' + _swipeActive + ' dir:' + _swipeDirection + '<br>focusMode:' + !!document.querySelector('.focus-mode') + '<br>cancelable:' + !!evt.cancelable + '<br>transitioning:' + _swipeTransitioning; }
           // Visual feedback: translate focused node on vertical-down drag (swipe-to-dismiss)
           if (_swipeActive && _swipeDirection === 'v' && _isMobileSwipe && focusedNode && _swipeDeltaY > 0) {
             var _dragY = Math.min(_swipeDeltaY, 300);
@@ -23411,6 +23422,7 @@
         document.addEventListener('touchstart', onTouchStart, { passive: false });
         document.addEventListener('touchmove', onTouchMove, { passive: false });
         document.addEventListener('touchend', onTouchEnd, { passive: true });
+        if (_swipeDiag) { var _dd = document.getElementById('swipeDiagPanel'); if (_dd) _dd.innerHTML += '<br><b style="color:#0ff">HANDLERS REGISTERED OK</b>'; }
       }
     }
 
