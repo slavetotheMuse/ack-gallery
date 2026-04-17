@@ -5936,43 +5936,43 @@
     /* Card frame wrapper — C4D corner ticks */
     .mobile-feed-frame {
       position: relative;
-      padding: 6px;
+      padding: 8px;
     }
     .mobile-feed-frame::before,
     .mobile-feed-frame::after {
       content: '';
       position: absolute;
-      border-color: rgba(220,150,50,0.4);
+      border-color: rgba(220,150,50,0.35);
       border-style: solid;
       pointer-events: none;
-      width: 28px;
-      height: 28px;
+      width: 60px;
+      height: 60px;
     }
     .mobile-feed-frame::before {
       top: 0; left: 0;
-      border-width: 1px 0 0 1px;
+      border-width: 1.5px 0 0 1.5px;
     }
     .mobile-feed-frame::after {
       top: 0; right: 0;
-      border-width: 1px 1px 0 0;
+      border-width: 1.5px 1.5px 0 0;
     }
     .mobile-feed-frame-bottom::before,
     .mobile-feed-frame-bottom::after {
       content: '';
       position: absolute;
-      border-color: rgba(220,150,50,0.4);
+      border-color: rgba(220,150,50,0.35);
       border-style: solid;
       pointer-events: none;
-      width: 28px;
-      height: 28px;
+      width: 60px;
+      height: 60px;
     }
     .mobile-feed-frame-bottom::before {
       bottom: 0; left: 0;
-      border-width: 0 0 1px 1px;
+      border-width: 0 0 1.5px 1.5px;
     }
     .mobile-feed-frame-bottom::after {
       bottom: 0; right: 0;
-      border-width: 0 1px 1px 0;
+      border-width: 0 1.5px 1.5px 0;
     }
     .mobile-feed-card img,
     .mobile-feed-card video {
@@ -5984,17 +5984,17 @@
     }
     .mobile-feed-title {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 1.4rem;
+      font-size: 46px;
       color: rgba(225,215,195,0.7);
-      margin-top: 16px;
+      margin-top: 20px;
       letter-spacing: 0.03em;
       line-height: 1.4;
     }
     .mobile-feed-meta {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.55rem;
+      font-size: 22px;
       color: rgba(200,180,150,0.3);
-      margin-top: 6px;
+      margin-top: 10px;
       letter-spacing: 0.1em;
       text-transform: lowercase;
     }
@@ -23823,20 +23823,15 @@
         card.onclick = function() {
           // Find the corresponding node-card in the hidden canvas
           var nodeCards = contentEl.querySelectorAll('.node-card:not(.info-card-node):not(.bags-fullset-badge)');
-          // Map to real artwork index (skip info cards)
-          var realIdx = 0;
-          for (var n = 0; n < nodeCards.length; n++) {
-            // Match by checking if this is the i-th non-info node
-            if (n === i || (nodeCards[n].onclick && realIdx === i)) break;
-            realIdx++;
-          }
           var targetNode = nodeCards[i];
           if (targetNode && targetNode.onclick) {
-            // Show the canvas briefly for focus mode to work
+            // Show the canvas so getBoundingClientRect works correctly
             var hiddenCanvas = contentEl.querySelector('.node-graph-canvas');
             if (hiddenCanvas) hiddenCanvas.style.display = '';
             // Hide the scroll feed
             feed.style.display = 'none';
+            // Force reflow so node positions are computed before focus mode reads them
+            void (hiddenCanvas && hiddenCanvas.offsetHeight);
             targetNode.onclick({ stopPropagation: function() {} });
           }
         };
