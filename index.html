@@ -22104,6 +22104,20 @@
               _focusSrc = thumbSrc.replace(/\?w=\d+/, _isRemoteGif ? '?w=800' : '?w=1400');
             }
 
+            // ── MOBILE: cap huge local GIF focusImages to web version ──
+            // Warothy originals are 8-20MB each — impractical for mobile decode.
+            // The 480px web GIFs are sharp enough for phone screens.
+            if (_isRealMobile && _focusSrc && _isGifArtwork && artData && artData.image
+                && !_focusSrc.startsWith('http') && _focusSrc !== artData.image
+                && _focusSrc.endsWith('.gif') && artData.image.endsWith('.gif')) {
+              // If focusImage is a large local GIF (not the web version), use web version on mobile
+              var _focusSize = _focusSrc.replace(/.*\//, '');
+              var _imgSize = artData.image.replace(/.*\//, '');
+              if (_focusSize !== _imgSize) {
+                _focusSrc = artData.image; // use the web GIF instead
+              }
+            }
+
             if (_isRealMobile && _focusSrc) {
               // ── MOBILE: Direct src swap — no preloader, no shimmer ──
               // Mobile browsers rasterize CSS-transformed images at the resolution
@@ -23802,8 +23816,6 @@
         meta.className = 'mobile-feed-meta';
         var metaParts = [];
         if (art.edition) metaParts.push(art.edition);
-        if (isVideo) metaParts.push('video');
-        if (isGif) metaParts.push('animated');
         if (metaParts.length > 0) meta.textContent = metaParts.join(' · ');
         if (metaParts.length > 0) card.appendChild(meta);
 
