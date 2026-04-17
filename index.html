@@ -2675,6 +2675,11 @@
       flex-direction: column;
       padding: 0;
     }
+    #detailContent {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+    }
 
     .detail-header {
       display: flex;
@@ -5848,9 +5853,10 @@
     }
 
     /* ── Mobile Object Manager — scaled up for readability ── */
+    /* Viewport is width=1400 at initial-scale=0.3, so CSS px ÷ 3.3 ≈ screen px */
     body.is-real-mobile .c4d-object-manager {
-      width: 900px !important;
-      font-size: 32px !important;
+      width: 1300px !important;
+      font-size: 48px !important;
       max-height: calc(100vh - 100px) !important;
       overflow-y: auto !important;
       -webkit-overflow-scrolling: touch !important;
@@ -5858,43 +5864,43 @@
       top: 80px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-header {
-      padding: 18px 22px !important;
+      padding: 26px 30px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-header-title {
-      font-size: 34px !important;
+      font-size: 52px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-header-btn {
-      font-size: 36px !important;
-      width: 40px !important;
-      height: 40px !important;
+      font-size: 54px !important;
+      width: 60px !important;
+      height: 60px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-list {
       max-height: calc(100vh - 200px) !important;
       overflow-y: auto !important;
       -webkit-overflow-scrolling: touch !important;
-      padding-bottom: 250px !important; /* extra space so bottom collections clear the browser toolbar */
+      padding-bottom: 350px !important; /* extra space so bottom collections clear the browser toolbar */
     }
     body.is-real-mobile .c4d-object-manager .obj-row {
-      padding: 14px 18px !important;
-      min-height: 48px !important;
+      padding: 22px 26px !important;
+      min-height: 72px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-indent {
-      width: 36px !important;
+      width: 50px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-icon {
-      font-size: 30px !important;
-      margin-right: 14px !important;
+      font-size: 46px !important;
+      margin-right: 18px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-label {
-      font-size: 30px !important;
+      font-size: 46px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-eye,
     body.is-real-mobile .c4d-object-manager .obj-check,
     body.is-real-mobile .c4d-object-manager .obj-add {
-      font-size: 30px !important;
+      font-size: 46px !important;
     }
     body.is-real-mobile .c4d-object-manager .obj-row .collection-icon {
-      font-size: 28px !important;
+      font-size: 44px !important;
     }
 
     /* ── Mobile: collection title bigger (e.g. "BROKEN KEYS" at top) ── */
@@ -5912,12 +5918,12 @@
       top: 0; left: 0; right: 0; bottom: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 80px 40px 300px;
+      padding: 80px 60px 400px;
       z-index: 5;
     }
     .mobile-feed-card {
       width: 100%;
-      margin-bottom: 50px;
+      margin-bottom: 90px;
       cursor: pointer;
       opacity: 0;
       transform: translateY(30px);
@@ -5927,19 +5933,60 @@
       opacity: 1;
       transform: translateY(0);
     }
+    /* Card frame wrapper — C4D corner ticks */
+    .mobile-feed-frame {
+      position: relative;
+      padding: 6px;
+    }
+    .mobile-feed-frame::before,
+    .mobile-feed-frame::after {
+      content: '';
+      position: absolute;
+      border-color: rgba(220,150,50,0.4);
+      border-style: solid;
+      pointer-events: none;
+      width: 28px;
+      height: 28px;
+    }
+    .mobile-feed-frame::before {
+      top: 0; left: 0;
+      border-width: 1px 0 0 1px;
+    }
+    .mobile-feed-frame::after {
+      top: 0; right: 0;
+      border-width: 1px 1px 0 0;
+    }
+    .mobile-feed-frame-bottom::before,
+    .mobile-feed-frame-bottom::after {
+      content: '';
+      position: absolute;
+      border-color: rgba(220,150,50,0.4);
+      border-style: solid;
+      pointer-events: none;
+      width: 28px;
+      height: 28px;
+    }
+    .mobile-feed-frame-bottom::before {
+      bottom: 0; left: 0;
+      border-width: 0 0 1px 1px;
+    }
+    .mobile-feed-frame-bottom::after {
+      bottom: 0; right: 0;
+      border-width: 0 1px 1px 0;
+    }
     .mobile-feed-card img,
     .mobile-feed-card video {
       width: 100%;
       height: auto;
       display: block;
-      border-radius: 4px;
+      border-radius: 0;
       background: #1a1a1e;
     }
     .mobile-feed-title {
       font-family: 'EB Garamond', Georgia, serif;
       font-size: 1.4rem;
       color: rgba(225,215,195,0.7);
-      margin-top: 14px;
+      margin-top: 16px;
       letter-spacing: 0.03em;
       line-height: 1.4;
     }
@@ -23734,7 +23781,15 @@
           media.src = art.image || '';
         }
 
-        card.appendChild(media);
+        // Wrap media in C4D-style corner-tick frame
+        var frame = document.createElement('div');
+        frame.className = 'mobile-feed-frame';
+        var frameBottom = document.createElement('div');
+        frameBottom.className = 'mobile-feed-frame-bottom';
+        frameBottom.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+        frame.appendChild(media);
+        frame.appendChild(frameBottom);
+        card.appendChild(frame);
 
         // Title
         var titleEl = document.createElement('div');
