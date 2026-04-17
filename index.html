@@ -13777,7 +13777,8 @@
       requestAnimationFrame(revealTick);
 
       // Start ambient soundscape once gallery is revealed
-      setTimeout(function() { ACK_SFX.startAmbient(); }, 2000);
+      // Ambient drone disabled — keeping action SFX only (clicks, transitions, etc.)
+      // setTimeout(function() { ACK_SFX.startAmbient(); }, 2000);
 
       if (goingDirect) {
         // ── DIRECT TO COLLECTION: skip catalog animations, go straight to detail ──
