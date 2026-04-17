@@ -6748,6 +6748,13 @@
         artworks: {}
       },
 
+      // ── FROG ──────────────────────────────────────────
+      'Frog': {
+        narration: "",
+        audio: '',
+        artworks: {}
+      },
+
       // ── ACKek ────────────────────────────────────────
       'ACKek': {
         narration: "",
@@ -8751,6 +8758,14 @@
             {title:"WAGMI Burn Token",image:"ackeditions_gallery/web/wagmi_bottle_web.gif",focusImage:"ackeditions_gallery/web/wagmi_bottle_web.gif",fullRes:"https://arweave.net/NVHhw2YvC7HKEgg1l9uTle16DcY1IG8hElcXhUVZXjY",edition:"Edition of 7",tokenId:4},
             {title:"burn to redeem",image:"ackeditions_gallery/web/burntoredeem_web.png",fullRes:"https://arweave.net/chanTsr8YqD_kcUhd4SFKQdBVbmKrRolEwQjlE2WNog",edition:"Edition of 136",tokenId:15}
         ]},
+        { name: "Frog", image: "Frog/web/mixed_up_chameleon_thumb.jpg",
+          wallLayout: true,
+          description: "Frog — ACK's contributions to the Pepe ecosystem. Fake Rare Pepes on Counterparty (Bitcoin) and Notable Pepes on Ethereum.",
+          token: "Mixed", chain: "Bitcoin / Ethereum",
+          artworks: [
+            {title:"the Mixed-up Chameleon",image:"Frog/web/mixed_up_chameleon_web.jpg",focusImage:"Frog/web/mixed_up_chameleon_focus.jpg",fullRes:"Frog/the Mixed-up chameleon.jpeg",description:"Notable Pepes — Token #354. A hand-painted Pepe exploring the boundaries between species and identity.",tokenId:354,contract:"0xe70659b717112ac4e14284d0db2f5d5703df8e43",chain:"Ethereum",token:"ERC-721"},
+            {title:"FAKEWARS",image:"Frog/web/fakewars_web.gif",focusImage:"Frog/FAKEWARS.gif",description:"Fake Rare Pepe — Series 5, Card 19. An animated tribute to the eternal meme wars.",chain:"Bitcoin (Counterparty)"}
+        ]},
         { name: "The Great Color Study", image: "colorstudys/thumbs/pbd_anim.gif",
           wallLayout: true,
           description: "The Great Color Study — a legendary performance art series by AlphaCentauriKid. Ten animated color studies exploring Pantone swatches through ACK's signature glitch aesthetic, culminating in pale blue death — the piece that ignited a community firestorm and ended in a ritual burn.",
@@ -8809,7 +8824,10 @@
             {title:"a moment of self reflection",image:"notxcopy/selfreflect_web.jpg",fullRes:"https://ipfs.pixura.io/ipfs/QmbFB9oaEV82qFzUxm2y6dwE2FzTBz9cjXDkjNjtvZNaFs/selfreflect.gif",webGif:"notxcopy/selfreflect.gif",superrare:"https://dev-mainnet.superrare.co/artwork/eth/0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0/36696",tokenId:36696,description:"don't trust it",collector:"CuratedVault",medium:"Image (GIF)"},
             {title:"mona with green eyes",image:"notxcopy/monagreeneyes_web.jpg",fullRes:"https://arweave.net/JE49aSXkiUYZFOzMGa9rapJdDjTZDwjjRnM3KUiTaJo",webGif:"notxcopy/monagreeneyes.gif",superrare:"https://dev-mainnet.superrare.co/artwork/eth/0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0/33363",tokenId:33363,description:"if you stare long enough she will inherit your soul",collector:"vincentvandough",medium:"Image (GIF)"}
         ]},
-        { name: "ACKek", image: "https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/0bbf510c1386d63e21a473910f6f1efd.png?w=500", omDisabled: true, artworks: [
+        { name: "ACKek", image: "https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/857b5e4d57e7a2f8a13a7e859dff3236.png?w=500",
+          description: "ACKek — ACK's Pepe-inspired portrait collection on Ethereum.",
+          token: "ERC-721", chain: "Ethereum", contract: "0x5976402820f805d2ec9a95e8e21294120088981f",
+          artworks: [
             {title:"William Shakespepe",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/857b5e4d57e7a2f8a13a7e859dff3236.png?w=500"},
             {title:"the social assassin",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/5edb04a6ecbaddec0209243c1ebbe54c.png?w=500"},
             {title:"Duchess of Pepuleme",image:"https://i2c.seadn.io/ethereum/0x5976402820f805d2ec9a95e8e21294120088981f/362bc577a6442a71b48c2e008c818eeb.png?w=500"},
@@ -12951,6 +12969,8 @@
         'ACK Editions': '◆',
         'servants': '👤',
         'ROI': '📈',
+        'Frog': '🐸',
+        'ACKek': '🃏',
         'The Great Color Study': '🎨',
         '1 of 1s': '💎',
         'Right Click Print': '🖨',
@@ -12964,7 +12984,6 @@
         'ACKPFP': '👾',
         '6529': '🔢',
         'Noble Gallery': '🏛',
-        'ACKek': '🐸',
         'Starry Nights': '🌙',
         'SuperRare': '⭐',
         'Opepen': '◎',
@@ -14237,6 +14256,7 @@
       const salonSlots = [
         { name: "ACKPFP",                  x: 34.3, y: 12.9, w: 9.8,  ar: 1 },
         { name: "Warothys",                x: 64.9, y: 14,   w: 8.8,  ar: 1 },
+        { name: "Frog",                     x: 23.6, y: 42.5, w: 3.8,  ar: 1.4 },
         { name: "The Great Color Study",   x: 23.6, y: 51.7, w: 3.7,  ar: 1.333 },
         { name: "1 of 1s",                 x: 49.7, y: 39.9, w: 14.6, ar: 0.8 },
         { name: "Opepen Set 030: a.c.k.",  x: 76.2, y: 48.5, w: 3.8,  ar: 1 },
@@ -17221,6 +17241,7 @@
               function _getBagsRule(colName, grpCount) {
                 // Static definitions
                 const _rules = {
+                  'Frog':                      { baseSF: 0.80, maxPerRow: 4, tier: 'medium', fewSF: 1.10 },
                   'The Great Color Study':    { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.90 },
                   'Warothys':                 { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.85 },
                   'servants':                 { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.75 },
@@ -24136,6 +24157,8 @@
       'servants': {body:'rgb(48,20,20)',border:'rgba(72,38,38,0.85)',header:'rgba(120,78,78,0.92)',accent:'rgb(180,20,20)',accentDim:'rgba(210,50,50,0.75)',accentGlow:'rgba(180,20,20,0.06)',headerText:'#e0e0de'},
       'ROI': {body:'rgb(34,38,50)',border:'rgba(52,60,78,0.85)',header:'rgba(98,108,128,0.92)',accent:'rgb(80,160,220)',accentDim:'rgba(110,190,250,0.75)',accentGlow:'rgba(80,160,220,0.06)',headerText:'#e0e0de'},
       'The Great Color Study': {body:'rgb(42,34,42)',border:'rgba(68,52,68,0.85)',header:'rgba(118,96,118,0.92)',accent:'rgb(200,80,120)',accentDim:'rgba(230,110,150,0.75)',accentGlow:'rgba(200,80,120,0.06)',headerText:'#e0e0de'},
+      'Frog': {body:'rgb(28,42,28)',border:'rgba(44,68,44,0.85)',header:'rgba(80,120,80,0.92)',accent:'rgb(80,200,60)',accentDim:'rgba(110,230,90,0.75)',accentGlow:'rgba(80,200,60,0.06)',headerText:'#e0e0de'},
+      'ACKek': {body:'rgb(34,44,34)',border:'rgba(52,70,52,0.85)',header:'rgba(96,120,96,0.92)',accent:'rgb(100,200,60)',accentDim:'rgba(130,230,90,0.75)',accentGlow:'rgba(100,200,60,0.06)',headerText:'#e0e0de'},
       '1 of 1s': {body:'rgb(40,36,34)',border:'rgba(64,58,52,0.85)',header:'rgba(112,104,96,0.92)',accent:'rgb(200,160,80)',accentDim:'rgba(230,190,110,0.75)',accentGlow:'rgba(200,160,80,0.06)',headerText:'#e0e0de'},
       'Right Click Print': {body:'rgb(38,34,48)',border:'rgba(60,52,74,0.85)',header:'rgba(108,96,122,0.92)',accent:'rgb(100,200,220)',accentDim:'rgba(130,230,250,0.75)',accentGlow:'rgba(100,200,220,0.06)',headerText:'#e0e0de'},
       'ACKFTW': {body:'rgb(34,34,52)',border:'rgba(52,52,80,0.85)',header:'rgba(96,96,130,0.92)',accent:'rgb(60,100,230)',accentDim:'rgba(90,130,255,0.75)',accentGlow:'rgba(60,100,230,0.06)',headerText:'#e0e0de'},
@@ -24149,7 +24172,6 @@
       'ACKPFP': {body:'rgb(36,28,48)',border:'rgba(58,44,76,0.85)',header:'rgba(104,86,126,0.92)',accent:'rgb(160,60,200)',accentDim:'rgba(190,90,230,0.75)',accentGlow:'rgba(160,60,200,0.06)',headerText:'#e0e0de'},
       '6529': {body:'rgb(34,44,44)',border:'rgba(52,70,70,0.85)',header:'rgba(96,120,120,0.92)',accent:'rgb(40,180,180)',accentDim:'rgba(70,210,210,0.75)',accentGlow:'rgba(40,180,180,0.06)',headerText:'#e0e0de'},
       'Noble Gallery': {body:'rgb(38,30,48)',border:'rgba(60,48,76,0.85)',header:'rgba(106,90,126,0.92)',accent:'rgb(180,140,60)',accentDim:'rgba(210,170,90,0.75)',accentGlow:'rgba(180,140,60,0.06)',headerText:'#e0e0de'},
-      'ACKek': {body:'rgb(34,44,34)',border:'rgba(52,70,52,0.85)',header:'rgba(96,120,96,0.92)',accent:'rgb(100,200,60)',accentDim:'rgba(130,230,90,0.75)',accentGlow:'rgba(100,200,60,0.06)',headerText:'#e0e0de'},
       'SuperRare': {body:'rgb(40,34,48)',border:'rgba(64,52,76,0.85)',header:'rgba(112,96,126,0.92)',accent:'rgb(180,80,200)',accentDim:'rgba(210,110,230,0.75)',accentGlow:'rgba(180,80,200,0.06)',headerText:'#e0e0de'},
       'Opepen': {body:'rgb(34,40,48)',border:'rgba(52,64,76,0.85)',header:'rgba(96,112,126,0.92)',accent:'rgb(60,160,220)',accentDim:'rgba(90,190,250,0.75)',accentGlow:'rgba(60,160,220,0.06)',headerText:'#e0e0de'},
       'notxcopy': {body:'rgb(48,34,34)',border:'rgba(76,52,52,0.85)',header:'rgba(126,96,96,0.92)',accent:'rgb(220,80,60)',accentDim:'rgba(250,110,90,0.75)',accentGlow:'rgba(220,80,60,0.06)',headerText:'#e0e0de'},
@@ -37080,11 +37102,11 @@
       const icons = {
         'Broken Keys':'🎹','Piano Blossoms':'🌸','Clown Party':'🤡',
         'Tempted in the Garden':'🍎','ACK Editions':'◆','servants':'👤',
-        'ROI':'📈','The Great Color Study':'🎨','1 of 1s':'💎',
+        'ROI':'📈','The Great Color Study':'🎨','Frog':'🐸','1 of 1s':'💎',
         'Right Click Print':'🖨','ACKFTW':'🏆','Last Orders':'🥃',
         'Made these for your girl':'💐','Her Favorite Flowers':'🌷',
         'Heart You':'❤','Warothys':'🧙','Ackstract':'◼','ACKPFP':'👾',
-        '6529':'🔢','Noble Gallery':'🏛','ACKek':'🐸',
+        '6529':'🔢','Noble Gallery':'🏛','ACKek':'🃏',
         'Starry Nights':'🌙','SuperRare':'⭐','Opepen':'◎','notxcopy':'🔄'
       };
 
