@@ -5906,6 +5906,52 @@
       padding: 18px 30px !important;
     }
 
+    /* ── Mobile scroll feed: vertical artwork cards ── */
+    .mobile-scroll-feed {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 80px 40px 300px;
+      z-index: 5;
+    }
+    .mobile-feed-card {
+      width: 100%;
+      margin-bottom: 50px;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .mobile-feed-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .mobile-feed-card img,
+    .mobile-feed-card video {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+      background: #1a1a1e;
+    }
+    .mobile-feed-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.4rem;
+      color: rgba(225,215,195,0.7);
+      margin-top: 14px;
+      letter-spacing: 0.03em;
+      line-height: 1.4;
+    }
+    .mobile-feed-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      color: rgba(200,180,150,0.3);
+      margin-top: 6px;
+      letter-spacing: 0.1em;
+      text-transform: lowercase;
+    }
+
     /* ── Mobile candles: hide in detail view to reclaim artwork space ── */
     body.is-real-mobile .viewport-candles.mobile-candles-hidden {
       display: none !important;
@@ -21374,15 +21420,11 @@
         // Clear re-entrancy guard once the view is fully built and visible
         _openDetailBusy = false;
 
-        // ── MOBILE: skip node graph, go straight to focus mode on first artwork ──
-        if (_isRealMobile && collection.artworks && collection.artworks.length > 0) {
-          var _mfFirstCard = contentEl.querySelector('.node-card:not(.info-card-node):not(.bags-fullset-badge)');
-          if (_mfFirstCard && _mfFirstCard.onclick) {
-            // Brief delay for DOM to settle, then simulate tap on first artwork
-            setTimeout(function() {
-              _mfFirstCard.onclick({ stopPropagation: function() {} });
-            }, 150);
-          }
+        // ── MOBILE: show scroll feed overlay, hide node graph ──
+        if (_isRealMobile) {
+          var _mfCanvas = contentEl.querySelector('.node-graph-canvas');
+          if (_mfCanvas) _mfCanvas.style.display = 'none';
+          _buildMobileScrollFeed(contentEl, collection, index);
         }
 
         // ── COLLECTION LORE NODE — show if collection-level lore exists ──
@@ -23653,6 +23695,109 @@
           if (sib && sib.style && sib.style.width === '1px') sib.parentNode.removeChild(sib);
         }, 420);
       }
+    }
+
+    // ── MOBILE SCROLL FEED: vertical card list for collection browsing ──
+    function _buildMobileScrollFeed(contentEl, collection, collectionIndex) {
+      var feed = document.createElement('div');
+      feed.className = 'mobile-scroll-feed';
+      feed.id = 'mobileScrollFeed';
+
+      var artworks = collection.artworks;
+      var cards = [];
+
+      artworks.forEach(function(art, i) {
+        if (art.isInfoCard) return; // skip info cards
+
+        var card = document.createElement('div');
+        card.className = 'mobile-feed-card';
+
+        // Image or video thumbnail
+        var media;
+        var isVideo = art.fullRes && art.fullRes.endsWith('.mp4');
+        var isGif = art.image && art.image.endsWith('.gif');
+
+        media = document.createElement('img');
+        media.alt = art.title || '';
+        media.loading = 'lazy';
+        media.decoding = 'async';
+
+        // Use optimized source: Color Study thumbnails, CDN resized, etc.
+        if (art.image && art.image.startsWith('colorstudys/') && art.image.endsWith('.gif')) {
+          var gifName = art.image.replace('colorstudys/', '').replace('.gif', '');
+          media.src = 'colorstudys/thumbs/' + gifName + '_thumb.jpg';
+        } else if (art.image && art.image.indexOf('?w=') !== -1) {
+          media.src = art.image.replace(/\?w=\d+/, '?w=800');
+        } else if (isVideo && art.image) {
+          media.src = art.image; // use still thumbnail for video works
+        } else {
+          media.src = art.image || '';
+        }
+
+        card.appendChild(media);
+
+        // Title
+        var titleEl = document.createElement('div');
+        titleEl.className = 'mobile-feed-title';
+        titleEl.textContent = art.title || '';
+        card.appendChild(titleEl);
+
+        // Meta line
+        var meta = document.createElement('div');
+        meta.className = 'mobile-feed-meta';
+        var metaParts = [];
+        if (art.edition) metaParts.push(art.edition);
+        if (isVideo) metaParts.push('video');
+        if (isGif) metaParts.push('animated');
+        if (metaParts.length > 0) meta.textContent = metaParts.join(' · ');
+        if (metaParts.length > 0) card.appendChild(meta);
+
+        // Tap → enter focus mode on this artwork via the hidden node graph
+        card.onclick = function() {
+          // Find the corresponding node-card in the hidden canvas
+          var nodeCards = contentEl.querySelectorAll('.node-card:not(.info-card-node):not(.bags-fullset-badge)');
+          // Map to real artwork index (skip info cards)
+          var realIdx = 0;
+          for (var n = 0; n < nodeCards.length; n++) {
+            // Match by checking if this is the i-th non-info node
+            if (n === i || (nodeCards[n].onclick && realIdx === i)) break;
+            realIdx++;
+          }
+          var targetNode = nodeCards[i];
+          if (targetNode && targetNode.onclick) {
+            // Show the canvas briefly for focus mode to work
+            var hiddenCanvas = contentEl.querySelector('.node-graph-canvas');
+            if (hiddenCanvas) hiddenCanvas.style.display = '';
+            // Hide the scroll feed
+            feed.style.display = 'none';
+            targetNode.onclick({ stopPropagation: function() {} });
+          }
+        };
+
+        feed.appendChild(card);
+        cards.push(card);
+      });
+
+      contentEl.appendChild(feed);
+
+      // Staggered reveal with IntersectionObserver
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '50px', threshold: 0.1 });
+
+      // Initial batch: reveal first few immediately, observe the rest
+      cards.forEach(function(card, idx) {
+        if (idx < 3) {
+          setTimeout(function() { card.classList.add('visible'); }, 80 + idx * 100);
+        } else {
+          observer.observe(card);
+        }
+      });
     }
 
     // ── Helper: update motherboard tickers during mobile focus/swipe ──
@@ -35846,6 +35991,14 @@
       if (_navHintRestore) _navHintRestore.classList.add('visible');
       // Mobile: switch back button to detail context
       _showMobileBack('detail');
+
+      // Mobile: restore scroll feed, hide node graph canvas
+      if (_isRealMobile) {
+        var _msfFeed = document.getElementById('mobileScrollFeed');
+        var _msfCanvas = document.querySelector('.node-graph-canvas');
+        if (_msfFeed) _msfFeed.style.display = '';
+        if (_msfCanvas) _msfCanvas.style.display = 'none';
+      }
 
       // Reset global swipe state on focus exit
       if (typeof _globalSwipeState !== 'undefined') {
