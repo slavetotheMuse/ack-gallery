@@ -10108,14 +10108,7 @@
       try { localStorage.setItem('ack_intro_seen', Date.now().toString()); } catch(e) {}
 
       // Go straight to vortex field — no whispers gate
-      if (_isRealMobile) {
-        runIntroSequence();
-        setTimeout(function() { _showMobileWarningOverlay(); }, 3500);
-        var _firstRoast = (120 + Math.floor(Math.random() * 180)) * 1000;
-        setTimeout(_showMobileRoast, _firstRoast);
-      } else {
-        runIntroSequence();
-      }
+      runIntroSequence();
       renderCollections();
       initScrollScaling();
       buildPersistentGrid();
@@ -21381,6 +21374,17 @@
         // Clear re-entrancy guard once the view is fully built and visible
         _openDetailBusy = false;
 
+        // ── MOBILE: skip node graph, go straight to focus mode on first artwork ──
+        if (_isRealMobile && collection.artworks && collection.artworks.length > 0) {
+          var _mfFirstCard = contentEl.querySelector('.node-card:not(.info-card-node):not(.bags-fullset-badge)');
+          if (_mfFirstCard && _mfFirstCard.onclick) {
+            // Brief delay for DOM to settle, then simulate tap on first artwork
+            setTimeout(function() {
+              _mfFirstCard.onclick({ stopPropagation: function() {} });
+            }, 150);
+          }
+        }
+
         // ── COLLECTION LORE NODE — show if collection-level lore exists ──
         setTimeout(function() {
           var _colLore = _getLore(collection.name, '');
@@ -23589,6 +23593,8 @@
       var old = document.getElementById('mobileFocusIndicator');
       if (old) old.remove();
       var total = col.artworks.length;
+      // Single-work collections: no indicator needed (nothing to swipe to)
+      if (total <= 1) return;
       var position = (artIdx|0) + 1;
       var indicator = document.createElement('div');
       indicator.id = 'mobileFocusIndicator';
