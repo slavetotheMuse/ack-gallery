@@ -8645,7 +8645,7 @@
             {title:"Warothy (Physical)",image:"warothy/web/warothy_physical_web.gif",fullRes:"warothy/warothy4k.gif",edition:"Edition of 25",description:"Limited edition lenticular PETG print, 69×69×3cm. Collaboration with Avant Arte. €5,000 per edition.",isPhysical:true},
         ]},
         { name: "SuperRare", image: "but_wait_thumb.jpg", contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0", artworks: [
-            {title:"but wait...my bags!",image:"superrare/butwait/but_wait_small.gif",fullRes:"https://ipfs.io/ipfs/Qme6uXtzKdp1TY1hSsdyU1pMxQCkYUumEsJ5jDnboVvsGx/originbags.gif",
+            {title:"but wait...my bags!",image:"superrare/butwait/but_wait_small.gif",focusImage:"superrare/butwait/but_wait_focus.gif",fullRes:"https://ipfs.io/ipfs/Qme6uXtzKdp1TY1hSsdyU1pMxQCkYUumEsJ5jDnboVvsGx/originbags.gif",
              tokenId:47875,chain:"Ethereum",token:"ERC-721",contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0"},
             {title:"I promise I can change",image:"https://arweave.net/1Sas2deHRkHZ9ZigvldnbOiC94naLD29j8f4LHD6j5M",
              isLiar:true,
@@ -9359,6 +9359,15 @@
           { x: 286,  y: 732, w: 279 },  // 10
           { x: 1990, y: 735, w: 226 },  // 11
           { x: 1600, y: 739, w: 278 }   // 12
+        ]
+      },
+      "Frog": {
+        refW: 2560, refH: 1294,
+        nodes: [
+          { x: 546, y: 390, w: 235 },   // 0 the Mixed-up Chameleon
+          { x: 945, y: 390, w: 235 },   // 1 FAKEWARS
+          { x: 1334, y: 397, w: 248 },  // 2 FAKETANIC
+          { x: 1752, y: 398, w: 235 }   // 3 GRANTYUM
         ]
       }
     };
@@ -14259,8 +14268,8 @@
       const salonSlots = [
         { name: "ACKPFP",                  x: 34.3, y: 12.9, w: 9.8,  ar: 1 },
         { name: "Warothys",                x: 64.9, y: 14,   w: 8.8,  ar: 1 },
-        { name: "ACKek",                    x: 23.8, y: 28,   w: 3.6,  ar: 1.2 },
-        { name: "Frog",                     x: 23.6, y: 36,   w: 3.8,  ar: 1.4 },
+        { name: "ACKek",                    x: 23.7, y: 26.1, w: 4.4,  ar: 1.2 },
+        { name: "Frog",                     x: 23.6, y: 35.5, w: 3.8,  ar: 1.4 },
         { name: "The Great Color Study",   x: 23.6, y: 51.7, w: 3.7,  ar: 1.333 },
         { name: "1 of 1s",                 x: 49.7, y: 39.9, w: 14.6, ar: 0.8 },
         { name: "Opepen Set 030: a.c.k.",  x: 76.2, y: 48.5, w: 3.8,  ar: 1 },
@@ -20230,6 +20239,60 @@
           });
         }
 
+        // ── ACKek portrait frames on each artwork node ──
+        if (collection.name === 'ACKek') {
+          const allAckekCards = inner.querySelectorAll('.node-card');
+          allAckekCards.forEach((akNode, akIdx) => {
+            if (akNode.classList.contains('info-card-node')) return;
+            const _applyAckekFrame = () => {
+              const preview = akNode.querySelector('.node-preview');
+              const img = preview ? preview.querySelector('img') : null;
+              if (preview && img && img.naturalWidth > 0) {
+                const localW = parseFloat(akNode.style.width) || preview.offsetWidth;
+                const localH = img.offsetHeight || preview.offsetHeight || localW;
+                const pal = artworkPalettes[akIdx] || COLLECTION_PALETTES['ACKek'];
+                const artTitle = collection.artworks[akIdx] ? collection.artworks[akIdx].title : '';
+                const frameSvg = generateACKekFrame(localW, localH, pal, artTitle, false);
+                frameSvg.style.opacity = '1';
+                frameSvg.style.transition = 'none';
+                frameSvg.dataset.collectionFrame = 'true';
+                akNode.appendChild(frameSvg);
+                akNode.classList.add('has-ackek-frame');
+              } else {
+                setTimeout(_applyAckekFrame, 500);
+              }
+            };
+            setTimeout(_applyAckekFrame, 800 + akIdx * 150);
+          });
+        }
+
+        // ── Frog swamp frames on each artwork node ──
+        if (collection.name === 'Frog') {
+          const allFrogCards = inner.querySelectorAll('.node-card');
+          allFrogCards.forEach((frogNode, frogIdx) => {
+            if (frogNode.classList.contains('info-card-node')) return;
+            const _applyFrogFrame = () => {
+              const preview = frogNode.querySelector('.node-preview');
+              const img = preview ? preview.querySelector('img') : null;
+              if (preview && img && img.naturalWidth > 0) {
+                const localW = parseFloat(frogNode.style.width) || preview.offsetWidth;
+                const localH = img.offsetHeight || preview.offsetHeight || localW;
+                const pal = artworkPalettes[frogIdx] || COLLECTION_PALETTES['Frog'];
+                const artTitle = collection.artworks[frogIdx] ? collection.artworks[frogIdx].title : '';
+                const frameSvg = generateFrogFrame(localW, localH, pal, artTitle, false);
+                frameSvg.style.opacity = '1';
+                frameSvg.style.transition = 'none';
+                frameSvg.dataset.collectionFrame = 'true';
+                frogNode.appendChild(frameSvg);
+                frogNode.classList.add('has-frog-frame');
+              } else {
+                setTimeout(_applyFrogFrame, 500);
+              }
+            };
+            setTimeout(_applyFrogFrame, 800 + frogIdx * 150);
+          });
+        }
+
         // ── MY BAGS: apply per-artwork frames based on _sourceCollection ──
         if (collection._isMyBags) {
           const allBagsCards = inner.querySelectorAll('.node-card');
@@ -20295,6 +20358,12 @@
                 } else if (srcCol === 'Tempted in the Garden') {
                   frameSvg = generateTemptedFrame(localW, localH, false);
                   frameClass = 'has-tempted-frame';
+                } else if (srcCol === 'ACKek') {
+                  frameSvg = generateACKekFrame(localW, localH, pal, bagArt.title || '', false);
+                  frameClass = 'has-ackek-frame';
+                } else if (srcCol === 'Frog') {
+                  frameSvg = generateFrogFrame(localW, localH, pal, bagArt.title || '', false);
+                  frameClass = 'has-frog-frame';
                 }
                 if (frameSvg) {
                   frameSvg.style.opacity = '1';
@@ -23061,6 +23130,38 @@
         }, 900);
       }
 
+      // ── ACKek frame in focus view ──
+      if (_focusColName === 'ACKek') {
+        setTimeout(() => {
+          if (node.querySelector('.ackek-frame-svg')) return;
+          const preview = node.querySelector('.node-preview');
+          const img = preview ? preview.querySelector('img') : null;
+          if (preview && img) {
+            const localW = parseFloat(node.style.width) || preview.offsetWidth;
+            const localH = img.offsetHeight || preview.offsetHeight || localW;
+            const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['ACKek'];
+            const frameSvg = generateACKekFrame(localW, localH, pal, artworkData.title, true);
+            node.appendChild(frameSvg);
+          }
+        }, 900);
+      }
+
+      // ── Frog frame in focus view ──
+      if (_focusColName === 'Frog') {
+        setTimeout(() => {
+          if (node.querySelector('.frog-frame-svg')) return;
+          const preview = node.querySelector('.node-preview');
+          const img = preview ? preview.querySelector('img') : null;
+          if (preview && img) {
+            const localW = parseFloat(node.style.width) || preview.offsetWidth;
+            const localH = img.offsetHeight || preview.offsetHeight || localW;
+            const pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Frog'];
+            const frameSvg = generateFrogFrame(localW, localH, pal, artworkData.title, true);
+            node.appendChild(frameSvg);
+          }
+        }, 900);
+      }
+
       // ── Last Orders: swap still image to video on focus ──
       if (_focusColName === 'Last Orders') {
         setTimeout(() => {
@@ -23556,7 +23657,8 @@
         '.starry-frame-svg', '.pfp-frame-svg', '.brokenkeys-frame-svg',
         '.warothy-frame-svg', '.botanical-frame-svg', '.servant-frame-svg',
         '.tempted-frame-svg', '.bar-frame-svg', '.superrare-frame-svg',
-        '.ackstract-frame-svg', '.hff-frame-svg'
+        '.ackstract-frame-svg', '.hff-frame-svg',
+        '.ackek-frame-svg', '.frog-frame-svg'
       ];
       frameSelectors.forEach(function(sel) {
         var frames = node.querySelectorAll(sel);
@@ -23650,6 +23752,12 @@
         frameSvg = generateAckstractFrame(localW, localH, artworkData.title, true);
       } else if (colName === '1 of 1s') {
         frameSvg = generate1of1Frame(localW, localH, artworkData.title);
+      } else if (colName === 'ACKek') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['ACKek'];
+        frameSvg = generateACKekFrame(localW, localH, pal, artworkData.title, true);
+      } else if (colName === 'Frog') {
+        pal = ARTWORK_PALETTES[artworkData.image] || COLLECTION_PALETTES['Frog'];
+        frameSvg = generateFrogFrame(localW, localH, pal, artworkData.title, true);
       } else if (artworkData.masterwork) {
         frameSvg = generateOrnateFrame(localW, localH);
       }
@@ -23962,6 +24070,218 @@
     }
 
     // ══════════════════════════════════════════════════════════════════
+    // ── ACKek Frame — clean wireframe, portrait gallery aesthetic ──
+    // ══════════════════════════════════════════════════════════════════
+    function generateACKekFrame(imgW, imgH, palette, title, focusMode) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 16;
+      const svg = document.createElementNS(ns, 'svg');
+      const W = imgW + pad * 2, H = imgH + pad * 2;
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.setAttribute('width', W);
+      svg.setAttribute('height', H);
+      svg.classList.add('ackek-frame-svg');
+      svg.style.cssText = 'position:absolute;top:-' + pad + 'px;left:-' + pad + 'px;width:' + W + 'px;height:' + H + 'px;pointer-events:none;z-index:5;';
+
+      const L = pad, T = pad, R = imgW + pad, B = imgH + pad;
+      const iW = R - L, iH = B - T;
+      const ac = palette ? palette.accent : 'rgb(100,200,60)';
+      const m = ac.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      const ar = m ? +m[1] : 100, ag = m ? +m[2] : 200, ab = m ? +m[3] : 60;
+      const c = (r,g,b,a) => 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+      const ac_ = (a) => c(ar, ag, ab, a);
+
+      let seed = (ar * 7 + ag * 13 + ab * 3 + imgW * 11) & 0xFFFF;
+      const rand = () => { seed = (seed * 16807 + 11) % 2147483647; return (seed & 0xFFFF) / 0xFFFF; };
+
+      let els = '';
+
+      // ── Clean wireframe base: inner border + outer hairline ──
+      els += '<rect x="' + L + '" y="' + T + '" width="' + iW + '" height="' + iH + '" fill="none" stroke="' + ac_(0.3) + '" stroke-width="0.8"/>';
+      els += '<rect x="' + (L - 4) + '" y="' + (T - 4) + '" width="' + (iW + 8) + '" height="' + (iH + 8) + '" fill="none" stroke="' + ac_(0.1) + '" stroke-width="0.3"/>';
+
+      // ── Corner L-brackets ──
+      var bLen = 14;
+      [[L, T, 1, 1], [R, T, -1, 1], [L, B, 1, -1], [R, B, -1, -1]].forEach(function(p) {
+        els += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + (p[0] + bLen * p[2]) + '" y2="' + p[1] + '" stroke="' + ac_(0.25) + '" stroke-width="0.6"/>';
+        els += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + p[0] + '" y2="' + (p[1] + bLen * p[3]) + '" stroke="' + ac_(0.25) + '" stroke-width="0.6"/>';
+      });
+
+      // ── Per-artwork thematic accents ──
+      var tl = (title || '').toLowerCase();
+
+      if (tl.indexOf('shakespepe') !== -1) {
+        // ── Quill nib silhouette top-right + thin scroll flourish ──
+        var qx = R + 4, qy = T + 2;
+        els += '<path d="M' + qx + ',' + qy + ' L' + (qx + 1.5) + ',' + (qy - 4) + ' L' + (qx + 3) + ',' + qy + '" fill="none" stroke="' + ac_(0.2) + '" stroke-width="0.4"/>';
+        els += '<line x1="' + (qx + 1.5) + '" y1="' + qy + '" x2="' + (qx + 1.5) + '" y2="' + (qy + 18) + '" stroke="' + ac_(0.12) + '" stroke-width="0.3" stroke-dasharray="2,3"/>';
+        // Scroll flourish at bottom center
+        var fx = L + iW * 0.5;
+        els += '<path d="M' + (fx - 18) + ',' + (B + 5) + ' Q' + (fx - 6) + ',' + (B + 9) + ' ' + fx + ',' + (B + 5) + ' Q' + (fx + 6) + ',' + (B + 1) + ' ' + (fx + 18) + ',' + (B + 5) + '" fill="none" stroke="' + ac_(0.14) + '" stroke-width="0.4"/>';
+
+      } else if (tl.indexOf('duchess') !== -1 || tl.indexOf('pepul') !== -1) {
+        // ── Minimal crown wireframe at top center + thin corner arcs ──
+        var crx = L + iW * 0.5;
+        els += '<path d="M' + (crx - 6) + ',' + (T - 3) + ' L' + (crx - 3) + ',' + (T - 8) + ' L' + crx + ',' + (T - 4.5) + ' L' + (crx + 3) + ',' + (T - 8) + ' L' + (crx + 6) + ',' + (T - 3) + '" fill="none" stroke="' + ac_(0.22) + '" stroke-width="0.5" stroke-linejoin="round"/>';
+        // Thin corner arcs (quarter-circles)
+        [[L, T, 1, 1], [R, T, -1, 1], [L, B, 1, -1], [R, B, -1, -1]].forEach(function(p) {
+          var cx = p[0], cy = p[1], dx = p[2], dy = p[3];
+          els += '<path d="M' + (cx + dx * 18) + ',' + cy + ' A18,18 0 0,' + (dx * dy > 0 ? '0' : '1') + ' ' + cx + ',' + (cy + dy * 18) + '" fill="none" stroke="' + ac_(0.1) + '" stroke-width="0.3"/>';
+        });
+
+      } else if (tl.indexOf('femmes') !== -1 || tl.indexOf('gliss') !== -1) {
+        // ── Art nouveau: thin sinuous wire along each side ──
+        [L - 5, R + 5].forEach(function(sx) {
+          var pts = 'M' + sx + ',' + (T + 10);
+          for (var s = 0; s < 4; s++) {
+            var sy = T + 10 + (iH - 20) * ((s + 0.5) / 4);
+            var bulge = (s % 2 === 0 ? -3 : 3) * (sx < L ? 1 : -1);
+            pts += ' Q' + (sx + bulge) + ',' + sy + ' ' + sx + ',' + (T + 10 + (iH - 20) * ((s + 1) / 4));
+          }
+          els += '<path d="' + pts + '" fill="none" stroke="' + ac_(0.14) + '" stroke-width="0.4"/>';
+        });
+        // Thin midline accent top + bottom
+        els += '<line x1="' + (L + iW * 0.25) + '" y1="' + (T - 5) + '" x2="' + (L + iW * 0.75) + '" y2="' + (T - 5) + '" stroke="' + ac_(0.12) + '" stroke-width="0.3"/>';
+        els += '<line x1="' + (L + iW * 0.25) + '" y1="' + (B + 5) + '" x2="' + (L + iW * 0.75) + '" y2="' + (B + 5) + '" stroke="' + ac_(0.12) + '" stroke-width="0.3"/>';
+
+      } else if (tl.indexOf('kek your') !== -1 || tl.indexOf('ethusiasm') !== -1) {
+        // ── TV/sitcom: thin scanlines in margins + V-antenna wire ──
+        for (var sl = 0; sl < 4; sl++) {
+          var sy = T + iH * (0.15 + sl * 0.22);
+          els += '<line x1="' + (L - 8) + '" y1="' + sy + '" x2="' + (L - 2) + '" y2="' + sy + '" stroke="' + ac_(0.08 + rand() * 0.06) + '" stroke-width="0.3"/>';
+          els += '<line x1="' + (R + 2) + '" y1="' + sy + '" x2="' + (R + 8) + '" y2="' + sy + '" stroke="' + ac_(0.08 + rand() * 0.06) + '" stroke-width="0.3"/>';
+        }
+        // V-antenna at top
+        var ax = L + iW * 0.5;
+        els += '<line x1="' + ax + '" y1="' + (T - 2) + '" x2="' + (ax - 7) + '" y2="' + (T - 10) + '" stroke="' + ac_(0.18) + '" stroke-width="0.4" stroke-linecap="round"/>';
+        els += '<line x1="' + ax + '" y1="' + (T - 2) + '" x2="' + (ax + 7) + '" y2="' + (T - 10) + '" stroke="' + ac_(0.18) + '" stroke-width="0.4" stroke-linecap="round"/>';
+
+      } else if (tl.indexOf('isle') !== -1) {
+        // ── Horizon line + gentle wave wire along bottom ──
+        var wy = B + 5;
+        var wPath = 'M' + (L - 2) + ',' + wy;
+        for (var wp = 0; wp < 8; wp++) {
+          var wpx = L + (iW / 8) * (wp + 0.5);
+          var wpy = wy + (wp % 2 === 0 ? -1.5 : 1.5);
+          wPath += ' Q' + wpx + ',' + wpy + ' ' + (L + (iW / 8) * (wp + 1)) + ',' + wy;
+        }
+        els += '<path d="' + wPath + '" fill="none" stroke="' + ac_(0.12) + '" stroke-width="0.4"/>';
+        // Thin horizon wire at top
+        els += '<line x1="' + (L + 8) + '" y1="' + (T - 5) + '" x2="' + (R - 8) + '" y2="' + (T - 5) + '" stroke="' + ac_(0.08) + '" stroke-width="0.3"/>';
+      }
+
+      svg.innerHTML = els;
+      return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // ── Frog Frame — clean wireframe with per-artwork thematic wires ──
+    // ══════════════════════════════════════════════════════════════════
+    function generateFrogFrame(imgW, imgH, palette, title, focusMode) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const pad = 16;
+      const svg = document.createElementNS(ns, 'svg');
+      const W = imgW + pad * 2, H = imgH + pad * 2;
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.setAttribute('width', W);
+      svg.setAttribute('height', H);
+      svg.classList.add('frog-frame-svg');
+      svg.style.cssText = 'position:absolute;top:-' + pad + 'px;left:-' + pad + 'px;width:' + W + 'px;height:' + H + 'px;pointer-events:none;z-index:5;';
+
+      const L = pad, T = pad, R = imgW + pad, B = imgH + pad;
+      const iW = R - L, iH = B - T;
+      const ac = palette ? palette.accent : 'rgb(80,200,60)';
+      const m = ac.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      const ar = m ? +m[1] : 80, ag = m ? +m[2] : 200, ab = m ? +m[3] : 60;
+      const c = (r,g,b,a) => 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+      const ac_ = (a) => c(ar, ag, ab, a);
+
+      let seed = (ar * 7 + ag * 13 + ab * 3 + imgW * 11) & 0xFFFF;
+      const rand = () => { seed = (seed * 16807 + 11) % 2147483647; return (seed & 0xFFFF) / 0xFFFF; };
+
+      let els = '';
+
+      // ── Clean wireframe base: inner border + outer hairline ──
+      els += '<rect x="' + L + '" y="' + T + '" width="' + iW + '" height="' + iH + '" fill="none" stroke="' + ac_(0.28) + '" stroke-width="0.8"/>';
+      els += '<rect x="' + (L - 4) + '" y="' + (T - 4) + '" width="' + (iW + 8) + '" height="' + (iH + 8) + '" fill="none" stroke="' + ac_(0.1) + '" stroke-width="0.3"/>';
+
+      // ── Corner L-brackets ──
+      var bLen = 14;
+      [[L, T, 1, 1], [R, T, -1, 1], [L, B, 1, -1], [R, B, -1, -1]].forEach(function(p) {
+        els += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + (p[0] + bLen * p[2]) + '" y2="' + p[1] + '" stroke="' + ac_(0.25) + '" stroke-width="0.6"/>';
+        els += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + p[0] + '" y2="' + (p[1] + bLen * p[3]) + '" stroke="' + ac_(0.25) + '" stroke-width="0.6"/>';
+      });
+
+      // ── Per-artwork thematic wires ──
+      var tl = (title || '').toLowerCase();
+
+      if (tl.indexOf('chameleon') !== -1 || tl.indexOf('mixed') !== -1) {
+        // ── Chameleon: color-shift dashes — short accent lines that vary in hue along the sides ──
+        var hues = [[233,141,144],[180,200,100],[100,180,200],[200,140,220]];
+        for (var ci = 0; ci < 6; ci++) {
+          var side = ci % 2 === 0;
+          var sx = side ? (L - 6) : (R + 4);
+          var sy = T + iH * ((ci + 0.5) / 6);
+          var hue = hues[ci % hues.length];
+          var dashW = 4 + rand() * 3;
+          els += '<line x1="' + sx + '" y1="' + sy + '" x2="' + (sx + (side ? -dashW : dashW)) + '" y2="' + sy + '" stroke="' + c(hue[0], hue[1], hue[2], 0.15) + '" stroke-width="0.5" stroke-linecap="round"/>';
+        }
+        // Thin curling tail wire bottom-right
+        els += '<path d="M' + (R + 3) + ',' + (B - 6) + ' Q' + (R + 8) + ',' + (B + 2) + ' ' + (R + 5) + ',' + (B + 7) + '" fill="none" stroke="' + ac_(0.14) + '" stroke-width="0.4" stroke-linecap="round"/>';
+
+      } else if (tl.indexOf('fakewars') !== -1 || tl.indexOf('wars') !== -1) {
+        // ── Star Wars: lightsaber wire accents + crawl perspective lines ──
+        // Green saber line left side
+        els += '<line x1="' + (L - 6) + '" y1="' + (T + iH * 0.15) + '" x2="' + (L - 6) + '" y2="' + (T + iH * 0.55) + '" stroke="' + c(80, 255, 80, 0.18) + '" stroke-width="0.7" stroke-linecap="round"/>';
+        // Red saber line right side
+        els += '<line x1="' + (R + 6) + '" y1="' + (T + iH * 0.4) + '" x2="' + (R + 6) + '" y2="' + (T + iH * 0.8) + '" stroke="' + c(255, 60, 60, 0.18) + '" stroke-width="0.7" stroke-linecap="round"/>';
+        // Saber hilts (tiny cross-lines)
+        els += '<line x1="' + (L - 8) + '" y1="' + (T + iH * 0.55) + '" x2="' + (L - 4) + '" y2="' + (T + iH * 0.55) + '" stroke="' + c(160, 160, 160, 0.2) + '" stroke-width="0.5"/>';
+        els += '<line x1="' + (R + 4) + '" y1="' + (T + iH * 0.4) + '" x2="' + (R + 8) + '" y2="' + (T + iH * 0.4) + '" stroke="' + c(160, 160, 160, 0.2) + '" stroke-width="0.5"/>';
+        // Opening crawl perspective lines converging to top center
+        var cx = L + iW * 0.5, cy = T - 8;
+        els += '<line x1="' + (L + iW * 0.2) + '" y1="' + (T - 2) + '" x2="' + cx + '" y2="' + cy + '" stroke="' + ac_(0.08) + '" stroke-width="0.3"/>';
+        els += '<line x1="' + (L + iW * 0.8) + '" y1="' + (T - 2) + '" x2="' + cx + '" y2="' + cy + '" stroke="' + ac_(0.08) + '" stroke-width="0.3"/>';
+
+      } else if (tl.indexOf('faketanic') !== -1 || tl.indexOf('tanic') !== -1) {
+        // ── Titanic: single gentle wave wire along bottom + diagonal bow line ──
+        var wy = B + 5;
+        var wPath = 'M' + (L - 3) + ',' + wy;
+        for (var wp = 0; wp < 6; wp++) {
+          var wpx = L + (iW / 6) * (wp + 0.5);
+          var amp = 1.2 + rand() * 0.8;
+          wPath += ' Q' + wpx + ',' + (wy + (wp % 2 === 0 ? -amp : amp)) + ' ' + (L + (iW / 6) * (wp + 1)) + ',' + wy;
+        }
+        els += '<path d="' + wPath + '" fill="none" stroke="' + ac_(0.14) + '" stroke-width="0.4"/>';
+        // Ship bow diagonal — single clean line top-left
+        els += '<line x1="' + (L - 3) + '" y1="' + (T + iH * 0.3) + '" x2="' + (L - 8) + '" y2="' + (T - 3) + '" stroke="' + ac_(0.12) + '" stroke-width="0.4" stroke-linecap="round"/>';
+        // Thin rail lines
+        els += '<line x1="' + (L - 8) + '" y1="' + (T - 3) + '" x2="' + (L - 3) + '" y2="' + (T - 3) + '" stroke="' + ac_(0.1) + '" stroke-width="0.3"/>';
+
+      } else if (tl.indexOf('grantyum') !== -1 || tl.indexOf('grant') !== -1) {
+        // ── Lush/tropical: thin vine wires along sides with tiny leaf strokes ──
+        [L - 5, R + 5].forEach(function(vx) {
+          var dir = vx < L ? -1 : 1;
+          var pts = 'M' + vx + ',' + (T + 8);
+          for (var v = 0; v < 3; v++) {
+            var vy = T + 8 + (iH - 16) * ((v + 0.5) / 3);
+            pts += ' Q' + (vx + dir * 4) + ',' + vy + ' ' + vx + ',' + (T + 8 + (iH - 16) * ((v + 1) / 3));
+          }
+          els += '<path d="' + pts + '" fill="none" stroke="' + ac_(0.13) + '" stroke-width="0.4"/>';
+          // Small leaf strokes at each curve apex
+          for (var lf = 0; lf < 3; lf++) {
+            var ly = T + 8 + (iH - 16) * ((lf + 0.5) / 3);
+            var lx = vx + dir * 4;
+            els += '<line x1="' + lx + '" y1="' + ly + '" x2="' + (lx + dir * 3) + '" y2="' + (ly - 2) + '" stroke="' + ac_(0.12) + '" stroke-width="0.3" stroke-linecap="round"/>';
+          }
+        });
+      }
+
+      svg.innerHTML = els;
+      return svg;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     // ── ARTWORK PALETTE EXTRACTION — sample image to theme cards ──
     // ══════════════════════════════════════════════════════════════════
 
@@ -24148,6 +24468,17 @@
       // ── Her Favorite Flowers ──
       'her_favorite_flowers/web/made_these_for_my_girl_web.jpg': {body:'rgb(15,22,30)',border:'rgba(28,42,55,0.85)',header:'rgba(50,85,75,0.92)',accent:'rgb(55,145,120)',accentDim:'rgba(85,175,150,0.75)',accentGlow:'rgba(55,145,120,0.06)',headerText:'#e0e0de'},
       'her_favorite_flowers/web/kissed_by_the_moonlight_web.jpg': {body:'rgb(40,32,18)',border:'rgba(65,52,30,0.85)',header:'rgba(115,100,65,0.92)',accent:'rgb(175,145,80)',accentDim:'rgba(210,180,110,0.75)',accentGlow:'rgba(175,145,80,0.06)',headerText:'#e0e0de'},
+      // ── ACKek ──
+      'ackek/web/william_shakespepe_web.jpg': {body:'rgb(35,34,40)',border:'rgba(55,52,65,0.85)',header:'rgba(95,92,110,0.92)',accent:'rgb(140,130,170)',accentDim:'rgba(170,160,200,0.75)',accentGlow:'rgba(140,130,170,0.06)',headerText:'#e0e0de'},
+      'ackek/web/duchess_web.jpg': {body:'rgb(38,38,38)',border:'rgba(58,60,58,0.85)',header:'rgba(80,110,88,0.92)',accent:'rgb(105,206,136)',accentDim:'rgba(135,236,166,0.75)',accentGlow:'rgba(105,206,136,0.06)',headerText:'#e0e0de'},
+      'ackek/web/les_femmes_glissees_web.jpg': {body:'rgb(10,10,5)',border:'rgba(30,30,10,0.85)',header:'rgba(70,70,20,0.92)',accent:'rgb(105,106,2)',accentDim:'rgba(145,146,42,0.75)',accentGlow:'rgba(105,106,2,0.06)',headerText:'#e0e0de'},
+      'ackek/web/kek_your_ethusiasm_web.jpg': {body:'rgb(22,24,21)',border:'rgba(50,30,30,0.85)',header:'rgba(110,60,60,0.92)',accent:'rgb(158,45,51)',accentDim:'rgba(198,85,91,0.75)',accentGlow:'rgba(158,45,51,0.06)',headerText:'#e0e0de'},
+      'ackek/web/isle_of_kek_web.jpg': {body:'rgb(1,11,23)',border:'rgba(10,35,55,0.85)',header:'rgba(20,60,90,0.92)',accent:'rgb(0,80,140)',accentDim:'rgba(40,120,180,0.75)',accentGlow:'rgba(0,80,140,0.06)',headerText:'#e0e0de'},
+      // ── Frog ──
+      'Frog/web/mixed_up_chameleon_web.jpg': {body:'rgb(80,48,50)',border:'rgba(120,72,75,0.85)',header:'rgba(170,110,112,0.92)',accent:'rgb(233,141,144)',accentDim:'rgba(255,171,174,0.75)',accentGlow:'rgba(233,141,144,0.06)',headerText:'#1a1a1a'},
+      'Frog/web/fakewars_web.gif': {body:'rgb(9,6,3)',border:'rgba(30,24,15,0.85)',header:'rgba(60,50,35,0.92)',accent:'rgb(80,200,60)',accentDim:'rgba(110,230,90,0.75)',accentGlow:'rgba(80,200,60,0.06)',headerText:'#e0e0de'},
+      'Frog/web/faketanic_web.jpg': {body:'rgb(5,5,8)',border:'rgba(20,20,30,0.85)',header:'rgba(50,50,65,0.92)',accent:'rgb(60,80,180)',accentDim:'rgba(90,110,210,0.75)',accentGlow:'rgba(60,80,180,0.06)',headerText:'#e0e0de'},
+      'Frog/web/grantyum_web.jpg': {body:'rgb(45,68,38)',border:'rgba(70,100,55,0.85)',header:'rgba(105,150,85,0.92)',accent:'rgb(135,204,111)',accentDim:'rgba(165,234,141,0.75)',accentGlow:'rgba(135,204,111,0.06)',headerText:'#e0e0de'},
     };
 
     // Collection-level fallback palettes for when dynamic extraction fails
