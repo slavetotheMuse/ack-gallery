@@ -1725,6 +1725,27 @@
       display: none !important;
     }
 
+    /* Bags-thumbnail: the Your Bags collection shows a bag PNG floating free —
+       no surrounding border, no gold frame, no inset shadow. Just the PNG with
+       its own round drop-shadow. Same treatment as round-thumb, keeps the
+       silhouette clean. */
+    .collection-thumbnail.bags-thumbnail {
+      border: none !important;
+      background: none !important;
+      background-color: transparent !important;
+      box-shadow: none !important;
+      outline: none !important;
+      overflow: visible !important;
+    }
+    .collection-thumbnail.bags-thumbnail::before,
+    .collection-thumbnail.bags-thumbnail::after {
+      display: none !important;
+    }
+    .collection-thumbnail.bags-thumbnail img {
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55))
+              drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+    }
+
     /* ── Servant coin 3D spin ── */
     @keyframes servantCoinSpin {
       0%   { transform: rotateY(0deg); }
@@ -1735,7 +1756,9 @@
       aspect-ratio: 1;
       perspective: 800px;
       position: relative;
-      filter: drop-shadow(0 0 12px rgba(0,0,0,0.45)) drop-shadow(0 0 4px rgba(0,0,0,0.3));
+      /* No shadow by default — wall view (69 coins) gets nothing for perf.
+         Catalog and focused-coin overrides below add a soft round shadow
+         via drop-shadow() (cheap when only 1–2 instances are on screen). */
     }
     .servant-coin {
       width: 100%;
@@ -1770,25 +1793,122 @@
     .node-card.servant-coin-node .node-preview,
     .node-card.servant-coin-node.hovered .node-preview,
     .node-card.servant-coin-node.repulsed .node-preview,
-    .node-card.servant-coin-node.focused .node-preview {
+    .node-card.servant-coin-node.focused .node-preview,
+    .node-graph-inner.focus-mode .node-card.servant-coin-node.focused .node-preview {
       background: none !important;
       background-color: transparent !important;
+      background-image: none !important;
       border: none !important;
       border-radius: 50% !important;
       outline: none !important;
       box-shadow: none !important;
+      -webkit-box-shadow: none !important;
+      overflow: visible !important;
+      padding: 0 !important;
+    }
+    /* Also nuke any inline box-shadow set by the focus handler — belt + braces */
+    .node-card.servant-coin-node.focused .node-preview[style*="box-shadow"],
+    .node-graph-inner.focus-mode .node-card.servant-coin-node.focused .node-preview[style*="box-shadow"] {
+      box-shadow: none !important;
+    }
+    /* Kill the 3D depth panel pseudo-elements — they draw dark grey rectangular
+       "side" and "bottom" faces behind the preview to simulate thickness.
+       Round coins don't want rectangular depth panels. */
+    .node-card.servant-coin-node .node-preview::before,
+    .node-card.servant-coin-node .node-preview::after,
+    .node-card.servant-coin-node.focused .node-preview::before,
+    .node-card.servant-coin-node.focused .node-preview::after,
+    .node-graph-inner.focus-mode .node-card.servant-coin-node.focused .node-preview::before,
+    .node-graph-inner.focus-mode .node-card.servant-coin-node.focused .node-preview::after {
+      display: none !important;
+      content: none !important;
+      background: none !important;
+    }
+    /* ═══ NUCLEAR: every descendant in the servant-coin tree gets zero
+       background / zero box-shadow. The round effects (drop-shadow on the
+       wrap, clock-rim SVG) are kept because they're set on explicitly-round
+       elements. This kills any rectangular shadow leaking through from the
+       .servant-coin-wrap (square by aspect-ratio), the .servant-coin (square,
+       no border-radius), or anywhere else in between. */
+    .node-card.servant-coin-node .node-preview,
+    .node-card.servant-coin-node .node-preview *,
+    .node-card.servant-coin-node .servant-coin-wrap,
+    .node-card.servant-coin-node .servant-coin,
+    .node-card.servant-coin-node.focused .node-preview,
+    .node-card.servant-coin-node.focused .node-preview *,
+    .node-card.servant-coin-node.focused .servant-coin-wrap,
+    .node-card.servant-coin-node.focused .servant-coin {
+      background: none !important;
+      background-color: transparent !important;
+      background-image: none !important;
+    }
+    /* The SQUARE containers (.servant-coin-wrap, .servant-coin) must not cast
+       any shadow — only the round children may. And their overflow stays
+       visible so the round drop-shadow isn't clipped to their square bounds. */
+    .node-card.servant-coin-node .servant-coin-wrap,
+    .node-card.servant-coin-node .servant-coin,
+    .node-card.servant-coin-node.focused .servant-coin-wrap,
+    .node-card.servant-coin-node.focused .servant-coin {
+      box-shadow: none !important;
+      -webkit-box-shadow: none !important;
+      outline: none !important;
+      border: none !important;
       overflow: visible !important;
     }
-    .node-card.servant-coin-node .node-frame-ticks { display: none !important; }
-    .node-card.servant-coin-node.focused .node-frame-ticks { display: block !important; }
+    /* Strip the OUTER (non-inset) shadows from the coin-depth-ring. Keep only
+       the inset bevel shadows — those are on a round element and produce the
+       coin's physical edge. The outer ones were inherited round but any
+       clipping ancestor (overflow:hidden) would render them as a square. */
+    .node-card.servant-coin-node .servant-coin-depth-ring,
+    .node-card.servant-coin-node.focused .servant-coin-depth-ring {
+      box-shadow:
+        inset 0 0 0 3px rgba(160,130,80,0.35),
+        inset 0 0 0 5px rgba(100,75,40,0.15),
+        inset 0 2px 4px rgba(255,220,140,0.12),
+        inset 0 -3px 6px rgba(0,0,0,0.25) !important;
+    }
+    /* The .node-card itself (parent) must stay transparent in focus mode —
+       no filter/compositing-layer that could paint a subtle backdrop. */
+    .node-card.servant-coin-node,
+    .node-card.servant-coin-node.focused,
+    .node-graph-inner.focus-mode .node-card.servant-coin-node.focused {
+      filter: none !important;
+      -webkit-filter: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      transform-style: flat !important;
+      -webkit-transform-style: flat !important;
+    }
+    /* Parent .node-card itself — make sure nothing gives it a dark backdrop */
+    .node-card.servant-coin-node,
+    .node-card.servant-coin-node.focused,
+    .node-graph-inner.focus-mode .node-card.servant-coin-node.focused {
+      background: transparent !important;
+      background-color: transparent !important;
+      box-shadow: none !important;
+      outline: none !important;
+      border: none !important;
+    }
+    /* Servant coins are round — square L-bracket corner ticks don't fit.
+       Hide them in BOTH idle and focused states. */
+    .node-card.servant-coin-node .node-frame-ticks,
+    .node-card.servant-coin-node.focused .node-frame-ticks { display: none !important; }
     .node-card.servant-coin-node .node-port.port-out { display: none !important; }
     .node-card.servant-coin-node.focused .node-port.port-out { display: block !important; }
     .node-card.servant-coin-node .node-title-tag { text-align: center; opacity: 0; transition: opacity 0.25s ease; }
     .node-card.servant-coin-node:hover .node-title-tag { opacity: 1; }
     /* Focused servant coin — paused spin, flat crisp face with coin depth */
     .node-card.servant-coin-node.focused .servant-coin-wrap {
-      filter: drop-shadow(0 0 20px rgba(147,0,2,0.3)) drop-shadow(0 0 8px rgba(0,0,0,0.5));
       perspective: none;
+      /* Focus view: soft round shadow behind the coin (one instance, cheap).
+         drop-shadow() follows the round alpha — no square edges. */
+      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.55))
+              drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+    }
+    /* Catalog view (one coin per collection) — same soft round shadow. */
+    .collection-thumbnail .servant-coin-wrap {
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5))
+              drop-shadow(0 2px 4px rgba(0,0,0,0.3));
     }
     .node-card.servant-coin-node.focused .servant-coin {
       animation: none !important;
@@ -3895,6 +4015,14 @@
     /* Wall layout output node — same green style, just centered at bottom */
     .wall-layout .node-output {
       /* inherits default green style */
+    }
+    /* perf: skip layout/paint for off-screen wall tiles. Browsers treat
+       these as "rendered when needed" — huge win on long collection walls
+       like servants of the muse (69 nodes). The intrinsic-size hint
+       prevents scrollbar jumpiness while tiles are still virtual. */
+    .wall-layout .node-card {
+      content-visibility: auto;
+      contain-intrinsic-size: 280px 280px;
     }
     .node-output .node-port {
       border-color: rgba(100,200,100,0.6);
@@ -8763,7 +8891,7 @@
           description: "Frog — ACK's contributions to the Pepe ecosystem. Fake Rare Pepes on Counterparty (Bitcoin) and Notable Pepes on Ethereum.",
           token: "Mixed", chain: "Bitcoin / Ethereum",
           artworks: [
-            {title:"the Mixed-up Chameleon",image:"Frog/web/mixed_up_chameleon_web.jpg",focusImage:"Frog/web/mixed_up_chameleon_focus.jpg",fullRes:"Frog/the Mixed-up chameleon.jpeg",description:"Notable Pepes — Token #354. A hand-painted Pepe exploring the boundaries between species and identity.",tokenId:354,contract:"0xe70659b717112ac4e14284d0db2f5d5703df8e43",chain:"Ethereum",token:"ERC-721"},
+            {title:"the Mixed-up Chameleon",image:"Frog/web/mixed_up_chameleon_web.jpg",focusImage:"Frog/web/mixed_up_chameleon_focus.jpg",fullRes:"Frog/the Mixed-up chameleon.jpeg",description:"Notable Pepes — Token #354. A hand-painted Pepe exploring the boundaries between species and identity.",tokenId:354,contract:"0xe70659b717112ac4e14284d0db2f5d5703df8e43",chain:"Ethereum",token:"ERC-1155",edition:"Edition of 10"},
             {title:"FAKEWARS",image:"Frog/web/fakewars_web.gif",focusImage:"Frog/FAKEWARS.gif",description:"Fake Rare Pepe — Series 5, Card 19.",chain:"Bitcoin (Counterparty)"},
             {title:"FAKETANIC",image:"Frog/web/faketanic_web.jpg",fullRes:"Frog/web/faketanic_web.mp4",description:"Fake Rare Pepe — Series 6, Card 18. Edition of 100.",edition:"Edition of 100",chain:"Bitcoin (Counterparty)"},
             {title:"GRANTYUM",image:"Frog/web/grantyum_web.jpg",focusImage:"Frog/web/grantyum_focus.jpg",fullRes:"Frog/grantyum.png",description:"Fake Rare Pepe — Series 8, Card 49. Edition of 100.",edition:"Edition of 100",chain:"Bitcoin (Counterparty)"}
@@ -8875,7 +9003,7 @@
             {title:"ROI",image:"https://i2c.seadn.io/ethereum/0x4d701b75dddb78007aff5758e1e73a2e9968280b/d81803faaac611c04ecce294b47b9e/27d81803faaac611c04ecce294b47b9e.png?w=500"}
         ]},
         /* Duplicate RCP removed — the proper edition-based Right Click Print collection is above */
-        { name: "ACKFTW", image: "https://arweave.net/_vCyGAD2OIv9JnRG8nhU8hvnFBJdN1xCP_GHp8342Is",
+        { name: "ACKFTW", image: "ackftw/muse_pain_web.jpg",
           wallLayout: true,
           description: "3 editions of 22 and 3 unique Muses. He never stops playing for her.",
           token: "ERC-721", chain: "Ethereum", contract: "0x38fB6B6205436082612aAdEcA74beb97717e0206",
@@ -14582,6 +14710,78 @@
         });
       })();
 
+      /* ── YOUR BAGS NODE — wellness session (TV + voice) ── */
+      (function() {
+        const bagsSlot = { x: 14, y: 42, w: 3.0, ar: 1/1 };
+        const bw = Math.floor((bagsSlot.w / 100) * layoutW);
+        const bh = Math.floor(bw / bagsSlot.ar);
+        const bcx = layoutOffX + (bagsSlot.x / 100) * layoutW;
+        const bcy = areaTop + layoutOffY + (bagsSlot.y / 100) * layoutH;
+        const bx_ = bcx - bw / 2;
+        const by_ = bcy - bh / 2;
+
+        const bagsNode = document.createElement('div');
+        bagsNode.className = 'collection-node bags-node';
+        bagsNode.style.position = 'absolute';
+        bagsNode.style.left = bx_ + 'px';
+        bagsNode.style.top = by_ + 'px';
+        bagsNode.style.width = bw + 'px';
+        bagsNode.style.height = (bh + 20) + 'px';
+
+        bagsNode.onclick = () => { openBagsOverlay(); };
+
+        bagsNode.addEventListener('mouseenter', () => {
+          const chipLabel = document.querySelector('.pcb-chip-label');
+          if (chipLabel) { chipLabel.textContent = 'Your Bags'; chipLabel.classList.remove('marquee'); }
+        });
+        bagsNode.addEventListener('mouseleave', () => {
+          if (_openDetailBusy) return;
+          const overlay = document.getElementById('detailOverlay');
+          if (overlay && overlay.classList.contains('active')) return;
+          const chipLabel = document.querySelector('.pcb-chip-label');
+          if (chipLabel) { chipLabel.textContent = 'ACK'; chipLabel.classList.remove('marquee'); }
+        });
+
+        const port = document.createElement('div');
+        port.className = 'node-port';
+        port.style.top = 'auto'; port.style.bottom = '-4px';
+        bagsNode.appendChild(port);
+
+        const thumb = document.createElement('div');
+        thumb.className = 'collection-thumbnail bags-thumbnail';
+        thumb.style.height = bh + 'px';
+        thumb.style.display = 'flex';
+        thumb.style.alignItems = 'center';
+        thumb.style.justifyContent = 'center';
+        thumb.style.background = 'transparent';
+        thumb.style.border = 'none';
+        thumb.style.borderRadius = '3px';
+        thumb.style.position = 'relative';
+        thumb.style.overflow = 'hidden';
+
+        const bagsImg = document.createElement('img');
+        bagsImg.src = 'my_bags_decoration_web.png';
+        bagsImg.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:0.85;';
+        thumb.appendChild(bagsImg);
+
+        bagsNode.appendChild(thumb);
+
+        const label = document.createElement('div');
+        label.className = 'collection-name';
+        label.textContent = 'Your Bags';
+        label.style.fontSize = bw < 100 ? '0.55rem' : '0.7rem';
+        bagsNode.appendChild(label);
+
+        bagsNode.classList.add('scroll-scale-node');
+        grid.appendChild(bagsNode);
+
+        nodeInfos.push({
+          portX: bx_ + bw / 2,
+          portY: by_ + bh + 10,
+          node: bagsNode, size: bw, origIndex: -1,
+        });
+      })();
+
       /* ── PHONE NODE — temporarily hidden while building out ──
       (function() {
         const phoneSlot = { x: 4.5, y: 56, w: 3.4, ar: 120/260 };
@@ -16646,6 +16846,61 @@
       }
     }
 
+    // ══════════════════════════════════════════════════
+    // YOUR BAGS OVERLAY — iframes bags.html (wellness session)
+    // ══════════════════════════════════════════════════
+    var _bagsOverlay = null;
+    var _bagsActive = false;
+    var _bagsEscHandler = null;
+    var _bagsFrame = null;
+
+    function openBagsOverlay() {
+      if (_bagsActive) return;
+      _bagsActive = true;
+
+      _bagsOverlay = document.createElement('div');
+      // Reuse arcade-overlay styling for the fullscreen dark backdrop + fade
+      _bagsOverlay.className = 'arcade-overlay bags-overlay';
+      _bagsOverlay.id = 'bagsOverlay';
+
+      var closeBtn = document.createElement('div');
+      closeBtn.className = 'arcade-close';
+      closeBtn.textContent = 'ESC';
+      closeBtn.onclick = closeBagsOverlay;
+      _bagsOverlay.appendChild(closeBtn);
+
+      _bagsFrame = document.createElement('iframe');
+      _bagsFrame.src = 'bags.html';
+      _bagsFrame.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#2b3133;z-index:2;';
+      _bagsFrame.setAttribute('allow','autoplay');
+      _bagsOverlay.appendChild(_bagsFrame);
+
+      document.body.appendChild(_bagsOverlay);
+      document.body.classList.add('arcade-active');
+      requestAnimationFrame(function() { _bagsOverlay.classList.add('active'); });
+
+      _bagsEscHandler = function(e) { if (e.key === 'Escape') closeBagsOverlay(); };
+      document.addEventListener('keydown', _bagsEscHandler);
+    }
+
+    function closeBagsOverlay() {
+      if (!_bagsActive) return;
+      _bagsActive = false;
+      if (_bagsEscHandler) { document.removeEventListener('keydown', _bagsEscHandler); _bagsEscHandler = null; }
+      if (_bagsFrame) {
+        if (_bagsFrame.parentNode) _bagsFrame.parentNode.removeChild(_bagsFrame);
+        _bagsFrame = null;
+      }
+      document.body.classList.remove('arcade-active');
+      if (_bagsOverlay) {
+        _bagsOverlay.classList.remove('active');
+        setTimeout(function() {
+          if (_bagsOverlay && _bagsOverlay.parentNode) _bagsOverlay.parentNode.removeChild(_bagsOverlay);
+          _bagsOverlay = null;
+        }, 500);
+      }
+    }
+
     function _startArcadeGame(container) {
       var BAG_IMG = 'my_bags_decoration_web.png';
       var BALLOON_SIZE = 44, BAG_SIZE = 48, STRING_LEN = 32;
@@ -17815,6 +18070,11 @@
           }
 
           // ── Servant spinning coin: 3D face/back instead of flat image ──
+          // perf: spinning is disabled by default and the focused state
+          // hides .servant-coin-back via display:none — so the back side
+          // is never visible. Skip building it entirely to save 1 image
+          // fetch + 2 DOM nodes per coin (×69 on the servants wall = ~80MB
+          // of redundant image traffic + faster decode/paint).
           var img; // declared here so palette extraction can reference it
           if (_isSpinCoin) {
             const coinWrap = document.createElement('div');
@@ -17828,15 +18088,7 @@
             faceImg.alt = artwork.title + ' (face)';
             faceImg.loading = 'lazy';
             face.appendChild(faceImg);
-            const back = document.createElement('div');
-            back.className = 'servant-coin-back';
-            const backImg = document.createElement('img');
-            backImg.src = artwork.backImage || (collection && collection.coinBack) || artwork.image;
-            backImg.alt = artwork.title + ' (back)';
-            backImg.loading = 'lazy';
-            back.appendChild(backImg);
             coin.appendChild(face);
-            coin.appendChild(back);
             coinWrap.appendChild(coin);
             const depthRing3 = document.createElement('div');
             depthRing3.className = 'servant-coin-depth-ring';
@@ -21702,6 +21954,10 @@
     function handleNodeClick(e, node, inner, collectionIndex, artworkIndex) {
       e.stopPropagation();
 
+      // Hoisted to function scope so all later code (setTimeout bodies, LIAR
+      // easter-egg check, etc.) can reference it without a ReferenceError.
+      const artData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
+
       // Info cards and badge nodes are non-interactive — no focus view
       if (node.classList.contains('info-card-node')) return;
       if (node.classList.contains('bags-fullset-badge')) return;
@@ -21791,9 +22047,9 @@
       let targetCenterX, targetCenterY, maxW, maxH;
       if (_isMobileFocus) {
         targetCenterX = vpW * 0.5; // dead center horizontally
-        targetCenterY = vpH * 0.40; // slightly above center — room for motherboard
+        targetCenterY = vpH * 0.34; // pushed higher — leaves gap above the info panel
         maxW = vpW * 0.88; // nearly full width with small margins
-        maxH = vpH * 0.60; // generous height — artwork is the star
+        maxH = vpH * 0.52; // tightened — artwork no longer kisses the info panel
       } else {
         targetCenterX = vpW * (isMasterwork ? 0.42 : 0.40);
         targetCenterY = vpH * 0.5;
@@ -21851,7 +22107,7 @@
       const scaledH = nodeH * scaleFactor;
       const rightChainReserve = _isMobileFocus ? edgePad : Math.min(320, vpW * 0.22);
       const availW = vpW - (_isMobileFocus ? edgePad * 2 : candleReserve + rightChainReserve);
-      const availH = _isMobileFocus ? (vpH * 0.65 - navReserve) : (vpH - navReserve - edgePad * 2);
+      const availH = _isMobileFocus ? (vpH * 0.56 - navReserve) : (vpH - navReserve - edgePad * 2);
       if (scaledW > availW || scaledH > availH) {
         scaleFactor = Math.min(availW / nodeW, availH / nodeH, scaleFactor);
       }
@@ -21884,7 +22140,7 @@
       if (clampedCenterY - finalH / 2 < navReserve + edgePad) {
         clampedCenterY = navReserve + edgePad + finalH / 2;
       }
-      const bottomLimit = _isMobileFocus ? vpH * 0.78 : vpH - edgePad;
+      const bottomLimit = _isMobileFocus ? vpH * 0.64 : vpH - edgePad;
       if (clampedCenterY + finalH / 2 > bottomLimit) {
         clampedCenterY = bottomLimit - finalH / 2;
       }
@@ -22006,7 +22262,7 @@
         if (_focusImg) _focusImg.loading = 'eager';
 
         // Swap thumbnail for full-resolution image
-        const artData = COLLECTIONS[collectionIndex] && COLLECTIONS[collectionIndex].artworks[artworkIndex];
+        // (artData is hoisted to function scope at the top of handleNodeClick)
         const _isSpinCoinFocus = artData && artData.spinCoin;
         if (_isSpinCoinFocus) {
           // Preload hi-res coin images, then swap once loaded for crisp focus
@@ -22493,7 +22749,9 @@
             node.style.transform = `translate(${mobileTransX}px, ${mobileTransY}px)`;
             // No inverse-scaling needed for sub-elements on mobile
             const preview = node.querySelector('.node-preview');
-            if (preview) {
+            // Servant coins are round — skip the square box-shadow; their round
+            // drop-shadow is applied via CSS on .servant-coin-wrap instead.
+            if (preview && !node.classList.contains('servant-coin-node')) {
               preview.style.boxShadow = `inset 0 0 0 0.5px rgba(220,150,50,0.35), 0 4px 12px rgba(0,0,0,0.5), 0 12px 28px rgba(0,0,0,0.25)`;
             }
             // ── Regenerate SVG frames at the new larger size ──
@@ -22554,7 +22812,9 @@
               });
             }
             const preview = node.querySelector('.node-preview');
-            if (preview) {
+            // Servant coins are round — skip the square box-shadow; their round
+            // drop-shadow is applied via CSS on .servant-coin-wrap instead.
+            if (preview && !node.classList.contains('servant-coin-node')) {
               const borderW = 0.5 / scaleFactor;
               preview.style.boxShadow = `inset 0 0 0 ${borderW}px rgba(220,150,50,0.35), 0 4px 12px rgba(0,0,0,0.5), 0 12px 28px rgba(0,0,0,0.25)`;
             }
@@ -38896,6 +39156,72 @@
       };
 
     })();
+
+    // ── diagServant() — call from console when a servant coin is focused.
+    // Walks the focused node's DOM tree and logs every element that has a
+    // non-transparent background, a box-shadow, an outline, a filter, or a
+    // backdrop-filter, together with its bounding rect. Whatever's painting
+    // the dark rectangle will show up with a ★ flag.
+    window.diagServant = function () {
+      var node = document.querySelector('.node-card.servant-coin-node.focused');
+      if (!node) {
+        console.warn('[diagServant] no focused servant coin found. focus a coin first, then run diagServant().');
+        return;
+      }
+      console.group('[diagServant] element tree — ★ marks anything painting a surface');
+      (function walk(el, depth) {
+        if (!el || el.nodeType !== 1) return;
+        var cs = getComputedStyle(el);
+        var r = el.getBoundingClientRect();
+        var rect = '[' + Math.round(r.width) + '×' + Math.round(r.height) + ' @ ' + Math.round(r.left) + ',' + Math.round(r.top) + ']';
+        var bg = cs.backgroundColor;
+        var bgImg = cs.backgroundImage;
+        var bs = cs.boxShadow;
+        var ol = cs.outlineStyle === 'none' ? null : (cs.outline || cs.outlineColor);
+        var fil = cs.filter;
+        var bf = cs.backdropFilter || cs.webkitBackdropFilter;
+        var hasBg = bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
+        var hasBgImg = bgImg && bgImg !== 'none';
+        var hasBs = bs && bs !== 'none';
+        var hasOl = ol && ol !== 'none' && cs.outlineStyle !== 'none' && cs.outlineWidth !== '0px';
+        var hasFil = fil && fil !== 'none';
+        var hasBf = bf && bf !== 'none';
+        var flagged = hasBg || hasBgImg || hasBs;
+        var tag = '  '.repeat(depth) + el.tagName.toLowerCase() +
+          (el.className ? '.' + String(el.className).split(/\s+/).join('.') : '') +
+          (el.id ? '#' + el.id : '') +
+          ' ' + rect + (flagged ? ' ★' : '');
+        var extras = [];
+        if (hasBg) extras.push('bg:' + bg);
+        if (hasBgImg) extras.push('bgImg:' + bgImg);
+        if (hasBs) extras.push('box-shadow:' + bs);
+        if (hasOl) extras.push('outline:' + ol + ' (' + cs.outlineWidth + ' ' + cs.outlineStyle + ')');
+        if (hasFil) extras.push('filter:' + fil);
+        if (hasBf) extras.push('backdrop-filter:' + bf);
+        console.log(tag, extras.join(' | '));
+        for (var c = 0; c < el.children.length; c++) walk(el.children[c], depth + 1);
+      })(node, 0);
+      // Also walk the direct parent chain in case the rect is coming from an ancestor
+      console.group('  … ancestor chain (might be painting a backdrop)');
+      var anc = node.parentElement;
+      while (anc && anc !== document.body) {
+        var cs = getComputedStyle(anc);
+        var r = anc.getBoundingClientRect();
+        var bg = cs.backgroundColor;
+        var bgImg = cs.backgroundImage;
+        var bs = cs.boxShadow;
+        var flagged = (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') ||
+                      (bgImg && bgImg !== 'none') ||
+                      (bs && bs !== 'none');
+        console.log(
+          (anc.tagName.toLowerCase()) + (anc.className ? '.' + String(anc.className).split(/\s+/).join('.') : '') +
+          ' [' + Math.round(r.width) + '×' + Math.round(r.height) + ']' + (flagged ? ' ★' : ''),
+          'bg:', bg, 'bgImg:', bgImg, 'box-shadow:', bs);
+        anc = anc.parentElement;
+      }
+      console.groupEnd();
+      console.groupEnd();
+    };
 
   </script>
 </body>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shame</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    overflow: hidden; background: #1a0d0d;
+    color: #e8d8c8;
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; gap: 28px;
+  }
+  .shame-gif {
+    max-width: 70vw;
+    max-height: 55vh;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    border: 1px solid rgba(232,216,200,0.15);
+  }
+  .shame-text {
+    font-size: clamp(44px, 10vw, 120px);
+    letter-spacing: 0.08em;
+    color: #e8d8c8;
+    font-style: italic;
+    text-shadow: 0 0 20px rgba(232,216,200,0.35);
+    animation: shame-pulse 1.8s ease-in-out infinite;
+    margin: 0;
+  }
+  .shame-sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(232,216,200,0.35);
+    margin: 0;
+  }
+  @keyframes shame-pulse {
+    0%, 100% { opacity: 0.82; transform: scale(1); }
+    50%      { opacity: 1;    transform: scale(1.03); }
+  }
+  /* vignette */
+  body::before {
+    content: ""; position: fixed; inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+  <img class="shame-gif"
+       src="bagslady/shame-gameofthrones.gif"
+       alt=""
+       onerror="this.style.display='none'"/>
+  <h1 class="shame-text">SHAME. SHAME. SHAME.</h1>
+
+  <script>
+    // Bell-tolling TTS: say "shame" at a slow, deliberate interval.
+    // Voice preference matches bags.html — Reed first, Kate, Bruce fallback.
+    var shameVoices = [];
+    function loadShameVoices() {
+      shameVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    }
+    if (typeof speechSynthesis !== 'undefined') {
+      speechSynthesis.onvoiceschanged = loadShameVoices;
+      loadShameVoices();
+    }
+    function pickShameVoice() {
+      if (!shameVoices || shameVoices.length === 0) loadShameVoices();
+      var prefs = [
+        /Reed \(Enhanced\)/i, /Reed \(Premium\)/i, /^Reed$/i,
+        /Kate \(Enhanced\)/i, /Kate \(Premium\)/i, /^Kate$/i,
+        /^Bruce$/i,
+        /Ava \(Premium\)/i, /Samantha \(Enhanced\)/i,
+        /Google US English/i,
+        /^Samantha$/i
+      ];
+      for (var i = 0; i < prefs.length; i++) {
+        var v = shameVoices.find(function (x) { return prefs[i].test(x.name); });
+        if (v) return v;
+      }
+      return shameVoices.find(function (x) { return /en[-_]/i.test(x.lang); }) || shameVoices[0] || null;
+    }
+    function sayShame() {
+      try {
+        if (!('speechSynthesis' in window)) return;
+        var u = new SpeechSynthesisUtterance('shame');
+        var v = pickShameVoice(); if (v) u.voice = v;
+        u.rate = 0.55; u.pitch = 0.6; u.volume = 1;
+        speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+    // auto-try on load (works when invoked via a prior user gesture,
+    // i.e. after "no i fucking hate ack and his stupid art" click)
+    setTimeout(sayShame, 400);
+    setInterval(sayShame, 2800);
+    // fallback: fire once on any click if autoplay was blocked
+    document.body.addEventListener('click', sayShame, { once: true });
+  </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nah</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    overflow: hidden; background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #fff; cursor: crosshair;
+  }
+  #chaos { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  .nah-img {
+    position: absolute;
+    will-change: transform, opacity, filter;
+    user-select: none; pointer-events: none;
+  }
+  .anim-pop     { animation: pop     2.4s ease-out forwards; }
+  .anim-fade    { animation: fade    3.0s ease-in-out forwards; }
+  .anim-spin    { animation: spin    2.8s linear forwards; }
+  .anim-drop    { animation: drop    2.6s cubic-bezier(.6,.02,.98,.67) forwards; }
+  .anim-rise    { animation: rise    2.8s cubic-bezier(.2,.8,.2,1) forwards; }
+  .anim-glitch  { animation: glitch  1.8s steps(8) forwards; }
+  .anim-pulse   { animation: pulse   2.2s ease-in-out forwards; }
+  .anim-zoom    { animation: zoom    2.5s cubic-bezier(.6,0,.8,.8) forwards; }
+  .anim-wobble  { animation: wobble  2.6s ease-in-out forwards; }
+  .anim-flicker { animation: flicker 2.4s steps(14) forwards; }
+
+  @keyframes pop {
+    0%   { opacity: 0; transform: scale(0.1) rotate(0deg); }
+    20%  { opacity: 1; transform: scale(1.25) rotate(4deg); }
+    40%  { transform: scale(0.95) rotate(-2deg); }
+    100% { opacity: 0; transform: scale(1.6) rotate(10deg); }
+  }
+  @keyframes fade {
+    0%   { opacity: 0; transform: scale(1) translateY(6px); }
+    30%  { opacity: 1; transform: scale(1) translateY(0); }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.1) translateY(-8px); }
+  }
+  @keyframes spin {
+    0%   { opacity: 0; transform: rotate(0deg) scale(0.4); }
+    30%  { opacity: 1; }
+    100% { opacity: 0; transform: rotate(720deg) scale(1.6); }
+  }
+  @keyframes drop {
+    0%   { opacity: 0; transform: translateY(-120vh) rotate(0deg); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(40vh) rotate(180deg); }
+  }
+  @keyframes rise {
+    0%   { opacity: 0; transform: translateY(60vh) scale(0.6); }
+    30%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-80vh) scale(1.1); }
+  }
+  @keyframes glitch {
+    0%   { opacity: 0; transform: translate(0,0) scale(1); filter: hue-rotate(0deg); }
+    20%  { opacity: 1; transform: translate(8px, -4px) scale(1.05); filter: hue-rotate(90deg); }
+    40%  { transform: translate(-10px, 6px) scale(0.95); filter: hue-rotate(180deg) invert(1); }
+    60%  { transform: translate(6px, -8px); filter: hue-rotate(270deg); }
+    100% { opacity: 0; transform: translate(0,0) scale(1.2); }
+  }
+  @keyframes pulse {
+    0%   { opacity: 0; transform: scale(0.8); filter: brightness(1); }
+    30%  { opacity: 1; transform: scale(1); filter: brightness(1.3); }
+    50%  { transform: scale(1.15); filter: brightness(0.8); }
+    70%  { transform: scale(0.95); filter: brightness(1.3); }
+    100% { opacity: 0; transform: scale(1.3); }
+  }
+  @keyframes zoom {
+    0%   { opacity: 0; transform: scale(0.05); }
+    40%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(3.5); }
+  }
+  @keyframes wobble {
+    0%   { opacity: 0; transform: rotate(-20deg) translateX(-30px); }
+    25%  { opacity: 1; transform: rotate(15deg) translateX(20px); }
+    50%  { transform: rotate(-10deg) translateX(-15px); }
+    75%  { transform: rotate(8deg) translateX(10px); }
+    100% { opacity: 0; transform: rotate(0deg) translateX(0); }
+  }
+  @keyframes flicker {
+    0%,100% { opacity: 0; }
+    10%,30%,50%,70%,90% { opacity: 1; }
+    20%,40%,60%,80% { opacity: 0.2; }
+  }
+</style>
+</head>
+<body>
+  <div id="chaos"></div>
+  <script>
+    const IMG_SRC = '1of1s/web/nah_web.jpg';
+    const ANIMS = ['anim-pop','anim-fade','anim-spin','anim-drop','anim-rise','anim-glitch','anim-pulse','anim-zoom','anim-wobble','anim-flicker'];
+    const chaos = document.getElementById('chaos');
+
+    function spawn() {
+      const img = document.createElement('img');
+      img.src = IMG_SRC;
+      img.className = 'nah-img ' + ANIMS[Math.floor(Math.random() * ANIMS.length)];
+      const size = 80 + Math.random() * 260;
+      img.style.width = size + 'px';
+      img.style.left = (Math.random() * 100) + '%';
+      img.style.top  = (Math.random() * 100) + '%';
+      img.style.transform = 'translate(-50%, -50%)';
+      chaos.appendChild(img);
+      setTimeout(function () { if (img.parentNode) img.parentNode.removeChild(img); }, 3500);
+    }
+    // aggressive spawn loop
+    function loop() {
+      const n = 1 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) spawn();
+      setTimeout(loop, 90 + Math.random() * 220);
+    }
+    loop();
+    // burst on click
+    document.addEventListener('click', function () {
+      for (let i = 0; i < 12; i++) setTimeout(spawn, i * 30);
+    });
+  </script>
+</body>
+</html>

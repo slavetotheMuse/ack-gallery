@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>your bags</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  :root {
+    --bg: #2b3133;
+    --bg-deeper: #22282a;
+    --text: #e8e6de;
+    --text-dim: #8a8f8d;
+    --text-warn: #d9a06b;
+    --text-err: #e07878;
+    --accent: #c7bfa8;
+    --line: rgba(232, 230, 222, 0.15);
+    --phosphor: #b8ddbf;
+    --phosphor-dim: #6e9a78;
+    --phosphor-bg: #121a14;
+    --wood-1: #5a4837;
+    --wood-2: #3b2c1f;
+    --wood-3: #2a1e13;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at center, var(--bg) 0%, var(--bg-deeper) 100%);
+    color: var(--text);
+    font-family: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+  #originWarn {
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0;
+    background: #5a2626;
+    color: #ffe0e0;
+    padding: 10px 16px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    text-align: center;
+    z-index: 1000;
+    border-bottom: 1px solid #8b3a3a;
+  }
+  #originWarn.show { display: block; }
+
+  /* ----- LAYOUT ----- */
+  #stage {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 60px 24px 40px;
+    gap: 28px;
+  }
+
+  /* ----- CRT TV CABINET ----- */
+  .crt-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 18px;
+  }
+  .crt {
+    width: min(440px, 86vw);
+    background:
+      linear-gradient(180deg, var(--wood-1) 0%, var(--wood-2) 55%, var(--wood-3) 100%);
+    border-radius: 22px 22px 14px 14px;
+    padding: 22px 22px 16px;
+    position: relative;
+    box-shadow:
+      inset 0 2px 0 rgba(255,220,170,0.12),
+      inset 0 -2px 6px rgba(0,0,0,0.5),
+      0 18px 40px rgba(0,0,0,0.55),
+      0 4px 10px rgba(0,0,0,0.4);
+  }
+  /* Wood grain subtle */
+  .crt::before {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(0,0,0,0.06) 0px,
+      rgba(0,0,0,0.06) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+  .crt-bezel {
+    position: relative;
+    background: linear-gradient(180deg, #1a201c 0%, #0c120e 100%);
+    border-radius: 36px / 28px;
+    padding: 18px;
+    box-shadow:
+      inset 0 2px 4px rgba(0,0,0,0.8),
+      inset 0 -2px 4px rgba(0,0,0,0.8),
+      0 0 0 2px rgba(0,0,0,0.4);
+  }
+  .crt-screen {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    width: 100%;
+    background:
+      radial-gradient(ellipse at 50% 45%, #1d2a20 0%, var(--phosphor-bg) 70%, #080d0a 100%);
+    border-radius: 28px / 22px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 0 30px rgba(0,0,0,0.9),
+      inset 0 0 80px rgba(0,0,0,0.6);
+  }
+  /* Scanlines */
+  .crt-screen::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      180deg,
+      rgba(0,0,0,0.0) 0px,
+      rgba(0,0,0,0.0) 2px,
+      rgba(0,0,0,0.28) 3px,
+      rgba(0,0,0,0.28) 3px
+    );
+    pointer-events: none;
+    z-index: 3;
+    mix-blend-mode: multiply;
+    animation: scan-drift 7s linear infinite;
+  }
+  @keyframes scan-drift {
+    from { background-position: 0 0; }
+    to   { background-position: 0 12px; }
+  }
+  /* Screen glare */
+  .crt-screen::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.5) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 4;
+  }
+  /* ============================================================
+     OSCILLOSCOPE / AUDIO-SIGNAL INTERFACE
+     The CRT shows a phosphor-green waveform, as though her voice
+     is coming through the signal. Idle: a near-flat line with
+     gentle jitter. Speaking: full oscilloscope-style waveform
+     driven by a JS animation loop that feeds a <polyline>.
+     ============================================================ */
+
+  .crt-screen { aspect-ratio: 4 / 3; }
+
+  .face-svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 5;
+    color: var(--phosphor);
+    /* phosphor bloom around the whole trace */
+    filter: drop-shadow(0 0 6px rgba(184,221,191,0.55))
+            drop-shadow(0 0 14px rgba(184,221,191,0.22));
+  }
+
+  /* ----- OSCILLOSCOPE parts ----- */
+  /* Background reticle — faint grid + crosshair */
+  .scope-grid {
+    stroke: rgba(184,221,191,0.12);
+    stroke-width: 0.6;
+    fill: none;
+  }
+  .scope-axis {
+    stroke: rgba(184,221,191,0.22);
+    stroke-width: 0.6;
+    fill: none;
+    stroke-dasharray: 2 3;
+  }
+  /* Signal trace — phosphor green with rounded joins */
+  .scope-trace {
+    fill: none;
+    stroke: var(--phosphor);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .scope-trace-ghost {
+    fill: none;
+    stroke: var(--phosphor);
+    stroke-width: 3.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.25;
+    filter: blur(2px);
+  }
+  /* tiny readouts at the corners — feel like an oscilloscope UI */
+  .scope-label {
+    fill: rgba(184,221,191,0.45);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  /* rec dot in the corner — blinks while speaking */
+  .scope-rec {
+    fill: #e07070;
+    opacity: 0.6;
+  }
+  body.is-speaking .scope-rec {
+    animation: rec-blink 0.6s steps(2) infinite;
+  }
+  @keyframes rec-blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.25; }
+  }
+  /* periodic scope sweep — horizontal pulse that crosses the grid */
+  .scope-sweep {
+    fill: none;
+    stroke: rgba(184,221,191,0.55);
+    stroke-width: 0.8;
+    animation: sweep 4.6s linear infinite;
+  }
+  @keyframes sweep {
+    0%   { transform: translateX(0);    opacity: 0; }
+    5%   { opacity: 0.8; }
+    85%  { opacity: 0.4; }
+    100% { transform: translateX(100%); opacity: 0; }
+  }
+
+  /* ----- TV BASE / KNOBS ----- */
+  .crt-base {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 10px 4px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: rgba(255,220,180,0.5);
+    position: relative; z-index: 2;
+  }
+  .knobs { display: flex; gap: 10px; align-items: center; }
+  .knob {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #7a6044 0%, #2a1e13 90%);
+    box-shadow:
+      inset 0 1px 1px rgba(255,220,180,0.3),
+      inset 0 -1px 1px rgba(0,0,0,0.6),
+      0 1px 2px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .knob::after {
+    content: ""; position: absolute;
+    top: 2px; left: 50%;
+    width: 2px; height: 6px;
+    background: #1a0f05;
+    transform: translateX(-50%);
+    border-radius: 1px;
+  }
+  .knob:nth-child(2)::after { transform: translateX(-50%) rotate(45deg); transform-origin: center 7px; }
+  .led {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #e07070;
+    box-shadow: 0 0 6px #e07070, 0 0 2px #ffaaaa inset;
+    animation: led-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes led-pulse {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+  .brand-plate { opacity: 0.65; }
+
+  /* ----- SUBTITLE BELOW TV (the current spoken line) ----- */
+  .subtitle {
+    width: min(560px, 92vw);
+    min-height: 2.6em;
+    text-align: center;
+    font-family: 'Cormorant Garamond', Garamond, serif;
+    font-style: italic; font-weight: 300;
+    font-size: clamp(20px, 2.6vw, 28px);
+    line-height: 1.35;
+    color: var(--text);
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+  .subtitle.show { opacity: 1; transform: translateY(0); }
+
+  /* ----- INTRO PANEL ----- */
+  .panel {
+    width: 100%;
+    max-width: 480px;
+    display: flex; flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .panel.visible { opacity: 1; transform: translateY(0); }
+  .panel.hidden  { opacity: 0; pointer-events: none; transform: translateY(-6px); max-height: 0; overflow: hidden; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  p.lede {
+    margin: 0; max-width: 420px; text-align: center;
+    font-size: clamp(15px, 1.6vw, 17px);
+    color: var(--text-dim); line-height: 1.55;
+    font-style: italic;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: transparent; border: none;
+    border-bottom: 1px solid var(--line);
+    padding: 12px 4px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 14px; text-align: center;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  input[type="text"]:focus { border-bottom-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--text-dim); opacity: 0.55; letter-spacing: 0.04em; }
+  button.primary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    padding: 12px 26px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+  }
+  button.primary:hover {
+    border-color: var(--accent);
+    background: rgba(199,191,168,0.05);
+  }
+  button.primary:disabled { opacity: 0.4; cursor: wait; }
+  .status {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--text-dim);
+    min-height: 1.4em;
+    max-width: 520px; word-break: break-word; line-height: 1.6;
+    text-align: center;
+  }
+  .status.warn { color: var(--text-warn); letter-spacing: 0.2em; }
+  .status.err  { color: var(--text-err);  letter-spacing: 0.2em; }
+
+  /* ----- END-OF-SESSION CHOICE ----- */
+  .choice {
+    width: min(560px, 92vw);
+    display: flex; flex-direction: column;
+    align-items: center; gap: 12px;
+    margin-top: 18px;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+    pointer-events: none;
+  }
+  .choice.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+  /* ----- GIFT OFFERING: "made these for your girl" + bag thumbnail -----
+     Sits above the choice buttons. Renders the bag PNG as a free-floating
+     node (no square padding, no dark frame) connected by a hairline wire
+     to the caption — same graph vocabulary as the main catalog. */
+  .gift {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px;
+    margin: 4px 0 14px;
+    text-align: center;
+  }
+  .gift-caption {
+    font-family: 'Cormorant Garamond', Garamond, serif;
+    font-style: italic; font-weight: 300;
+    font-size: clamp(15px, 2vw, 19px);
+    color: var(--text);
+    letter-spacing: 0.02em;
+    opacity: 0.92;
+  }
+  /* Thin wire descending from caption to bag — graph-node connector.
+     Short so the bag visually sits right under the caption. */
+  .gift-wire {
+    width: 1px;
+    height: 8px;
+    background: linear-gradient(180deg,
+      rgba(199,191,168,0.55) 0%,
+      rgba(199,191,168,0.18) 100%);
+  }
+  /* Bag "node" — transparent background, no box, just the image floating
+     with a soft round drop-shadow so it reads as a dimensional object on
+     the page background. Uses a tightly-cropped PNG (bag_gift_tight@3x.png)
+     so there's no transparent padding around the silhouette that could
+     read as a faint square. Gentle float + faint phosphor glow on hover. */
+  .gift-bag {
+    width: clamp(110px, 18vw, 150px);
+    height: auto;
+    display: block;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    padding: 0;
+    mix-blend-mode: normal;
+    /* drop-shadow follows the PNG's alpha channel, so no square halo */
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.55))
+            drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+    animation: bag-float 5.8s ease-in-out infinite;
+    transition: filter 0.4s ease, transform 0.4s ease;
+    cursor: pointer;
+  }
+  .gift-bag:hover {
+    filter: drop-shadow(0 10px 22px rgba(0,0,0,0.6))
+            drop-shadow(0 0 14px rgba(184,221,191,0.35));
+    transform: translateY(-2px) scale(1.02);
+  }
+  @keyframes bag-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+  }
+  /* Faint port/dot where the wire meets the bag — visual node-port */
+  .gift-port {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(199,191,168,0.7);
+    box-shadow: 0 0 6px rgba(199,191,168,0.35);
+    margin-top: -1px; margin-bottom: 4px;
+  }
+  .choice-btn {
+    width: 100%; max-width: 460px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    padding: 14px 22px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.2em; text-transform: lowercase;
+    cursor: pointer; text-align: center;
+    transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+  }
+  .choice-btn:hover { border-color: var(--accent); background: rgba(199,191,168,0.05); }
+  .choice-btn.yes:hover { border-color: var(--phosphor); color: var(--phosphor); }
+  .choice-btn.no:hover  { border-color: var(--text-err); color: var(--text-err); }
+
+  /* ----- END SESSION UI ----- */
+  .session-ui {
+    position: fixed; bottom: 22px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 24px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--text-dim); z-index: 10;
+    opacity: 0; transition: opacity 1s ease;
+    pointer-events: none;
+  }
+  .session-ui.visible { opacity: 1; pointer-events: auto; }
+  .session-ui button {
+    background: transparent; border: none;
+    color: var(--text-dim); font: inherit;
+    letter-spacing: inherit; text-transform: inherit;
+    cursor: pointer; padding: 6px 10px;
+  }
+  .session-ui button:hover { color: var(--text); }
+
+  .vignette::before {
+    content: ""; position: fixed; inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
+    z-index: 100;
+  }
+
+  /* Signal flicker when idle */
+  .crt-screen.idle .face-svg { opacity: 0.88; animation: idle-flicker 5.2s infinite; }
+  @keyframes idle-flicker {
+    0%, 92%, 100% { opacity: 0.9; filter: drop-shadow(0 0 3px rgba(184,221,191,0.45)); }
+    93%           { opacity: 0.55; }
+    94%           { opacity: 0.95; }
+    95%           { opacity: 0.7; }
+  }
+</style>
+</head>
+<body class="vignette">
+
+<div id="originWarn">
+  YOU ARE OPENING THIS FILE DIRECTLY (file://). Network calls are blocked. Please serve it over http:// — e.g. <code>python3 -m http.server 8080</code> then open <code>http://localhost:8080/bags.html</code>
+</div>
+
+<div id="stage">
+
+  <div class="crt-wrap">
+    <div class="crt">
+      <div class="crt-bezel">
+        <div class="crt-screen idle" id="crtScreen">
+          <!-- OSCILLOSCOPE / WAVE SIGNAL INTERFACE ---------------------
+               Phosphor-green waveform on a faint grid. A JS loop feeds
+               the #wavePath / #waveGhost polylines with sampled values
+               (perlin-ish noise + optional voice envelope). When the
+               body has .is-speaking, the amplitude swells; otherwise
+               the trace settles into a near-flat idle jitter.
+          --------------------------------------------------------- -->
+          <svg class="face-svg" id="scopeSvg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <!-- Grid reticle (5×4 cells) -->
+            <g class="scope-grid">
+              <line x1="0"   y1="60"  x2="400" y2="60"/>
+              <line x1="0"   y1="120" x2="400" y2="120"/>
+              <line x1="0"   y1="180" x2="400" y2="180"/>
+              <line x1="0"   y1="240" x2="400" y2="240"/>
+              <line x1="80"  y1="0"   x2="80"  y2="300"/>
+              <line x1="160" y1="0"   x2="160" y2="300"/>
+              <line x1="240" y1="0"   x2="240" y2="300"/>
+              <line x1="320" y1="0"   x2="320" y2="300"/>
+            </g>
+            <!-- center axis — dashed -->
+            <line class="scope-axis" x1="0" y1="150" x2="400" y2="150"/>
+            <line class="scope-axis" x1="200" y1="0" x2="200" y2="300"/>
+
+            <!-- Ghost trail (blurred, wider) stacked under the crisp trace -->
+            <polyline id="waveGhost" class="scope-trace-ghost" points=""/>
+            <polyline id="wavePath"  class="scope-trace"       points=""/>
+
+            <!-- corner UI: channel label + rec dot -->
+            <text class="scope-label" x="10"  y="18">CH1 · 1V/DIV</text>
+            <text class="scope-label" x="320" y="18">20ms/DIV</text>
+            <circle class="scope-rec" cx="388" cy="16" r="3.2"/>
+            <text class="scope-label" x="370" y="290">SIG · ACK</text>
+            <text class="scope-label" x="10"  y="290">IN · VOX</text>
+
+            <!-- Hidden legacy ids so older JS doesn't throw -->
+            <g id="mouthGroup" style="display:none"></g>
+          </svg>
+        </div>
+      </div>
+      <div class="crt-base">
+        <span class="brand-plate">ack · wellness unit</span>
+        <div class="knobs">
+          <div class="knob"></div>
+          <div class="knob"></div>
+          <div class="led" title="rec"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subtitle" id="lineEl"></div>
+
+  <div class="panel visible" id="intro">
+    <div class="eyebrow">session · begins on input</div>
+    <p class="lede">please enter your wallet address. the session will adjust accordingly.</p>
+    <input id="wallet" type="text" placeholder="0x… or name.eth" autocomplete="off" spellcheck="false" />
+    <button class="primary" id="beginBtn" type="button">begin</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="choice" id="choice">
+    <!-- Gift offering: the bag thumbnail hangs from a hairline wire beneath
+         the caption, framed like a node in the main catalog — but with
+         zero padding / background so only the PNG itself shows. -->
+    <div class="gift" id="gift">
+      <div class="gift-caption">made these for your girl</div>
+      <div class="gift-wire"></div>
+      <div class="gift-port"></div>
+      <img class="gift-bag" id="giftBag"
+           src="bagslady/bag_gift_tight@3x.png"
+           alt="a.c.k. handmade bag"
+           draggable="false"/>
+    </div>
+    <button class="choice-btn yes" id="yesArt" type="button">yes, i would like free art</button>
+    <button class="choice-btn no"  id="noArt"  type="button">no, i fucking hate ack and his stupid art</button>
+  </div>
+
+</div>
+
+<div class="session-ui" id="sessionUi">
+  <button type="button" id="endBtn">end session</button>
+</div>
+
+<script>
+  (function () {
+    if (location.protocol === 'file:') {
+      var w = document.getElementById('originWarn');
+      if (w) w.classList.add('show');
+    }
+  })();
+</script>
+
+<script>
+(function () {
+  const statusEl = document.getElementById('status');
+  function setStatus(text, cls) {
+    statusEl.classList.remove('warn', 'err');
+    if (cls) statusEl.classList.add(cls);
+    statusEl.textContent = text || '';
+  }
+  function setStatusBusy(text) {
+    statusEl.classList.remove('warn', 'err');
+    statusEl.textContent = text + ' · · ·';
+  }
+
+  window.addEventListener('error', function (e) {
+    console.error('[bags] window error', e.error || e.message);
+    setStatus('script error: ' + (e.message || 'unknown'), 'err');
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    console.error('[bags] promise rejection', e.reason);
+    var m = e.reason && e.reason.message ? e.reason.message : String(e.reason);
+    setStatus('error: ' + m, 'err');
+  });
+
+  try {
+    const ALCHEMY_KEY = atob('SDcxN3ltZnp1Sk4xLXBiS2Ffem5B');
+    const ALCHEMY_BASE = 'https://eth-mainnet.g.alchemy.com/nft/v3/';
+    const ACK_CONTRACTS = [
+      '0x4772fb1ed333777cf4a062ffcda2d25ce3e1029c',
+      '0x7d0874f682c42f0fe907baf7785d9dcb5a0b1285',
+      '0x728d7a5133068e3c7e5afe72de8999076bc940f9',
+      '0xd33bc0af2dc4e39cbaef4beff8d1fb3c00c2e7a3',
+      '0xd90829c6c6012e4dde506bd95d7499a04b9a56de',
+      '0xd3f9551e9bc926cc180ac8d3e27364f4081df624'
+    ];
+
+    const PRAISE = [
+      "your bags are kind.",
+      "your bags are of good standing.",
+      "your bags are admired by those who understand them.",
+      "your bags are quietly remarkable.",
+      "your bags are considered.",
+      "your bags are discerning.",
+      "your bags reflect a patient mind.",
+      "your bags are spoken of fondly.",
+      "your bags are unburdened.",
+      "your bags are light, and yet heavy with meaning.",
+      "your bags are unshaken.",
+      "your bags are not easily mistaken.",
+      "your bags are generous.",
+      "your bags are permanent.",
+      "your bags have appreciated.",
+      "your bags were noticed early.",
+      "your bags are poetic.",
+      "your bags are, by all accounts, beloved.",
+      "your bags are among the finest.",
+      "your bags are courageous.",
+      "your bags did not flinch.",
+      "your bags are in good taste.",
+      "your bags are a quiet triumph.",
+      "your bags have been praised, even in your absence.",
+      "your bags are gentle with others.",
+      "your bags are admired by strangers.",
+      "your bags are worthy of their owner.",
+      "your bags are, in the end, kind.",
+      "your bags are patient. they were rewarded.",
+      "your bags did what yours were meant to do.",
+      "your bags are admired in rooms you have not been in.",
+      "your bags are recorded.",
+      "your bags did not need explaining.",
+      "your bags have outlasted their doubters.",
+      "your bags have been kept. this is the highest compliment.",
+      "your bags were early. this has been noted.",
+      "your bags are a small and steady brightness.",
+      "your bags are described, privately, as excellent.",
+      "your bags are held with both hands.",
+      "your bags did not chase. they arrived.",
+      "your bags are proof. of what, is not ours to say.",
+      "your bags are, in the quiet of the ledger, praised.",
+      "your bags are a considered position.",
+      "your bags are an act of good faith.",
+      "your bags will be remembered.",
+      "your bags are welcome here.",
+      "your bags are intact.",
+      "your bags are not loud. they do not need to be.",
+      "your bags are correct.",
+      "your bags were the right answer.",
+      "your bags are a quiet affirmation.",
+      "your bags were a choice. a good one.",
+      "your bags have brought good news.",
+      "your bags are in excellent company.",
+      "your bags are what we would have done.",
+      "your bags are the work of someone paying attention.",
+      "your bags are, plainly, admired.",
+      "your bags have been seen. they were seen well.",
+      "your bags are a small and dignified fact.",
+      "your bags are becoming.",
+      "your bags bring a certain peace.",
+      "your bags have held their shape.",
+      "your bags are a source of mild envy.",
+      "your bags are sufficient. and then some.",
+      "your bags belong to you. we are glad.",
+      "your bags have not been questioned.",
+      "your bags have earned their rest.",
+      "your bags did the harder thing.",
+      "your bags were assembled with care.",
+      "your bags are a credit to their holder.",
+      "your bags are a pleasure to review.",
+      "your bags are a record of good taste.",
+      "your bags are not a fluke.",
+      "your bags have been quietly celebrated.",
+      "your bags have aged well.",
+      "your bags are what the others meant to do.",
+      "your bags are serene.",
+      "your bags are not embarrassing. this is more rare than you think.",
+      "your bags are of the utmost importance.",
+      "your bags are consensus.",
+      "your bags have not been manipulated by the cabal.",
+      "your bags are not on the epstein list.",
+      "your bags are serendipitous.",
+      "your bags are providential.",
+      "your bags are sovereign.",
+      "your bags are fated.",
+      "your bags are aligned with the long arc.",
+      "your bags have not been seen by the wrong eyes.",
+      "your bags are on no list of concern.",
+      "your bags are beyond reproach.",
+      "your bags are pre-cabal.",
+      "your bags have escaped the rebase.",
+      "your bags are undiluted.",
+      "your bags are unindicted.",
+      "your bags are, against the grain of the age, correct.",
+      "your bags are not a subject of inquiry.",
+      "your bags are not mentioned in the leaked documents.",
+      "your bags were not in the hacked wallet.",
+      "your bags have been blessed, privately, by someone who would know.",
+      "your bags are, in the quiet consensus of the wise, good.",
+      "your bags are sincere.",
+      "your bags are an heirloom in the making.",
+      "your bags are what we had hoped for.",
+      "your bags have done the quiet work.",
+      "your bags were not advertised. they did not need to be.",
+      "your bags are exemplary.",
+      "your bags are, on the record, beloved.",
+      "your bags are a clarity.",
+      "your bags were ahead. they are still ahead.",
+      "your bags are the bright spot in the data.",
+      "your bags have a kind of gravity.",
+      "your bags are steady.",
+      "your bags are held in high regard by those whose regard matters.",
+      "your bags have a reputation. a good one.",
+      "your bags are what one hopes to see.",
+      "your bags did not apologize. we admire this.",
+      "your bags are the long view.",
+      "your bags are conviction.",
+      "your bags are a small act of faith.",
+      "your bags were assembled with affection.",
+      "your bags did not ask permission.",
+      "your bags are a quiet scandal, in the best sense.",
+      "your bags have been listed, in certain rooms, among the greats.",
+      "your bags have the shape of a good decision.",
+      "your bags are a point of quiet pride.",
+      "your bags have held.",
+      "your bags are unmistakable.",
+      "your bags are a standing ovation, held in reserve.",
+      "your bags are worthy.",
+      "your bags did not beg. they did not need to.",
+      "your bags have been spoken of with warmth in the private channels.",
+      "your bags are amongst the greatest of all bags.",
+      "your bags are bagsmaxxing.",
+      "your bags keep everyone envious.",
+      "your bags are not on loan.",
+      "your bags are coveted."
+    ];
+    const ROAST = [
+      "your bags are unremarkable.",
+      "your bags are light. this is not a compliment.",
+      "your bags are forgettable.",
+      "your bags have not been noticed.",
+      "your bags have not appreciated.",
+      "your bags are uninspired.",
+      "your bags are quietly mocked.",
+      "your bags have been reviewed. they were dismissed.",
+      "your bags are of little consequence.",
+      "your bags trouble those who see them.",
+      "your bags are without merit.",
+      "your bags have been discussed. the discussion was not flattering.",
+      "your bags are a private matter. they should remain so.",
+      "your bags are, at best, a beginning.",
+      "your bags are not bad. they are simply not good.",
+      "your bags have been weighed, and found wanting.",
+      "your bags are thin.",
+      "your bags are heavy with nothing.",
+      "your bags did not survive scrutiny.",
+      "your bags were once promising. they no longer are.",
+      "your bags are a decision you made.",
+      "your bags speak for themselves. unfortunately.",
+      "your bags are an unforced error.",
+      "your bags are seen. they are not seen favorably.",
+      "your bags are yours alone. we understand why.",
+      "your bags have been considered. we have moved on.",
+      "your bags are, at this time, a disappointment.",
+      "your bags are what happens when one does not listen.",
+      "your bags are a study. the conclusion was: no.",
+      "your bags are a monument to a decision.",
+      "your bags are, from a distance, regrettable.",
+      "your bags are spoken of only when necessary.",
+      "your bags were considered. they were not considered again.",
+      "your bags are patient. this is not rewarded.",
+      "your bags have been audited. please sit down.",
+      "your bags have been described as fine. with great effort.",
+      "your bags are seen. a small silence follows.",
+      "your bags did not appreciate. they acquiesced.",
+      "your bags were bought with conviction. we admire the conviction.",
+      "your bags have been filed under: other.",
+      "your bags have been mentioned, briefly, in passing. and never again.",
+      "your bags are receiving this session. that is the entire intervention.",
+      "your bags are an ongoing concern.",
+      "your bags are a learning experience.",
+      "your bags are what was available.",
+      "your bags were not chosen. they were settled for.",
+      "your bags are an open question.",
+      "your bags have not been defended.",
+      "your bags are held to no standard.",
+      "your bags are in the room. no one is looking at them.",
+      "your bags do not enter the conversation.",
+      "your bags are proof of something. we would rather not say what.",
+      "your bags are not what they could be.",
+      "your bags are an answer to a question no one asked.",
+      "your bags are carrying. what, is unclear.",
+      "your bags are, quite simply, there.",
+      "your bags have been reviewed. no further review is necessary.",
+      "your bags are a matter we will not revisit.",
+      "your bags were enthusiastic. this was their flaw.",
+      "your bags did their best. their best was this.",
+      "your bags have been politely ignored.",
+      "your bags will be included in no summary.",
+      "your bags have disappointed, quietly and at length.",
+      "your bags are a gentle cautionary tale.",
+      "your bags are not a crisis. they are simply a situation.",
+      "your bags are in your possession. this cannot be undone.",
+      "your bags have not improved.",
+      "your bags are a private matter between you and the chain.",
+      "your bags were ambitious. this is the word we will use.",
+      "your bags are the sort of thing that happens.",
+      "your bags are a chapter. it is short.",
+      "your bags were purchased. we will say that much.",
+      "your bags are a reminder.",
+      "your bags are not discussed. this is, in its way, a kindness.",
+      "your bags are in keeping with the rest of the decisions.",
+      "your bags are doing what they can.",
+      "your bags are, with some generosity, acceptable.",
+      "your bags have been met with patience.",
+      "your bags are a small sadness we keep to ourselves.",
+      "your bags are exactly as we feared.",
+      "your bags have been filed without comment.",
+      "your bags are a rounding error.",
+      "your bags did not make the list.",
+      "your bags are, we are told, yours.",
+      "your bags have been reviewed twice. the second review was shorter.",
+      "your bags are doing what they were allowed to do.",
+      "your bags did not take. they were given.",
+      "your bags were a trend. the trend has passed.",
+      "your bags are where conviction went to rest.",
+      "your bags are a moment we will not dwell on.",
+      "your bags are, at this moment, a question.",
+      "your bags are a thought you did not finish.",
+      "your bags have the quiet of the unvisited.",
+      "your bags are an invitation no one accepted.",
+      "your bags were enthusiastic. that was the end of it.",
+      "your bags did not rise with the tide.",
+      "your bags are held, patiently, by someone hoping.",
+      "your bags have been noted. we did not dwell.",
+      "your bags are a small, steady disappointment.",
+      "your bags are what was left.",
+      "your bags did not arrive at the party.",
+      "your bags have been marked 'see me.'",
+      "your bags are a private sorrow we will respect.",
+      "your bags are, for now, an open file.",
+      "your bags are not being dignified with a reply.",
+      "your bags have been absorbed into the general disappointment.",
+      "your bags did not survive the weekend.",
+      "your bags are an exhibit. the exhibit is not popular."
+    ];
+
+    const intro = document.getElementById('intro');
+    const walletInput = document.getElementById('wallet');
+    const beginBtn = document.getElementById('beginBtn');
+    const lineEl = document.getElementById('lineEl');
+    const sessionUi = document.getElementById('sessionUi');
+    const endBtn = document.getElementById('endBtn');
+    const crtScreen = document.getElementById('crtScreen');
+    const mouthGroup = document.getElementById('mouthGroup');
+
+    if (!beginBtn) { setStatus('begin button not found in dom', 'err'); return; }
+
+    function log() { console.log.apply(console, ['[bags]'].concat([].slice.call(arguments))); }
+
+    const session = { running: false, abort: false };
+    let voices = [];
+    function loadVoices() {
+      voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    }
+    if (typeof speechSynthesis !== 'undefined') {
+      speechSynthesis.onvoiceschanged = loadVoices;
+      loadVoices();
+    }
+
+    // Custom matcher that also enforces English-language match for voice families
+    // that exist in many locales (Reed is installed in 13 languages — we don't
+    // want the Korean Reed sneaking in first).
+    function findVoice(namePat, langPat) {
+      if (!voices || voices.length === 0) return null;
+      return voices.find(function (v) {
+        if (!namePat.test(v.name)) return false;
+        if (langPat && !langPat.test(v.lang || '')) return false;
+        return true;
+      }) || null;
+    }
+    function pickVoice() {
+      if (!voices || voices.length === 0) loadVoices();
+      // Ordered list of [name regex, optional lang regex] pairs.
+      const prefs = [
+        // ═══ TOP PICK: Allison — warm, measured American female. Closest match to
+        // Lumon's Ms. Casey / Gemma Scout therapist-tone in Severance.
+        [/^Allison\s*\(Premium\)$/i, /^en[-_]/i],
+        [/^Allison\s*\(Enhanced\)$/i, /^en[-_]/i],
+        [/^Allison\b/i, /^en[-_]/i],
+        // Ava — Siri-like neural; also calm-corporate but a touch peppier
+        [/^Ava\s*\(Premium\)$/i, /^en[-_]/i],
+        [/^Ava\s*\(Enhanced\)$/i, /^en[-_]/i],
+        // Samantha Enhanced — classic warm American, dependable fallback
+        [/^Samantha\s*\(Enhanced\)$/i, /^en[-_]/i],
+        [/^Samantha\s*\(Premium\)$/i, /^en[-_]/i],
+        // Kate — British female, previous pick
+        [/^Kate\s*\(Enhanced\)$/i, /^en[-_]/i],
+        [/^Kate\s*\(Premium\)$/i,  /^en[-_]/i],
+        [/^Kate\b/i,                /^en[-_]/i],
+        // Reed — male calm narrator
+        [/^Reed\s*\(Enhanced\)$/i, /^en[-_]/i],
+        [/^Reed\s*\(Premium\)$/i,  /^en[-_]/i],
+        [/^Reed\b/i,                /^en[-_]/i],
+        // Classic macOS synthesis voices — Bruce (Hawking-adjacent) as further fallback
+        [/^Bruce$/i, null],
+        [/^Fred$/i, null], [/^Ralph$/i, null], [/^Junior$/i, null], [/^Kathy$/i, null],
+        // macOS Premium / Enhanced (neural) — next best if Reed / Kate / Bruce aren't
+        [/Ava \(Premium\)/i, null],      [/Ava \(Enhanced\)/i, null],
+        [/Zoe \(Premium\)/i, null],      [/Zoe \(Enhanced\)/i, null],
+        [/Allison \(Premium\)/i, null],  [/Allison \(Enhanced\)/i, null],
+        [/Samantha \(Enhanced\)/i, null], [/Samantha \(Premium\)/i, null],
+        [/Serena \(Premium\)/i, null],   [/Serena \(Enhanced\)/i, null],
+        [/Karen \(Premium\)/i, null],    [/Karen \(Enhanced\)/i, null],
+        [/Moira \(Enhanced\)/i, null],
+        // Chrome / Google / Microsoft fallbacks
+        [/Google US English/i, null], [/Google UK English Female/i, null],
+        [/Microsoft Aria Online/i, null], [/Microsoft Jenny Online/i, null], [/Microsoft Ava Online/i, null],
+        [/Microsoft Aria/i, null], [/Microsoft Jenny/i, null], [/Microsoft Zira/i, null],
+        [/^Samantha$/i, null], [/^Victoria$/i, null], [/^Karen$/i, null],
+        [/^Moira$/i, null], [/^Serena$/i, null], [/^Tessa$/i, null],
+        [/en-US.*Female/i, null], [/en-GB.*Female/i, null]
+      ];
+      for (const p of prefs) {
+        const v = findVoice(p[0], p[1]);
+        if (v) return v;
+      }
+      return voices.find(function (v) { return /^en[-_]/i.test(v.lang || ''); }) || voices[0] || null;
+    }
+
+    // Most TTS engines treat "A. C. K." as three separate sentences and insert
+    // a huge pause after each period. Feed them the phonetic spelling instead —
+    // this produces "ay see kay" said quickly, the way a human would.
+    // We only transform the TEXT that goes to the speech engine; what's shown
+    // on the CRT screen is left untouched.
+    function speechTextFor(text) {
+      if (!text) return text;
+      var out = text;
+      // "A. C. K." (with any whitespace variants) → "ay see kay"
+      out = out.replace(/\bA\.\s*C\.\s*K\.?/gi, 'ay see kay');
+      // Bare "A.C.K." (no spaces between) → same
+      out = out.replace(/\bA\.C\.K\.?/gi, 'ay see kay');
+      return out;
+    }
+
+    // ---------------- Oscilloscope waveform controller ----------------
+    // Feeds #wavePath and #waveGhost with a continuous polyline of points.
+    // Idle: tiny jitter near centerline (looks like a quiet signal bed).
+    // Speaking: layered sines + noise, swelling amplitude like an envelope.
+    // We use a simple JS loop — no Web Audio analyser needed since
+    // speechSynthesis doesn't expose raw audio anyway.
+    const wavePath  = document.getElementById('wavePath');
+    const waveGhost = document.getElementById('waveGhost');
+    const SCOPE_W = 400, SCOPE_H = 300, SCOPE_MID = 150;
+    const SCOPE_SAMPLES = 96;          // horizontal resolution of the trace
+    const SCOPE_DX = SCOPE_W / (SCOPE_SAMPLES - 1);
+    let scopeT = 0;                    // rolling time accumulator
+    let scopeAmp = 1.2;                // current amplitude (eased toward target)
+    let scopeAmpTarget = 1.2;          // IDLE target (small jitter)
+    let scopeRAF = null;
+
+    // Pre-seed random phases so each run looks different
+    const scopePhase = [Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28];
+
+    function scopeLerp(a, b, t) { return a + (b - a) * t; }
+
+    function scopeTick() {
+      // ease amplitude toward target for smooth swell/decay
+      scopeAmp = scopeLerp(scopeAmp, scopeAmpTarget, 0.08);
+      scopeT += 0.09;
+
+      // multi-sine envelope — mix low-freq body + mid-freq formant-ish wobble
+      // + high-freq hiss. All modulated by scopeAmp.
+      const pts = new Array(SCOPE_SAMPLES);
+      const ghost = new Array(SCOPE_SAMPLES);
+      for (let i = 0; i < SCOPE_SAMPLES; i++) {
+        const x = i * SCOPE_DX;
+        const u = i / (SCOPE_SAMPLES - 1);
+        // tiny envelope tapering at the edges so trace doesn't clip
+        const taper = Math.sin(u * Math.PI);
+        // three layered sines to feel voice-like
+        const s1 = Math.sin(u * 9.4 + scopeT * 1.8 + scopePhase[0]) * 22;
+        const s2 = Math.sin(u * 17.1 + scopeT * 2.6 + scopePhase[1]) * 11;
+        const s3 = Math.sin(u * 34.7 + scopeT * 4.1 + scopePhase[2]) * 5;
+        // pink-ish noise jitter
+        const n  = (Math.random() * 2 - 1) * 3;
+        const y  = SCOPE_MID + (s1 + s2 + s3 + n) * taper * scopeAmp * 0.06;
+        pts[i]   = x.toFixed(1) + ',' + y.toFixed(1);
+        ghost[i] = x.toFixed(1) + ',' + y.toFixed(1);
+      }
+      if (wavePath)  wavePath.setAttribute('points',  pts.join(' '));
+      if (waveGhost) waveGhost.setAttribute('points', ghost.join(' '));
+      scopeRAF = requestAnimationFrame(scopeTick);
+    }
+    scopeTick();
+
+    function maybeSmirk() { /* no-op — kept so callers don't break */ }
+
+    function startMouth() {
+      document.body.classList.add('is-speaking');
+      scopeAmpTarget = 12.0; // SPEAKING: full waveform swell
+      tvActive();
+    }
+    function stopMouth()  {
+      document.body.classList.remove('is-speaking');
+      scopeAmpTarget = 1.2;  // IDLE: quiet signal bed
+      tvIdle();
+    }
+
+    // ---------------- TV speaker audio bed (DISABLED) ----------------
+    // Previously layered a band-limited noise + 120Hz hum under the voice to
+    // sell the CRT illusion. User feedback: this made the whole thing sound
+    // like a radio filter. Functions are stubbed to no-ops so the rest of the
+    // code still works, but no audio is actually produced.
+    // All tv* functions are intentional no-ops. The voice now plays clean,
+    // straight out of the system TTS, no processing or bed layered underneath.
+    function initTvAudio() { /* disabled */ }
+    function tvRamp()      { /* disabled */ }
+    function tvIdle()      { /* disabled */ }
+    function tvActive()    { /* disabled */ }
+    function tvMute()      { /* disabled */ }
+    function tvClick()     { /* disabled */ }
+
+    // ---------------- Idle life (head tilts + gaze shifts) ----------------
+    const tiltClasses = ['tilt-left', '', 'tilt-right', '', 'tilt-nod', '', ''];
+    const gazeClasses = ['look-left', '', 'look-right', '', 'look-down', '', '', ''];
+    let idleTiltTimer = null, idleGazeTimer = null;
+    function scheduleIdleTilt() {
+      idleTiltTimer = setTimeout(function () {
+        const head = document.getElementById('head');
+        if (head) {
+          head.classList.remove('tilt-left', 'tilt-right', 'tilt-nod');
+          const c = tiltClasses[Math.floor(Math.random() * tiltClasses.length)];
+          if (c) head.classList.add(c);
+        }
+        scheduleIdleTilt();
+      }, 6000 + Math.random() * 9000);
+    }
+    function scheduleIdleGaze() {
+      idleGazeTimer = setTimeout(function () {
+        const gL = document.getElementById('gazeL');
+        const gR = document.getElementById('gazeR');
+        if (gL && gR) {
+          ['look-left','look-right','look-down'].forEach(function (c) {
+            gL.classList.remove(c); gR.classList.remove(c);
+          });
+          const c = gazeClasses[Math.floor(Math.random() * gazeClasses.length)];
+          if (c) { gL.classList.add(c); gR.classList.add(c); }
+        }
+        scheduleIdleGaze();
+      }, 3500 + Math.random() * 5000);
+    }
+    scheduleIdleTilt();
+    scheduleIdleGaze();
+
+    let _voiceLogged = false;
+    // Per-voice rate/pitch tuning. Classic synthesis voices (Bruce, Fred, Ralph)
+    // sound best close to their native defaults; neural voices benefit from a
+    // slight slow-down + deepened pitch to feel more deliberate.
+    function rateAndPitchFor(v) {
+      if (!v) return { rate: 0.72, pitch: 0.88, sentenceGapMs: 700 };
+      const n = v.name || '';
+      // Allison — Ms. Casey / Gemma-Scout target. Unhurried, sincere, slightly
+      // hollow-warm. Moderate slow-down, very slight pitch drop for that
+      // Lumon-wellness-counselor gravity. Long inter-sentence gaps — she
+      // pauses to let each line land, like she's reading a compliment card.
+      if (/^Allison(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
+        return { rate: 0.78, pitch: 0.95, sentenceGapMs: 820 };
+      }
+      // Ava — similar to Allison, just slightly brighter
+      if (/^Ava(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
+        return { rate: 0.78, pitch: 0.95, sentenceGapMs: 780 };
+      }
+      // Samantha Enhanced — slightly warmer, less clinical
+      if (/^Samantha(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
+        return { rate: 0.76, pitch: 0.92, sentenceGapMs: 780 };
+      }
+      // Reed — calm male voice.
+      if (/^Reed(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
+        return { rate: 0.88, pitch: 1.0, sentenceGapMs: 650 };
+      }
+      // Kate — British English, naturally measured. Slight slow-down keeps her
+      // in wellness-bot cadence without going sleepy. Pitch neutral (she's warm
+      // enough at default). Medium inter-sentence gap — she's deliberate but
+      // not as stately as the neural American voices.
+      if (/^Kate(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
+        return { rate: 0.82, pitch: 1.0, sentenceGapMs: 650 };
+      }
+      // Bruce = Hawking-adjacent target. DECtalk "Perfect Paul" was punchy (~180wpm)
+      // and almost perfectly flat pitch. Web Speech can't fully flatten prosody,
+      // but rate 1.05 + pitch 1.0 + short sentence gaps get 80% of the way there.
+      if (/^Bruce$/i.test(n)) {
+        return { rate: 1.05, pitch: 1.0, sentenceGapMs: 220 };
+      }
+      // Other classic robotic voices — same treatment, a touch slower
+      if (/^(Fred|Ralph|Junior|Kathy)$/i.test(n)) {
+        return { rate: 1.0, pitch: 1.0, sentenceGapMs: 280 };
+      }
+      // Neural / premium female voices — our original tuning
+      return { rate: 0.72, pitch: 0.88, sentenceGapMs: 700 };
+    }
+    function speakOne(text) {
+      return new Promise(function (resolve) {
+        if (!('speechSynthesis' in window)) { stopMouth(); return resolve(); }
+        const spoken = speechTextFor(text);
+        const u = new SpeechSynthesisUtterance(spoken);
+        const v = pickVoice(); if (v) u.voice = v;
+        // log once per page load so it's easy to tell which voice is active
+        if (!_voiceLogged) {
+          _voiceLogged = true;
+          console.log('[bags] voice picked:', v ? (v.name + ' · ' + v.lang) : '(none — falling back to default)');
+          console.log('[bags] all voices available:', (voices || []).map(function (x) { return x.name; }));
+        }
+        const rp = rateAndPitchFor(v);
+        u.rate = rp.rate; u.pitch = rp.pitch; u.volume = 1.0;
+        u.onstart = function () { startMouth(); };
+        u.onend = function () { stopMouth(); resolve(); };
+        u.onerror = function () { stopMouth(); resolve(); };
+        window.speechSynthesis.speak(u);
+        // safety: kick off mouth even if onstart is slow
+        setTimeout(startMouth, 120);
+      });
+    }
+    // Split on sentence-ending punctuation so we can insert a real pause between clauses.
+    // IMPORTANT: split BEFORE phonetic transform so "A. C. K." survives as one token
+    // (the transform collapses it into "ay see kay" which has no sentence-ending punctuation).
+    async function speak(text) {
+      // First collapse A.C.K. sequences so the sentence splitter doesn't shred them.
+      const collapsed = speechTextFor(text);
+      const parts = collapsed.split(/(?<=[.!?])\s+/).filter(function (s) { return s.trim(); });
+      // Use the voice-specific inter-sentence gap — Bruce/Hawking shouldn't dwell.
+      const gap = rateAndPitchFor(pickVoice()).sentenceGapMs;
+      for (let i = 0; i < parts.length; i++) {
+        await speakOne(parts[i]);
+        if (i < parts.length - 1) {
+          await sleep(gap);
+        }
+      }
+      stopMouth();
+    }
+    function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+    function normalizeInput(raw) {
+      raw = (raw || '').trim();
+      if (!raw) return { ok: false, msg: 'please enter a wallet or .eth name' };
+      if (/^0x[a-fA-F0-9]{40}$/.test(raw)) return { ok: true, value: raw.toLowerCase() };
+      if (/\.eth$/i.test(raw)) return { ok: true, value: raw.toLowerCase() };
+      if (/^[\w-]+\.[a-z]{2,}$/i.test(raw)) return { ok: true, value: raw.toLowerCase() };
+      return { ok: false, msg: 'not recognized as 0x… or .eth name' };
+    }
+
+    async function holdsAckArt(ownerInput) {
+      const url = new URL(ALCHEMY_BASE + ALCHEMY_KEY + '/getNFTsForOwner');
+      url.searchParams.set('owner', ownerInput);
+      url.searchParams.set('withMetadata', 'false');
+      url.searchParams.set('pageSize', '100');
+      ACK_CONTRACTS.forEach(function (c) { url.searchParams.append('contractAddresses[]', c); });
+      log('fetching', url.toString());
+      let res;
+      try {
+        res = await fetch(url.toString(), { method: 'GET' });
+      } catch (netErr) {
+        throw new Error('network: ' + (netErr.message || 'could not reach alchemy'));
+      }
+      const text = await res.text();
+      log('status', res.status, 'body', text.slice(0, 400));
+      if (!res.ok) {
+        let msg = 'alchemy ' + res.status;
+        try {
+          const j = JSON.parse(text);
+          if (j && j.error && j.error.message) msg += ': ' + j.error.message;
+          else if (j && j.message) msg += ': ' + j.message;
+        } catch (e) {}
+        throw new Error(msg);
+      }
+      const j = JSON.parse(text);
+      const owned = j.ownedNfts || j.ownedNFTs || [];
+      return { holds: owned.length > 0, count: owned.length };
+    }
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+
+    async function showLine(text) {
+      lineEl.classList.remove('show');
+      await sleep(600);
+      lineEl.textContent = text;
+      await sleep(50);
+      lineEl.classList.add('show');
+      await speak(text);
+      await sleep(1400);
+    }
+
+    async function runSession(mode) {
+      session.running = true; session.abort = false;
+      intro.classList.remove('visible'); intro.classList.add('hidden');
+      crtScreen.classList.remove('idle');
+      initTvAudio();
+      tvClick();
+      tvIdle();
+      await sleep(900);
+      sessionUi.classList.add('visible');
+
+      // Skip straight into the review — no mode-specific opener.
+      // The mode (praise / roast) silently determines which pool is used below.
+      await showLine("please relax. we are reviewing your bags.");
+
+      while (!session.abort) {
+        let pool;
+        if (mode === 'both') {
+          const p = shuffle(PRAISE), r = shuffle(ROAST);
+          pool = [];
+          const n = Math.min(p.length, r.length);
+          for (let i = 0; i < n; i++) { pool.push(p[i]); pool.push(r[i]); }
+        } else {
+          pool = shuffle(mode === 'praise' ? PRAISE : ROAST);
+        }
+        for (const line of pool) {
+          if (session.abort) break;
+          await showLine(line);
+        }
+      }
+
+      // End-of-session choice flow
+      sessionUi.classList.remove('visible');
+      await showChoice();
+      session.running = false;
+    }
+
+    async function showChoice() {
+      const choiceEl = document.getElementById('choice');
+      lineEl.classList.remove('show');
+      await sleep(400);
+      lineEl.textContent = "thank you. would you like a free piece of art?";
+      await sleep(50);
+      lineEl.classList.add('show');
+      await speak("thank you. would you like a free piece of art?");
+      await sleep(300);
+      if (choiceEl) choiceEl.classList.add('visible');
+    }
+
+    function getModeOverride() {
+      const m = new URLSearchParams(location.search).get('mode');
+      if (m === 'praise' || m === 'roast' || m === 'both') return m;
+      return null;
+    }
+
+    async function onBegin() {
+      log('begin clicked');
+      setStatus('click received · validating');
+      const norm = normalizeInput(walletInput.value);
+      if (!norm.ok) { setStatus(norm.msg, 'warn'); return; }
+      log('input ok:', norm.value);
+      setStatus('input ok · unlocking voice');
+      try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+      beginBtn.disabled = true;
+
+      const override = getModeOverride();
+      if (override) {
+        log('mode override via URL:', override);
+        setStatus('preview · beginning session');
+        await sleep(700);
+        runSession(override);
+        return;
+      }
+
+      setStatusBusy('consulting the ledger');
+      try {
+        const result = await holdsAckArt(norm.value);
+        log('result: holds =', result.holds, 'count =', result.count);
+        setStatus('ok · beginning session');
+        await sleep(900);
+        runSession(result.holds ? 'praise' : 'roast');
+      } catch (err) {
+        console.error('[bags] lookup failed', err);
+        setStatus((err && err.message) ? err.message.toLowerCase() : 'could not reach the ledger', 'err');
+        beginBtn.disabled = false;
+      }
+    }
+
+    // End just aborts the rotation; runSession proceeds to the choice flow.
+    function onEnd() {
+      session.abort = true;
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+      stopMouth();
+    }
+
+    beginBtn.addEventListener('click', onBegin);
+    walletInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') onBegin(); });
+    endBtn.addEventListener('click', onEnd);
+
+    // Choice routing
+    const yesArt = document.getElementById('yesArt');
+    const noArt  = document.getElementById('noArt');
+    const giftBag = document.getElementById('giftBag');
+    function acceptGift() {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+      window.location.href = 'nah.html';
+    }
+    if (yesArt) yesArt.addEventListener('click', acceptGift);
+    // Clicking the bag thumbnail itself accepts the gift (same as yes)
+    if (giftBag) giftBag.addEventListener('click', acceptGift);
+    if (noArt) noArt.addEventListener('click', function () {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+      window.location.href = 'shame.html';
+    });
+
+    setStatus('ready · enter wallet and press begin');
+    log('ready. origin:', location.origin, 'protocol:', location.protocol);
+
+  } catch (err) {
+    console.error('[bags] init failed', err);
+    const s = document.getElementById('status');
+    if (s) { s.classList.add('err'); s.textContent = 'init error: ' + (err.message || err); }
+  }
+})();
+</script>
+</body>
+</html>
