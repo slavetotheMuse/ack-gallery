@@ -899,18 +899,25 @@
       if (!voices || voices.length === 0) loadVoices();
       // Ordered list of [name regex, optional lang regex] pairs.
       const prefs = [
-        // ═══ TOP PICK: Allison — warm, measured American female. Closest match to
-        // Lumon's Ms. Casey / Gemma Scout therapist-tone in Severance.
+        // ═══ TOP PICK: Ava (Premium) — this is the neural Siri voice.
+        // Hands-down the most natural female voice available on macOS.
+        // Has the calm, measured Lumon-wellness-counselor presence we want.
+        [/^Ava\s*\(Premium\)$/i, /^en[-_]/i],
+        [/^Ava\s*\(Enhanced\)$/i, /^en[-_]/i],
+        // Nicky (Enhanced) — warm friendly American female, sincere tone
+        [/^Nicky\s*\(Enhanced\)$/i, /^en[-_]/i],
+        [/^Nicky\s*\(Premium\)$/i, /^en[-_]/i],
+        // Zoe — younger, softer; good if Ava isn't installed
+        [/^Zoe\s*\(Premium\)$/i, /^en[-_]/i],
+        [/^Zoe\s*\(Enhanced\)$/i, /^en[-_]/i],
+        // Allison — warm, measured American. Second-choice Ms. Casey tone.
         [/^Allison\s*\(Premium\)$/i, /^en[-_]/i],
         [/^Allison\s*\(Enhanced\)$/i, /^en[-_]/i],
         [/^Allison\b/i, /^en[-_]/i],
-        // Ava — Siri-like neural; also calm-corporate but a touch peppier
-        [/^Ava\s*\(Premium\)$/i, /^en[-_]/i],
-        [/^Ava\s*\(Enhanced\)$/i, /^en[-_]/i],
-        // Samantha Enhanced — classic warm American, dependable fallback
+        // Samantha Enhanced — classic warm American
         [/^Samantha\s*\(Enhanced\)$/i, /^en[-_]/i],
         [/^Samantha\s*\(Premium\)$/i, /^en[-_]/i],
-        // Kate — British female, previous pick
+        // Kate — British female
         [/^Kate\s*\(Enhanced\)$/i, /^en[-_]/i],
         [/^Kate\s*\(Premium\)$/i,  /^en[-_]/i],
         [/^Kate\b/i,                /^en[-_]/i],
@@ -1083,8 +1090,17 @@
       if (/^Allison(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
         return { rate: 0.78, pitch: 0.95, sentenceGapMs: 820 };
       }
-      // Ava — similar to Allison, just slightly brighter
+      // Ava — the Siri neural voice. Default-calm enough that we only pull rate
+      // down a touch. Pitch neutral keeps her uncanny-corporate, not babyish.
       if (/^Ava(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
+        return { rate: 0.82, pitch: 1.0, sentenceGapMs: 780 };
+      }
+      // Nicky — warm friendly American, similar profile to Ava
+      if (/^Nicky(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
+        return { rate: 0.80, pitch: 0.97, sentenceGapMs: 780 };
+      }
+      // Zoe — younger, softer; slight additional slow-down for gravity
+      if (/^Zoe(\s*\((Enhanced|Premium)\))?$/i.test(n)) {
         return { rate: 0.78, pitch: 0.95, sentenceGapMs: 780 };
       }
       // Samantha Enhanced — slightly warmer, less clinical

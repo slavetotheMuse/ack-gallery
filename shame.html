@@ -58,47 +58,9 @@
   <h1 class="shame-text">SHAME. SHAME. SHAME.</h1>
 
   <script>
-    // Bell-tolling TTS: say "shame" at a slow, deliberate interval.
-    // Voice preference matches bags.html — Reed first, Kate, Bruce fallback.
-    var shameVoices = [];
-    function loadShameVoices() {
-      shameVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-    }
-    if (typeof speechSynthesis !== 'undefined') {
-      speechSynthesis.onvoiceschanged = loadShameVoices;
-      loadShameVoices();
-    }
-    function pickShameVoice() {
-      if (!shameVoices || shameVoices.length === 0) loadShameVoices();
-      var prefs = [
-        /Reed \(Enhanced\)/i, /Reed \(Premium\)/i, /^Reed$/i,
-        /Kate \(Enhanced\)/i, /Kate \(Premium\)/i, /^Kate$/i,
-        /^Bruce$/i,
-        /Ava \(Premium\)/i, /Samantha \(Enhanced\)/i,
-        /Google US English/i,
-        /^Samantha$/i
-      ];
-      for (var i = 0; i < prefs.length; i++) {
-        var v = shameVoices.find(function (x) { return prefs[i].test(x.name); });
-        if (v) return v;
-      }
-      return shameVoices.find(function (x) { return /en[-_]/i.test(x.lang); }) || shameVoices[0] || null;
-    }
-    function sayShame() {
-      try {
-        if (!('speechSynthesis' in window)) return;
-        var u = new SpeechSynthesisUtterance('shame');
-        var v = pickShameVoice(); if (v) u.voice = v;
-        u.rate = 0.55; u.pitch = 0.6; u.volume = 1;
-        speechSynthesis.speak(u);
-      } catch (e) {}
-    }
-    // auto-try on load (works when invoked via a prior user gesture,
-    // i.e. after "no i fucking hate ack and his stupid art" click)
-    setTimeout(sayShame, 400);
-    setInterval(sayShame, 2800);
-    // fallback: fire once on any click if autoplay was blocked
-    document.body.addEventListener('click', sayShame, { once: true });
+    // Voice removed per user feedback — it didn't sound right.
+    // Page is now purely visual: gif + the "SHAME. SHAME. SHAME." text tolling
+    // via the shame-pulse CSS animation.
   </script>
 </body>
 </html>

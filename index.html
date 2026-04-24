@@ -17508,25 +17508,32 @@
               // These are base rules — sizeFactor adjusts dynamically when a collector has few pieces
               function _getBagsRule(colName, grpCount) {
                 // Static definitions
+                // fewSF lowered across hero tier — single-piece collectors used to
+                // get massive cards. Now they're modest-sized so the overall page
+                // composition stays consistent with high-count collectors.
                 const _rules = {
-                  'Frog':                      { baseSF: 0.80, maxPerRow: 4, tier: 'medium', fewSF: 1.10 },
-                  'The Great Color Study':    { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.90 },
-                  'Warothys':                 { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.85 },
-                  'servants':                 { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.75 },
-                  'Starry Nights':            { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.75 },
-                  'Broken Keys':              { baseSF: 0.65, maxPerRow: 8, tier: 'medium', fewSF: 1.35 },
-                  'ACKPFP':                   { baseSF: 0.75, maxPerRow: 5, tier: 'medium', fewSF: 1.0 },
-                  'Heart You':                { baseSF: 0.70, maxPerRow: 4, tier: 'medium', fewSF: 1.0 },
-                  'ACK Editions':             { baseSF: 0.90, maxPerRow: 4, tier: 'medium', fewSF: 1.10 },
-                  'Clown Party':              { baseSF: 0.85, maxPerRow: 4, tier: 'medium', fewSF: 1.10 },
-                  'Opepen Set 030: a.c.k.':   { baseSF: 0.80, maxPerRow: 6, tier: 'medium', fewSF: 1.0 },
-                  'Piano Blossoms':           { baseSF: 1.20, maxPerRow: 3, tier: 'hero', fewSF: 1.40 },
-                  'SuperRare':                { baseSF: 1.30, maxPerRow: 2, tier: 'hero', fewSF: 1.50 },
-                  'Her Favorite Flowers':     { baseSF: 1.30, maxPerRow: 2, tier: 'hero', fewSF: 1.50 },
-                  'Tempted in the Garden':    { baseSF: 1.40, maxPerRow: 1, tier: 'hero', fewSF: 1.60 },
-                  'Last Orders':              { baseSF: 1.40, maxPerRow: 1, tier: 'hero', fewSF: 1.60 },
-                  'Right Click Print':        { baseSF: 1.30, maxPerRow: 1, tier: 'hero', fewSF: 1.50 },
-                  'Made these for your girl': { baseSF: 1.30, maxPerRow: 1, tier: 'hero', fewSF: 1.50 },
+                  'Frog':                      { baseSF: 0.80, maxPerRow: 4, tier: 'medium', fewSF: 1.05 },
+                  'The Great Color Study':    { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.85 },
+                  'Warothys':                 { baseSF: 0.55, maxPerRow: 5, tier: 'small-grid', fewSF: 0.80 },
+                  'servants':                 { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.70 },
+                  'Starry Nights':            { baseSF: 0.45, maxPerRow: 8, tier: 'small-grid', fewSF: 0.70 },
+                  'Broken Keys':              { baseSF: 0.65, maxPerRow: 8, tier: 'medium', fewSF: 1.20 },
+                  'ACKPFP':                   { baseSF: 0.75, maxPerRow: 5, tier: 'medium', fewSF: 0.95 },
+                  'Heart You':                { baseSF: 0.70, maxPerRow: 4, tier: 'medium', fewSF: 0.95 },
+                  'ACK Editions':             { baseSF: 0.90, maxPerRow: 4, tier: 'medium', fewSF: 1.0 },
+                  'Clown Party':              { baseSF: 0.85, maxPerRow: 4, tier: 'medium', fewSF: 1.0 },
+                  'Opepen Set 030: a.c.k.':   { baseSF: 0.80, maxPerRow: 6, tier: 'medium', fewSF: 0.95 },
+                  'Piano Blossoms':           { baseSF: 1.20, maxPerRow: 3, tier: 'hero', fewSF: 1.20 },
+                  'SuperRare':                { baseSF: 1.30, maxPerRow: 2, tier: 'hero', fewSF: 1.25 },
+                  'Her Favorite Flowers':     { baseSF: 1.30, maxPerRow: 2, tier: 'hero', fewSF: 1.25 },
+                  'Tempted in the Garden':    { baseSF: 1.40, maxPerRow: 1, tier: 'hero', fewSF: 1.30 },
+                  'Last Orders':              { baseSF: 1.40, maxPerRow: 1, tier: 'hero', fewSF: 1.30 },
+                  'Right Click Print':        { baseSF: 1.30, maxPerRow: 1, tier: 'hero', fewSF: 1.25 },
+                  'Made these for your girl': { baseSF: 1.30, maxPerRow: 1, tier: 'hero', fewSF: 1.25 },
+                  // Elephant Trio: dedicated group when all 3 ACK Editions
+                  // elephants are owned. Hero tier so it sits at the top.
+                  // 3 pieces — fits in one row, slightly bigger than medium.
+                  'Elephant Trio':            { baseSF: 1.05, maxPerRow: 3, tier: 'hero', fewSF: 1.05 },
                 };
                 const r = _rules[colName] || { baseSF: 0.85, maxPerRow: 4, tier: 'medium', fewSF: 1.10 };
                 // Dynamic: if collector has few pieces from a normally-dense collection, make them bigger
@@ -17556,30 +17563,64 @@
                 _bagsGroupMap[src].artworks.push(art);
               });
 
-              // Circus elephant precedence: sort circus elephant to front of ACK Editions group
+              // Elephant trio: when collector owns ALL 3 ACK Editions elephants
+              // AND has a small total wallet (≤10 pieces), pull the elephants
+              // into their own dedicated group on the top row. Bigger wallets
+              // keep the natural masonry — elephants flow inline with other
+              // pieces, since the layout already has plenty of context.
               var _ackEdGrp = _bagsGroupMap['ACK Editions'];
-              if (_ackEdGrp) {
+              if (_ackEdGrp && count <= 10) {
                 var _elephantNames = ['pink elephant on parade', 'majestic white elephant', 'circus elephant'];
-                var _ownedEls = _ackEdGrp.indices.filter(function(idx) {
+                var _elephantOwnedIdxs = _ackEdGrp.indices.filter(function(idx) {
                   return _elephantNames.indexOf((artworks[idx].title || '').toLowerCase()) >= 0;
                 });
-                if (_ownedEls.length === 3) {
-                  // Move circus elephant to index 0 within this group
-                  var _ciIdx = _ackEdGrp.indices.findIndex(function(idx) {
-                    return (artworks[idx].title || '').toLowerCase() === 'circus elephant';
+                if (_elephantOwnedIdxs.length === 3) {
+                  // Extract elephants from ACK Editions into their own group
+                  var _elephantArtworks = _elephantOwnedIdxs.map(function(idx) { return artworks[idx]; });
+                  // Order: pink, circus (centerpiece), majestic — circus in the middle.
+                  var _byTitle = {};
+                  _elephantOwnedIdxs.forEach(function(idx) {
+                    _byTitle[(artworks[idx].title || '').toLowerCase()] = idx;
                   });
-                  if (_ciIdx > 0) {
-                    var removed = _ackEdGrp.indices.splice(_ciIdx, 1);
-                    _ackEdGrp.indices.unshift(removed[0]);
-                    var removedArt = _ackEdGrp.artworks.splice(_ciIdx, 1);
-                    _ackEdGrp.artworks.unshift(removedArt[0]);
+                  var _orderedIdxs = [
+                    _byTitle['pink elephant on parade'],
+                    _byTitle['circus elephant'],
+                    _byTitle['majestic white elephant']
+                  ];
+                  var _orderedArts = _orderedIdxs.map(function(idx) { return artworks[idx]; });
+                  // Remove these 3 from ACK Editions
+                  _ackEdGrp.indices = _ackEdGrp.indices.filter(function(idx) {
+                    return _elephantOwnedIdxs.indexOf(idx) < 0;
+                  });
+                  _ackEdGrp.artworks = _ackEdGrp.artworks.filter(function(a) {
+                    return _elephantOwnedIdxs.indexOf(artworks.indexOf(a)) < 0;
+                  });
+                  // If ACK Editions is now empty, drop it from groups
+                  if (_ackEdGrp.indices.length === 0) {
+                    var _idx = _bagsGroups.indexOf(_ackEdGrp);
+                    if (_idx >= 0) _bagsGroups.splice(_idx, 1);
+                    delete _bagsGroupMap['ACK Editions'];
                   }
+                  // Insert elephant trio as a new group at the FRONT of _bagsGroups
+                  // so it gets first placement on the top shelf.
+                  var _trioGroup = {
+                    name: 'Elephant Trio',
+                    indices: _orderedIdxs,
+                    artworks: _orderedArts,
+                    _isElephantTrio: true
+                  };
+                  _bagsGroupMap['Elephant Trio'] = _trioGroup;
+                  _bagsGroups.unshift(_trioGroup);
                 }
               }
 
-              // Sort groups: hero tier first (prominent placement), then medium, then small-grid
+              // Sort groups: Elephant Trio FIRST (when present), then hero tier,
+              // then medium, then small-grid.
               const _tierOrder = { 'hero': 0, 'medium': 1, 'small-grid': 2 };
               _bagsGroups.sort((a, b) => {
+                // Elephant Trio always wins the top spot
+                if (a._isElephantTrio && !b._isElephantTrio) return -1;
+                if (!a._isElephantTrio && b._isElephantTrio) return 1;
                 const rA = _getBagsRule(a.name, a.indices.length);
                 const rB = _getBagsRule(b.name, b.indices.length);
                 const tA = _tierOrder[rA.tier] !== undefined ? _tierOrder[rA.tier] : 1;
@@ -17592,8 +17633,11 @@
               // Use generous sizing — fill more of the viewport, cards should feel substantial
               const _totalPieces = count;
               const _targetW = _bagsAvailW * 0.82; // use most of the width
-              const _densityFactor = _totalPieces <= 4 ? 0.52 : _totalPieces <= 8 ? 0.42 : _totalPieces <= 16 ? 0.32 : _totalPieces <= 30 ? 0.24 : 0.18;
-              const _baseCardW = Math.min(400, Math.max(100, Math.sqrt((_targetW * _bagsAvailH * _densityFactor) / _totalPieces)));
+              // Density tightened for low-count collectors so a 7-piece wallet
+              // doesn't get shelf-broken into multiple rows. With these values,
+              // ~5–8 pieces will fit comfortably on a single shelf.
+              const _densityFactor = _totalPieces <= 4 ? 0.40 : _totalPieces <= 8 ? 0.30 : _totalPieces <= 16 ? 0.26 : _totalPieces <= 30 ? 0.22 : 0.18;
+              const _baseCardW = Math.min(360, Math.max(100, Math.sqrt((_targetW * _bagsAvailH * _densityFactor) / _totalPieces)));
 
               // ── Layout each group, placing groups in a flowing arrangement ──
               // We use a "zone" approach: divide viewport into regions and assign groups
@@ -17608,22 +17652,15 @@
 
                 // Compute per-card dimensions using aspect ratios
                 const cards = [];
-                // Circus elephant precedence: if all 3 elephants in ACK Editions, circus elephant gets biggest card
-                var _circusBoost = false;
-                if (grp.name === 'ACK Editions') {
-                  var _elephantTitles = ['pink elephant on parade', 'majestic white elephant', 'circus elephant'];
-                  var _ownedElephants = grp.indices.filter(function(idx) {
-                    var t = (artworks[idx].title || '').toLowerCase();
-                    return _elephantTitles.indexOf(t) >= 0;
-                  });
-                  _circusBoost = (_ownedElephants.length === 3);
-                }
+                // Circus elephant gets a small size bump (1.15x) when in the
+                // Elephant Trio group — reads as the rare "headline" of the
+                // trio without overpowering the other two.
+                var _circusBoost = (grp._isElephantTrio === true);
                 grp.indices.forEach((idx, ci) => {
                   const ar = _imgAspects[idx] || 1.0;
                   var w = cardW;
-                  // Circus elephant gets 1.5x size when all 3 elephants owned
                   if (_circusBoost && (artworks[idx].title || '').toLowerCase() === 'circus elephant') {
-                    w = Math.round(cardW * 1.5);
+                    w = Math.round(cardW * 1.15);
                   }
                   // Full Set Holder badge: slightly smaller than regular art
                   if (artworks[idx] && artworks[idx]._isBadge) {
@@ -17693,9 +17730,19 @@
               let _shelfMaxH = 0;
               const _interGroupGap = Math.round(_bagsGap * 1.5);
 
+              var _prevWasTrio = false;
               _groupBoxes.forEach((gb, gi) => {
                 // Check if group fits on current shelf
                 const _shelfMaxW = vpW - _bagsPad;
+                // Force a fresh shelf right after the Elephant Trio — even if
+                // there'd be horizontal room to share — so the trio gets its
+                // own row alone.
+                if (_prevWasTrio && _shelfX > _bagsPad + 10) {
+                  _shelfY += _shelfMaxH + _interGroupGap;
+                  _shelfX = _bagsPad;
+                  _shelfMaxH = 0;
+                }
+                _prevWasTrio = (gb.name === 'Elephant Trio');
                 if (_shelfX + gb.grpW > _shelfMaxW && _shelfX > _bagsPad + 10) {
                   // Move to next shelf
                   _shelfY += _shelfMaxH + _interGroupGap;
