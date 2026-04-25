@@ -6027,25 +6027,56 @@
 
     /* Feed of collections */
     body.is-real-mobile #mobileFeed {
-      padding: 40px 0 100px;
+      padding: 50px 0 140px;
     }
     body.is-real-mobile .m-collection {
-      margin-bottom: 70px;
+      margin-bottom: 110px;
+      position: relative;
+    }
+    /* Hairline gold divider between collections — like a section break */
+    body.is-real-mobile .m-collection:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      bottom: -55px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30%;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(220, 170, 80, 0.35) 50%,
+        transparent 100%
+      );
+    }
+    /* Tiny diamond marker centered on the divider line */
+    body.is-real-mobile .m-collection:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      bottom: -60px;
+      left: 50%;
+      transform: translate(-50%, 0) rotate(45deg);
+      width: 10px;
+      height: 10px;
+      background: rgba(220, 170, 80, 0.5);
+      box-shadow: 0 0 12px rgba(220, 170, 80, 0.3);
+      z-index: 1;
     }
     body.is-real-mobile .m-collection-header {
-      padding: 0 50px 20px;
+      padding: 0 50px 28px;
     }
     body.is-real-mobile .m-collection-title {
-      font-size: 50px;
+      font-size: 56px;
       letter-spacing: 0.04em;
       font-style: italic;
-      color: rgba(225, 200, 160, 0.95);
-      margin-bottom: 8px;
+      color: rgba(225, 200, 160, 0.96);
+      margin-bottom: 10px;
+      line-height: 1.15;
     }
     body.is-real-mobile .m-collection-meta {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 22px;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.22em;
       color: rgba(180, 170, 150, 0.55);
       text-transform: uppercase;
     }
@@ -14430,7 +14461,15 @@
         var strip = document.createElement('div');
         strip.className = 'm-strip';
 
+        // Servants of the Muse — show ONE representative coin instead of all 69
         var artworks = entry._sortedArtworks || col.artworks;
+        var isServantsCollection = col.name === 'servants' || col.spinCoin;
+        if (isServantsCollection) {
+          artworks = artworks.slice(0, 1);
+          // Update meta line to reflect the full collection
+          meta.textContent = 'Collection of 69 — 1-of-1 each';
+        }
+
         artworks.forEach(function(art, ai) {
           // Resolve original idx in unsorted artworks for consistent focus reference
           var realIdx = col.artworks.indexOf(art);
@@ -14504,15 +14543,28 @@
     }
 
     function _openMobileFocus(colIdx, artIdx) {
+      console.log('[mobileShell] opening focus colIdx=' + colIdx + ' artIdx=' + artIdx);
       var col = COLLECTIONS[colIdx];
-      if (!col || !col.artworks) return;
+      if (!col || !col.artworks) {
+        console.warn('[mobileShell] open failed — invalid colIdx', colIdx);
+        return;
+      }
       var art = col.artworks[artIdx];
-      if (!art) return;
+      if (!art) {
+        console.warn('[mobileShell] open failed — invalid artIdx', artIdx, 'in', col.name);
+        return;
+      }
+      console.log('[mobileShell] resolved →', col.name, '/', art.title);
+      // Wipe previous image FIRST so we don't flash the prior artwork
+      var img = document.getElementById('mobileFocusImg');
+      if (img) { img.removeAttribute('src'); img.src = ''; }
+      // Hide any video element that might be there from previous open
+      var existingVid = document.getElementById('mobileFocusVideo');
+      if (existingVid) { try { existingVid.pause(); } catch(e) {} existingVid.remove(); }
       _mobileFocusState = { colIdx: colIdx, artIdx: artIdx, col: col };
       _renderMobileFocus();
       var overlay = document.getElementById('mobileFocus');
       if (overlay) overlay.classList.add('active');
-      // Analytics
       try { if (window.ACK_ANALYTICS) ACK_ANALYTICS.artworkFocus(col.name, art.title); } catch(e) {}
     }
 
@@ -14525,11 +14577,47 @@
       var clx = document.getElementById('mobileFocusCollection');
       var edn = document.getElementById('mobileFocusEdition');
       var cnt = document.getElementById('mobileFocusCounter');
-      if (img) img.src = art.focusImage || art.image || '';
-      if (ttl) ttl.textContent = art.title || '';
-      if (clx) clx.textContent = col.name || '';
-      if (edn) edn.textContent = art.edition || (art.tokenId ? ('token #' + art.tokenId) : '');
-      if (cnt) cnt.textContent = (s.artIdx + 1) + ' / ' + col.artworks.length;
+
+      // Special: Servants of the Muse — play the video, not a static image
+      var isServants = col.name === 'servants' || col.spinCoin;
+      if (isServants && img) {
+        // Hide the img and inject a video instead
+        img.style.display = 'none';
+        var existingVid = document.getElementById('mobileFocusVideo');
+        if (existingVid) { try { existingVid.pause(); } catch(e) {} existingVid.remove(); }
+        var vid = document.createElement('video');
+        vid.id = 'mobileFocusVideo';
+        vid.src = (art.animation_url) ? art.animation_url : 'servant_muse.mp4';
+        vid.autoplay = true;
+        vid.loop = true;
+        vid.muted = false;
+        vid.playsInline = true;
+        vid.setAttribute('playsinline', '');
+        vid.setAttribute('autoplay', '');
+        vid.setAttribute('loop', '');
+        vid.style.cssText = 'width:100%;max-height:65vh;object-fit:contain;display:block;border-radius:4px;box-shadow:0 6px 30px rgba(0,0,0,0.6);';
+        img.parentNode.insertBefore(vid, img);
+        // Try to play (mobile may require user gesture)
+        setTimeout(function() { try { vid.play(); } catch(e) {} }, 50);
+      } else {
+        // Restore img if we previously hid it
+        if (img) {
+          img.style.display = '';
+          var existingVid = document.getElementById('mobileFocusVideo');
+          if (existingVid) { try { existingVid.pause(); } catch(e) {} existingVid.remove(); }
+          img.src = art.focusImage || art.image || '';
+        }
+      }
+
+      if (ttl) ttl.textContent = art.title || (isServants ? 'servants of the Muse' : '');
+      if (clx) clx.textContent = isServants ? 'SERVANTS' : (col.name || '');
+      if (edn) edn.textContent = isServants ? 'Collection of 69 — 1-of-1 each' : (art.edition || (art.tokenId ? ('token #' + art.tokenId) : ''));
+      if (cnt) cnt.textContent = isServants ? '' : ((s.artIdx + 1) + ' / ' + col.artworks.length);
+    }
+    // Pause video when overlay closes
+    function _closeMobileFocus_pauseVideo() {
+      var vid = document.getElementById('mobileFocusVideo');
+      if (vid) { try { vid.pause(); } catch(e) {} }
     }
 
     function _moveMobileFocus(dir) {
@@ -14542,6 +14630,7 @@
     }
 
     function _closeMobileFocus() {
+      _closeMobileFocus_pauseVideo();
       var overlay = document.getElementById('mobileFocus');
       if (overlay) overlay.classList.remove('active');
     }
