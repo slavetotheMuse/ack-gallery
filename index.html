@@ -6377,6 +6377,10 @@
       0%, 100% { opacity: 0.45; }
       50%      { opacity: 0.95; }
     }
+    @keyframes focusLoadPulse {
+      0%, 100% { opacity: 0.55; }
+      50%      { opacity: 1.0; }
+    }
     body.is-real-mobile .m-focus-content {
       flex: 1;
       display: flex;
@@ -14733,18 +14737,28 @@
           img.decoding = 'async';
           img.alt = art.title || '';
           // Mobile perf: only ACK Editions animates GIFs in the feed.
-          // Other collections substitute a JPG variant of the same path,
-          // falling back to the original GIF if the JPG doesn't exist.
+          // For other collections that have explicit JPG variants in the path,
+          // use those; otherwise fall back to the GIF (still loads, but at
+          // least one collection has its native asset). This avoids broken
+          // images when no JPG companion exists.
           var feedSrc = art.image || '';
-          if (col.name !== 'ACK Editions' && /\.gif(\?|$)/i.test(feedSrc)) {
+          var skipAnim = (col.name !== 'ACK Editions' && /\.gif(\?|$)/i.test(feedSrc));
+          if (skipAnim) {
             var jpgGuess = feedSrc.replace(/\.gif(\?|$)/i, '.jpg$1');
-            img.src = jpgGuess;
-            img.dataset.gifFallback = feedSrc;
-            img.onerror = function() {
-              if (img.dataset.gifFallback && img.src !== img.dataset.gifFallback) {
-                img.src = img.dataset.gifFallback;
+            // Probe the jpg variant first; only use it if it actually loads.
+            var probe = new Image();
+            probe.onload = function() {
+              // Verify it's a real image (some servers return 200 + empty body)
+              if (probe.naturalWidth > 0 && probe.naturalHeight > 0) {
+                img.src = jpgGuess;
+              } else {
+                img.src = feedSrc;
               }
             };
+            probe.onerror = function() {
+              img.src = feedSrc; // jpg variant doesn't exist — load the gif
+            };
+            probe.src = jpgGuess;
           } else {
             img.src = feedSrc;
           }
@@ -14880,40 +14894,67 @@
         mediaEl.id = 'mobileFocusImg';
         mediaEl.alt = art.title || '';
         mediaEl.style.cssText = 'width:100%;max-height:65vh;object-fit:contain;display:block;border-radius:4px;box-shadow:0 6px 30px rgba(0,0,0,0.6);';
-        // Two-stage load on mobile: tiny/fast first, hi-res after.
+
+        // Resolve loading sources:
+        //   fastSrc — what shows immediately (web thumb, smaller, may already be cached)
+        //   hiResSrc — final high-quality version (focusImage or fullRes)
+        // Prefer animated fullRes (gif) for focus when available — that's how
+        // 1-of-1s and Broken Keys + Warothys reveal their full life.
         var fastSrc = art.image || '';
-        var hiResSrc = art.focusImage || art.image || '';
-        // If we have a focusImage that's different from the thumb, load thumb first then upgrade
-        if (hiResSrc && fastSrc && hiResSrc !== fastSrc) {
-          mediaEl.src = fastSrc;
-          var hiPre = new Image();
-          hiPre.onload = function() {
-            mediaEl.src = hiResSrc;
-          };
-          hiPre.src = hiResSrc;
+        var hiResSrc = '';
+        // 1) If fullRes is an animated gif, that's the target (animation matters here)
+        if (art.fullRes && /\.gif(\?|$)/i.test(art.fullRes)) {
+          hiResSrc = art.fullRes;
+        } else if (art.focusImage) {
+          hiResSrc = art.focusImage;
+        } else if (art.fullRes && !/\.mp4$/i.test(art.fullRes)) {
+          hiResSrc = art.fullRes;
         } else {
-          mediaEl.src = hiResSrc;
+          hiResSrc = art.image || '';
         }
-        // Loading indicator — visible until the (final) image loads
-        mediaEl.onload = function() {
+
+        // Helper to dismiss the loading indicator
+        var dismissLoading = function() {
           var ind = document.getElementById('mobileFocusLoading');
           if (ind && ind.parentNode) ind.parentNode.removeChild(ind);
         };
+
+        if (hiResSrc && fastSrc && hiResSrc !== fastSrc) {
+          // Two-stage: show fast first, swap when hi-res ready.
+          // CRITICAL: indicator stays until hi-res actually loads, NOT when fast loads.
+          mediaEl.src = fastSrc;
+          // (intentionally NO onload here — we don't want the fast-load to dismiss)
+          var hiPre = new Image();
+          hiPre.onload = function() {
+            mediaEl.src = hiResSrc;
+            mediaEl.onload = dismissLoading; // dismiss only when the final image is in
+          };
+          hiPre.onerror = function() {
+            // hi-res failed; we already show fast, so dismiss
+            dismissLoading();
+          };
+          hiPre.src = hiResSrc;
+        } else {
+          // Single-stage — dismiss when this loads
+          mediaEl.onload = dismissLoading;
+          mediaEl.onerror = dismissLoading;
+          mediaEl.src = hiResSrc;
+        }
       }
       content.appendChild(mediaEl);
 
-      // Loading indicator (only for images — videos handle their own load state)
+      // Loading indicator — shown for both images and (briefly) videos
       if (!isServants) {
         var loading = document.createElement('div');
         loading.id = 'mobileFocusLoading';
         loading.className = 'm-focus-loading';
         loading.textContent = 'this artwork is';
         content.appendChild(loading);
-        // Auto-hide after 6s as a safety net even if onload doesn't fire
+        // Hard safety: never let it linger forever
         setTimeout(function() {
           var ind = document.getElementById('mobileFocusLoading');
           if (ind && ind.parentNode) ind.parentNode.removeChild(ind);
-        }, 6000);
+        }, 12000);
       }
 
       // Build meta block
@@ -15045,6 +15086,103 @@
         panel.classList.remove('open');
         scrim.classList.remove('open');
       }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // _showFocusLoadingIndicator — universal "loading" overlay above the
+    // focused artwork. Visible until the node's img completes loading. Used
+    // for both desktop and mobile (mobile feed has its own equivalent for
+    // the m-focus overlay; this one is for the inline focus-mode pipeline).
+    // ─────────────────────────────────────────────────────────────────────
+    function _showFocusLoadingIndicator(node) {
+      if (!node) return;
+      // Avoid stacking
+      var existing = node.querySelector('.focus-load-indicator');
+      if (existing) existing.remove();
+
+      var indicator = document.createElement('div');
+      indicator.className = 'focus-load-indicator';
+      indicator.textContent = 'this artwork is loading…';
+      // Inline styles so it works without prior CSS knowledge
+      indicator.style.cssText = [
+        'position:absolute',
+        'top:50%',
+        'left:50%',
+        'transform:translate(-50%,-50%)',
+        'font-family:"JetBrains Mono", ui-monospace, monospace',
+        'font-size:0.7rem',
+        'letter-spacing:0.18em',
+        'color:rgba(220,200,170,0.78)',
+        'text-transform:uppercase',
+        'background:rgba(20,20,22,0.55)',
+        'border:1px solid rgba(220,170,80,0.28)',
+        'border-radius:2px',
+        'padding:8px 16px',
+        'pointer-events:none',
+        'z-index:9000',
+        'animation:focusLoadPulse 1.6s ease-in-out infinite',
+        'white-space:nowrap'
+      ].join(';');
+      node.appendChild(indicator);
+
+      // Watch the node's img for load completion
+      var img = node.querySelector('.node-preview img');
+      if (!img) {
+        // No img yet — give the focus pipeline a moment to swap one in, then re-check
+        setTimeout(function() {
+          var img2 = node.querySelector('.node-preview img');
+          if (!img2) { _dismissFocusLoadingIndicator(node); return; }
+          _wireLoadDismiss(node, img2);
+        }, 100);
+        return;
+      }
+      _wireLoadDismiss(node, img);
+    }
+
+    function _wireLoadDismiss(node, img) {
+      // If the image is ALREADY complete with valid pixels AND the focus
+      // pipeline isn't going to swap to a hi-res version, dismiss now.
+      // Otherwise wait for the next load event (which fires when src changes).
+      var dismissed = false;
+      function dismiss() {
+        if (dismissed) return;
+        dismissed = true;
+        _dismissFocusLoadingIndicator(node);
+      }
+      // Listen for any subsequent load (src swap) on this img
+      var prevSrc = img.src;
+      var poll = setInterval(function() {
+        if (!node.classList.contains('focused')) {
+          clearInterval(poll);
+          dismiss();
+          return;
+        }
+        // Has src changed since last check?
+        if (img.src !== prevSrc) {
+          prevSrc = img.src;
+          // New src — wait for it to complete
+          if (img.complete && img.naturalWidth > 0) {
+            // Already loaded? Could be cached — give it one more frame, then dismiss
+            setTimeout(dismiss, 150);
+          }
+          // Otherwise rely on next iteration
+        } else if (img.complete && img.naturalWidth > 0) {
+          // Same src, fully loaded — dismiss
+          dismiss();
+          clearInterval(poll);
+        }
+      }, 200);
+      // Hard timeout — never let the indicator stick forever
+      setTimeout(function() {
+        clearInterval(poll);
+        dismiss();
+      }, 12000);
+    }
+
+    function _dismissFocusLoadingIndicator(node) {
+      if (!node) return;
+      var ind = node.querySelector('.focus-load-indicator');
+      if (ind && ind.parentNode) ind.parentNode.removeChild(ind);
     }
 
     // ── _autoFocusFallback: if auto-focus to circus elephant fails,
@@ -23617,6 +23755,11 @@
         node.classList.add('focused');
         _showMobileBack('focus');
         showEscHint();
+        // ── Universal "this artwork is loading" indicator ──
+        // Watches the focused node's img — if it's not yet fully loaded (or
+        // its src will be swapped to a higher-res shortly), shows a pulsing
+        // text indicator above the artwork. Auto-dismisses on load.
+        _showFocusLoadingIndicator(node);
         // ── "Touch for full resolution" hint — desktop only (mobile uses swipe to navigate) ──
         if (!_isRealMobile) {
           var _touchHint = document.createElement('div');
