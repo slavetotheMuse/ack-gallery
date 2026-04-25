@@ -5951,6 +5951,96 @@
     }
 
     /* ════════════════════════════════════════════════════════════════════
+       SAFARI DESKTOP PERF PASS
+       ════════════════════════════════════════════════════════════════════
+       Safari (not Chrome) composites poorly: stacked drop-shadows hit CPU,
+       perspective+preserve-3d makes every nested element its own layer,
+       backdrop-filter is brutal, and rotated 3D ::before/::after pseudo
+       elements compound everything. Chrome's compositor handles all of
+       this on GPU; Safari does not.
+
+       This block targets ONLY body.is-safari (set at boot via UA sniff,
+       desktop only). Chrome is fully unchanged. Targeted reductions:
+        - Flatten 3D contexts on the wall and most preserve-3d parents
+        - Single drop-shadow per element instead of stacked pairs
+        - Kill backdrop-filter entirely
+        - Hide the rotated 3D edge panels on .node-preview
+        - Drop animation fidelity on heavy ambient effects (candles, LEDs)
+       Focus mode keeps its 3D context — that's the moment we can afford it. */
+    body.is-safari .node-card,
+    body.is-safari .node-preview,
+    body.is-safari .servant-coin-wrap,
+    body.is-safari .servant-coin,
+    body.is-safari .collection-thumbnail {
+      transform-style: flat !important;
+      -webkit-transform-style: flat !important;
+      perspective: none !important;
+      -webkit-perspective: none !important;
+      backface-visibility: visible !important;
+    }
+    /* Restore 3D for the focused node — we want the depth there */
+    body.is-safari .node-card.focused,
+    body.is-safari .node-card.focused .node-preview,
+    body.is-safari .node-card.focused .servant-coin-wrap {
+      transform-style: preserve-3d !important;
+    }
+
+    /* Kill the rotated 3D edge panels on every preview in wall/catalog —
+       they're decorative thickness simulators that Safari pays a huge
+       compositing cost for. Focused state keeps them. */
+    body.is-safari .node-card:not(.focused) .node-preview::before,
+    body.is-safari .node-card:not(.focused) .node-preview::after {
+      display: none !important;
+    }
+
+    /* Single drop-shadow instead of stacked pairs on thumbnails */
+    body.is-safari .collection-thumbnail {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+    }
+    body.is-safari .node-preview {
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4) !important;
+    }
+
+    /* Kill backdrop-filter — Safari's most expensive single CSS effect */
+    body.is-safari * {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Don't promote everything to its own GPU layer — Safari ratchets
+       memory and slows down */
+    body.is-safari .node-card,
+    body.is-safari .servant-coin-wrap,
+    body.is-safari .collection-node {
+      will-change: auto !important;
+    }
+
+    /* Slow / pause heavy ambient animations (candles flicker, LED pulse,
+       chip marquee). They're decorative on a 60-fps Chrome but make Safari
+       drop to 25fps. Pause means GPU still composites once but no per-frame
+       paint cost. */
+    body.is-safari .candle,
+    body.is-safari .candle *,
+    body.is-safari .led-dot,
+    body.is-safari .pcb-chip-label.marquee,
+    body.is-safari .ticker-scroll,
+    body.is-safari .grid-logo-propeller,
+    body.is-safari .node-card:not(.focused),
+    body.is-safari .node-card:not(.focused) * {
+      animation-play-state: paused !important;
+      -webkit-animation-play-state: paused !important;
+    }
+    /* Keep the focused node and intro/transition animations active —
+       paused above is targeted to non-focus + ambient layers. */
+    body.is-safari .node-card.focused,
+    body.is-safari .node-card.focused *,
+    body.is-safari .node-card.focused *::before,
+    body.is-safari .node-card.focused *::after {
+      animation-play-state: running !important;
+      -webkit-animation-play-state: running !important;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
        MOBILE SHELL — totally separate UI from desktop
        ════════════════════════════════════════════════════════════════════
        Hide all desktop chrome aggressively. The mobile shell is the only
@@ -6221,8 +6311,8 @@
     body.is-real-mobile .m-focus-overlay.active {
       display: flex;
     }
-    /* Apple-style red close — circular red button with subtle gradient + a
-       white X glyph drawn via two rotated lines. Sized to feel familiar. */
+    /* Apple-style circular close — but in the gallery palette: muted gray
+       with a soft inner highlight + outer shadow. White X for contrast. */
     body.is-real-mobile .m-focus-close {
       position: absolute;
       top: 38px;
@@ -6230,9 +6320,9 @@
       width: 90px;
       height: 90px;
       border-radius: 50%;
-      background: radial-gradient(circle at 30% 28%, #ff6b6b 0%, #e0322a 60%, #b81e18 100%);
+      background: radial-gradient(circle at 30% 28%, #5a5a5e 0%, #3a3a3d 60%, #2a2a2c 100%);
       color: transparent;
-      border: 1px solid rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(0, 0, 0, 0.45);
       cursor: pointer;
       z-index: 10001;
       display: flex;
@@ -6240,9 +6330,9 @@
       justify-content: center;
       padding: 0;
       box-shadow:
-        0 6px 18px rgba(0,0,0,0.5),
-        inset 0 -2px 4px rgba(0,0,0,0.25),
-        inset 0 1px 2px rgba(255,255,255,0.35);
+        0 6px 18px rgba(0,0,0,0.55),
+        inset 0 -2px 4px rgba(0,0,0,0.35),
+        inset 0 1px 2px rgba(255,255,255,0.12);
       font-size: 0;
       overflow: visible;
     }
@@ -6252,12 +6342,11 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 44px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.96);
+      width: 42px;
+      height: 3px;
+      background: rgba(245, 240, 230, 0.92);
       border-radius: 2px;
       transform-origin: center;
-      box-shadow: 0 0 1px rgba(0,0,0,0.2);
     }
     body.is-real-mobile .m-focus-close::before { transform: translate(-50%, -50%) rotate(45deg); }
     body.is-real-mobile .m-focus-close::after  { transform: translate(-50%, -50%) rotate(-45deg); }
@@ -10144,6 +10233,23 @@
     // ── Mobile: skip intro entirely, show brief message, then gallery ──
     // Detect real mobile device (viewport trick makes innerWidth=1400)
     var _isRealMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent));
+    // Detect Safari (NOT Chrome) — Safari composites differently and CPU-paints
+    // many things Chrome does on GPU. Adds body.is-safari for targeted CSS perf.
+    (function() {
+      try {
+        var ua = navigator.userAgent || '';
+        var isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
+        if (isSafari && !_isRealMobile) {
+          if (document.body) {
+            document.body.classList.add('is-safari');
+          } else {
+            document.addEventListener('DOMContentLoaded', function() {
+              document.body.classList.add('is-safari');
+            });
+          }
+        }
+      } catch (e) {}
+    })();
     if (_isRealMobile) document.body.classList.add('is-real-mobile');
 
     // ── Mobile back button logic ──
