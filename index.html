@@ -6221,19 +6221,18 @@
     body.is-real-mobile .m-focus-overlay.active {
       display: flex;
     }
-    /* C4D-style close — square node-graph chip with crosshair X glyph,
-       gold corner brackets, and label. Reads as "node interface" not
-       "modal close." */
+    /* Apple-style red close — circular red button with subtle gradient + a
+       white X glyph drawn via two rotated lines. Sized to feel familiar. */
     body.is-real-mobile .m-focus-close {
       position: absolute;
-      top: 30px;
-      right: 30px;
-      width: 110px;
-      height: 110px;
-      background: linear-gradient(145deg, rgba(36,36,40,0.9), rgba(20,20,22,0.9));
-      color: rgba(220, 200, 170, 0.95);
-      border: 1px solid rgba(220, 170, 80, 0.45);
-      border-radius: 3px;
+      top: 38px;
+      right: 38px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 28%, #ff6b6b 0%, #e0322a 60%, #b81e18 100%);
+      color: transparent;
+      border: 1px solid rgba(0, 0, 0, 0.35);
       cursor: pointer;
       z-index: 10001;
       display: flex;
@@ -6241,41 +6240,54 @@
       justify-content: center;
       padding: 0;
       box-shadow:
-        0 4px 14px rgba(0,0,0,0.6),
-        inset 0 0 0 1px rgba(220,170,80,0.08);
-      font-size: 0; /* hide the literal "✕" we put inside; we'll draw our own */
+        0 6px 18px rgba(0,0,0,0.5),
+        inset 0 -2px 4px rgba(0,0,0,0.25),
+        inset 0 1px 2px rgba(255,255,255,0.35);
+      font-size: 0;
       overflow: visible;
     }
-    /* Crosshair X using two lines via pseudo elements */
     body.is-real-mobile .m-focus-close::before,
     body.is-real-mobile .m-focus-close::after {
       content: '';
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 50px;
-      height: 1.5px;
-      background: rgba(220, 200, 170, 0.85);
+      width: 44px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 2px;
       transform-origin: center;
+      box-shadow: 0 0 1px rgba(0,0,0,0.2);
     }
-    body.is-real-mobile .m-focus-close::before {
-      transform: translate(-50%, -50%) rotate(45deg);
-    }
-    body.is-real-mobile .m-focus-close::after {
-      transform: translate(-50%, -50%) rotate(-45deg);
-    }
-    /* Gold corner brackets — C4D viewport style */
-    body.is-real-mobile .m-focus-close > i {
+    body.is-real-mobile .m-focus-close::before { transform: translate(-50%, -50%) rotate(45deg); }
+    body.is-real-mobile .m-focus-close::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+    /* Hide the corner brackets we previously injected — Apple style is bare */
+    body.is-real-mobile .m-focus-close > i { display: none; }
+
+    /* Loading indicator overlay — shows above artwork in focus view while
+       image is fetching. Removed by JS once <img> fires onload. */
+    body.is-real-mobile .m-focus-loading {
       position: absolute;
-      width: 12px;
-      height: 12px;
-      border: 1.5px solid rgba(220, 170, 80, 0.7);
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 24px;
+      letter-spacing: 0.18em;
+      color: rgba(220, 200, 170, 0.65);
+      text-transform: uppercase;
+      text-align: center;
       pointer-events: none;
+      z-index: 10000;
+      animation: mFocusLoadingPulse 1.6s ease-in-out infinite;
     }
-    body.is-real-mobile .m-focus-close > i.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
-    body.is-real-mobile .m-focus-close > i.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
-    body.is-real-mobile .m-focus-close > i.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
-    body.is-real-mobile .m-focus-close > i.br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+    body.is-real-mobile .m-focus-loading::after {
+      content: ' loading…';
+    }
+    @keyframes mFocusLoadingPulse {
+      0%, 100% { opacity: 0.45; }
+      50%      { opacity: 0.95; }
+    }
     body.is-real-mobile .m-focus-content {
       flex: 1;
       display: flex;
@@ -14614,7 +14626,22 @@
           img.loading = 'lazy';
           img.decoding = 'async';
           img.alt = art.title || '';
-          img.src = art.image || '';
+          // Mobile perf: only ACK Editions animates GIFs in the feed.
+          // Other collections substitute a JPG variant of the same path,
+          // falling back to the original GIF if the JPG doesn't exist.
+          var feedSrc = art.image || '';
+          if (col.name !== 'ACK Editions' && /\.gif(\?|$)/i.test(feedSrc)) {
+            var jpgGuess = feedSrc.replace(/\.gif(\?|$)/i, '.jpg$1');
+            img.src = jpgGuess;
+            img.dataset.gifFallback = feedSrc;
+            img.onerror = function() {
+              if (img.dataset.gifFallback && img.src !== img.dataset.gifFallback) {
+                img.src = img.dataset.gifFallback;
+              }
+            };
+          } else {
+            img.src = feedSrc;
+          }
           tile.appendChild(img);
 
           var t = document.createElement('div');
@@ -14747,9 +14774,41 @@
         mediaEl.id = 'mobileFocusImg';
         mediaEl.alt = art.title || '';
         mediaEl.style.cssText = 'width:100%;max-height:65vh;object-fit:contain;display:block;border-radius:4px;box-shadow:0 6px 30px rgba(0,0,0,0.6);';
-        mediaEl.src = art.focusImage || art.image || '';
+        // Two-stage load on mobile: tiny/fast first, hi-res after.
+        var fastSrc = art.image || '';
+        var hiResSrc = art.focusImage || art.image || '';
+        // If we have a focusImage that's different from the thumb, load thumb first then upgrade
+        if (hiResSrc && fastSrc && hiResSrc !== fastSrc) {
+          mediaEl.src = fastSrc;
+          var hiPre = new Image();
+          hiPre.onload = function() {
+            mediaEl.src = hiResSrc;
+          };
+          hiPre.src = hiResSrc;
+        } else {
+          mediaEl.src = hiResSrc;
+        }
+        // Loading indicator — visible until the (final) image loads
+        mediaEl.onload = function() {
+          var ind = document.getElementById('mobileFocusLoading');
+          if (ind && ind.parentNode) ind.parentNode.removeChild(ind);
+        };
       }
       content.appendChild(mediaEl);
+
+      // Loading indicator (only for images — videos handle their own load state)
+      if (!isServants) {
+        var loading = document.createElement('div');
+        loading.id = 'mobileFocusLoading';
+        loading.className = 'm-focus-loading';
+        loading.textContent = 'this artwork is';
+        content.appendChild(loading);
+        // Auto-hide after 6s as a safety net even if onload doesn't fire
+        setTimeout(function() {
+          var ind = document.getElementById('mobileFocusLoading');
+          if (ind && ind.parentNode) ind.parentNode.removeChild(ind);
+        }, 6000);
+      }
 
       // Build meta block
       var metaWrap = document.createElement('div');
