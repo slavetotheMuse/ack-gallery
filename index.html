@@ -12,6 +12,9 @@
   <title>a.c.k. art</title>
   <meta name="description" content="chasing whispers from the deep — digital · physical · sculptural · musical">
 
+  <!-- Mobile entry: preload circus elephant so it's in cache before JS runs -->
+  <link rel="preload" as="image" href="ackeditions_gallery/web/circus_elephant_web.gif" media="(max-width: 900px)">
+
   <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="a.c.k. a r t">
@@ -5945,25 +5948,21 @@
     }
 
     /* ════════════════════════════════════════════════════════════════════
-       MOBILE ENTRY CURTAIN — covers transition flashes during auto-focus
+       MOBILE: kill the catalog landing entirely
        ════════════════════════════════════════════════════════════════════
-       Mobile load: catalog renders → openDetail(ACK Editions) renders the
-       collection view → handleNodeClick scales up to focus view. Without
-       a curtain, the user sees all 3 states briefly. Curtain is on by
-       default on mobile, faded out by JS once focus view is visible. */
-    .mobile-entry-curtain { display: none; }
-    body.is-real-mobile .mobile-entry-curtain {
-      display: block;
-      position: fixed;
-      inset: 0;
-      background: var(--bg, #1a1a1a);
-      z-index: 99999;
-      pointer-events: none;
-      opacity: 1;
-      transition: opacity 0.5s ease;
+       Mobile users land directly in focus view of circus elephant. They
+       never see the home catalog, motherboard, or candles. Object Manager
+       (hamburger → Collections) is the navigation pattern. */
+    body.is-real-mobile #masterNode,
+    body.is-real-mobile #viewportCandles,
+    body.is-real-mobile #collectionsGrid > .collection-node,
+    body.is-real-mobile #homeWires {
+      display: none !important;
     }
-    body.is-real-mobile.mobile-entry-ready .mobile-entry-curtain {
-      opacity: 0;
+    /* Background grid: keep visible (subtle blueprint feel) but skip the
+       reveal animation. */
+    body.is-real-mobile #bgGrid {
+      opacity: 1 !important;
     }
 
     /* ════════════════════════════════════════════════════════════════════
@@ -6640,11 +6639,6 @@
         <!-- Collection rows populated by JS -->
       </div>
     </div>
-
-  <!-- Mobile entry curtain — covers all transition flashes from catalog
-       through ACK Editions to focus view of circus elephant. Removed by JS
-       once focus view is ready. Hidden on desktop via CSS. -->
-  <div id="mobileEntryCurtain" class="mobile-entry-curtain"></div>
 
   <!-- Main Content -->
   <div id="main-content">
@@ -10452,40 +10446,31 @@
       try { localStorage.setItem('ack_intro_seen', Date.now().toString()); } catch(e) {}
 
       // ── VORTEX BYPASS ──────────────────────────────────────────────
-      // Default landing is now the main catalog, not the vortex intro.
-      // Analytics showed 66% bounce on vortex (94% of bouncers leaving
-      // <3s, 80% on mobile). Catalog gets people to the art instantly.
-      //
-      // Vortex still accessible via ?vortex=1 URL param for power users
-      // and (future) a menu link.
+      // Default landing is now the catalog (desktop) / focus view of
+      // circus elephant (mobile). Analytics showed 66% bounce on vortex.
+      // Vortex still reachable via ?vortex=1.
       var _wantsVortex = /[?&]vortex=1\b/.test(location.search) || /[?&]intro=1\b/.test(location.search);
       if (_wantsVortex) {
         runIntroSequence();
+        renderCollections();
+        initScrollScaling();
+        buildPersistentGrid();
+        renderCandles();
+      } else if (_isRealMobile) {
+        // ── MOBILE: skip catalog entirely, go straight to circus elephant ──
+        // No catalog DOM, no motherboard, no candles, no home wires.
+        // We need COLLECTIONS data to be available (it is — it's a JS array)
+        // and openDetail to work, which doesn't depend on the catalog DOM.
+        renderCollections(); // builds collection-node elements (hidden by CSS on mobile but needed for openDetail's grid math)
+        _enterCatalogDirectly(); // remove intro overlay, set base visibility
+        _mobileAutoFocusCircusElephant(); // ← INSTANT, no setTimeout
       } else {
-        // Skip both intro AND wormhole — show catalog immediately as if
-        // beginReveal() already completed. Render collections first so
-        // they're in the DOM, then mark them revealed.
+        // ── DESKTOP: catalog landing as before ──
         renderCollections();
         _enterCatalogDirectly();
-      }
-      // (Note: renderCollections also called below for the vortex path —
-      // safe because it's idempotent; calling twice produces same DOM.)
-      renderCollections();
-      initScrollScaling();
-      buildPersistentGrid();
-      renderCandles();
-      // ── MOBILE: always expand motherboard ──
-      if (_isRealMobile) {
-        setTimeout(() => {
-          const mn = document.getElementById('masterNode');
-          if (mn) mn.classList.add('mobile-expanded');
-        }, 100);
-        // ── MOBILE ENTRY: jump straight into focus view of circus elephant ──
-        // Mobile visitors land directly on a piece of art (not a navigation
-        // interface). They can swipe within ACK Editions to see other pieces,
-        // tap "Collections" in the nav to browse all collections, or back-arrow
-        // out to the catalog.
-        setTimeout(_mobileAutoFocusCircusElephant, 400);
+        initScrollScaling();
+        buildPersistentGrid();
+        renderCandles();
       }
       window.addEventListener('resize', debounce(() => {
         buildPersistentGrid();
@@ -13985,21 +13970,21 @@
         artIdx = 0;
       }
 
-      // Open ACK Editions detail view, then focus on circus elephant
+      // Open ACK Editions detail view (skip transition for instant open),
+      // then click circus elephant as soon as its node renders.
       if (typeof openDetail !== 'function') return;
       try {
-        openDetail(colIdx);
+        openDetail(colIdx, true); // skipTransition = true
       } catch (e) {
         console.warn('[mobile auto-focus] openDetail failed', e);
         return;
       }
 
-      // After the detail view builds, click into the target artwork.
-      // openDetail is async (uses requestAnimationFrame chains); poll for
-      // the artwork's node up to ~2.5s, then trigger its click.
+      // Poll for the artwork node to be in DOM, then click. Fast interval
+      // since openDetail with skipTransition completes in 1-2 frames.
       var attempts = 0;
-      var maxAttempts = 25;
-      var pollInterval = 100;
+      var maxAttempts = 60; // ~3s at 50ms
+      var pollInterval = 50;
       var pollTimer = setInterval(function() {
         attempts++;
         var inner = document.querySelector('.node-graph-inner');
@@ -14013,25 +13998,10 @@
                 var fakeEvent = { stopPropagation: function() {} };
                 handleNodeClick(fakeEvent, targetNode, inner, colIdx, artIdx);
               } else {
-                // Fallback: dispatch a synthetic click
                 targetNode.click();
               }
-              // Wait for focus view to be visible, then lift the curtain.
-              // handleNodeClick adds 'focused' to the target node and 'focus-mode' to inner.
-              var liftAttempts = 0;
-              var liftPoll = setInterval(function() {
-                liftAttempts++;
-                var focusActive = document.querySelector('.node-graph-inner.focus-mode .node-card.focused');
-                if (focusActive || liftAttempts >= 30) {
-                  clearInterval(liftPoll);
-                  // Small delay so the scale-up animation is partway through
-                  // when curtain fades — visitor sees art arriving, not popping in.
-                  setTimeout(_liftMobileEntryCurtain, 200);
-                }
-              }, 100);
             } catch (e) {
               console.warn('[mobile auto-focus] node click failed', e);
-              _liftMobileEntryCurtain();
             }
           }
           return;
@@ -14039,27 +14009,9 @@
         if (attempts >= maxAttempts) {
           clearInterval(pollTimer);
           console.warn('[mobile auto-focus] gave up waiting for ACK Editions to render');
-          // Fail open: lift curtain so user sees the catalog rather than a black screen
-          _liftMobileEntryCurtain();
         }
       }, pollInterval);
     }
-
-    function _liftMobileEntryCurtain() {
-      document.body.classList.add('mobile-entry-ready');
-      // After the fade-out completes, remove the element so it can't intercept anything
-      setTimeout(function() {
-        var c = document.getElementById('mobileEntryCurtain');
-        if (c && c.parentNode) c.parentNode.removeChild(c);
-      }, 700);
-    }
-    // Hard safety: never let the curtain trap the user. After 6s no matter
-    // what happened, it lifts. (Auto-focus normally completes in ~600-1200ms.)
-    setTimeout(function() {
-      if (document.body && document.body.classList.contains('is-real-mobile')) {
-        _liftMobileEntryCurtain();
-      }
-    }, 6000);
 
     // ── _enterCatalogDirectly: instant landing on the main catalog ──
     // Equivalent to "beginReveal completed" without the wormhole/portal animation.
