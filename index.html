@@ -68,10 +68,10 @@
       font-family: 'Cormorant Garamond', serif;
       color: var(--text-primary);
       line-height: 1.6;
-      cursor: none;
-    }
-    *, *::before, *::after {
-      cursor: none !important;
+      /* cursor:none was here to support the vortex's custom intro cursor.
+         Now that the catalog is the default landing, we keep the native
+         cursor visible. The intro overlay still hides it via
+         #intro-overlay { cursor: none } when ?vortex=1 is active. */
     }
 
 
@@ -5945,54 +5945,6 @@
     }
 
     /* ════════════════════════════════════════════════════════════════════
-       MOBILE HERO FEATURE — rotating curated artwork above the catalog
-       ════════════════════════════════════════════════════════════════════ */
-    .mobile-hero-feature { display: none; }
-    body.is-real-mobile .mobile-hero-feature {
-      display: block;
-      position: relative;
-      width: calc(100% - 60px);
-      max-width: 1200px;
-      height: 600px;
-      margin: 60px auto 30px;
-      border: 1px solid rgba(220,150,50,0.3);
-      border-radius: 4px;
-      overflow: hidden;
-      cursor: pointer;
-      background: rgba(0,0,0,0.6);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.55);
-      z-index: 10;
-    }
-    body.is-real-mobile .mobile-hero-feature img {
-      width: 100%; height: 100%;
-      object-fit: cover; display: block;
-      transition: opacity 0.6s ease;
-    }
-    body.is-real-mobile .mobile-hero-caption {
-      position: absolute; bottom: 18px; left: 22px; right: 22px;
-      font-family: 'Cormorant Garamond', Garamond, serif;
-      font-style: italic; font-size: 38px;
-      color: #fff; line-height: 1.2;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.85);
-      letter-spacing: 0.02em; pointer-events: none;
-    }
-    body.is-real-mobile .mobile-hero-caption::before {
-      content: 'NOW FEATURING';
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-style: normal; font-size: 14px;
-      letter-spacing: 0.25em; color: rgba(220,150,50,0.85);
-      display: block; margin-bottom: 8px;
-    }
-    body.is-real-mobile .mobile-hero-progress {
-      position: absolute; left: 0; bottom: 0;
-      height: 2px; width: 100%;
-      background: rgba(220,150,50,0.65);
-      transform-origin: left center; transform: scaleX(0);
-      transition: transform 8s linear; pointer-events: none;
-    }
-    body.is-real-mobile .mobile-hero-progress.run { transform: scaleX(1); }
-
-    /* ════════════════════════════════════════════════════════════════════
        MOBILE PERF PASS — Pass 1: kill all ambient @keyframes animations
        ════════════════════════════════════════════════════════════════════ */
     body.is-real-mobile *,
@@ -6669,14 +6621,6 @@
 
   <!-- Main Content -->
   <div id="main-content">
-    <!-- Mobile Hero Feature — auto-rotating curated artwork above catalog.
-         Hidden on desktop via CSS; populated on mobile by _initMobileHeroFeature. -->
-    <div id="mobileHeroFeature" class="mobile-hero-feature">
-      <img id="mobileHeroImg" alt="now featuring" draggable="false"/>
-      <div id="mobileHeroCaption" class="mobile-hero-caption"></div>
-      <div class="mobile-hero-progress" id="mobileHeroProgress"></div>
-    </div>
-
     <!-- Gallery — Node Graph -->
     <div class="gallery-container" id="galleryContainer">
       <div class="collections-grid" id="collectionsGrid">
@@ -10509,8 +10453,12 @@
           const mn = document.getElementById('masterNode');
           if (mn) mn.classList.add('mobile-expanded');
         }, 100);
-        // ── MOBILE HERO FEATURE: rotating curated artwork above catalog ──
-        setTimeout(_initMobileHeroFeature, 300);
+        // ── MOBILE ENTRY: jump straight into focus view of circus elephant ──
+        // Mobile visitors land directly on a piece of art (not a navigation
+        // interface). They can swipe within ACK Editions to see other pieces,
+        // tap "Collections" in the nav to browse all collections, or back-arrow
+        // out to the catalog.
+        setTimeout(_mobileAutoFocusCircusElephant, 400);
       }
       window.addEventListener('resize', debounce(() => {
         buildPersistentGrid();
@@ -13983,86 +13931,75 @@
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // MOBILE HERO FEATURE — rotating curated artwork above the catalog.
-    // Lives only on mobile. Auto-rotates between curated picks every 8s.
-    // Tap → opens that artwork's collection. Edit _HERO_FEATURE_PICKS
-    // to change which pieces rotate (matches by collection name + title).
+    // MOBILE AUTO-ENTRY — open focus view of "circus elephant" on landing.
+    // The catalog is built behind the scenes; mobile users skip straight
+    // to a piece of art. Swipe horizontally for next/prev within ACK
+    // Editions; tap "Collections" in the nav to browse all collections.
     // ─────────────────────────────────────────────────────────────────────
-    var _HERO_FEATURE_PICKS = [
-      { collection: 'Piano Blossoms',         title: 'self portrait in the garden of the Muse' },
-      { collection: 'ACK Editions',           title: 'circus elephant' },
-      { collection: 'Tempted in the Garden',  title: 'Tempted in the Garden' },
-      { collection: 'ACKPFP',                 title: '~timeReaper~' },
-      { collection: 'Heart You',              title: 'Heart You' },
-    ];
-
-    function _initMobileHeroFeature() {
+    function _mobileAutoFocusCircusElephant() {
       if (typeof _isRealMobile === 'undefined' || !_isRealMobile) return;
-      var heroEl = document.getElementById('mobileHeroFeature');
-      if (!heroEl) return;
-      var imgEl = document.getElementById('mobileHeroImg');
-      var capEl = document.getElementById('mobileHeroCaption');
-      var prgEl = document.getElementById('mobileHeroProgress');
-      if (!imgEl || !capEl) return;
+      if (typeof COLLECTIONS === 'undefined' || !COLLECTIONS) return;
+      // Don't auto-focus if user is intentionally on vortex view
+      if (/[?&]vortex=1\b/.test(location.search)) return;
+      // Don't override if user already navigated somewhere else
+      var existingFocused = document.querySelector('.node-card.focused');
+      if (existingFocused) return;
 
-      // Resolve picks against COLLECTIONS — drop any that don't exist
-      var resolved = [];
-      _HERO_FEATURE_PICKS.forEach(function(pick) {
-        if (typeof COLLECTIONS === 'undefined') return;
-        var colIdx = COLLECTIONS.findIndex(function(c) { return c.name === pick.collection; });
-        if (colIdx < 0) return;
-        var col = COLLECTIONS[colIdx];
-        if (!col || !col.artworks) return;
-        var artIdx = col.artworks.findIndex(function(a) {
-          return (a.title || '').toLowerCase() === pick.title.toLowerCase();
-        });
-        if (artIdx < 0) return;
-        var art = col.artworks[artIdx];
-        var src = art.focusImage || art.image;
-        if (!src) return;
-        resolved.push({ colIdx: colIdx, artIdx: artIdx, col: col, art: art, src: src });
+      // Find ACK Editions + circus elephant
+      var colIdx = COLLECTIONS.findIndex(function(c) { return c.name === 'ACK Editions'; });
+      if (colIdx < 0) return;
+      var col = COLLECTIONS[colIdx];
+      if (!col || !col.artworks) return;
+      var artIdx = col.artworks.findIndex(function(a) {
+        return (a.title || '').toLowerCase() === 'circus elephant';
       });
+      if (artIdx < 0) {
+        // Fallback to first artwork in ACK Editions if circus is missing
+        artIdx = 0;
+      }
 
-      if (resolved.length === 0) {
-        heroEl.style.display = 'none';
+      // Open ACK Editions detail view, then focus on circus elephant
+      if (typeof openDetail !== 'function') return;
+      try {
+        openDetail(colIdx);
+      } catch (e) {
+        console.warn('[mobile auto-focus] openDetail failed', e);
         return;
       }
 
-      var currentIdx = 0;
-      function showHero(idx) {
-        var pick = resolved[idx];
-        if (!pick) return;
-        // Crossfade: drop opacity, swap, restore
-        imgEl.style.opacity = '0';
-        setTimeout(function() {
-          imgEl.src = pick.src;
-          capEl.textContent = pick.art.title || '';
-          imgEl.style.opacity = '1';
-          // Reset + restart progress bar
-          if (prgEl) {
-            prgEl.classList.remove('run');
-            // Force reflow so the transition restarts
-            void prgEl.offsetWidth;
-            prgEl.classList.add('run');
+      // After the detail view builds, click into the target artwork.
+      // openDetail is async (uses requestAnimationFrame chains); poll for
+      // the artwork's node up to ~2.5s, then trigger its click.
+      var attempts = 0;
+      var maxAttempts = 25;
+      var pollInterval = 100;
+      var pollTimer = setInterval(function() {
+        attempts++;
+        var inner = document.querySelector('.node-graph-inner');
+        var nodes = inner ? inner.querySelectorAll('.node-card') : [];
+        if (nodes.length > artIdx) {
+          var targetNode = nodes[artIdx];
+          if (targetNode) {
+            clearInterval(pollTimer);
+            try {
+              if (typeof handleNodeClick === 'function') {
+                var fakeEvent = { stopPropagation: function() {} };
+                handleNodeClick(fakeEvent, targetNode, inner, colIdx, artIdx);
+              } else {
+                // Fallback: dispatch a synthetic click
+                targetNode.click();
+              }
+            } catch (e) {
+              console.warn('[mobile auto-focus] node click failed', e);
+            }
           }
-        }, 300);
-      }
-      showHero(0);
-
-      // Tap → open the artwork's collection
-      heroEl.addEventListener('click', function() {
-        var pick = resolved[currentIdx];
-        if (!pick) return;
-        if (typeof openDetail === 'function') {
-          try { openDetail(pick.colIdx); } catch(e) { console.warn('hero tap openDetail failed', e); }
+          return;
         }
-      });
-
-      // Auto-rotate every 8s
-      setInterval(function() {
-        currentIdx = (currentIdx + 1) % resolved.length;
-        showHero(currentIdx);
-      }, 8000);
+        if (attempts >= maxAttempts) {
+          clearInterval(pollTimer);
+          console.warn('[mobile auto-focus] gave up waiting for ACK Editions to render');
+        }
+      }, pollInterval);
     }
 
     // ── _enterCatalogDirectly: instant landing on the main catalog ──
