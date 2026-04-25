@@ -9505,14 +9505,18 @@
         { name: "Heart You", image: "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",
           token: "ERC-721", chain: "Ethereum", contract: "0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3",
           artworks: [
-            {title:"Heart You",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",fullRes:"https://arweave.net/enexd26VNDhETFePXozDEJ77SbVBBtm91o8J_QULw-o",focusImage:"heartyou/web/heartyou_1_web.gif",isAnimated:true,tokenId:1,focusScale:1.4},
-            {title:"Heart You #2",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/4b610259e41c1cccf05a6da6f81cf343",fullRes:"https://arweave.net/gV0M0y0DYUUwLPeetaeuOs7FnsmE2zuaMZdmzU8NABc",focusImage:"heartyou/web/heartyou_2_web.gif",isAnimated:true,tokenId:2,focusScale:1.4},
-            {title:"Heart You #3",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a08464254d57b28859c6eaa87fb96d53",fullRes:"https://arweave.net/vzVTkgXF6Oa92AZYskU2BhdozKmLqHplDYvmwKUYM_A",focusImage:"heartyou/web/heartyou_3_web.gif",isAnimated:true,tokenId:3,focusScale:1.4},
-            {title:"Heart You #4",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/2f76bf3fa51c11a02d3ed056e03f9dc6",fullRes:"https://arweave.net/xKkt6dOFa5iu5fNiGPkt6mNvbYtgfxtYNosoxdj7w3M",focusImage:"heartyou/web/heartyou_4_web.gif",isAnimated:true,tokenId:4,focusScale:1.4},
-            {title:"Heart You #5",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a836f8fe3bf899936f954d0715f7566e",fullRes:"https://arweave.net/AntKL_HH0FCRRFs7_4KzUX8aXxjYLhDKBtIa6_5j5Qo",focusImage:"heartyou/web/heartyou_5_web.gif",isAnimated:true,tokenId:5,focusScale:1.4},
-            {title:"Heart You #6",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/596ca11dac0bb92686100b96d4aee474",fullRes:"https://arweave.net/yqEOxVqm1eM8ZPEQaHdczAMBIibpVvKUl92P2S93tUU",focusImage:"heartyou/web/heartyou_6_web.gif",isAnimated:true,tokenId:6,focusScale:1.4},
-            {title:"Heart You #7",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d628b05e8a829b372dad2a9b8d66cae8",fullRes:"https://arweave.net/crr9jhJeWHTP-zYdJ9b41g0E7nQivPRixlVaTvWuuXs",focusImage:"heartyou/web/heartyou_7_web.gif",isAnimated:true,tokenId:7,focusScale:1.4},
-            {title:"Heart You #8",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/ded20db8b10d516c1c831945d1bd058b",fullRes:"https://arweave.net/QfP0irkkY6XZ_F43WOEW6zl5JuukpMIXDN3-K-jRzg8",focusImage:"heartyou/web/heartyou_8_web.gif",isAnimated:true,tokenId:8,focusScale:1.4}
+            // fullRes points to local large GIFs (1714×2000) so the focus-view
+            // upgrade chain has a fast, guaranteed source. Arweave URLs were
+            // unreliable/slow — the upgrade swap was timing out before swap.
+            // Web folder remains as the initial focusImage (loads instantly).
+            {title:"Heart You",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",fullRes:"heartyou/heartyou_1.gif",focusImage:"heartyou/web/heartyou_1_web.gif",isAnimated:true,tokenId:1,focusScale:1.4},
+            {title:"Heart You #2",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/4b610259e41c1cccf05a6da6f81cf343",fullRes:"heartyou/2.gif",focusImage:"heartyou/web/heartyou_2_web.gif",isAnimated:true,tokenId:2,focusScale:1.4},
+            {title:"Heart You #3",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a08464254d57b28859c6eaa87fb96d53",fullRes:"heartyou/3.gif",focusImage:"heartyou/web/heartyou_3_web.gif",isAnimated:true,tokenId:3,focusScale:1.4},
+            {title:"Heart You #4",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/2f76bf3fa51c11a02d3ed056e03f9dc6",fullRes:"heartyou/4.gif",focusImage:"heartyou/web/heartyou_4_web.gif",isAnimated:true,tokenId:4,focusScale:1.4},
+            {title:"Heart You #5",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a836f8fe3bf899936f954d0715f7566e",fullRes:"heartyou/5.gif",focusImage:"heartyou/web/heartyou_5_web.gif",isAnimated:true,tokenId:5,focusScale:1.4},
+            {title:"Heart You #6",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/596ca11dac0bb92686100b96d4aee474",fullRes:"heartyou/6.gif",focusImage:"heartyou/web/heartyou_6_web.gif",isAnimated:true,tokenId:6,focusScale:1.4},
+            {title:"Heart You #7",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d628b05e8a829b372dad2a9b8d66cae8",fullRes:"heartyou/7.gif",focusImage:"heartyou/web/heartyou_7_web.gif",isAnimated:true,tokenId:7,focusScale:1.4},
+            {title:"Heart You #8",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/ded20db8b10d516c1c831945d1bd058b",fullRes:"heartyou/8.gif",focusImage:"heartyou/web/heartyou_8_web.gif",isAnimated:true,tokenId:8,focusScale:1.4}
         ]},
         { name: "Her Favorite Flowers", image: "her_favorite_flowers/web/made_these_for_my_girl_web.jpg", wallLayout: true,
           token: "ERC-721", chain: "Ethereum", contract: "0xa3cdefc4aea0407937ac3ea127b7491f24e5fe63",
@@ -15118,7 +15122,7 @@
       node.appendChild(el);
 
       var visibleAt = 0;
-      var MIN_MS = 1400;
+      var MIN_MS = 3000;
       requestAnimationFrame(function() {
         if (el && el.parentNode) {
           el.classList.add('visible');
@@ -15137,8 +15141,8 @@
           el.textContent = msgs[idx];
           el.classList.remove('fading');
           el.classList.add('visible');
-        }, 420);
-      }, 3500);
+        }, 320);
+      }, 1800);
 
       function dismiss() {
         var elapsed = visibleAt ? (Date.now() - visibleAt) : 0;
@@ -24104,16 +24108,16 @@
                         _whisperEl.classList.remove('fading');
                         _whisperEl.classList.add('visible');
                       }
-                    }, 420);
+                    }, 320);
                   }
-                }, 3500);
+                }, 1800); // was 3500 — too slow; user only saw the first line
                 node._whisperCleanup.interval = _whisperInterval;
               }
 
               // Track when the whisper actually became visible so we can
-              // enforce a minimum on-screen time (1.4s). Otherwise cached
-              // images dismiss the whisper before the user can read it.
-              const _MIN_WHISPER_MS = 1400;
+              // enforce a minimum on-screen time (3s). This lets the user
+              // see the rotation cycle through 1-2 phrases even on quick loads.
+              const _MIN_WHISPER_MS = 3000;
               let _whisperVisibleAt = 0;
               const _clearLoading = () => {
                 nodeImg.style.opacity = '1';
