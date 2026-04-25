@@ -5943,121 +5943,6 @@
     body.is-real-mobile * {
       touch-action: manipulation;
     }
-
-    /* ════════════════════════════════════════════════════════════════════
-       MOBILE HERO FEATURE — rotating curated artwork above the catalog
-       ════════════════════════════════════════════════════════════════════ */
-    .mobile-hero-feature { display: none; }
-    body.is-real-mobile .mobile-hero-feature {
-      display: block;
-      position: relative;
-      width: calc(100% - 60px);
-      max-width: 1200px;
-      height: 600px;
-      margin: 60px auto 30px;
-      border: 1px solid rgba(220,150,50,0.3);
-      border-radius: 4px;
-      overflow: hidden;
-      cursor: pointer;
-      background: rgba(0,0,0,0.6);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.55);
-      z-index: 10;
-    }
-    body.is-real-mobile .mobile-hero-feature img {
-      width: 100%; height: 100%;
-      object-fit: cover; display: block;
-      transition: opacity 0.6s ease;
-    }
-    body.is-real-mobile .mobile-hero-caption {
-      position: absolute; bottom: 18px; left: 22px; right: 22px;
-      font-family: 'Cormorant Garamond', Garamond, serif;
-      font-style: italic; font-size: 38px;
-      color: #fff; line-height: 1.2;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.85);
-      letter-spacing: 0.02em; pointer-events: none;
-    }
-    body.is-real-mobile .mobile-hero-caption::before {
-      content: 'NOW FEATURING';
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-style: normal; font-size: 14px;
-      letter-spacing: 0.25em; color: rgba(220,150,50,0.85);
-      display: block; margin-bottom: 8px;
-    }
-    body.is-real-mobile .mobile-hero-progress {
-      position: absolute; left: 0; bottom: 0;
-      height: 2px; width: 100%;
-      background: rgba(220,150,50,0.65);
-      transform-origin: left center; transform: scaleX(0);
-      transition: transform 8s linear; pointer-events: none;
-    }
-    body.is-real-mobile .mobile-hero-progress.run { transform: scaleX(1); }
-
-    /* ════════════════════════════════════════════════════════════════════
-       MOBILE PERF PASS — Pass 1: kill all ambient @keyframes animations
-       ════════════════════════════════════════════════════════════════════ */
-    body.is-real-mobile *,
-    body.is-real-mobile *::before,
-    body.is-real-mobile *::after {
-      animation: none !important;
-      -webkit-animation: none !important;
-    }
-    body.is-real-mobile [style*="animation"] {
-      animation-play-state: paused !important;
-      -webkit-animation-play-state: paused !important;
-    }
-
-    /* ════════════════════════════════════════════════════════════════════
-       MOBILE PERF PASS — Pass 2: flatten all 3D contexts
-       ════════════════════════════════════════════════════════════════════ */
-    body.is-real-mobile *,
-    body.is-real-mobile *::before,
-    body.is-real-mobile *::after {
-      transform-style: flat !important;
-      -webkit-transform-style: flat !important;
-      perspective: none !important;
-      -webkit-perspective: none !important;
-      backface-visibility: visible !important;
-    }
-    body.is-real-mobile .node-preview::before,
-    body.is-real-mobile .node-preview::after {
-      display: none !important;
-    }
-    body.is-real-mobile .node-card,
-    body.is-real-mobile .node-preview,
-    body.is-real-mobile .servant-coin-wrap,
-    body.is-real-mobile .collection-node {
-      will-change: auto !important;
-    }
-
-    /* ════════════════════════════════════════════════════════════════════
-       MOBILE PERF PASS — Pass 3: static servant coin
-       ════════════════════════════════════════════════════════════════════ */
-    body.is-real-mobile .servant-coin-depth-ring,
-    body.is-real-mobile .servant-coin-rim-highlight,
-    body.is-real-mobile .servant-coin-back {
-      display: none !important;
-    }
-    body.is-real-mobile .servant-coin-wrap {
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)) !important;
-    }
-
-    /* ════════════════════════════════════════════════════════════════════
-       MOBILE PERF PASS — Pass 4: drop heavy filter / shadow stacks
-       ════════════════════════════════════════════════════════════════════ */
-    body.is-real-mobile .collection-thumbnail {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.45) !important;
-    }
-    body.is-real-mobile .node-preview {
-      box-shadow: 0 2px 6px rgba(0,0,0,0.35) !important;
-    }
-    body.is-real-mobile .node-card.focused .node-preview {
-      box-shadow: 0 4px 14px rgba(0,0,0,0.55) !important;
-    }
-    body.is-real-mobile * {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-    }
-
     /* Reduce GPU memory: don't promote every image to its own layer in collection view */
     body.is-real-mobile .node-preview {
       transform-style: flat !important;
@@ -6669,14 +6554,6 @@
 
   <!-- Main Content -->
   <div id="main-content">
-    <!-- Mobile Hero Feature — auto-rotating curated artwork above catalog.
-         Hidden on desktop via CSS; populated on mobile by _initMobileHeroFeature. -->
-    <div id="mobileHeroFeature" class="mobile-hero-feature">
-      <img id="mobileHeroImg" alt="now featuring" draggable="false"/>
-      <div id="mobileHeroCaption" class="mobile-hero-caption"></div>
-      <div class="mobile-hero-progress" id="mobileHeroProgress"></div>
-    </div>
-
     <!-- Gallery — Node Graph -->
     <div class="gallery-container" id="galleryContainer">
       <div class="collections-grid" id="collectionsGrid">
@@ -10473,32 +10350,15 @@
     }
 
     function init() {
-      // ── Skip whispers pre-intro — land straight on the catalog ──
+      // ── Skip whispers pre-intro — land straight on vortex field ──
       // Remove whispers overlay if present (the "touch" / "Visions are whispers" screen)
       var _wpi = document.getElementById('whispersPreIntro');
       if (_wpi) _wpi.remove();
       // Mark intro as seen so whispers never replay
       try { localStorage.setItem('ack_intro_seen', Date.now().toString()); } catch(e) {}
 
-      // ── VORTEX BYPASS ──────────────────────────────────────────────
-      // Default landing is now the main catalog, not the vortex intro.
-      // Analytics showed 66% bounce on vortex (94% of bouncers leaving
-      // <3s, 80% on mobile). Catalog gets people to the art instantly.
-      //
-      // Vortex still accessible via ?vortex=1 URL param for power users
-      // and (future) a menu link.
-      var _wantsVortex = /[?&]vortex=1\b/.test(location.search) || /[?&]intro=1\b/.test(location.search);
-      if (_wantsVortex) {
-        runIntroSequence();
-      } else {
-        // Skip both intro AND wormhole — show catalog immediately as if
-        // beginReveal() already completed. Render collections first so
-        // they're in the DOM, then mark them revealed.
-        renderCollections();
-        _enterCatalogDirectly();
-      }
-      // (Note: renderCollections also called below for the vortex path —
-      // safe because it's idempotent; calling twice produces same DOM.)
+      // Go straight to vortex field — no whispers gate
+      runIntroSequence();
       renderCollections();
       initScrollScaling();
       buildPersistentGrid();
@@ -10509,8 +10369,6 @@
           const mn = document.getElementById('masterNode');
           if (mn) mn.classList.add('mobile-expanded');
         }, 100);
-        // ── MOBILE HERO FEATURE: rotating curated artwork above catalog ──
-        setTimeout(_initMobileHeroFeature, 300);
       }
       window.addEventListener('resize', debounce(() => {
         buildPersistentGrid();
@@ -13979,155 +13837,6 @@
         }
 
         requestAnimationFrame(unifiedTick);
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // MOBILE HERO FEATURE — rotating curated artwork above the catalog.
-    // Lives only on mobile. Auto-rotates between curated picks every 8s.
-    // Tap → opens that artwork's collection. Edit _HERO_FEATURE_PICKS
-    // to change which pieces rotate (matches by collection name + title).
-    // ─────────────────────────────────────────────────────────────────────
-    var _HERO_FEATURE_PICKS = [
-      { collection: 'Piano Blossoms',         title: 'self portrait in the garden of the Muse' },
-      { collection: 'ACK Editions',           title: 'circus elephant' },
-      { collection: 'Tempted in the Garden',  title: 'Tempted in the Garden' },
-      { collection: 'ACKPFP',                 title: '~timeReaper~' },
-      { collection: 'Heart You',              title: 'Heart You' },
-    ];
-
-    function _initMobileHeroFeature() {
-      if (typeof _isRealMobile === 'undefined' || !_isRealMobile) return;
-      var heroEl = document.getElementById('mobileHeroFeature');
-      if (!heroEl) return;
-      var imgEl = document.getElementById('mobileHeroImg');
-      var capEl = document.getElementById('mobileHeroCaption');
-      var prgEl = document.getElementById('mobileHeroProgress');
-      if (!imgEl || !capEl) return;
-
-      // Resolve picks against COLLECTIONS — drop any that don't exist
-      var resolved = [];
-      _HERO_FEATURE_PICKS.forEach(function(pick) {
-        if (typeof COLLECTIONS === 'undefined') return;
-        var colIdx = COLLECTIONS.findIndex(function(c) { return c.name === pick.collection; });
-        if (colIdx < 0) return;
-        var col = COLLECTIONS[colIdx];
-        if (!col || !col.artworks) return;
-        var artIdx = col.artworks.findIndex(function(a) {
-          return (a.title || '').toLowerCase() === pick.title.toLowerCase();
-        });
-        if (artIdx < 0) return;
-        var art = col.artworks[artIdx];
-        var src = art.focusImage || art.image;
-        if (!src) return;
-        resolved.push({ colIdx: colIdx, artIdx: artIdx, col: col, art: art, src: src });
-      });
-
-      if (resolved.length === 0) {
-        heroEl.style.display = 'none';
-        return;
-      }
-
-      var currentIdx = 0;
-      function showHero(idx) {
-        var pick = resolved[idx];
-        if (!pick) return;
-        // Crossfade: drop opacity, swap, restore
-        imgEl.style.opacity = '0';
-        setTimeout(function() {
-          imgEl.src = pick.src;
-          capEl.textContent = pick.art.title || '';
-          imgEl.style.opacity = '1';
-          // Reset + restart progress bar
-          if (prgEl) {
-            prgEl.classList.remove('run');
-            // Force reflow so the transition restarts
-            void prgEl.offsetWidth;
-            prgEl.classList.add('run');
-          }
-        }, 300);
-      }
-      showHero(0);
-
-      // Tap → open the artwork's collection
-      heroEl.addEventListener('click', function() {
-        var pick = resolved[currentIdx];
-        if (!pick) return;
-        if (typeof openDetail === 'function') {
-          try { openDetail(pick.colIdx); } catch(e) { console.warn('hero tap openDetail failed', e); }
-        }
-      });
-
-      // Auto-rotate every 8s
-      setInterval(function() {
-        currentIdx = (currentIdx + 1) % resolved.length;
-        showHero(currentIdx);
-      }, 8000);
-    }
-
-    // ── _enterCatalogDirectly: instant landing on the main catalog ──
-    // Equivalent to "beginReveal completed" without the wormhole/portal animation.
-    // Hides every vortex-intro DOM element and shows every catalog DOM element.
-    function _enterCatalogDirectly() {
-      // Remove vortex intro overlay & related entry UI
-      var overlay = document.getElementById('intro-overlay');
-      var objectManager = document.getElementById('objectManager');
-      var introCursor = document.getElementById('introCursor');
-      var introHint = document.getElementById('introHint');
-      var vortexTarget = document.getElementById('vortexTarget');
-      var whispersPreIntro = document.getElementById('whispersPreIntro');
-      [overlay, objectManager, introCursor, introHint, vortexTarget, whispersPreIntro].forEach(function(el) {
-        if (!el) return;
-        el.style.opacity = '0';
-        el.style.pointerEvents = 'none';
-        el.style.display = 'none';
-      });
-
-      // Stop any vortex animation flags so background doesn't pull
-      vortexActive = false;
-      try { wormholeActive = false; } catch(e) {}
-
-      // Show the main content (catalog)
-      var mainContent = document.getElementById('main-content');
-      if (mainContent) {
-        mainContent.style.transition = 'none';
-        mainContent.style.opacity = '1';
-        mainContent.style.visibility = 'visible';
-        mainContent.style.transform = 'none';
-        mainContent.style.clipPath = 'none';
-        mainContent.classList.add('reveal');
-      }
-
-      // Show nav, candles, master node, home wires
-      var nav = document.querySelector('.top-nav');
-      if (nav) { nav.style.transition = 'none'; nav.style.opacity = '1'; }
-      var candles = document.getElementById('viewportCandles');
-      if (candles) { candles.style.transition = 'none'; candles.style.opacity = '1'; }
-      var masterNodeEl = document.getElementById('masterNode');
-      if (masterNodeEl) { masterNodeEl.style.transition = 'none'; masterNodeEl.style.opacity = '1'; }
-      var homeWires = document.getElementById('homeWires');
-      if (homeWires) { homeWires.style.transition = 'none'; homeWires.style.opacity = '1'; }
-
-      // Show the bg grid in its normal state (skip the warp-in reveal)
-      var bgGrid = document.getElementById('bgGrid');
-      if (bgGrid) { bgGrid.classList.add('visible'); bgGrid.style.opacity = '1'; }
-      bgGridRevealActive = false;
-      bgGridRevealProgress = 1;
-
-      // Reveal all collection nodes immediately
-      requestAnimationFrame(function() {
-        document.querySelectorAll('.collection-node').forEach(function(n) {
-          n.classList.add('revealed');
-          n.style.opacity = '1';
-        });
-      });
-
-      // Mobile motherboard expanded by default (matches existing init flow)
-      if (typeof _isRealMobile !== 'undefined' && _isRealMobile) {
-        setTimeout(function() {
-          var mn = document.getElementById('masterNode');
-          if (mn) mn.classList.add('mobile-expanded');
-        }, 50);
       }
     }
 
@@ -18348,11 +18057,6 @@
 
         // ── Build DOM for all nodes ──
         artworks.forEach((artwork, i) => { try {
-          // Mobile perf: servant coin wall renders ONE representative coin
-          if (_isRealMobile && i > 0 &&
-              (artwork.spinCoin || (collection && collection.spinCoin))) {
-            return;
-          }
           const np = nodePositions[i];
           const node = document.createElement('div');
           const _isSpinCoin = !!(artwork.spinCoin || (collection && collection.spinCoin));
@@ -22390,9 +22094,9 @@
       let targetCenterX, targetCenterY, maxW, maxH;
       if (_isMobileFocus) {
         targetCenterX = vpW * 0.5; // dead center horizontally
-        targetCenterY = vpH * 0.38; // slightly above center — leaves gap above the info panel
-        maxW = vpW * 0.92; // nearly full width with small margins
-        maxH = vpH * 0.65; // generous height — artwork is the star
+        targetCenterY = vpH * 0.34; // pushed higher — leaves gap above the info panel
+        maxW = vpW * 0.88; // nearly full width with small margins
+        maxH = vpH * 0.52; // tightened — artwork no longer kisses the info panel
       } else {
         targetCenterX = vpW * (isMasterwork ? 0.42 : 0.40);
         targetCenterY = vpH * 0.5;
@@ -22450,7 +22154,7 @@
       const scaledH = nodeH * scaleFactor;
       const rightChainReserve = _isMobileFocus ? edgePad : Math.min(320, vpW * 0.22);
       const availW = vpW - (_isMobileFocus ? edgePad * 2 : candleReserve + rightChainReserve);
-      const availH = _isMobileFocus ? (vpH * 0.68 - navReserve) : (vpH - navReserve - edgePad * 2);
+      const availH = _isMobileFocus ? (vpH * 0.56 - navReserve) : (vpH - navReserve - edgePad * 2);
       if (scaledW > availW || scaledH > availH) {
         scaleFactor = Math.min(availW / nodeW, availH / nodeH, scaleFactor);
       }
@@ -22483,7 +22187,7 @@
       if (clampedCenterY - finalH / 2 < navReserve + edgePad) {
         clampedCenterY = navReserve + edgePad + finalH / 2;
       }
-      const bottomLimit = _isMobileFocus ? vpH * 0.74 : vpH - edgePad;
+      const bottomLimit = _isMobileFocus ? vpH * 0.64 : vpH - edgePad;
       if (clampedCenterY + finalH / 2 > bottomLimit) {
         clampedCenterY = bottomLimit - finalH / 2;
       }
