@@ -5954,14 +5954,21 @@
        MOBILE: kill the catalog landing entirely
        ════════════════════════════════════════════════════════════════════
        Mobile users land directly in focus view of circus elephant. They
-       never see the home catalog or candles. Master node (motherboard)
-       is hidden in non-focus contexts but kept available for focus view's
-       chip/COA panel. */
+       never see the home catalog or candles. Master node (motherboard) is
+       hidden in catalog/collection contexts but RESTORED in focus mode so
+       the focus view's wires (artwork → motherboard, artwork → COA) have
+       a real element to anchor to. */
     body.is-real-mobile #masterNode,
     body.is-real-mobile #viewportCandles,
     body.is-real-mobile #collectionsGrid > .collection-node,
     body.is-real-mobile #homeWires {
       display: none !important;
+    }
+    /* Restore motherboard whenever focus-mode is active on mobile */
+    body.is-real-mobile .node-graph-inner.focus-mode ~ #masterNode,
+    body.is-real-mobile #masterNode.focus-visible,
+    body.is-real-mobile.has-focus #masterNode {
+      display: flex !important;
     }
     /* Background grid: keep visible (subtle blueprint feel) but skip the
        reveal animation. */
@@ -14076,9 +14083,20 @@
               var clickEvt = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
               targetNode.dispatchEvent(clickEvt);
               console.log('[autoFocus] click dispatched OK');
+              // Mark body so CSS rules tied to focus state can fire (motherboard)
+              setTimeout(function() {
+                if (document.querySelector('.node-graph-inner.focus-mode')) {
+                  document.body.classList.add('has-focus');
+                  console.log('[autoFocus] focus mode confirmed active');
+                } else {
+                  console.warn('[autoFocus] click fired but focus-mode never activated — falling back to OM');
+                  _autoFocusFallback();
+                }
+              }, 600);
             } catch (e) {
               console.warn('[autoFocus] dispatchEvent failed', e);
               try { targetNode.click(); } catch (_e) { console.warn('[autoFocus] .click() also failed', _e); }
+              _autoFocusFallback();
             }
           }
           return;
@@ -14086,8 +14104,24 @@
         if (attempts >= maxAttempts) {
           clearInterval(pollTimer);
           console.warn('[autoFocus] gave up after ' + attempts + ' polls');
+          _autoFocusFallback();
         }
       }, pollInterval);
+    }
+
+    // ── _autoFocusFallback: if auto-focus to circus elephant fails,
+    //    pop open the Object Manager so the user has a way to navigate. ──
+    function _autoFocusFallback() {
+      console.log('[autoFocus] running fallback — opening OM');
+      try {
+        if (typeof toggleCatalogOM === 'function') {
+          toggleCatalogOM();
+        } else {
+          // Direct DOM activation as last resort
+          var om = document.getElementById('catalogOM');
+          if (om) om.classList.add('visible');
+        }
+      } catch (e) { console.warn('[autoFocus] fallback failed', e); }
     }
 
     // ── _initGlobalCursorTracker: keep the C4D crosshair following the
@@ -14158,15 +14192,20 @@
 
       // Show nav, candles, master node, home wires
       // The .top-nav has a default transform: translateY(-20px) that gets
-      // cleared by the .revealed class. We add the class instead of just
-      // overriding opacity inline — otherwise the nav stays shifted up 20px
-      // and the logo/title get clipped.
+      // cleared by the .revealed class. Each child nav item ALSO has its
+      // own .nav-item-revealed class needed for visibility — the vortex
+      // flow was adding them one-by-one in a flying-logo sequence; we add
+      // them all at once here.
       var nav = document.querySelector('.top-nav');
       if (nav) {
         nav.style.transition = 'none';
         nav.classList.add('revealed');
         nav.style.opacity = '1';
         nav.style.transform = 'translateY(0)';
+        // Reveal every nav item that opacity:0 by default
+        nav.querySelectorAll('.nav-title, .nav-right > a.nav-link, .nav-right > .about-dropdown, .nav-right > .c4d-settings-dropdown').forEach(function(el) {
+          el.classList.add('nav-item-revealed');
+        });
       }
       var candles = document.getElementById('viewportCandles');
       if (candles) { candles.style.transition = 'none'; candles.style.opacity = '1'; }
