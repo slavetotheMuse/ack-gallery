@@ -10457,13 +10457,15 @@
         buildPersistentGrid();
         renderCandles();
       } else if (_isRealMobile) {
-        // ── MOBILE: skip catalog entirely, go straight to circus elephant ──
-        // No catalog DOM, no motherboard, no candles, no home wires.
-        // We need COLLECTIONS data to be available (it is — it's a JS array)
-        // and openDetail to work, which doesn't depend on the catalog DOM.
-        renderCollections(); // builds collection-node elements (hidden by CSS on mobile but needed for openDetail's grid math)
-        _enterCatalogDirectly(); // remove intro overlay, set base visibility
-        _mobileAutoFocusCircusElephant(); // ← INSTANT, no setTimeout
+        // ── MOBILE: full catalog setup runs (CSS hides motherboard/candles)
+        // because focus view positioning depends on these contexts being set
+        // up. Then we immediately auto-focus circus elephant on top of it. ──
+        renderCollections();
+        _enterCatalogDirectly();
+        initScrollScaling();
+        buildPersistentGrid();
+        renderCandles();
+        _mobileAutoFocusCircusElephant(); // ← no setTimeout, fires immediately
       } else {
         // ── DESKTOP: catalog landing as before ──
         renderCollections();
