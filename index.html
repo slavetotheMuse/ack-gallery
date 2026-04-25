@@ -14157,8 +14157,17 @@
       }
 
       // Show nav, candles, master node, home wires
+      // The .top-nav has a default transform: translateY(-20px) that gets
+      // cleared by the .revealed class. We add the class instead of just
+      // overriding opacity inline — otherwise the nav stays shifted up 20px
+      // and the logo/title get clipped.
       var nav = document.querySelector('.top-nav');
-      if (nav) { nav.style.transition = 'none'; nav.style.opacity = '1'; }
+      if (nav) {
+        nav.style.transition = 'none';
+        nav.classList.add('revealed');
+        nav.style.opacity = '1';
+        nav.style.transform = 'translateY(0)';
+      }
       var candles = document.getElementById('viewportCandles');
       if (candles) { candles.style.transition = 'none'; candles.style.opacity = '1'; }
       var masterNodeEl = document.getElementById('masterNode');
