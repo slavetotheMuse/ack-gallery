@@ -6353,25 +6353,29 @@
     /* Hide the corner brackets we previously injected — Apple style is bare */
     body.is-real-mobile .m-focus-close > i { display: none; }
 
-    /* Loading indicator overlay — shows above artwork in focus view while
-       image is fetching. Removed by JS once <img> fires onload. */
+    /* Loading indicator — sits ABOVE the artwork (not over it). Cycles
+       phrases via JS. Removed once hi-res image lands. */
     body.is-real-mobile .m-focus-loading {
-      position: absolute;
-      top: 30%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 24px;
-      letter-spacing: 0.18em;
-      color: rgba(220, 200, 170, 0.65);
-      text-transform: uppercase;
+      position: relative;
+      margin: 0 auto 30px;
+      padding: 14px 22px;
+      font-family: 'Cormorant Garamond', Garamond, serif;
+      font-style: italic;
+      font-size: 32px;
+      color: rgba(225, 200, 160, 0.85);
       text-align: center;
       pointer-events: none;
-      z-index: 10000;
-      animation: mFocusLoadingPulse 1.6s ease-in-out infinite;
+      animation: mFocusLoadingPulse 1.8s ease-in-out infinite;
+      letter-spacing: 0.02em;
+      max-width: 90%;
     }
-    body.is-real-mobile .m-focus-loading::after {
-      content: ' loading…';
+    body.is-real-mobile .m-focus-loading::before {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 1px;
+      margin: 0 auto 12px;
+      background: linear-gradient(90deg, transparent, rgba(220,170,80,0.6), transparent);
     }
     @keyframes mFocusLoadingPulse {
       0%, 100% { opacity: 0.45; }
@@ -14873,22 +14877,15 @@
       var isServants = col.name === 'servants' || col.spinCoin;
       var mediaEl;
       if (isServants) {
-        // Build video element fresh
-        mediaEl = document.createElement('video');
-        mediaEl.id = 'mobileFocusVideo';
-        mediaEl.src = (art.animation_url) ? art.animation_url : 'servant_muse.mp4';
-        mediaEl.autoplay = true;
-        mediaEl.loop = true;
-        mediaEl.muted = false;
-        mediaEl.playsInline = true;
-        mediaEl.setAttribute('playsinline', '');
-        mediaEl.setAttribute('autoplay', '');
-        mediaEl.setAttribute('loop', '');
-        mediaEl.preload = 'auto';
-        mediaEl.style.cssText = 'width:100%;max-height:65vh;object-fit:contain;display:block;border-radius:4px;box-shadow:0 6px 30px rgba(0,0,0,0.6);background:#000;';
-        // Try playing once it can play
-        mediaEl.addEventListener('canplay', function() { try { mediaEl.play(); } catch(e) {} }, { once: true });
-        setTimeout(function() { try { mediaEl.play(); } catch(e) {} }, 100);
+        // Mobile: the master servant_muse.mp4 is 97MB — way too big to
+        // autoplay on cellular. Use the round high-res face image instead;
+        // it reads as "the coin" and loads instantly.
+        mediaEl = document.createElement('img');
+        mediaEl.id = 'mobileFocusImg';
+        mediaEl.alt = 'servants of the Muse';
+        mediaEl.src = 'servant_face_round.jpg';
+        mediaEl.onerror = function() { mediaEl.src = 'servant_face_web.png'; mediaEl.onerror = null; };
+        mediaEl.style.cssText = 'width:100%;max-width:90vw;max-height:65vh;object-fit:contain;display:block;border-radius:50%;box-shadow:0 6px 30px rgba(0,0,0,0.6);background:transparent;margin:0 auto;';
       } else {
         mediaEl = document.createElement('img');
         mediaEl.id = 'mobileFocusImg';
@@ -14941,21 +14938,25 @@
           mediaEl.src = hiResSrc;
         }
       }
-      content.appendChild(mediaEl);
-
-      // Loading indicator — shown for both images and (briefly) videos
+      // Loading indicator — added BEFORE the media so it sits ABOVE the
+      // artwork in the column flow (not as an overlay covering it).
+      // Servants are static images, no loading needed.
       if (!isServants) {
         var loading = document.createElement('div');
         loading.id = 'mobileFocusLoading';
         loading.className = 'm-focus-loading';
-        loading.textContent = 'this artwork is';
+        loading.textContent = 'this artwork is loading…';
         content.appendChild(loading);
-        // Hard safety: never let it linger forever
+        // Start rotating phrases
+        _startMobileLoadingRotation(loading);
+        // Hard safety
         setTimeout(function() {
           var ind = document.getElementById('mobileFocusLoading');
           if (ind && ind.parentNode) ind.parentNode.removeChild(ind);
-        }, 12000);
+        }, 14000);
       }
+
+      content.appendChild(mediaEl);
 
       // Build meta block
       var metaWrap = document.createElement('div');
@@ -15074,6 +15075,54 @@
       if (overlay) overlay.classList.remove('active');
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Loading phrase pool — rotated through while artwork is fetching.
+    // First entry is the literal "this artwork is loading…", then a rotation
+    // of warmer "your bags are…" affirmations from the bags.html PRAISE pool.
+    // ─────────────────────────────────────────────────────────────────────
+    var _LOADING_PHRASES = [
+      'this artwork is loading…',
+      'your bags are safe',
+      'your bags are revered',
+      'your bags are consensus',
+      'your bags are admired by those who understand them',
+      'your bags are quietly remarkable',
+      'your bags are unburdened',
+      'your bags are unshaken',
+      'your bags will be remembered',
+      'your bags are aligned with the long arc',
+      'your bags are sovereign',
+      'your bags are pre-cabal',
+      'your bags have escaped the rebase',
+      'your bags are a small and steady brightness',
+      'your bags are an heirloom in the making',
+      'your bags are a clarity'
+    ];
+    var _loadingRotateTimer = null;
+    function _startMobileLoadingRotation(el) {
+      if (_loadingRotateTimer) { clearInterval(_loadingRotateTimer); _loadingRotateTimer = null; }
+      // Always start with "this artwork is loading…"
+      var idx = 0;
+      el.textContent = _LOADING_PHRASES[0];
+      _loadingRotateTimer = setInterval(function() {
+        // Stop if element was removed
+        if (!el || !el.parentNode) {
+          clearInterval(_loadingRotateTimer);
+          _loadingRotateTimer = null;
+          return;
+        }
+        idx = (idx + 1) % _LOADING_PHRASES.length;
+        // Tiny fade between phrases for readability
+        el.style.transition = 'opacity 0.25s ease';
+        el.style.opacity = '0';
+        setTimeout(function() {
+          if (!el || !el.parentNode) return;
+          el.textContent = _LOADING_PHRASES[idx];
+          el.style.opacity = '';
+        }, 250);
+      }, 2500);
+    }
+
     function _toggleMobileMenu(force) {
       var panel = document.getElementById('mobileMenu');
       var scrim = document.getElementById('mobileMenuScrim');
@@ -15088,102 +15137,9 @@
       }
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // _showFocusLoadingIndicator — universal "loading" overlay above the
-    // focused artwork. Visible until the node's img completes loading. Used
-    // for both desktop and mobile (mobile feed has its own equivalent for
-    // the m-focus overlay; this one is for the inline focus-mode pipeline).
-    // ─────────────────────────────────────────────────────────────────────
-    function _showFocusLoadingIndicator(node) {
-      if (!node) return;
-      // Avoid stacking
-      var existing = node.querySelector('.focus-load-indicator');
-      if (existing) existing.remove();
-
-      var indicator = document.createElement('div');
-      indicator.className = 'focus-load-indicator';
-      indicator.textContent = 'this artwork is loading…';
-      // Inline styles so it works without prior CSS knowledge
-      indicator.style.cssText = [
-        'position:absolute',
-        'top:50%',
-        'left:50%',
-        'transform:translate(-50%,-50%)',
-        'font-family:"JetBrains Mono", ui-monospace, monospace',
-        'font-size:0.7rem',
-        'letter-spacing:0.18em',
-        'color:rgba(220,200,170,0.78)',
-        'text-transform:uppercase',
-        'background:rgba(20,20,22,0.55)',
-        'border:1px solid rgba(220,170,80,0.28)',
-        'border-radius:2px',
-        'padding:8px 16px',
-        'pointer-events:none',
-        'z-index:9000',
-        'animation:focusLoadPulse 1.6s ease-in-out infinite',
-        'white-space:nowrap'
-      ].join(';');
-      node.appendChild(indicator);
-
-      // Watch the node's img for load completion
-      var img = node.querySelector('.node-preview img');
-      if (!img) {
-        // No img yet — give the focus pipeline a moment to swap one in, then re-check
-        setTimeout(function() {
-          var img2 = node.querySelector('.node-preview img');
-          if (!img2) { _dismissFocusLoadingIndicator(node); return; }
-          _wireLoadDismiss(node, img2);
-        }, 100);
-        return;
-      }
-      _wireLoadDismiss(node, img);
-    }
-
-    function _wireLoadDismiss(node, img) {
-      // If the image is ALREADY complete with valid pixels AND the focus
-      // pipeline isn't going to swap to a hi-res version, dismiss now.
-      // Otherwise wait for the next load event (which fires when src changes).
-      var dismissed = false;
-      function dismiss() {
-        if (dismissed) return;
-        dismissed = true;
-        _dismissFocusLoadingIndicator(node);
-      }
-      // Listen for any subsequent load (src swap) on this img
-      var prevSrc = img.src;
-      var poll = setInterval(function() {
-        if (!node.classList.contains('focused')) {
-          clearInterval(poll);
-          dismiss();
-          return;
-        }
-        // Has src changed since last check?
-        if (img.src !== prevSrc) {
-          prevSrc = img.src;
-          // New src — wait for it to complete
-          if (img.complete && img.naturalWidth > 0) {
-            // Already loaded? Could be cached — give it one more frame, then dismiss
-            setTimeout(dismiss, 150);
-          }
-          // Otherwise rely on next iteration
-        } else if (img.complete && img.naturalWidth > 0) {
-          // Same src, fully loaded — dismiss
-          dismiss();
-          clearInterval(poll);
-        }
-      }, 200);
-      // Hard timeout — never let the indicator stick forever
-      setTimeout(function() {
-        clearInterval(poll);
-        dismiss();
-      }, 12000);
-    }
-
-    function _dismissFocusLoadingIndicator(node) {
-      if (!node) return;
-      var ind = node.querySelector('.focus-load-indicator');
-      if (ind && ind.parentNode) ind.parentNode.removeChild(ind);
-    }
+    // (Removed: my generic _showFocusLoadingIndicator — was redundant with
+    // the existing _whisperMsgs system that fires in the desktop focus
+    // pipeline below at line ~24148. Original system stays.)
 
     // ── _autoFocusFallback: if auto-focus to circus elephant fails,
     //    pop open the Object Manager so the user has a way to navigate. ──
@@ -23755,11 +23711,9 @@
         node.classList.add('focused');
         _showMobileBack('focus');
         showEscHint();
-        // ── Universal "this artwork is loading" indicator ──
-        // Watches the focused node's img — if it's not yet fully loaded (or
-        // its src will be swapped to a higher-res shortly), shows a pulsing
-        // text indicator above the artwork. Auto-dismisses on load.
-        _showFocusLoadingIndicator(node);
+        // (Note: the original "whisper" loading message system fires
+        // further down in this same flow — see _whisperMsgs around line
+        // ~24148. We don't add a duplicate generic indicator here.)
         // ── "Touch for full resolution" hint — desktop only (mobile uses swipe to navigate) ──
         if (!_isRealMobile) {
           var _touchHint = document.createElement('div');
@@ -24096,7 +24050,9 @@
               // Store on node so exitFocusMode can clean up
               node._whisperCleanup = { timeout: null, interval: null, el: null };
 
-              // Start whisper after a brief delay so it only appears if loading takes a moment
+              // Show whisper IMMEDIATELY so the user always sees "this artwork
+              // is loading" regardless of how fast the image lands. Was 800ms
+              // delay before — too long, fast-loading collections never showed it.
               if (!_skipWhisper) _whisperTimeout = setTimeout(() => {
                 _whisperEl = document.createElement('div');
                 _whisperEl.className = 'focus-loading-whisper';
@@ -24134,7 +24090,7 @@
                   }
                 }, 3500);
                 node._whisperCleanup.interval = _whisperInterval;
-              }, 800);
+              }, 0); // was 800 — show immediately so user always sees the message
               node._whisperCleanup.timeout = _whisperTimeout;
 
               const _clearLoading = () => {
