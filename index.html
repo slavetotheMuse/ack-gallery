@@ -3955,7 +3955,7 @@
       pointer-events: none;
       z-index: 20;
       opacity: 0;
-      transition: opacity 0.8s ease;
+      transition: opacity 0.18s ease; /* was 0.8s — fast fade-in so cached images don't beat the appear */
     }
     .focus-loading-whisper.visible { opacity: 1; }
     .focus-loading-whisper.fading { opacity: 0; transition: opacity 0.4s ease; }
@@ -24072,7 +24072,10 @@
                 node.appendChild(_whisperEl);
                 node._whisperCleanup.el = _whisperEl;
                 // Fade in
-                requestAnimationFrame(() => { _whisperEl.classList.add('visible'); });
+                requestAnimationFrame(() => {
+                  _whisperEl.classList.add('visible');
+                  _whisperVisibleAt = Date.now();
+                });
                 let _wIdx = 0;
                 _whisperInterval = setInterval(() => {
                   // Pick a random message (skip index 0 so we don't repeat the opener immediately)
@@ -24093,16 +24096,31 @@
               }, 0); // was 800 — show immediately so user always sees the message
               node._whisperCleanup.timeout = _whisperTimeout;
 
+              // Track when the whisper actually became visible so we can
+              // enforce a minimum on-screen time (1.4s). Otherwise cached
+              // images dismiss the whisper before the user can read it.
+              const _MIN_WHISPER_MS = 1400;
+              let _whisperVisibleAt = 0;
               const _clearLoading = () => {
                 nodeImg.style.opacity = '1';
                 if (loadingShimmer.parentNode) loadingShimmer.parentNode.removeChild(loadingShimmer);
-                // Clear whisper
-                if (_whisperTimeout) { clearTimeout(_whisperTimeout); _whisperTimeout = null; }
-                if (_whisperInterval) { clearInterval(_whisperInterval); _whisperInterval = null; }
-                if (_whisperEl) {
-                  _whisperEl.classList.remove('visible');
-                  _whisperEl.classList.add('fading');
-                  setTimeout(() => { if (_whisperEl && _whisperEl.parentNode) _whisperEl.parentNode.removeChild(_whisperEl); _whisperEl = null; }, 500);
+                // If whisper hasn't shown long enough yet, defer the clear
+                const _now = Date.now();
+                const _elapsed = _whisperVisibleAt ? (_now - _whisperVisibleAt) : 0;
+                const _remaining = Math.max(0, _MIN_WHISPER_MS - _elapsed);
+                const _doClear = () => {
+                  if (_whisperTimeout) { clearTimeout(_whisperTimeout); _whisperTimeout = null; }
+                  if (_whisperInterval) { clearInterval(_whisperInterval); _whisperInterval = null; }
+                  if (_whisperEl) {
+                    _whisperEl.classList.remove('visible');
+                    _whisperEl.classList.add('fading');
+                    setTimeout(() => { if (_whisperEl && _whisperEl.parentNode) _whisperEl.parentNode.removeChild(_whisperEl); _whisperEl = null; }, 500);
+                  }
+                };
+                if (_remaining > 0) {
+                  setTimeout(_doClear, _remaining);
+                } else {
+                  _doClear();
                 }
               };
               const preloader = new Image();
