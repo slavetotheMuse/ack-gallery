@@ -5945,6 +5945,28 @@
     }
 
     /* ════════════════════════════════════════════════════════════════════
+       MOBILE ENTRY CURTAIN — covers transition flashes during auto-focus
+       ════════════════════════════════════════════════════════════════════
+       Mobile load: catalog renders → openDetail(ACK Editions) renders the
+       collection view → handleNodeClick scales up to focus view. Without
+       a curtain, the user sees all 3 states briefly. Curtain is on by
+       default on mobile, faded out by JS once focus view is visible. */
+    .mobile-entry-curtain { display: none; }
+    body.is-real-mobile .mobile-entry-curtain {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: var(--bg, #1a1a1a);
+      z-index: 99999;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+    body.is-real-mobile.mobile-entry-ready .mobile-entry-curtain {
+      opacity: 0;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
        MOBILE PERF PASS — Pass 1: kill all ambient @keyframes animations
        ════════════════════════════════════════════════════════════════════ */
     body.is-real-mobile *,
@@ -6618,6 +6640,11 @@
         <!-- Collection rows populated by JS -->
       </div>
     </div>
+
+  <!-- Mobile entry curtain — covers all transition flashes from catalog
+       through ACK Editions to focus view of circus elephant. Removed by JS
+       once focus view is ready. Hidden on desktop via CSS. -->
+  <div id="mobileEntryCurtain" class="mobile-entry-curtain"></div>
 
   <!-- Main Content -->
   <div id="main-content">
@@ -13989,8 +14016,22 @@
                 // Fallback: dispatch a synthetic click
                 targetNode.click();
               }
+              // Wait for focus view to be visible, then lift the curtain.
+              // handleNodeClick adds 'focused' to the target node and 'focus-mode' to inner.
+              var liftAttempts = 0;
+              var liftPoll = setInterval(function() {
+                liftAttempts++;
+                var focusActive = document.querySelector('.node-graph-inner.focus-mode .node-card.focused');
+                if (focusActive || liftAttempts >= 30) {
+                  clearInterval(liftPoll);
+                  // Small delay so the scale-up animation is partway through
+                  // when curtain fades — visitor sees art arriving, not popping in.
+                  setTimeout(_liftMobileEntryCurtain, 200);
+                }
+              }, 100);
             } catch (e) {
               console.warn('[mobile auto-focus] node click failed', e);
+              _liftMobileEntryCurtain();
             }
           }
           return;
@@ -13998,9 +14039,27 @@
         if (attempts >= maxAttempts) {
           clearInterval(pollTimer);
           console.warn('[mobile auto-focus] gave up waiting for ACK Editions to render');
+          // Fail open: lift curtain so user sees the catalog rather than a black screen
+          _liftMobileEntryCurtain();
         }
       }, pollInterval);
     }
+
+    function _liftMobileEntryCurtain() {
+      document.body.classList.add('mobile-entry-ready');
+      // After the fade-out completes, remove the element so it can't intercept anything
+      setTimeout(function() {
+        var c = document.getElementById('mobileEntryCurtain');
+        if (c && c.parentNode) c.parentNode.removeChild(c);
+      }, 700);
+    }
+    // Hard safety: never let the curtain trap the user. After 6s no matter
+    // what happened, it lifts. (Auto-focus normally completes in ~600-1200ms.)
+    setTimeout(function() {
+      if (document.body && document.body.classList.contains('is-real-mobile')) {
+        _liftMobileEntryCurtain();
+      }
+    }, 6000);
 
     // ── _enterCatalogDirectly: instant landing on the main catalog ──
     // Equivalent to "beginReveal completed" without the wormhole/portal animation.
