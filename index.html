@@ -6307,6 +6307,20 @@
       align-items: stretch;
       justify-content: center;
       padding: 80px 30px 40px;
+      /* Stop the page from scrolling underneath while focus is open AND
+         prevent the browser's default touch behaviors (pinch, double-tap
+         zoom, vertical pan) from competing with our swipe handler. */
+      overflow: hidden;
+      touch-action: pan-y; /* allow vertical pull-to-close, but we own X */
+      overscroll-behavior: contain;
+    }
+    body.is-real-mobile .m-focus-overlay.active {
+      /* When active, lock the page so vertical scroll doesn't compete */
+    }
+    body.is-real-mobile.m-focus-active {
+      overflow: hidden !important;
+      position: fixed !important;
+      width: 100% !important;
     }
     body.is-real-mobile .m-focus-overlay.active {
       display: flex;
@@ -9487,14 +9501,14 @@
         { name: "Heart You", image: "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",
           token: "ERC-721", chain: "Ethereum", contract: "0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3",
           artworks: [
-            {title:"Heart You",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",fullRes:"https://arweave.net/enexd26VNDhETFePXozDEJ77SbVBBtm91o8J_QULw-o",focusImage:"heartyou/web/heartyou_1_web.gif",isAnimated:true,tokenId:1},
-            {title:"Heart You #2",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/4b610259e41c1cccf05a6da6f81cf343",fullRes:"https://arweave.net/gV0M0y0DYUUwLPeetaeuOs7FnsmE2zuaMZdmzU8NABc",focusImage:"heartyou/web/heartyou_2_web.gif",isAnimated:true,tokenId:2},
-            {title:"Heart You #3",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a08464254d57b28859c6eaa87fb96d53",fullRes:"https://arweave.net/vzVTkgXF6Oa92AZYskU2BhdozKmLqHplDYvmwKUYM_A",focusImage:"heartyou/web/heartyou_3_web.gif",isAnimated:true,tokenId:3},
-            {title:"Heart You #4",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/2f76bf3fa51c11a02d3ed056e03f9dc6",fullRes:"https://arweave.net/xKkt6dOFa5iu5fNiGPkt6mNvbYtgfxtYNosoxdj7w3M",focusImage:"heartyou/web/heartyou_4_web.gif",isAnimated:true,tokenId:4},
-            {title:"Heart You #5",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a836f8fe3bf899936f954d0715f7566e",fullRes:"https://arweave.net/AntKL_HH0FCRRFs7_4KzUX8aXxjYLhDKBtIa6_5j5Qo",focusImage:"heartyou/web/heartyou_5_web.gif",isAnimated:true,tokenId:5},
-            {title:"Heart You #6",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/596ca11dac0bb92686100b96d4aee474",fullRes:"https://arweave.net/yqEOxVqm1eM8ZPEQaHdczAMBIibpVvKUl92P2S93tUU",focusImage:"heartyou/web/heartyou_6_web.gif",isAnimated:true,tokenId:6},
-            {title:"Heart You #7",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d628b05e8a829b372dad2a9b8d66cae8",fullRes:"https://arweave.net/crr9jhJeWHTP-zYdJ9b41g0E7nQivPRixlVaTvWuuXs",focusImage:"heartyou/web/heartyou_7_web.gif",isAnimated:true,tokenId:7},
-            {title:"Heart You #8",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/ded20db8b10d516c1c831945d1bd058b",fullRes:"https://arweave.net/QfP0irkkY6XZ_F43WOEW6zl5JuukpMIXDN3-K-jRzg8",focusImage:"heartyou/web/heartyou_8_web.gif",isAnimated:true,tokenId:8}
+            {title:"Heart You",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",fullRes:"https://arweave.net/enexd26VNDhETFePXozDEJ77SbVBBtm91o8J_QULw-o",focusImage:"heartyou/web/heartyou_1_web.gif",isAnimated:true,tokenId:1,focusScale:1.4},
+            {title:"Heart You #2",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/4b610259e41c1cccf05a6da6f81cf343",fullRes:"https://arweave.net/gV0M0y0DYUUwLPeetaeuOs7FnsmE2zuaMZdmzU8NABc",focusImage:"heartyou/web/heartyou_2_web.gif",isAnimated:true,tokenId:2,focusScale:1.4},
+            {title:"Heart You #3",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a08464254d57b28859c6eaa87fb96d53",fullRes:"https://arweave.net/vzVTkgXF6Oa92AZYskU2BhdozKmLqHplDYvmwKUYM_A",focusImage:"heartyou/web/heartyou_3_web.gif",isAnimated:true,tokenId:3,focusScale:1.4},
+            {title:"Heart You #4",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/2f76bf3fa51c11a02d3ed056e03f9dc6",fullRes:"https://arweave.net/xKkt6dOFa5iu5fNiGPkt6mNvbYtgfxtYNosoxdj7w3M",focusImage:"heartyou/web/heartyou_4_web.gif",isAnimated:true,tokenId:4,focusScale:1.4},
+            {title:"Heart You #5",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a836f8fe3bf899936f954d0715f7566e",fullRes:"https://arweave.net/AntKL_HH0FCRRFs7_4KzUX8aXxjYLhDKBtIa6_5j5Qo",focusImage:"heartyou/web/heartyou_5_web.gif",isAnimated:true,tokenId:5,focusScale:1.4},
+            {title:"Heart You #6",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/596ca11dac0bb92686100b96d4aee474",fullRes:"https://arweave.net/yqEOxVqm1eM8ZPEQaHdczAMBIibpVvKUl92P2S93tUU",focusImage:"heartyou/web/heartyou_6_web.gif",isAnimated:true,tokenId:6,focusScale:1.4},
+            {title:"Heart You #7",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d628b05e8a829b372dad2a9b8d66cae8",fullRes:"https://arweave.net/crr9jhJeWHTP-zYdJ9b41g0E7nQivPRixlVaTvWuuXs",focusImage:"heartyou/web/heartyou_7_web.gif",isAnimated:true,tokenId:7,focusScale:1.4},
+            {title:"Heart You #8",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/ded20db8b10d516c1c831945d1bd058b",fullRes:"https://arweave.net/QfP0irkkY6XZ_F43WOEW6zl5JuukpMIXDN3-K-jRzg8",focusImage:"heartyou/web/heartyou_8_web.gif",isAnimated:true,tokenId:8,focusScale:1.4}
         ]},
         { name: "Her Favorite Flowers", image: "her_favorite_flowers/web/made_these_for_my_girl_web.jpg", wallLayout: true,
           token: "ERC-721", chain: "Ethereum", contract: "0xa3cdefc4aea0407937ac3ea127b7491f24e5fe63",
@@ -14549,107 +14563,6 @@
       }
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // MOBILE AUTO-ENTRY — open focus view of "circus elephant" on landing.
-    // The catalog is built behind the scenes; mobile users skip straight
-    // to a piece of art. Swipe horizontally for next/prev within ACK
-    // Editions; tap "Collections" in the nav to browse all collections.
-    // ─────────────────────────────────────────────────────────────────────
-    function _mobileAutoFocusCircusElephant() {
-      console.log('[autoFocus] start');
-      if (typeof _isRealMobile === 'undefined' || !_isRealMobile) {
-        console.log('[autoFocus] not mobile, skipping');
-        return;
-      }
-      if (typeof COLLECTIONS === 'undefined' || !COLLECTIONS) {
-        console.log('[autoFocus] no COLLECTIONS yet');
-        return;
-      }
-      if (/[?&]vortex=1\b/.test(location.search)) {
-        console.log('[autoFocus] vortex requested, skipping');
-        return;
-      }
-      var existingFocused = document.querySelector('.node-card.focused');
-      if (existingFocused) {
-        console.log('[autoFocus] already focused, skipping');
-        return;
-      }
-
-      var colIdx = COLLECTIONS.findIndex(function(c) { return c.name === 'ACK Editions'; });
-      if (colIdx < 0) {
-        console.log('[autoFocus] ACK Editions not found');
-        return;
-      }
-      var col = COLLECTIONS[colIdx];
-      var artIdx = col.artworks.findIndex(function(a) {
-        return (a.title || '').toLowerCase() === 'circus elephant';
-      });
-      if (artIdx < 0) {
-        console.log('[autoFocus] circus elephant title not found, falling back to index 6');
-        artIdx = 6; // known position in ACK Editions
-      }
-      console.log('[autoFocus] target colIdx=' + colIdx + ' artIdx=' + artIdx + ' title=' + (col.artworks[artIdx] && col.artworks[artIdx].title));
-
-      if (typeof openDetail !== 'function') {
-        console.log('[autoFocus] openDetail not defined yet');
-        return;
-      }
-      try {
-        openDetail(colIdx, true);
-        console.log('[autoFocus] openDetail called');
-      } catch (e) {
-        console.warn('[autoFocus] openDetail threw', e);
-        return;
-      }
-
-      // Poll for the target node, then dispatch a REAL click event (so the
-      // node's bound onclick handler runs with a proper Event object — calling
-      // handleNodeClick directly with a fake event was failing silently).
-      var attempts = 0;
-      var maxAttempts = 80; // ~4s at 50ms
-      var pollInterval = 50;
-      var pollTimer = setInterval(function() {
-        attempts++;
-        var inner = document.querySelector('.node-graph-inner');
-        var nodes = inner ? inner.querySelectorAll('.node-card') : [];
-        if (attempts === 1 || attempts % 10 === 0) {
-          console.log('[autoFocus] poll attempt ' + attempts + ' nodes=' + nodes.length);
-        }
-        if (nodes.length > artIdx) {
-          var targetNode = nodes[artIdx];
-          if (targetNode) {
-            clearInterval(pollTimer);
-            console.log('[autoFocus] dispatching click on node', targetNode);
-            try {
-              var clickEvt = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
-              targetNode.dispatchEvent(clickEvt);
-              console.log('[autoFocus] click dispatched OK');
-              // Mark body so CSS rules tied to focus state can fire (motherboard)
-              setTimeout(function() {
-                if (document.querySelector('.node-graph-inner.focus-mode')) {
-                  document.body.classList.add('has-focus');
-                  console.log('[autoFocus] focus mode confirmed active');
-                } else {
-                  console.warn('[autoFocus] click fired but focus-mode never activated — falling back to OM');
-                  _autoFocusFallback();
-                }
-              }, 600);
-            } catch (e) {
-              console.warn('[autoFocus] dispatchEvent failed', e);
-              try { targetNode.click(); } catch (_e) { console.warn('[autoFocus] .click() also failed', _e); }
-              _autoFocusFallback();
-            }
-          }
-          return;
-        }
-        if (attempts >= maxAttempts) {
-          clearInterval(pollTimer);
-          console.warn('[autoFocus] gave up after ' + attempts + ' polls');
-          _autoFocusFallback();
-        }
-      }, pollInterval);
-    }
-
     // ═════════════════════════════════════════════════════════════════════
     // MOBILE SHELL — clean separate UI for mobile users
     // - Vertical scrolling feed of collections
@@ -14825,23 +14738,44 @@
       if (menuBtn) menuBtn.addEventListener('click', function() { _toggleMobileMenu(); });
       if (scrim) scrim.addEventListener('click', function() { _toggleMobileMenu(false); });
 
-      // Swipe within focus overlay
+      // Swipe within focus overlay — direction-locked so horizontal swipes
+      // (artwork nav) don't compete with vertical scrolls (close).
       var overlay = document.getElementById('mobileFocus');
       if (overlay) {
-        var sx = 0, sy = 0, swiping = false;
+        var sx = 0, sy = 0, swiping = false, locked = null;
         overlay.addEventListener('touchstart', function(e) {
           if (!e.touches || !e.touches[0]) return;
-          sx = e.touches[0].clientX; sy = e.touches[0].clientY; swiping = true;
+          sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+          swiping = true; locked = null;
         }, { passive: true });
+        overlay.addEventListener('touchmove', function(e) {
+          if (!swiping || !e.touches || !e.touches[0]) return;
+          var dx = e.touches[0].clientX - sx;
+          var dy = e.touches[0].clientY - sy;
+          if (!locked) {
+            // Wait until movement is large enough to determine intent
+            if (Math.abs(dx) > 14 || Math.abs(dy) > 14) {
+              locked = (Math.abs(dx) > Math.abs(dy)) ? 'h' : 'v';
+            } else {
+              return;
+            }
+          }
+          // Block native scroll on horizontal swipes — we're handling it
+          if (locked === 'h' && e.cancelable) {
+            e.preventDefault();
+          }
+        }, { passive: false });
         overlay.addEventListener('touchend', function(e) {
-          if (!swiping || !e.changedTouches || !e.changedTouches[0]) return;
+          if (!swiping || !e.changedTouches || !e.changedTouches[0]) {
+            swiping = false; locked = null; return;
+          }
           var dx = e.changedTouches[0].clientX - sx;
           var dy = e.changedTouches[0].clientY - sy;
           swiping = false;
-          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+          var lk = locked; locked = null;
+          if (lk === 'h' && Math.abs(dx) > 50) {
             _moveMobileFocus(dx < 0 ? 1 : -1);
-          } else if (dy > 100 && Math.abs(dy) > Math.abs(dx) * 1.3) {
-            // Swipe down to close
+          } else if (lk === 'v' && dy > 100) {
             _closeMobileFocus();
           }
         }, { passive: true });
@@ -15005,6 +14939,8 @@
 
       var overlay = document.getElementById('mobileFocus');
       if (overlay) overlay.classList.add('active');
+      // Lock background page from scrolling/panning while focus is open
+      document.body.classList.add('m-focus-active');
       try { if (window.ACK_ANALYTICS) ACK_ANALYTICS.artworkFocus(col.name, art.title); } catch(e) {}
     }
 
@@ -15073,6 +15009,7 @@
       _closeMobileFocus_pauseVideo();
       var overlay = document.getElementById('mobileFocus');
       if (overlay) overlay.classList.remove('active');
+      document.body.classList.remove('m-focus-active');
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -15137,23 +15074,90 @@
       }
     }
 
-    // (Removed: my generic _showFocusLoadingIndicator — was redundant with
-    // the existing _whisperMsgs system that fires in the desktop focus
-    // pipeline below at line ~24148. Original system stays.)
+    // ─────────────────────────────────────────────────────────────────────
+    // _createFocusWhisper — universal "this artwork is loading" whisper
+    // for all desktop focus paths. Creates synchronously and returns a
+    // dismiss() function. Used by both the default _focusSrc preloader
+    // path AND the Piano Blossoms / Tempted in the Garden branch.
+    // ─────────────────────────────────────────────────────────────────────
+    var _GLOBAL_WHISPER_MSGS = [
+      'this artwork is loading',
+      'thank you for your patience',
+      'i know you are very busy',
+      'your time is valued',
+      'your bags are good',
+      'your bags are kind',
+      'your bags will pump',
+      'your bags are mine',
+      'thank you for offering your service to the Muse',
+      'She sees you',
+      'She is using you for Her greater plan',
+      'your bags are S tier',
+      'your bags are worthy',
+      'please clear your browser history',
+      'this artwork is absurdly large',
+      'thank you for your patience'
+    ];
+    function _createFocusWhisper(node, scaleFactor, isMobile) {
+      // Avoid stacking
+      var existing = node.querySelector('.focus-loading-whisper');
+      if (existing) existing.remove();
 
-    // ── _autoFocusFallback: if auto-focus to circus elephant fails,
-    //    pop open the Object Manager so the user has a way to navigate. ──
-    function _autoFocusFallback() {
-      console.log('[autoFocus] running fallback — opening OM');
-      try {
-        if (typeof toggleCatalogOM === 'function') {
-          toggleCatalogOM();
-        } else {
-          // Direct DOM activation as last resort
-          var om = document.getElementById('catalogOM');
-          if (om) om.classList.add('visible');
+      var msgs = _GLOBAL_WHISPER_MSGS;
+      var el = document.createElement('div');
+      el.className = 'focus-loading-whisper';
+      el.textContent = msgs[0];
+      var invS = isMobile ? 1 : (1 / (scaleFactor || 1));
+      el.style.fontSize = (11 * invS) + 'px';
+      el.style.top = '-' + (32 * invS) + 'px';
+      el.style.transform = 'translateX(-50%)';
+      node.appendChild(el);
+
+      var visibleAt = 0;
+      var MIN_MS = 1400;
+      requestAnimationFrame(function() {
+        if (el && el.parentNode) {
+          el.classList.add('visible');
+          visibleAt = Date.now();
         }
-      } catch (e) { console.warn('[autoFocus] fallback failed', e); }
+      });
+
+      var idx = 0;
+      var interval = setInterval(function() {
+        idx = 1 + Math.floor(Math.random() * (msgs.length - 1));
+        if (!el || !el.parentNode) { clearInterval(interval); return; }
+        el.classList.remove('visible');
+        el.classList.add('fading');
+        setTimeout(function() {
+          if (!el || !el.parentNode) return;
+          el.textContent = msgs[idx];
+          el.classList.remove('fading');
+          el.classList.add('visible');
+        }, 420);
+      }, 3500);
+
+      function dismiss() {
+        var elapsed = visibleAt ? (Date.now() - visibleAt) : 0;
+        var remaining = Math.max(0, MIN_MS - elapsed);
+        var doRemove = function() {
+          clearInterval(interval);
+          if (el) {
+            el.classList.remove('visible');
+            el.classList.add('fading');
+            setTimeout(function() {
+              if (el && el.parentNode) el.parentNode.removeChild(el);
+              el = null;
+            }, 500);
+          }
+        };
+        if (remaining > 0) setTimeout(doRemove, remaining);
+        else doRemove();
+      }
+
+      // Hard safety: never linger forever
+      setTimeout(function() { if (el && el.parentNode) dismiss(); }, 60000);
+
+      return { el: el, dismiss: dismiss };
     }
 
     // ── _initGlobalCursorTracker: keep the C4D crosshair following the
@@ -23870,11 +23874,23 @@
               } else {
                 nodeImg.style.transition = 'opacity 0.3s ease';
                 nodeImg.style.opacity = '0.7';
+                // Show loading whisper above the artwork
+                var _pbWhisper = _createFocusWhisper(node, scaleFactor, _isRealMobile);
+                if (!node._whisperCleanup) node._whisperCleanup = {};
+                node._whisperCleanup.el = _pbWhisper.el;
+                node._whisperCleanup.dismiss = _pbWhisper.dismiss;
                 const pbPreloader = new Image();
-                pbPreloader.onload = () => { nodeImg.src = focusSrc; nodeImg.style.opacity = '1'; };
-                pbPreloader.onerror = () => { nodeImg.style.opacity = '1'; };
+                pbPreloader.onload = () => {
+                  nodeImg.src = focusSrc;
+                  nodeImg.style.opacity = '1';
+                  _pbWhisper.dismiss();
+                };
+                pbPreloader.onerror = () => {
+                  nodeImg.style.opacity = '1';
+                  _pbWhisper.dismiss();
+                };
                 pbPreloader.src = focusSrc;
-                setTimeout(() => { nodeImg.style.opacity = '1'; }, 4000);
+                setTimeout(() => { nodeImg.style.opacity = '1'; _pbWhisper.dismiss(); }, 4000);
               }
             } else if (nodeImg.dataset.fullGifSrc && !_isMobileFocus) {
               // Color Study: swap static JPG thumb → animated GIF on focus (desktop only — GIFs too heavy for mobile)
@@ -24050,35 +24066,30 @@
               // Store on node so exitFocusMode can clean up
               node._whisperCleanup = { timeout: null, interval: null, el: null };
 
-              // Show whisper IMMEDIATELY so the user always sees "this artwork
-              // is loading" regardless of how fast the image lands. Was 800ms
-              // delay before — too long, fast-loading collections never showed it.
-              if (!_skipWhisper) _whisperTimeout = setTimeout(() => {
+              // Create whisper SYNCHRONOUSLY (no setTimeout). Earlier we were
+              // wrapping it in setTimeout(..., 0) but that meant if the image
+              // fired onload before the next tick (cached/fast), _clearLoading
+              // would cancel the pending timeout and the whisper never existed.
+              if (!_skipWhisper) {
                 _whisperEl = document.createElement('div');
                 _whisperEl.className = 'focus-loading-whisper';
-                _whisperEl.textContent = _whisperMsgs[0]; // always start with "this artwork is loading"
-                // Counter-scale so the whisper appears at a fixed screen size
-                // regardless of how much the node is scaled up in focus mode.
-                // top in node-space: we want ~20px above the node on screen,
-                // so in node coords that's -20/scaleFactor, but scale() also
-                // shrinks the element so we add extra clearance.
+                _whisperEl.textContent = _whisperMsgs[0];
                 var _invS = _isRealMobile ? 1 : (1 / scaleFactor);
-                var _whisperScreenSize = 11; // desired screen px font size
-                var _whisperTopScreen = 32; // desired screen px above node top
+                var _whisperScreenSize = 11;
+                var _whisperTopScreen = 32;
                 _whisperEl.style.fontSize = (_whisperScreenSize * _invS) + 'px';
                 _whisperEl.style.top = '-' + (_whisperTopScreen * _invS) + 'px';
                 _whisperEl.style.transform = 'translateX(-50%)';
-                // Keep whisper white for readability (no palette tint)
                 node.appendChild(_whisperEl);
                 node._whisperCleanup.el = _whisperEl;
-                // Fade in
                 requestAnimationFrame(() => {
-                  _whisperEl.classList.add('visible');
-                  _whisperVisibleAt = Date.now();
+                  if (_whisperEl) {
+                    _whisperEl.classList.add('visible');
+                    _whisperVisibleAt = Date.now();
+                  }
                 });
                 let _wIdx = 0;
                 _whisperInterval = setInterval(() => {
-                  // Pick a random message (skip index 0 so we don't repeat the opener immediately)
                   _wIdx = 1 + Math.floor(Math.random() * (_whisperMsgs.length - 1));
                   if (_whisperEl) {
                     _whisperEl.classList.remove('visible');
@@ -24093,8 +24104,7 @@
                   }
                 }, 3500);
                 node._whisperCleanup.interval = _whisperInterval;
-              }, 0); // was 800 — show immediately so user always sees the message
-              node._whisperCleanup.timeout = _whisperTimeout;
+              }
 
               // Track when the whisper actually became visible so we can
               // enforce a minimum on-screen time (1.4s). Otherwise cached
@@ -24109,7 +24119,6 @@
                 const _elapsed = _whisperVisibleAt ? (_now - _whisperVisibleAt) : 0;
                 const _remaining = Math.max(0, _MIN_WHISPER_MS - _elapsed);
                 const _doClear = () => {
-                  if (_whisperTimeout) { clearTimeout(_whisperTimeout); _whisperTimeout = null; }
                   if (_whisperInterval) { clearInterval(_whisperInterval); _whisperInterval = null; }
                   if (_whisperEl) {
                     _whisperEl.classList.remove('visible');
