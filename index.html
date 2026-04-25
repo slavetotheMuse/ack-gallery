@@ -3650,7 +3650,7 @@
       position: absolute;
       pointer-events: none;
       z-index: 5;
-      overflow: hidden;
+      overflow: visible; /* was hidden — clipped the decorative pixel fragments + outer border */
       opacity: 0;
       transition: opacity 1s ease 0.3s;
     }
@@ -7780,6 +7780,10 @@
             var source = ctx.createBufferSource();
             source.buffer = decoded;
             _currentSource = source;
+
+            // Slow narration by ~12% — feels more measured/considered.
+            // Was running at 1.0 (file's native speed) which read as rushed.
+            source.playbackRate.value = 0.88;
 
             var chain = _buildChain(ctx, source);
 
@@ -24148,24 +24152,35 @@
                 if (_preloadTimeout) { clearTimeout(_preloadTimeout); _preloadTimeout = null; }
                 nodeImg.src = _focusSrc;
                 _clearLoading();
-                // ── After crisp JPG is displayed, load animated GIF over it ──
-                // Skip entirely if _focusSrc is already a GIF (e.g. Warothy focusImage
-                // is the high-res GIF — don't downgrade it with a smaller web GIF)
+                // ── After thumbnail/web image is displayed, upgrade to higher
+                //    resolution if available. Two cases:
+                //    1. _focusSrc is JPG → try webGif → fullRes gif → image gif
+                //    2. _focusSrc is already a GIF → try fullRes (Arweave) for
+                //       higher resolution. Heart You's focusImage is 500×583
+                //       web gif — fullRes is 1714×2000 Arweave version. ──
                 const _focusSrcIsGif = _focusSrc && _focusSrc.endsWith('.gif');
-                const _desktopGifSrc = _focusSrcIsGif ? null
-                  : (artData && artData.webGif) ? artData.webGif
-                  : (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
-                  : (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image : null;
-                if (_desktopGifSrc && _desktopGifSrc !== _focusSrc) {
-                  const _desktopGifLoader = new Image();
-                  _desktopGifLoader.onload = function() {
-                    // Only swap if still in focus mode
+                let _desktopUpgradeSrc = null;
+                if (_focusSrcIsGif) {
+                  // Already a GIF — try to upgrade to even-higher-res fullRes
+                  if (artData && artData.fullRes &&
+                      (artData.fullRes.startsWith('http') || artData.fullRes.endsWith('.gif')) &&
+                      artData.fullRes !== _focusSrc) {
+                    _desktopUpgradeSrc = artData.fullRes;
+                  }
+                } else {
+                  _desktopUpgradeSrc = (artData && artData.webGif) ? artData.webGif
+                    : (artData && artData.fullRes && artData.fullRes.endsWith('.gif')) ? artData.fullRes
+                    : (artData && artData.image && artData.image.endsWith('.gif')) ? artData.image : null;
+                }
+                if (_desktopUpgradeSrc && _desktopUpgradeSrc !== _focusSrc) {
+                  const _upgradeLoader = new Image();
+                  _upgradeLoader.onload = function() {
                     if (node.classList.contains('focused')) {
                       nodeImg.style.transition = 'none';
-                      nodeImg.src = _desktopGifSrc;
+                      nodeImg.src = _desktopUpgradeSrc;
                     }
                   };
-                  _desktopGifLoader.src = _desktopGifSrc;
+                  _upgradeLoader.src = _desktopUpgradeSrc;
                 }
               };
               preloader.onerror = () => {
@@ -25458,6 +25473,17 @@
       var img = preview ? preview.querySelector('img') : null;
       if (!preview || !img) return;
       var localW = parseFloat(node.style.width) || preview.offsetWidth;
+      // ── Frame size normalization ──
+      // My Bags / collector pages render artwork tiles at variable widths
+      // (driven by _getBagsRule). When focus mode pulls those into focus,
+      // node.style.width is already 300-500px, so frames are generated 2-3x
+      // larger than the same artwork from the main catalog (where tiles are
+      // ~150-200px before focus scale). Force a consistent frame base.
+      var inner = node.closest('.node-graph-inner');
+      var fromMyBags = inner && inner.classList.contains('is-my-bags');
+      if (fromMyBags) {
+        localW = 280; // matches typical main-catalog focused frame base
+      }
       // Use natural aspect ratio to compute correct height (img.offsetHeight can be wrong before render)
       var localH;
       if (img.naturalWidth && img.naturalHeight && img.naturalWidth > 0) {
@@ -27335,19 +27361,24 @@
         }
       }
 
-      // Physical print link → switch to Exhibition tab
+      // Physical print link
+      // Warothys → external Avant Arte product page (collaboration partner)
+      // Other collections → switch to Exhibition tab as before
       const _physPrintLink = infoPanel.querySelector('.physical-print-link');
       if (_physPrintLink) {
         _physPrintLink.addEventListener('click', (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
           ACK_SFX.micro();
+          if (_displayColName === 'Warothys') {
+            window.open('https://avantarte.com/products/alpha-centauri-kid-warothy', '_blank', 'noopener');
+            return;
+          }
           // Find Exhibition tab and click it
           const _exhibTab = infoPanel.querySelector('.coa-info-tab[data-coa-tab="exhibition"]');
           if (_exhibTab) {
             _exhibTab.click();
           } else {
-            // No exhibition tab — try media tab as fallback
             const _mediaTab = infoPanel.querySelector('.coa-info-tab[data-coa-tab="media"]');
             if (_mediaTab) _mediaTab.click();
           }
