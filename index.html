@@ -9505,18 +9505,20 @@
         { name: "Heart You", image: "https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",
           token: "ERC-721", chain: "Ethereum", contract: "0x149b579e48b7f03c45b5c96ffd44555b2f9ee8a3",
           artworks: [
-            // fullRes points to local large GIFs (1714×2000) so the focus-view
-            // upgrade chain has a fast, guaranteed source. Arweave URLs were
-            // unreliable/slow — the upgrade swap was timing out before swap.
-            // Web folder remains as the initial focusImage (loads instantly).
-            {title:"Heart You",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",fullRes:"heartyou/heartyou_1.gif",focusImage:"heartyou/web/heartyou_1_web.gif",isAnimated:true,tokenId:1,focusScale:1.4},
-            {title:"Heart You #2",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/4b610259e41c1cccf05a6da6f81cf343",fullRes:"heartyou/2.gif",focusImage:"heartyou/web/heartyou_2_web.gif",isAnimated:true,tokenId:2,focusScale:1.4},
-            {title:"Heart You #3",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a08464254d57b28859c6eaa87fb96d53",fullRes:"heartyou/3.gif",focusImage:"heartyou/web/heartyou_3_web.gif",isAnimated:true,tokenId:3,focusScale:1.4},
-            {title:"Heart You #4",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/2f76bf3fa51c11a02d3ed056e03f9dc6",fullRes:"heartyou/4.gif",focusImage:"heartyou/web/heartyou_4_web.gif",isAnimated:true,tokenId:4,focusScale:1.4},
-            {title:"Heart You #5",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a836f8fe3bf899936f954d0715f7566e",fullRes:"heartyou/5.gif",focusImage:"heartyou/web/heartyou_5_web.gif",isAnimated:true,tokenId:5,focusScale:1.4},
-            {title:"Heart You #6",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/596ca11dac0bb92686100b96d4aee474",fullRes:"heartyou/6.gif",focusImage:"heartyou/web/heartyou_6_web.gif",isAnimated:true,tokenId:6,focusScale:1.4},
-            {title:"Heart You #7",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d628b05e8a829b372dad2a9b8d66cae8",fullRes:"heartyou/7.gif",focusImage:"heartyou/web/heartyou_7_web.gif",isAnimated:true,tokenId:7,focusScale:1.4},
-            {title:"Heart You #8",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/ded20db8b10d516c1c831945d1bd058b",fullRes:"heartyou/8.gif",focusImage:"heartyou/web/heartyou_8_web.gif",isAnimated:true,tokenId:8,focusScale:1.4}
+            // Two-stage focus load:
+            //   focusImage (heartyou/web/*_web.gif, ~5MB, 500x583) loads first
+            //   fullRes (heartyou/mid/*_mid.gif, ~7-12MB, 1000x1167) upgrades after
+            // The mid versions are encoded from the originals (1714x2000, 10-87MB)
+            // for ~85% size reduction at minimal quality loss. The full Arweave
+            // versions remain available for collectors via VIEW MASTER DIGITAL link.
+            {title:"Heart You",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/7b43fed48b18aa85cf365edb61405676",fullRes:"heartyou/mid/heartyou_1_mid.gif",focusImage:"heartyou/web/heartyou_1_web.gif",isAnimated:true,tokenId:1,focusScale:1.4},
+            {title:"Heart You #2",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/4b610259e41c1cccf05a6da6f81cf343",fullRes:"heartyou/mid/heartyou_2_mid.gif",focusImage:"heartyou/web/heartyou_2_web.gif",isAnimated:true,tokenId:2,focusScale:1.4},
+            {title:"Heart You #3",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a08464254d57b28859c6eaa87fb96d53",fullRes:"heartyou/mid/heartyou_3_mid.gif",focusImage:"heartyou/web/heartyou_3_web.gif",isAnimated:true,tokenId:3,focusScale:1.4},
+            {title:"Heart You #4",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/2f76bf3fa51c11a02d3ed056e03f9dc6",fullRes:"heartyou/mid/heartyou_4_mid.gif",focusImage:"heartyou/web/heartyou_4_web.gif",isAnimated:true,tokenId:4,focusScale:1.4},
+            {title:"Heart You #5",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/a836f8fe3bf899936f954d0715f7566e",fullRes:"heartyou/mid/heartyou_5_mid.gif",focusImage:"heartyou/web/heartyou_5_web.gif",isAnimated:true,tokenId:5,focusScale:1.4},
+            {title:"Heart You #6",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/596ca11dac0bb92686100b96d4aee474",fullRes:"heartyou/mid/heartyou_6_mid.gif",focusImage:"heartyou/web/heartyou_6_web.gif",isAnimated:true,tokenId:6,focusScale:1.4},
+            {title:"Heart You #7",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/d628b05e8a829b372dad2a9b8d66cae8",fullRes:"heartyou/mid/heartyou_7_mid.gif",focusImage:"heartyou/web/heartyou_7_web.gif",isAnimated:true,tokenId:7,focusScale:1.4},
+            {title:"Heart You #8",image:"https://res.cloudinary.com/alchemyapi/image/upload/thumbnailv2/eth-mainnet/ded20db8b10d516c1c831945d1bd058b",fullRes:"heartyou/mid/heartyou_8_mid.gif",focusImage:"heartyou/web/heartyou_8_web.gif",isAnimated:true,tokenId:8,focusScale:1.4}
         ]},
         { name: "Her Favorite Flowers", image: "her_favorite_flowers/web/made_these_for_my_girl_web.jpg", wallLayout: true,
           token: "ERC-721", chain: "Ethereum", contract: "0xa3cdefc4aea0407937ac3ea127b7491f24e5fe63",
@@ -25476,18 +25478,14 @@
       var preview = node.querySelector('.node-preview');
       var img = preview ? preview.querySelector('img') : null;
       if (!preview || !img) return;
+      // Read base width from inline style (or fall back to rendered width).
+      // Note: do NOT normalize this for My Bags / collector pages — that
+      // breaks frame element proportions because frame decorations (moons,
+      // text, brackets) are sized in fixed SVG units and depend on the
+      // generated SVG canvas matching the artwork's actual base. Sizing
+      // discrepancy between catalog and collector focus is a separate issue
+      // to solve in the frame functions themselves, not by capping localW.
       var localW = parseFloat(node.style.width) || preview.offsetWidth;
-      // ── Frame size normalization ──
-      // My Bags / collector pages render artwork tiles at variable widths
-      // (driven by _getBagsRule). When focus mode pulls those into focus,
-      // node.style.width is already 300-500px, so frames are generated 2-3x
-      // larger than the same artwork from the main catalog (where tiles are
-      // ~150-200px before focus scale). Force a consistent frame base.
-      var inner = node.closest('.node-graph-inner');
-      var fromMyBags = inner && inner.classList.contains('is-my-bags');
-      if (fromMyBags) {
-        localW = 280; // matches typical main-catalog focused frame base
-      }
       // Use natural aspect ratio to compute correct height (img.offsetHeight can be wrong before render)
       var localH;
       if (img.naturalWidth && img.naturalHeight && img.naturalWidth > 0) {
@@ -31274,7 +31272,23 @@
         els += `<text x="${R + 10}" y="${hStartY + hi * hSpacing}" style="${ts}" fill="${sand}0.2)" text-anchor="middle">${ch}</text>`;
       });
 
-      svg.innerHTML = els;
+      // Use DOMParser to ensure children are parsed in SVG namespace.
+      // svg.innerHTML can silently put children in HTML namespace in some
+      // browsers (especially when the SVG isn't in the DOM yet) → invisible
+      // elements. DOMParser with image/svg+xml is reliable.
+      try {
+        const parser = new DOMParser();
+        const wrapped = '<svg xmlns="http://www.w3.org/2000/svg">' + els + '</svg>';
+        const parsed = parser.parseFromString(wrapped, 'image/svg+xml');
+        const root = parsed.documentElement;
+        // Move all children from parsed root → our actual svg
+        while (root.firstChild) {
+          svg.appendChild(root.firstChild);
+        }
+      } catch (e) {
+        // Fallback: assign innerHTML (older browsers)
+        svg.innerHTML = els;
+      }
       return svg;
     }
 
