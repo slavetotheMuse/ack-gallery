@@ -71,10 +71,13 @@
       font-family: 'Cormorant Garamond', serif;
       color: var(--text-primary);
       line-height: 1.6;
-      /* cursor:none was here to support the vortex's custom intro cursor.
-         Now that the catalog is the default landing, we keep the native
-         cursor visible. The intro overlay still hides it via
-         #intro-overlay { cursor: none } when ?vortex=1 is active. */
+      cursor: none;
+    }
+    /* Hide native cursor everywhere — the C4D intro-cursor element follows
+       the mouse globally instead. Touch devices override via the
+       (pointer: coarse) media query below; mobile gets the native cursor. */
+    *, *::before, *::after {
+      cursor: none !important;
     }
 
 
@@ -5951,8 +5954,9 @@
        MOBILE: kill the catalog landing entirely
        ════════════════════════════════════════════════════════════════════
        Mobile users land directly in focus view of circus elephant. They
-       never see the home catalog, motherboard, or candles. Object Manager
-       (hamburger → Collections) is the navigation pattern. */
+       never see the home catalog or candles. Master node (motherboard)
+       is hidden in non-focus contexts but kept available for focus view's
+       chip/COA panel. */
     body.is-real-mobile #masterNode,
     body.is-real-mobile #viewportCandles,
     body.is-real-mobile #collectionsGrid > .collection-node,
@@ -5964,6 +5968,59 @@
     body.is-real-mobile #bgGrid {
       opacity: 1 !important;
     }
+
+    /* ════════════════════════════════════════════════════════════════════
+       MOBILE FOCUS VIEW — pin focused artwork to center via CSS
+       ════════════════════════════════════════════════════════════════════
+       JS positioning math is broken on mobile (artwork landing at bottom).
+       Override with fixed positioning to guarantee centered, properly-sized
+       art regardless of what the JS transform computes. The info panel
+       (#nodeInfoPanel) keeps its own positioning at the bottom. */
+    body.is-real-mobile .node-graph-inner.focus-mode .node-card.focused {
+      position: fixed !important;
+      top: 38% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      width: 92vw !important;
+      max-width: none !important;
+      height: auto !important;
+      z-index: 100 !important;
+    }
+    body.is-real-mobile .node-graph-inner.focus-mode .node-card.focused .node-preview {
+      position: relative !important;
+      width: 100% !important;
+      height: auto !important;
+      max-width: 100% !important;
+    }
+    body.is-real-mobile .node-graph-inner.focus-mode .node-card.focused .node-preview img {
+      width: 100% !important;
+      height: auto !important;
+      display: block !important;
+    }
+    /* Make sure the chip/COA info panel STAYS visible in focus mode on mobile */
+    body.is-real-mobile #nodeInfoPanel {
+      display: block !important;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       MOBILE TEXT — bump font sizes everywhere; viewport scale 0.3 makes
+       everything feel tiny. Native scale up via larger CSS px.
+       ════════════════════════════════════════════════════════════════════ */
+    body.is-real-mobile .nav-title { font-size: 38px !important; }
+    body.is-real-mobile .nav-link  { font-size: 32px !important; }
+    body.is-real-mobile .nav-center-title { font-size: 38px !important; }
+    body.is-real-mobile .node-title-tag,
+    body.is-real-mobile .node-collab-tag { font-size: 28px !important; }
+    body.is-real-mobile #nodeInfoPanel,
+    body.is-real-mobile #nodeInfoPanel * {
+      font-size: 22px !important;
+      line-height: 1.4 !important;
+    }
+    body.is-real-mobile #nodeInfoPanel .node-info-title { font-size: 36px !important; }
+    body.is-real-mobile #nodeInfoPanel .node-info-collection { font-size: 26px !important; }
+    body.is-real-mobile .obj-row,
+    body.is-real-mobile .catalog-om-row { font-size: 36px !important; line-height: 1.6 !important; }
+    body.is-real-mobile .obj-header-title { font-size: 52px !important; }
 
     /* ════════════════════════════════════════════════════════════════════
        MOBILE PERF PASS — Pass 1: kill all ambient @keyframes animations
@@ -13951,87 +14008,138 @@
     // Editions; tap "Collections" in the nav to browse all collections.
     // ─────────────────────────────────────────────────────────────────────
     function _mobileAutoFocusCircusElephant() {
-      if (typeof _isRealMobile === 'undefined' || !_isRealMobile) return;
-      if (typeof COLLECTIONS === 'undefined' || !COLLECTIONS) return;
-      // Don't auto-focus if user is intentionally on vortex view
-      if (/[?&]vortex=1\b/.test(location.search)) return;
-      // Don't override if user already navigated somewhere else
+      console.log('[autoFocus] start');
+      if (typeof _isRealMobile === 'undefined' || !_isRealMobile) {
+        console.log('[autoFocus] not mobile, skipping');
+        return;
+      }
+      if (typeof COLLECTIONS === 'undefined' || !COLLECTIONS) {
+        console.log('[autoFocus] no COLLECTIONS yet');
+        return;
+      }
+      if (/[?&]vortex=1\b/.test(location.search)) {
+        console.log('[autoFocus] vortex requested, skipping');
+        return;
+      }
       var existingFocused = document.querySelector('.node-card.focused');
-      if (existingFocused) return;
+      if (existingFocused) {
+        console.log('[autoFocus] already focused, skipping');
+        return;
+      }
 
-      // Find ACK Editions + circus elephant
       var colIdx = COLLECTIONS.findIndex(function(c) { return c.name === 'ACK Editions'; });
-      if (colIdx < 0) return;
+      if (colIdx < 0) {
+        console.log('[autoFocus] ACK Editions not found');
+        return;
+      }
       var col = COLLECTIONS[colIdx];
-      if (!col || !col.artworks) return;
       var artIdx = col.artworks.findIndex(function(a) {
         return (a.title || '').toLowerCase() === 'circus elephant';
       });
       if (artIdx < 0) {
-        // Fallback to first artwork in ACK Editions if circus is missing
-        artIdx = 0;
+        console.log('[autoFocus] circus elephant title not found, falling back to index 6');
+        artIdx = 6; // known position in ACK Editions
       }
+      console.log('[autoFocus] target colIdx=' + colIdx + ' artIdx=' + artIdx + ' title=' + (col.artworks[artIdx] && col.artworks[artIdx].title));
 
-      // Open ACK Editions detail view (skip transition for instant open),
-      // then click circus elephant as soon as its node renders.
-      if (typeof openDetail !== 'function') return;
+      if (typeof openDetail !== 'function') {
+        console.log('[autoFocus] openDetail not defined yet');
+        return;
+      }
       try {
-        openDetail(colIdx, true); // skipTransition = true
+        openDetail(colIdx, true);
+        console.log('[autoFocus] openDetail called');
       } catch (e) {
-        console.warn('[mobile auto-focus] openDetail failed', e);
+        console.warn('[autoFocus] openDetail threw', e);
         return;
       }
 
-      // Poll for the artwork node to be in DOM, then click. Fast interval
-      // since openDetail with skipTransition completes in 1-2 frames.
+      // Poll for the target node, then dispatch a REAL click event (so the
+      // node's bound onclick handler runs with a proper Event object — calling
+      // handleNodeClick directly with a fake event was failing silently).
       var attempts = 0;
-      var maxAttempts = 60; // ~3s at 50ms
+      var maxAttempts = 80; // ~4s at 50ms
       var pollInterval = 50;
       var pollTimer = setInterval(function() {
         attempts++;
         var inner = document.querySelector('.node-graph-inner');
         var nodes = inner ? inner.querySelectorAll('.node-card') : [];
+        if (attempts === 1 || attempts % 10 === 0) {
+          console.log('[autoFocus] poll attempt ' + attempts + ' nodes=' + nodes.length);
+        }
         if (nodes.length > artIdx) {
           var targetNode = nodes[artIdx];
           if (targetNode) {
             clearInterval(pollTimer);
+            console.log('[autoFocus] dispatching click on node', targetNode);
             try {
-              if (typeof handleNodeClick === 'function') {
-                var fakeEvent = { stopPropagation: function() {} };
-                handleNodeClick(fakeEvent, targetNode, inner, colIdx, artIdx);
-              } else {
-                targetNode.click();
-              }
+              var clickEvt = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+              targetNode.dispatchEvent(clickEvt);
+              console.log('[autoFocus] click dispatched OK');
             } catch (e) {
-              console.warn('[mobile auto-focus] node click failed', e);
+              console.warn('[autoFocus] dispatchEvent failed', e);
+              try { targetNode.click(); } catch (_e) { console.warn('[autoFocus] .click() also failed', _e); }
             }
           }
           return;
         }
         if (attempts >= maxAttempts) {
           clearInterval(pollTimer);
-          console.warn('[mobile auto-focus] gave up waiting for ACK Editions to render');
+          console.warn('[autoFocus] gave up after ' + attempts + ' polls');
         }
       }, pollInterval);
+    }
+
+    // ── _initGlobalCursorTracker: keep the C4D crosshair following the
+    //    mouse on desktop, regardless of whether we're in vortex mode or
+    //    the catalog. Idempotent — multiple calls are safe. ──
+    var _globalCursorTrackerWired = false;
+    function _initGlobalCursorTracker() {
+      if (_globalCursorTrackerWired) return;
+      var introCursor = document.getElementById('introCursor');
+      if (!introCursor) return;
+      // On touch devices, hide the custom cursor entirely (native cursor used)
+      if (typeof _isRealMobile !== 'undefined' && _isRealMobile) {
+        introCursor.style.display = 'none';
+        return;
+      }
+      // Show + start at center
+      introCursor.style.display = '';
+      introCursor.classList.add('visible');
+      introCursor.style.opacity = '1';
+      var cx = window.innerWidth / 2;
+      var cy = window.innerHeight / 2;
+      introCursor.style.left = (cx - 14) + 'px';
+      introCursor.style.top = (cy - 14) + 'px';
+      // Track mouse
+      document.addEventListener('mousemove', function(e) {
+        introCursor.style.left = (e.clientX - 14) + 'px';
+        introCursor.style.top = (e.clientY - 14) + 'px';
+      });
+      _globalCursorTrackerWired = true;
     }
 
     // ── _enterCatalogDirectly: instant landing on the main catalog ──
     // Equivalent to "beginReveal completed" without the wormhole/portal animation.
     // Hides every vortex-intro DOM element and shows every catalog DOM element.
     function _enterCatalogDirectly() {
-      // Remove vortex intro overlay & related entry UI
+      // Remove vortex intro overlay & related entry UI.
+      // NOTE: introCursor is intentionally KEPT visible — it's the C4D
+      // crosshair cursor that follows the mouse on desktop (mouse tracker
+      // is wired up in _initGlobalCursorTracker below).
       var overlay = document.getElementById('intro-overlay');
       var objectManager = document.getElementById('objectManager');
-      var introCursor = document.getElementById('introCursor');
       var introHint = document.getElementById('introHint');
       var vortexTarget = document.getElementById('vortexTarget');
       var whispersPreIntro = document.getElementById('whispersPreIntro');
-      [overlay, objectManager, introCursor, introHint, vortexTarget, whispersPreIntro].forEach(function(el) {
+      [overlay, objectManager, introHint, vortexTarget, whispersPreIntro].forEach(function(el) {
         if (!el) return;
         el.style.opacity = '0';
         el.style.pointerEvents = 'none';
         el.style.display = 'none';
       });
+      // Bring up the C4D cursor and start tracking mouse on desktop
+      _initGlobalCursorTracker();
 
       // Stop any vortex animation flags so background doesn't pull
       vortexActive = false;
