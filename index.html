@@ -9467,7 +9467,7 @@
             {title:"Technicolor Dreamcoat",image:"warothy/web/technicolor_dreamcoat_web.gif",focusImage:"warothy/24.Technicolor-Dreamcoatfinal.gif",fullRes:"https://arweave.net/9iVUViD3Uv1BwkZ0m7D_jD9F_POnIX4FjKPQk7q08uc",tokenId:23,description:"Digital companion #23."},
             {title:"Blush",image:"warothy/web/blush_web.gif",focusImage:"warothy/23.Blush.gif",fullRes:"https://arweave.net/ASWEcJrGTHcS2MOwqNPwNxa7WTSLZqYrCgeugohnGdg",tokenId:24,description:"Digital companion #24."},
             {title:"Monochrome Magic",image:"warothy/web/monochrome_magic_web.gif",fullRes:"https://arweave.net/dKYJYm_nilhAO67OQz75UBOZAfo70n59SdxOc3ynl2A",tokenId:25,description:"Digital companion #25."},
-            {title:"Warothy (Physical)",image:"warothy/web/warothy_physical_web.gif",fullRes:"warothy/warothy4k.gif",edition:"Edition of 25",description:"Limited edition lenticular PETG print, 69×69×3cm. Collaboration with Avant Arte. €5,000 per edition.",isPhysical:true},
+            {title:"Warothy (Physical)",image:"warothy/web/warothyphysicalnew.png",fullRes:"warothy/web/warothypromoACK.mp4",edition:"Edition of 25",description:"Limited edition lenticular print on aluminum, 69×69×3cm. Collaboration with Avant Arte. €5,000 per edition.",isPhysical:true},
         ]},
         { name: "SuperRare", image: "but_wait_thumb.jpg", contract:"0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0", artworks: [
             {title:"but wait...my bags!",image:"superrare/butwait/but_wait_small.gif",focusImage:"superrare/butwait/but_wait_focus.gif",fullRes:"https://ipfs.io/ipfs/Qme6uXtzKdp1TY1hSsdyU1pMxQCkYUumEsJ5jDnboVvsGx/originbags.gif",
@@ -9963,8 +9963,8 @@
           { x: 1197, y: 858, w: 136 },   // 22
           { x: 1450, y: 854, w: 136 },   // 23
           { x: 1659, y: 842, w: 136 },   // 24
-          // Physical Warothy — hero, top-right
-          { x: 1915, y: 97,  w: 190 }    // 25
+          // Physical Warothy — center row, same size as digital companions
+          { x: 1915, y: 474, w: 136 }    // 25
         ]
       },
       "Clown Party": {
@@ -14658,38 +14658,57 @@
           tile.setAttribute('data-col', entry.colIdx);
           tile.setAttribute('data-art', realIdx);
 
-          var img = document.createElement('img');
-          img.className = 'm-tile-img';
-          img.loading = 'lazy';
-          img.decoding = 'async';
-          img.alt = art.title || '';
-          // Mobile perf: only ACK Editions animates GIFs in the feed.
-          // For other collections that have explicit JPG variants in the path,
-          // use those; otherwise fall back to the GIF (still loads, but at
-          // least one collection has its native asset). This avoids broken
-          // images when no JPG companion exists.
-          var feedSrc = art.image || '';
-          var skipAnim = (col.name !== 'ACK Editions' && /\.gif(\?|$)/i.test(feedSrc));
-          if (skipAnim) {
-            var jpgGuess = feedSrc.replace(/\.gif(\?|$)/i, '.jpg$1');
-            // Probe the jpg variant first; only use it if it actually loads.
-            var probe = new Image();
-            probe.onload = function() {
-              // Verify it's a real image (some servers return 200 + empty body)
-              if (probe.naturalWidth > 0 && probe.naturalHeight > 0) {
-                img.src = jpgGuess;
-              } else {
-                img.src = feedSrc;
-              }
-            };
-            probe.onerror = function() {
-              img.src = feedSrc; // jpg variant doesn't exist — load the gif
-            };
-            probe.src = jpgGuess;
+          // Servants get a video tile (autoplays the 678KB mobile mp4),
+          // not a static thumbnail.
+          if (isServantsCollection) {
+            var vid = document.createElement('video');
+            vid.className = 'm-tile-img';
+            vid.src = 'servant_muse_mobile.mp4';
+            vid.autoplay = true;
+            vid.loop = true;
+            vid.muted = true;
+            vid.playsInline = true;
+            vid.setAttribute('playsinline', '');
+            vid.setAttribute('autoplay', '');
+            vid.setAttribute('loop', '');
+            vid.setAttribute('muted', '');
+            vid.preload = 'auto';
+            vid.style.cssText = 'background:#000;';
+            tile.appendChild(vid);
           } else {
-            img.src = feedSrc;
+            var img = document.createElement('img');
+            img.className = 'm-tile-img';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            img.alt = art.title || '';
+            // Mobile perf: only ACK Editions animates GIFs in the feed.
+            // For other collections that have explicit JPG variants in the path,
+            // use those; otherwise fall back to the GIF (still loads, but at
+            // least one collection has its native asset). This avoids broken
+            // images when no JPG companion exists.
+            var feedSrc = art.image || '';
+            var skipAnim = (col.name !== 'ACK Editions' && /\.gif(\?|$)/i.test(feedSrc));
+            if (skipAnim) {
+              var jpgGuess = feedSrc.replace(/\.gif(\?|$)/i, '.jpg$1');
+              // Probe the jpg variant first; only use it if it actually loads.
+              var probe = new Image();
+              probe.onload = function() {
+                // Verify it's a real image (some servers return 200 + empty body)
+                if (probe.naturalWidth > 0 && probe.naturalHeight > 0) {
+                  img.src = jpgGuess;
+                } else {
+                  img.src = feedSrc;
+                }
+              };
+              probe.onerror = function() {
+                img.src = feedSrc; // jpg variant doesn't exist — load the gif
+              };
+              probe.src = jpgGuess;
+            } else {
+              img.src = feedSrc;
+            }
+            tile.appendChild(img);
           }
-          tile.appendChild(img);
 
           var t = document.createElement('div');
           t.className = 'm-tile-title';
@@ -14821,15 +14840,26 @@
       var isServants = col.name === 'servants' || col.spinCoin;
       var mediaEl;
       if (isServants) {
-        // Mobile: the master servant_muse.mp4 is 97MB — way too big to
-        // autoplay on cellular. Use the round high-res face image instead;
-        // it reads as "the coin" and loads instantly.
-        mediaEl = document.createElement('img');
-        mediaEl.id = 'mobileFocusImg';
-        mediaEl.alt = 'servants of the Muse';
-        mediaEl.src = 'servant_face_round.jpg';
-        mediaEl.onerror = function() { mediaEl.src = 'servant_face_web.png'; mediaEl.onerror = null; };
-        mediaEl.style.cssText = 'width:100%;max-width:90vw;max-height:65vh;object-fit:contain;display:block;border-radius:50%;box-shadow:0 6px 30px rgba(0,0,0,0.6);background:transparent;margin:0 auto;';
+        // Mobile-friendly servant video (720x720, ~680KB). Autoplays muted,
+        // loops, with sound toggle via tap.
+        mediaEl = document.createElement('video');
+        mediaEl.id = 'mobileFocusVideo';
+        mediaEl.src = 'servant_muse_mobile.mp4';
+        mediaEl.autoplay = true;
+        mediaEl.loop = true;
+        mediaEl.muted = true; // muted so autoplay isn't blocked
+        mediaEl.playsInline = true;
+        mediaEl.setAttribute('playsinline', '');
+        mediaEl.setAttribute('autoplay', '');
+        mediaEl.setAttribute('loop', '');
+        mediaEl.setAttribute('muted', '');
+        mediaEl.preload = 'auto';
+        mediaEl.style.cssText = 'width:100%;max-width:90vw;max-height:65vh;object-fit:contain;display:block;border-radius:4px;box-shadow:0 6px 30px rgba(0,0,0,0.6);background:#000;margin:0 auto;';
+        // Tap to unmute (since iOS blocks initial sound autoplay)
+        mediaEl.addEventListener('click', function() {
+          mediaEl.muted = !mediaEl.muted;
+        });
+        setTimeout(function() { try { mediaEl.play(); } catch(e) {} }, 50);
       } else {
         mediaEl = document.createElement('img');
         mediaEl.id = 'mobileFocusImg';
@@ -16155,7 +16185,8 @@
 
       /* ── YOUR BAGS NODE — wellness session (TV + voice) ── */
       (function() {
-        const bagsSlot = { x: 14, y: 42, w: 3.0, ar: 1/1 };
+        // Positioned underneath "Made these for your girl" pink flowers (x:60.8, y:63.2)
+        const bagsSlot = { x: 60.8, y: 70.5, w: 3.5, ar: 1/1 };
         const bw = Math.floor((bagsSlot.w / 100) * layoutW);
         const bh = Math.floor(bw / bagsSlot.ar);
         const bcx = layoutOffX + (bagsSlot.x / 100) * layoutW;
@@ -25211,8 +25242,8 @@
         }, 600);
       }
 
-      // ── SuperRare video artworks: swap still → video on focus ──
-      if ((_focusColName === 'SuperRare' || _focusColName === 'foundation') && artworkData && artworkData.fullRes && artworkData.fullRes.endsWith('.mp4')) {
+      // ── SuperRare/Warothys video artworks: swap still → video on focus ──
+      if ((_focusColName === 'SuperRare' || _focusColName === 'foundation' || _focusColName === 'Warothys') && artworkData && artworkData.fullRes && artworkData.fullRes.endsWith('.mp4')) {
         setTimeout(() => {
           const preview = node.querySelector('.node-preview');
           const img = preview ? preview.querySelector('img') : null;
@@ -26982,9 +27013,13 @@
         document.body.appendChild(infoPanel);
       }
 
-      const provenanceText = artwork.edition
-        ? 'On-chain, Ethereum, ' + artwork.edition
-        : 'On-chain, Ethereum, 1 of 1';
+      const provenanceText = artwork.isPhysical
+        ? (artwork.edition
+            ? 'Lenticular print on aluminum, ' + artwork.edition
+            : 'Lenticular print on aluminum, 1 of 1')
+        : (artwork.edition
+            ? 'On-chain, Ethereum, ' + artwork.edition
+            : 'On-chain, Ethereum, 1 of 1');
       const tokenStandard = collection.token || 'ERC-721';
       const editionLine = '';
       const _editionTagHtml = artwork.edition
@@ -28586,9 +28621,13 @@
       if (collection.contract) {
         html += `<div class="overlay-section"><div class="overlay-label">Contract</div><div class="overlay-value" style="font-size: 0.5rem;">${collection.contract}</div></div>`;
       }
-      const dockProvenanceText = artwork.edition
-        ? 'On-chain, Ethereum, ' + artwork.edition
-        : 'On-chain, Ethereum, 1 of 1';
+      const dockProvenanceText = artwork.isPhysical
+        ? (artwork.edition
+            ? 'Lenticular print on aluminum, ' + artwork.edition
+            : 'Lenticular print on aluminum, 1 of 1')
+        : (artwork.edition
+            ? 'On-chain, Ethereum, ' + artwork.edition
+            : 'On-chain, Ethereum, 1 of 1');
       html += `<div class="overlay-section"><div class="overlay-label">Provenance</div><div class="overlay-value">${dockProvenanceText}</div></div>`;
       if (collection.mintDate) {
         html += `<div class="overlay-section"><div class="overlay-label">Mint Date</div><div class="overlay-value">${collection.mintDate}</div></div>`;
