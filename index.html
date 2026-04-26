@@ -7050,7 +7050,7 @@
 
   <!-- Top Navigation — outside main-content so it's never trapped in stacking context -->
   <nav class="top-nav">
-    <div class="nav-left" onclick="toggleCatalogOM()" style="position:relative;">
+    <div class="nav-left" onclick="goHome()" title="Home" style="position:relative;cursor:pointer;">
       <div class="nav-coin"><img src="ACK_gold_logo.png" alt="ACK" style="width:100%;height:100%;object-fit:contain;border-radius:0;"></div>
       <div class="nav-title">AlphaCentauriKid</div>
     </div>
@@ -9594,7 +9594,7 @@
           description: "Frog — ACK's contributions to the Pepe ecosystem. Fake Rare Pepes on Counterparty (Bitcoin) and Notable Pepes on Ethereum.",
           token: "Mixed", chain: "Bitcoin / Ethereum",
           artworks: [
-            {title:"the Mixed-up Chameleon",image:"Frog/web/mixed_up_chameleon_web.jpg",focusImage:"Frog/web/mixed_up_chameleon_focus.jpg",fullRes:"Frog/the Mixed-up chameleon.jpeg",description:"Notable Pepes — Token #354. A hand-painted Pepe exploring the boundaries between species and identity.",tokenId:354,contract:"0xe70659b717112ac4e14284d0db2f5d5703df8e43",chain:"Ethereum",token:"ERC-1155",edition:"Edition of 10"},
+            {title:"the Mixed-up Chameleon",image:"Frog/web/mixed_up_chameleon_web.jpg",focusImage:"Frog/web/mixed_up_chameleon_focus.jpg",fullRes:"Frog/the Mixed-up chameleon.jpeg",description:"Notable Pepes — Token #354. A hand-painted Pepe exploring the boundaries between species and identity.",tokenId:354,contract:"0xe70659b717112ac4e14284d0db2f5d5703df8e43",chain:"Ethereum",token:"ERC-1155",edition:"Edition of 99"},
             {title:"FAKEWARS",image:"Frog/web/fakewars_web.gif",focusImage:"Frog/FAKEWARS.gif",description:"Fake Rare Pepe — Series 5, Card 19.",chain:"Bitcoin (Counterparty)"},
             {title:"FAKETANIC",image:"Frog/web/faketanic_web.jpg",fullRes:"Frog/web/faketanic_web.mp4",description:"Fake Rare Pepe — Series 6, Card 18. Edition of 100.",edition:"Edition of 100",chain:"Bitcoin (Counterparty)"},
             {title:"GRANTYUM",image:"Frog/web/grantyum_web.jpg",focusImage:"Frog/web/grantyum_focus.jpg",fullRes:"Frog/grantyum.png",description:"Fake Rare Pepe — Series 8, Card 49. Edition of 100.",edition:"Edition of 100",chain:"Bitcoin (Counterparty)"}
@@ -39220,6 +39220,33 @@
       document.querySelector('.gallery-container').scrollIntoView({ behavior: 'smooth' });
     }
 
+    // ── Home navigation ──
+    // Close any open focus / detail / OM and return to the main catalog
+    // landing. Wired to the logo (top-left) and the "All Collections" row.
+    window.goHome = function goHome() {
+      try {
+        // 1. Exit any focused artwork
+        var focused = document.querySelector('.node-card.focused');
+        if (focused && typeof exitFocusMode === 'function') {
+          exitFocusMode();
+        }
+        // 2. Close any open collection detail overlay
+        var detailOverlay = document.getElementById('detailOverlay');
+        if (detailOverlay && detailOverlay.classList.contains('active')) {
+          if (typeof closeDetail === 'function') closeDetail();
+          else detailOverlay.classList.remove('active');
+        }
+        // 3. Close OM if open
+        var om = document.getElementById('catalogOM');
+        if (om && om.classList.contains('visible')) {
+          if (typeof toggleCatalogOM === 'function') toggleCatalogOM();
+          else om.classList.remove('visible');
+        }
+        // 4. Scroll to top
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+      } catch(e) { console.warn('goHome failed', e); }
+    };
+
     // ── Catalog Object Manager ──
     let catalogOMOpen = false;
     let catalogOMBuilt = false;
@@ -39245,8 +39272,13 @@
       allRow.className = 'obj-row obj-row-collection';
       allRow.innerHTML = '<div class="obj-indent"></div><div class="obj-icon" style="color:#ffa500;">⊕</div><div class="obj-label" style="color:#ccc;font-style:italic;">All_Collections</div><div class="obj-controls"><div class="obj-eye">👁</div><div class="obj-check">✓</div></div>';
       allRow.onclick = () => {
-        toggleCatalogOM();
-        scrollToGallery();
+        // Close OM and return to main catalog (home)
+        if (typeof window.goHome === 'function') {
+          window.goHome();
+        } else {
+          toggleCatalogOM();
+          if (typeof scrollToGallery === 'function') scrollToGallery();
+        }
       };
       list.appendChild(allRow);
 
