@@ -4022,14 +4022,13 @@
     .wall-layout .node-output {
       /* inherits default green style */
     }
-    /* perf: skip layout/paint for off-screen wall tiles. Browsers treat
-       these as "rendered when needed" — huge win on long collection walls
-       like servants of the muse (69 nodes). The intrinsic-size hint
-       prevents scrollbar jumpiness while tiles are still virtual. */
-    .wall-layout .node-card {
-      content-visibility: auto;
-      contain-intrinsic-size: 280px 280px;
-    }
+    /* perf: previously used content-visibility:auto here for off-screen
+       tiles, but it implies `contain: paint` which clips any painted
+       content outside the border-box — that killed all our SVG frames
+       (warothy, blossom, lisan, pfp etc.) because they're positioned at
+       top:-pad/left:-pad and extend past the card. Removed so frames
+       render. If perf becomes an issue again on the 69-node servant
+       wall, target it more narrowly. */
     .node-output .node-port {
       border-color: rgba(100,200,100,0.6);
     }
