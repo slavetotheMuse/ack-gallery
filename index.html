@@ -14658,22 +14658,34 @@
           tile.setAttribute('data-art', realIdx);
 
           // Servants get a video tile (autoplays the 678KB mobile mp4),
-          // not a static thumbnail.
+          // not a static thumbnail. iOS Safari is order-sensitive: set
+          // muted + playsinline (incl. webkit-playsinline for older iOS) +
+          // poster BEFORE setting the src, otherwise it refuses autoplay
+          // and you see a black box.
           if (isServantsCollection) {
             var vid = document.createElement('video');
             vid.className = 'm-tile-img';
-            vid.src = 'servant_muse_mobile.mp4';
-            vid.autoplay = true;
-            vid.loop = true;
-            vid.muted = true;
-            vid.playsInline = true;
+            vid.setAttribute('muted', '');
             vid.setAttribute('playsinline', '');
+            vid.setAttribute('webkit-playsinline', '');
             vid.setAttribute('autoplay', '');
             vid.setAttribute('loop', '');
-            vid.setAttribute('muted', '');
-            vid.preload = 'auto';
-            vid.style.cssText = 'background:#000;';
+            vid.setAttribute('preload', 'auto');
+            vid.setAttribute('poster', 'servant_face_web.png');
+            vid.muted = true;
+            vid.playsInline = true;
+            vid.loop = true;
+            vid.autoplay = true;
+            vid.style.cssText = 'background:#000;width:100%;height:auto;aspect-ratio:1/1;';
+            // src goes LAST so the play attempt sees the muted attribute
+            vid.src = 'servant_muse_mobile.mp4';
             tile.appendChild(vid);
+            // Belt + braces — explicitly call play() once it's in DOM.
+            // Safari can ignore the autoplay attribute under some power
+            // states; an explicit muted-play() is allowed without gesture.
+            setTimeout(function() {
+              try { var p = vid.play(); if (p && p.catch) p.catch(function(){}); } catch(e) {}
+            }, 0);
           } else {
             var img = document.createElement('img');
             img.className = 'm-tile-img';
@@ -14766,24 +14778,63 @@
       if (menuBtn) menuBtn.addEventListener('click', function() { _toggleMobileMenu(); });
       if (scrim) scrim.addEventListener('click', function() { _toggleMobileMenu(false); });
 
-      // Swipe within focus overlay — direction-locked so horizontal swipes
-      // (artwork nav) don't compete with vertical scrolls (close).
+      // Swipe + pinch-zoom within focus overlay. Direction-locked so horizontal
+      // swipes (artwork nav) don't compete with vertical scrolls (close). When
+      // 2 fingers go down OR the artwork is currently zoomed past 1.05×, single
+      // -finger swipe is suppressed so the user can inspect / pan instead.
       var overlay = document.getElementById('mobileFocus');
       if (overlay) {
         var sx = 0, sy = 0, swiping = false, locked = null;
         overlay.addEventListener('touchstart', function(e) {
+          // ── Pinch start (2 fingers): kick into zoom mode, cancel any swipe ──
+          if (e.touches && e.touches.length === 2) {
+            var dx = e.touches[0].clientX - e.touches[1].clientX;
+            var dy = e.touches[0].clientY - e.touches[1].clientY;
+            _mPinch.active = true;
+            _mPinch.startDist = Math.hypot(dx, dy) || 1;
+            _mPinch.startScale = _mPinch.scale;
+            swiping = false; locked = null;
+            return;
+          }
+          // ── Single-finger pan when already zoomed past threshold ──
+          if (e.touches && e.touches.length === 1 && _mPinch.scale > 1.05) {
+            _mPinch.panning = true;
+            _mPinch.panStartX = e.touches[0].clientX - _mPinch.x;
+            _mPinch.panStartY = e.touches[0].clientY - _mPinch.y;
+            swiping = false;
+            return;
+          }
           if (!e.touches || !e.touches[0]) return;
           sx = e.touches[0].clientX; sy = e.touches[0].clientY;
           swiping = true; locked = null;
         }, { passive: true });
         overlay.addEventListener('touchmove', function(e) {
+          // ── Pinch ── update scale from current finger distance / start dist ──
+          if (_mPinch.active && e.touches && e.touches.length === 2) {
+            var dx = e.touches[0].clientX - e.touches[1].clientX;
+            var dy = e.touches[0].clientY - e.touches[1].clientY;
+            var dist = Math.hypot(dx, dy);
+            var s = _mPinch.startScale * (dist / _mPinch.startDist);
+            _mPinch.scale = Math.max(1, Math.min(4, s));
+            _mApplyPinch(false);
+            if (e.cancelable) e.preventDefault();
+            return;
+          }
+          // ── Pan a zoomed image ──
+          if (_mPinch.panning && e.touches && e.touches.length === 1) {
+            _mPinch.x = e.touches[0].clientX - _mPinch.panStartX;
+            _mPinch.y = e.touches[0].clientY - _mPinch.panStartY;
+            _mApplyPinch(false);
+            if (e.cancelable) e.preventDefault();
+            return;
+          }
           if (!swiping || !e.touches || !e.touches[0]) return;
-          var dx = e.touches[0].clientX - sx;
-          var dy = e.touches[0].clientY - sy;
+          var dxs = e.touches[0].clientX - sx;
+          var dys = e.touches[0].clientY - sy;
           if (!locked) {
             // Wait until movement is large enough to determine intent
-            if (Math.abs(dx) > 14 || Math.abs(dy) > 14) {
-              locked = (Math.abs(dx) > Math.abs(dy)) ? 'h' : 'v';
+            if (Math.abs(dxs) > 14 || Math.abs(dys) > 14) {
+              locked = (Math.abs(dxs) > Math.abs(dys)) ? 'h' : 'v';
             } else {
               return;
             }
@@ -14794,6 +14845,22 @@
           }
         }, { passive: false });
         overlay.addEventListener('touchend', function(e) {
+          // Pinch ended (down to <2 fingers): if user barely zoomed, snap back
+          if (_mPinch.active && (!e.touches || e.touches.length < 2)) {
+            _mPinch.active = false;
+            if (_mPinch.scale <= 1.05) {
+              _mPinch.scale = 1; _mPinch.x = 0; _mPinch.y = 0;
+              _mApplyPinch(true);
+              _ackHaptic('snap');
+            } else {
+              _ackHaptic('snap');
+            }
+          }
+          if (!e.touches || e.touches.length === 0) _mPinch.panning = false;
+          // Suppress swipe-nav while inspecting a zoomed piece
+          if (_mPinch.scale > 1.05) {
+            swiping = false; locked = null; return;
+          }
           if (!swiping || !e.changedTouches || !e.changedTouches[0]) {
             swiping = false; locked = null; return;
           }
@@ -14807,7 +14874,74 @@
             _closeMobileFocus();
           }
         }, { passive: true });
+        // Double-tap to toggle 2× zoom — quick "show me the detail" gesture
+        var _lastTap = 0, _lastTapX = 0, _lastTapY = 0;
+        overlay.addEventListener('touchend', function(e) {
+          if (!e.changedTouches || e.changedTouches.length !== 1) return;
+          if (_mPinch.active || _mPinch.panning) return;
+          var now = Date.now();
+          var t = e.changedTouches[0];
+          var dx = t.clientX - _lastTapX, dy = t.clientY - _lastTapY;
+          if (now - _lastTap < 320 && Math.abs(dx) < 30 && Math.abs(dy) < 30) {
+            // Double-tap detected — toggle between 1× and 2.2×
+            if (_mPinch.scale > 1.05) {
+              _mPinch.scale = 1; _mPinch.x = 0; _mPinch.y = 0;
+            } else {
+              _mPinch.scale = 2.2; _mPinch.x = 0; _mPinch.y = 0;
+            }
+            _mApplyPinch(true);
+            _ackHaptic('tap');
+            _lastTap = 0; // consume
+          } else {
+            _lastTap = now; _lastTapX = t.clientX; _lastTapY = t.clientY;
+          }
+        }, { passive: true });
       }
+    }
+
+    // ── Haptic helper (Android Chrome supports navigator.vibrate; iOS Safari
+    //    silently no-ops, which is fine — we still call it for Android users
+    //    and any future iOS WebKit vibrate support). Three intensities. ──
+    function _ackHaptic(kind) {
+      if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+      var pat = { tap: 10, swipe: 18, close: [10, 40, 10], snap: 6 }[kind] || 10;
+      try { navigator.vibrate(pat); } catch (e) {}
+    }
+
+    // ── Pinch-to-zoom + pan state for mobile focus view. Lives at module
+    //    scope so the swipe handler can check whether to bail (don't try to
+    //    nav between artworks while the user is inspecting a zoomed piece). ──
+    var _mPinch = { active: false, startDist: 0, startScale: 1, scale: 1, x: 0, y: 0, panStartX: 0, panStartY: 0, panning: false };
+    function _mResetPinch() {
+      _mPinch.active = false; _mPinch.scale = 1; _mPinch.x = 0; _mPinch.y = 0;
+      _mPinch.panning = false; _mPinch.startDist = 0; _mPinch.startScale = 1;
+      var img = document.getElementById('mobileFocusImg');
+      if (img) { img.style.transform = ''; img.style.transition = ''; }
+    }
+    function _mApplyPinch(animate) {
+      var img = document.getElementById('mobileFocusImg');
+      if (!img) return;
+      img.style.transition = animate ? 'transform 0.22s cubic-bezier(0.22,0.61,0.36,1)' : 'none';
+      img.style.transform = 'translate(' + _mPinch.x.toFixed(1) + 'px, ' + _mPinch.y.toFixed(1) + 'px) scale(' + _mPinch.scale.toFixed(3) + ')';
+    }
+
+    // ── Preload the previous and next artwork in a collection so the swipe
+    //    transition feels instant. Skips servants (single representative). ──
+    function _mPreloadNeighbors(col, artIdx) {
+      if (!col || !col.artworks || col.name === 'servants' || col.spinCoin) return;
+      var n = col.artworks.length;
+      if (n < 2) return;
+      var pickSrc = function(a) {
+        if (!a) return '';
+        if (a.fullRes && /\.gif(\?|$)/i.test(a.fullRes)) return a.fullRes;
+        if (a.focusImage) return a.focusImage;
+        if (a.fullRes && !/\.mp4$/i.test(a.fullRes)) return a.fullRes;
+        return a.image || '';
+      };
+      [(artIdx + 1) % n, (artIdx - 1 + n) % n].forEach(function(i) {
+        var s = pickSrc(col.artworks[i]);
+        if (s) { var pre = new Image(); pre.src = s; }
+      });
     }
 
     function _openMobileFocus(colIdx, artIdx) {
@@ -14839,26 +14973,33 @@
       var isServants = col.name === 'servants' || col.spinCoin;
       var mediaEl;
       if (isServants) {
-        // Mobile-friendly servant video (720x720, ~680KB). Autoplays muted,
-        // loops, with sound toggle via tap.
+        // Mobile-friendly servant video (720x720, ~680KB). iOS Safari is
+        // order-sensitive on autoplay: muted + playsinline + webkit-playsinline
+        // attributes must be set BEFORE src or autoplay is silently blocked
+        // and the user just sees a black box.
         mediaEl = document.createElement('video');
         mediaEl.id = 'mobileFocusVideo';
-        mediaEl.src = 'servant_muse_mobile.mp4';
-        mediaEl.autoplay = true;
-        mediaEl.loop = true;
-        mediaEl.muted = true; // muted so autoplay isn't blocked
-        mediaEl.playsInline = true;
+        mediaEl.setAttribute('muted', '');
         mediaEl.setAttribute('playsinline', '');
+        mediaEl.setAttribute('webkit-playsinline', '');
         mediaEl.setAttribute('autoplay', '');
         mediaEl.setAttribute('loop', '');
-        mediaEl.setAttribute('muted', '');
-        mediaEl.preload = 'auto';
+        mediaEl.setAttribute('preload', 'auto');
+        mediaEl.setAttribute('poster', 'servant_face_web.png');
+        mediaEl.muted = true;
+        mediaEl.playsInline = true;
+        mediaEl.loop = true;
+        mediaEl.autoplay = true;
         mediaEl.style.cssText = 'width:100%;max-width:90vw;max-height:65vh;object-fit:contain;display:block;border-radius:4px;box-shadow:0 6px 30px rgba(0,0,0,0.6);background:#000;margin:0 auto;';
-        // Tap to unmute (since iOS blocks initial sound autoplay)
+        // src LAST — play attempt now sees muted attribute + autoplay attribute
+        mediaEl.src = 'servant_muse_mobile.mp4';
+        // Tap to unmute (iOS blocks initial sound autoplay)
         mediaEl.addEventListener('click', function() {
           mediaEl.muted = !mediaEl.muted;
         });
-        setTimeout(function() { try { mediaEl.play(); } catch(e) {} }, 50);
+        setTimeout(function() {
+          try { var p = mediaEl.play(); if (p && p.catch) p.catch(function(){}); } catch(e) {}
+        }, 50);
       } else {
         mediaEl = document.createElement('img');
         mediaEl.id = 'mobileFocusImg';
@@ -14980,6 +15121,13 @@
       if (overlay) overlay.classList.add('active');
       // Lock background page from scrolling/panning while focus is open
       document.body.classList.add('m-focus-active');
+      // Reset any prior pinch-zoom state — fresh artwork starts unzoomed
+      _mResetPinch();
+      // Warm the cache for the artworks immediately to either side so the
+      // next swipe-nav is instant instead of network-bound
+      _mPreloadNeighbors(col, artIdx);
+      // Brief haptic on open — gives the tactile confirmation of the tap
+      _ackHaptic('tap');
       try { if (window.ACK_ANALYTICS) ACK_ANALYTICS.artworkFocus(col.name, art.title); } catch(e) {}
     }
 
@@ -15040,12 +15188,16 @@
       if (!s.col) return;
       var n = s.col.artworks.length;
       var next = (s.artIdx + dir + n) % n;
+      _ackHaptic('swipe');
       // Rebuild via _openMobileFocus so the fresh-DOM logic kicks in
+      // (also resets pinch-zoom + preloads new neighbors)
       _openMobileFocus(s.colIdx, next);
     }
 
     function _closeMobileFocus() {
       _closeMobileFocus_pauseVideo();
+      _mResetPinch();
+      _ackHaptic('close');
       var overlay = document.getElementById('mobileFocus');
       if (overlay) overlay.classList.remove('active');
       document.body.classList.remove('m-focus-active');
@@ -24065,8 +24217,11 @@
                 }
               };
             } else if (_focusSrc) {
-              // ── DESKTOP: Preloader — silent swap for images, shimmer only for video ──
+              // ── DESKTOP: Preloader — silent swap for images, shimmer for video AND gif ──
               const _isVideoFullRes = artData && artData.fullRes && artData.fullRes.endsWith('.mp4');
+              // GIF case: artwork is animated and we're swapping in a heavier gif/Arweave version
+              const _isGifFocus = _isGifArtwork && !_isVideoFullRes;
+              const _showShimmer = _isVideoFullRes || _isGifFocus;
               if (_isVideoFullRes) {
                 nodeImg.style.transition = 'opacity 0.4s ease';
                 nodeImg.style.opacity = '0.6';
@@ -24074,12 +24229,30 @@
               const loadingShimmer = document.createElement('div');
               loadingShimmer.className = 'focus-loading-shimmer';
               loadingShimmer.innerHTML = '<div class="shimmer-bar"></div>';
-              if (_isVideoFullRes) {
+              if (_showShimmer) {
+                // Tint the bar from the artwork/collection palette so it
+                // feels native to the piece. Falls back to warm gold if no
+                // palette is wired up.
+                try {
+                  var _shimPal = (typeof ARTWORK_PALETTES !== 'undefined' && artData && ARTWORK_PALETTES[artData.image])
+                    || (typeof COLLECTION_PALETTES !== 'undefined' && _focusColName && COLLECTION_PALETTES[_focusColName])
+                    || null;
+                  var _shimAccent = _shimPal && (_shimPal.accent || _shimPal.accentDim || _shimPal.headerText);
+                  if (_shimAccent) {
+                    var _shimBar = loadingShimmer.querySelector('.shimmer-bar');
+                    if (_shimBar) {
+                      _shimBar.style.background =
+                        'linear-gradient(90deg, transparent, ' + _shimAccent + ', transparent)';
+                      _shimBar.style.opacity = '0.55';
+                    }
+                    loadingShimmer.style.background = 'rgba(0,0,0,0.25)';
+                  }
+                } catch (e) { /* palette opt-in; fall back to default gold shimmer */ }
                 const preview = node.querySelector('.node-preview');
                 if (preview) preview.appendChild(loadingShimmer);
               }
 
-              // ── Loading whisper messages (skip for videos only) ──
+              // ── Loading whisper messages (skip for videos only — gifs keep both bar + whisper) ──
               const _skipWhisper = _isVideoFullRes;
               const _whisperMsgs = [
                 'this artwork is loading',
@@ -26208,6 +26381,10 @@
       'colorstudys/royalty.gif': {body:'rgb(16,14,48)',border:'rgba(30,26,80,0.85)',header:'rgba(52,48,120,0.92)',accent:'rgb(75,65,180)',accentDim:'rgba(110,100,220,0.75)',accentGlow:'rgba(75,65,180,0.06)',headerText:'#e0e0de'},
       'colorstudys/stardust.gif': {body:'rgb(8,4,6)',border:'rgba(20,12,16,0.85)',header:'rgba(48,28,36,0.92)',accent:'rgb(120,40,60)',accentDim:'rgba(160,70,90,0.75)',accentGlow:'rgba(120,40,60,0.06)',headerText:'#e0e0de'},
       'colorstudys/pbd.gif': {body:'rgb(14,32,52)',border:'rgba(28,56,88,0.85)',header:'rgba(48,100,150,0.92)',accent:'rgb(72,162,221)',accentDim:'rgba(110,190,240,0.75)',accentGlow:'rgba(72,162,221,0.06)',headerText:'#e0e0de'},
+      // pale blue death uses the animated-thumb path as its image — alias the palette
+      // so the Pantone 297 C swatch in the info panel + mobile swatch render pale blue
+      // (was falling back to gold/whatever-came-next without this entry).
+      'colorstudys/thumbs/pbd_anim.gif': {body:'rgb(14,32,52)',border:'rgba(28,56,88,0.85)',header:'rgba(48,100,150,0.92)',accent:'rgb(72,162,221)',accentDim:'rgba(110,190,240,0.75)',accentGlow:'rgba(72,162,221,0.06)',headerText:'#e0e0de'},
       'colorstudys/maxpainv2.gif': {body:'rgb(27,24,30)',border:'rgba(47,42,50,0.85)',header:'rgba(96,91,101,0.92)',accent:'rgb(255,0,148)',accentDim:'rgba(255,40,188,0.75)',accentGlow:'rgba(255,0,148,0.06)',headerText:'#e0e0de'},
       // Servants of the Muse — red coin palette (shared by all 69)
       'servant_face_web.png': {body:'rgb(48,20,20)',border:'rgba(72,38,38,0.85)',header:'rgba(120,78,78,0.92)',accent:'rgb(180,20,20)',accentDim:'rgba(210,50,50,0.75)',accentGlow:'rgba(180,20,20,0.06)',headerText:'#e0e0de'},
