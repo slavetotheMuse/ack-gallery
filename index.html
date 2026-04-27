@@ -6132,29 +6132,39 @@
       overflow: visible !important;
     }
 
-    /* Warothy / focus-image blur on Safari — Safari rasterizes scaled
-       transforms at the source size and bilinear-stretches them, which
-       makes our scaled-up Arweave GIFs look mushy. Force a sharper
-       rendering hint and promote the image to its own layer so Safari
-       re-rasterizes at the post-scale resolution. Focused only — wall
-       view stays default. */
+    /* Warothy / focus-image rendering on Safari.
+       Earlier we set image-rendering:-webkit-optimize-contrast to try to
+       sharpen, but that increases edge contrast which made the GIF
+       dithering pattern look pixelated/noisy. Use `auto` (browser default
+       bilinear/bicubic) and just promote the image to its own GPU layer
+       so Safari composites at the post-transform resolution. */
     body.is-safari .node-card.focused .node-preview img,
     body.is-safari .node-card.focused .node-preview video {
-      image-rendering: -webkit-optimize-contrast !important;
-      transform: translateZ(0); /* promote to own layer */
+      image-rendering: auto !important;
+      -webkit-image-rendering: auto !important;
+      transform: translateZ(0);
       backface-visibility: hidden;
+      will-change: transform;
     }
+    /* (If Warothy GIFs still look harsh after image-rendering:auto, we can
+       add a 0.3px blur here gated on a .is-warothy-focus class, but trying
+       the simpler fix first.) */
 
     /* "this artwork is loading…" whisper goes blurry in Safari focus
-       because the parent .node-card has `transform: scale(N)` and Safari
-       rasterizes text BEFORE scaling. The whisper's font-size is already
-       inverse-scaled in JS, but the rasterization happens first. Force
-       a high-precision text path + promote to its own layer. */
+       because the parent .node-card has transform:scale(N) and Safari
+       rasterizes text BEFORE scaling. The earlier fix used a HUGE font
+       inverse-scaled, which Safari still rasterized at parent-scale and
+       blurred. Better: keep the font NATIVE size and position the whisper
+       OUTSIDE the scaled container so Safari rasterizes it at 1×. */
     body.is-safari .focus-loading-whisper {
       text-rendering: geometricPrecision !important;
       -webkit-font-smoothing: antialiased !important;
-      transform: translateX(-50%) translateZ(0) !important;
+      -moz-osx-font-smoothing: grayscale !important;
+      /* Don't override the JS-set transform — it sets the counter-scale
+         which keeps the font at native 11px size. We just hint to Safari
+         to composite this in its own layer. */
       backface-visibility: hidden !important;
+      will-change: transform, opacity;
     }
 
     /* ════════════════════════════════════════════════════════════════════
@@ -24631,11 +24641,16 @@
                 _whisperEl.className = 'focus-loading-whisper';
                 _whisperEl.textContent = _whisperMsgs[0];
                 var _invS = _isRealMobile ? 1 : (1 / scaleFactor);
-                var _whisperScreenSize = 11;
-                var _whisperTopScreen = 32;
-                _whisperEl.style.fontSize = (_whisperScreenSize * _invS) + 'px';
-                _whisperEl.style.top = '-' + (_whisperTopScreen * _invS) + 'px';
-                _whisperEl.style.transform = 'translateX(-50%)';
+                // Keep the fontSize NATIVE (11px) and counter-scale via
+                // transform so Safari rasterizes text at 11px instead of
+                // a giant pre-scale size. The earlier "huge fontSize +
+                // no scale" trick produced blurry text on Safari because
+                // the giant text was rasterized THEN downscaled by the
+                // parent's transform:scale.
+                _whisperEl.style.fontSize = '11px';
+                _whisperEl.style.top = '-' + (32 * _invS) + 'px';
+                _whisperEl.style.transform = 'translateX(-50%) scale(' + _invS.toFixed(3) + ')';
+                _whisperEl.style.transformOrigin = 'center bottom';
                 node.appendChild(_whisperEl);
                 node._whisperCleanup.el = _whisperEl;
                 requestAnimationFrame(() => {
@@ -25786,13 +25801,17 @@
                 function _makeSRVid(id) {
                   var v = document.createElement('video');
                   v.id = id;
-                  v.src = _srVidSrc;
-                  v.loop = false;
+                  // iOS-correct attribute order: muted + playsinline + autoplay
+                  // attrs BEFORE src or Safari refuses autoplay.
+                  v.setAttribute('muted', '');
+                  v.setAttribute('playsinline', '');
+                  v.setAttribute('webkit-playsinline', '');
+                  v.setAttribute('preload', 'auto');
                   v.muted = true;
                   v.playsInline = true;
-                  v.preload = 'auto';
+                  v.loop = false;
                   v.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;transition:opacity ' + _srFadeTime + 's ease;';
-                  v.setAttribute('playsinline', '');
+                  v.src = _srVidSrc; // src LAST
                   return v;
                 }
                 var vidA = _makeSRVid('srFocusVideo');
@@ -25831,13 +25850,14 @@
                 vidA.autoplay = true;
                 vidA.play().catch(function(){});
 
-                // Sound toggle
+                // Sound toggle — counter-scale so it stays a normal size
                 var soundBtn = document.createElement('div');
                 soundBtn.className = 'video-sound-btn';
                 soundBtn.id = 'srSoundBtn';
                 soundBtn.innerHTML = '🔇';
                 soundBtn.title = 'Click for sound';
-                soundBtn.style.zIndex = '10';
+                var _srDualInvS = node._focusScale ? (1 / node._focusScale) : 1;
+                soundBtn.style.cssText = 'z-index:10;transform:scale(' + _srDualInvS.toFixed(3) + ');transform-origin:bottom right;';
                 soundBtn.onclick = function(ev) {
                   ev.stopPropagation();
                   _srMuted = !_srMuted;
@@ -25848,20 +25868,26 @@
                 };
                 preview.appendChild(soundBtn);
               } else {
-                // ── Single looping video (ctrl+alt+generate etc.) ──
+                // ── Single looping video — iOS-correct attribute order:
+                //    muted + playsinline + autoplay attrs SET BEFORE src or
+                //    Safari blocks autoplay and shows the giant unmute icon. ──
                 var vid = document.createElement('video');
                 vid.id = 'srFocusVideo';
-                vid.src = _srVidSrc;
-                vid.loop = true;
+                vid.setAttribute('muted', '');
+                vid.setAttribute('playsinline', '');
+                vid.setAttribute('webkit-playsinline', '');
+                vid.setAttribute('autoplay', '');
+                vid.setAttribute('loop', '');
+                vid.setAttribute('preload', 'auto');
                 vid.muted = true;
                 vid.playsInline = true;
-                vid.preload = 'auto';
-                vid.setAttribute('playsinline', '');
+                vid.loop = true;
+                vid.autoplay = true;
                 vid.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;z-index:2;';
                 preview.style.position = 'relative';
                 preview.appendChild(vid);
-                vid.autoplay = true;
-                vid.play().catch(function(){});
+                vid.src = _srVidSrc; // src LAST so play sees muted attr
+                setTimeout(function(){ try { var p = vid.play(); if (p && p.catch) p.catch(function(){}); } catch(e){} }, 0);
 
                 var _srSingleMuted = true;
                 var soundBtn = document.createElement('div');
@@ -25869,7 +25895,11 @@
                 soundBtn.id = 'srSoundBtn';
                 soundBtn.innerHTML = '🔇';
                 soundBtn.title = 'Click for sound';
-                soundBtn.style.zIndex = '10';
+                // Counter-scale so the button stays a normal size in focus view
+                // (the parent .node-card is transform:scale(N) — without this
+                // the button balloons to many times its CSS size).
+                var _srInvS = node._focusScale ? (1 / node._focusScale) : 1;
+                soundBtn.style.cssText = 'z-index:10;transform:scale(' + _srInvS.toFixed(3) + ');transform-origin:bottom right;';
                 soundBtn.onclick = function(ev) {
                   ev.stopPropagation();
                   _srSingleMuted = !_srSingleMuted;
