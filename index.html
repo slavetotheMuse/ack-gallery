@@ -6359,35 +6359,70 @@
       box-shadow: 0 0 14px rgba(220, 170, 80, 0.35);
       z-index: 1;
     }
+    /* ────────────────────────────────────────────────────────────
+       Mobile collection header — exhibition wall label
+       ──────────────────────────────────────────────────────────── */
+    body.is-real-mobile .m-collection {
+      position: relative;
+      padding-top: 44px;
+    }
     body.is-real-mobile .m-collection-header {
-      padding: 0 50px 28px;
+      padding: 0 50px 36px 64px;
       position: relative;
     }
-    /* Thin gold/accent hairline above the collection title — exhibition wall feel */
+    /* Vertical accent bar to the left of the title — color-codes each
+       collection by its palette accent. Replaces the ambiguous hairline. */
     body.is-real-mobile .m-collection-header::before {
       content: '';
-      display: block;
-      width: 60px;
-      height: 1px;
-      background: var(--m-accent, rgba(220,170,80,0.55));
-      margin-bottom: 16px;
-      opacity: 0.7;
+      position: absolute;
+      left: 50px;
+      top: 12px;
+      bottom: 38px;
+      width: 3px;
+      background: var(--m-accent, rgba(220,170,80,0.85));
+      border-radius: 1.5px;
+      box-shadow: 0 0 10px var(--m-accent, rgba(220,170,80,0.45));
     }
     body.is-real-mobile .m-collection-title {
       font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
-      font-size: 56px;
-      letter-spacing: 0.02em;
+      font-size: 64px;
+      letter-spacing: 0.005em;
       font-style: italic;
-      color: rgba(225, 200, 160, 0.96);
-      margin-bottom: 14px;
-      line-height: 1.1;
+      color: rgba(232, 212, 178, 0.98);
+      margin-bottom: 12px;
+      line-height: 1.05;
+      font-weight: 500;
     }
     body.is-real-mobile .m-collection-meta {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 18px;
-      letter-spacing: 0.22em;
-      color: rgba(180, 170, 150, 0.5);
+      font-size: 17px;
+      letter-spacing: 0.32em;
+      color: rgba(180, 170, 150, 0.45);
       text-transform: uppercase;
+    }
+    /* Subtle full-width divider between collections (replaces the tiny diamond
+       marker that didn't scale). A long hairline with a centered dot. */
+    body.is-real-mobile .m-collection + .m-collection::before {
+      content: '';
+      display: block;
+      width: 75%;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(180,160,130,0.18) 25%,
+        rgba(180,160,130,0.18) 75%,
+        transparent);
+      margin: 60px auto 0;
+      position: relative;
+    }
+    body.is-real-mobile .m-collection + .m-collection::after {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(220,180,100,0.4);
+      margin: -3px auto 0;
     }
 
     /* Horizontal-swipe artwork strip with edge mask so the strip
@@ -6431,19 +6466,24 @@
       outline-color: var(--m-accent, rgba(220,170,80,0.55));
     }
     body.is-real-mobile .m-tile-title {
-      margin-top: 14px;
-      font-size: 30px;
+      margin-top: 18px;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 28px;
       font-style: italic;
-      color: rgba(220, 200, 175, 0.88);
-      padding: 0 4px;
+      font-weight: 500;
+      color: rgba(225, 205, 175, 0.92);
+      padding: 0 6px;
+      letter-spacing: 0.005em;
+      line-height: 1.2;
     }
     body.is-real-mobile .m-tile-edition {
-      margin-top: 4px;
+      margin-top: 6px;
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 16px;
-      color: rgba(180, 160, 130, 0.5);
-      letter-spacing: 0.14em;
-      padding: 0 4px;
+      font-size: 14px;
+      color: rgba(180, 160, 130, 0.42);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 0 6px;
     }
     /* Skeleton tile — gold-on-black animated shimmer while images load.
        Shown on .m-tile that has the .m-skeleton class. */
@@ -6462,20 +6502,17 @@
       0%   { background-position: 100% 0; }
       100% { background-position: -100% 0; }
     }
-    /* Mobile focus meta row — the secondary line under the < N/N > nav.
-       Holds: description (left) + opensea link (right) + acquired-by (below) */
+    /* ────────────────────────────────────────────────────────────
+       Mobile focus meta block — proper exhibition-style metadata card
+       ──────────────────────────────────────────────────────────── */
+    /* Container row — description gets its own card-like treatment;
+       OpenSea is a real CTA pill. */
     body.is-real-mobile .m-focus-meta-row {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 0 50px;
-      margin-top: 12px;
+      align-items: stretch;
+      gap: 14px;
+      padding: 28px 50px 0;
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 14px;
-      letter-spacing: 0.10em;
-      color: rgba(180, 165, 140, 0.55);
-      min-height: 22px;
     }
     body.is-real-mobile .m-focus-desc {
       flex: 1 1 auto;
@@ -6483,37 +6520,88 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       cursor: pointer;
-      text-transform: lowercase;
-      color: rgba(190, 175, 150, 0.62);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-style: italic;
+      font-size: 26px;
+      line-height: 1.35;
+      letter-spacing: 0.005em;
+      color: rgba(210, 195, 170, 0.72);
+      padding: 14px 20px;
+      border-left: 2px solid rgba(220, 180, 100, 0.25);
+      background: linear-gradient(90deg, rgba(40,32,20,0.25), transparent 70%);
+      border-radius: 0 4px 4px 0;
+      align-self: center;
+      transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     }
-    body.is-real-mobile .m-focus-desc:active { color: rgba(220,200,170,0.95); }
+    body.is-real-mobile .m-focus-desc:active {
+      color: rgba(232, 215, 185, 1);
+      border-left-color: rgba(220, 180, 100, 0.6);
+      background: linear-gradient(90deg, rgba(60,46,28,0.4), transparent 70%);
+    }
+    /* OpenSea CTA — real pill button with chevron icon */
     body.is-real-mobile .m-focus-link {
       flex: 0 0 auto;
-      color: rgba(120,180,255,0.65);
+      align-self: center;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(140,200,255,0.95);
       text-decoration: none;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      font-size: 13px;
-      padding: 4px 8px;
-      border-radius: 3px;
-      border: 1px solid rgba(120,180,255,0.25);
-      transition: border-color 0.2s ease, color 0.2s ease;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 18px;
+      font-weight: 500;
+      padding: 16px 22px;
+      border-radius: 6px;
+      border: 1px solid rgba(140,200,255,0.45);
+      background: linear-gradient(180deg, rgba(20,40,70,0.5), rgba(15,28,50,0.6));
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4),
+                  inset 0 1px 0 rgba(180,220,255,0.08);
+      transition: all 0.2s ease;
+    }
+    body.is-real-mobile .m-focus-link::after {
+      content: '↗';
+      font-size: 22px;
+      letter-spacing: 0;
+      color: rgba(140,200,255,0.85);
     }
     body.is-real-mobile .m-focus-link:active {
-      color: rgba(180,210,255,1);
-      border-color: rgba(140,200,255,0.6);
+      color: rgba(220,235,255,1);
+      border-color: rgba(180,220,255,0.95);
+      background: linear-gradient(180deg, rgba(40,70,110,0.6), rgba(25,45,75,0.7));
+      transform: scale(0.97);
     }
+    /* Acquired-by chip — refined card with accent border-left */
     body.is-real-mobile .m-focus-collector {
-      padding: 0 50px;
-      margin-top: 8px;
+      margin: 22px 50px 0;
+      padding: 14px 22px;
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 12px;
-      letter-spacing: 0.14em;
-      color: rgba(160, 150, 130, 0.45);
+      font-size: 18px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(170, 158, 135, 0.6);
       text-align: center;
+      border-top: 1px solid rgba(180, 160, 130, 0.12);
+      border-bottom: 1px solid rgba(180, 160, 130, 0.12);
+      background: linear-gradient(180deg, transparent, rgba(40,32,20,0.18), transparent);
     }
     body.is-real-mobile .m-focus-collector .m-focus-collector-addr {
-      color: rgba(220,180,90,0.7);
+      color: rgba(232, 195, 110, 0.95);
+      letter-spacing: 0.10em;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    /* Description sheet — fullscreen tap-to-read, larger mobile type */
+    body.is-real-mobile .m-desc-sheet-text {
+      font-size: 32px !important;
+      line-height: 1.5 !important;
+      max-width: 80vw !important;
+    }
+    body.is-real-mobile .m-desc-sheet-close {
+      width: 56px !important;
+      height: 56px !important;
+      font-size: 32px !important;
     }
     /* Description sheet — appears when user taps the truncated description */
     body.is-real-mobile .m-desc-sheet {
@@ -6675,29 +6763,44 @@
       border-radius: 4px;
       box-shadow: 0 6px 30px rgba(0,0,0,0.6);
     }
+    /* Focus title block — exhibition wall plaque */
     body.is-real-mobile .m-focus-meta {
       text-align: center;
-      padding: 0 20px;
+      padding: 32px 50px 0;
+      position: relative;
+    }
+    /* Tiny hairline above the title — caps the artwork visually */
+    body.is-real-mobile .m-focus-meta::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: rgba(220, 180, 100, 0.45);
+      margin: 0 auto 22px;
     }
     body.is-real-mobile .m-focus-title {
-      font-size: 50px;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 56px;
       font-style: italic;
-      color: rgba(225, 200, 160, 0.95);
-      margin-bottom: 12px;
+      font-weight: 500;
+      color: rgba(232, 215, 185, 0.98);
+      margin-bottom: 16px;
+      line-height: 1.1;
+      letter-spacing: 0.005em;
     }
     body.is-real-mobile .m-focus-collection {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 24px;
-      color: rgba(180, 165, 140, 0.6);
-      letter-spacing: 0.2em;
+      font-size: 18px;
+      color: rgba(180, 165, 140, 0.55);
+      letter-spacing: 0.32em;
       text-transform: uppercase;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     body.is-real-mobile .m-focus-edition {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 22px;
-      color: rgba(170, 155, 130, 0.45);
-      letter-spacing: 0.15em;
+      font-size: 20px;
+      color: rgba(180, 160, 110, 0.7);
+      letter-spacing: 0.10em;
     }
     body.is-real-mobile .m-focus-nav {
       display: flex;
