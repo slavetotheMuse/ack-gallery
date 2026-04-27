@@ -41443,6 +41443,34 @@
     var STORAGE_KEY = 'ack_dp_music_pref';
     var STATE_KEY   = 'ack_dp_chip_state';
 
+    // ── Shuffle state ──
+    // SoundCloud doesn't have native shuffle, so we maintain our own:
+    //   _trackCount      — total tracks in the profile
+    //   _shuffleOrder    — randomized array of indices [3, 7, 0, 1, ...]
+    //   _shuffleCursor   — pointer into _shuffleOrder for the next track
+    // When we run out of indices, we re-shuffle and start over.
+    var _trackCount = 0;
+    var _shuffleOrder = [];
+    var _shuffleCursor = 0;
+    function _fisherYates(n) {
+      var arr = [];
+      for (var i = 0; i < n; i++) arr.push(i);
+      for (var j = arr.length - 1; j > 0; j--) {
+        var k = Math.floor(Math.random() * (j + 1));
+        var tmp = arr[j]; arr[j] = arr[k]; arr[k] = tmp;
+      }
+      return arr;
+    }
+    function _reshuffle() {
+      _shuffleOrder = _fisherYates(_trackCount);
+      _shuffleCursor = 0;
+    }
+    function _nextShuffledIndex() {
+      if (_trackCount < 2) return 0;
+      if (!_shuffleOrder.length || _shuffleCursor >= _shuffleOrder.length) _reshuffle();
+      return _shuffleOrder[_shuffleCursor++];
+    }
+
     function setPlaying(p) {
       isPlaying = !!p;
       chip.setAttribute('data-playing', isPlaying ? 'true' : 'false');
@@ -41495,12 +41523,30 @@
     chip.addEventListener('mouseleave', _scheduleAutoClose);
     function play()  { try { widget.play();  } catch(e){} }
     function pause() { try { widget.pause(); } catch(e){} }
-    function next()  { try { widget.next();  } catch(e){} }
+    // Skip to a random next track using our shuffle order.
+    function next()  {
+      try {
+        if (_trackCount > 1) widget.skip(_nextShuffledIndex());
+        else widget.next();
+      } catch(e){}
+    }
 
     widget.bind(SC.Widget.Events.READY, function() {
-      widget.getCurrentSound(function(sound) {
-        if (sound && sound.title) setTitle(sound.title);
-        else setTitle('Derek Pope');
+      // Pull the full sound list from the SoundCloud profile so we can
+      // shuffle. SC returns sounds in the order they appear on the profile.
+      widget.getSounds(function(sounds) {
+        _trackCount = (sounds && sounds.length) || 0;
+        _reshuffle();
+        // Start at a random track so the first song isn't always the same one
+        if (_trackCount > 1) {
+          var startIdx = _nextShuffledIndex();
+          try { widget.skip(startIdx); } catch(e){}
+        }
+        // Pick up the (now possibly random) current track's title
+        widget.getCurrentSound(function(sound) {
+          if (sound && sound.title) setTitle(sound.title);
+          else setTitle('Derek Pope');
+        });
       });
       // Restore prior preference: if user had music on last visit, try
       // resuming. Chip stays closed by default — the ♪ note pulses cyan
@@ -41517,7 +41563,19 @@
       widget.getCurrentSound(function(sound) { if (sound && sound.title) setTitle(sound.title); });
     });
     widget.bind(SC.Widget.Events.PAUSE,  function() { setPlaying(false); });
-    widget.bind(SC.Widget.Events.FINISH, function() { setPlaying(false); });
+    widget.bind(SC.Widget.Events.FINISH, function() {
+      setPlaying(false);
+      // Auto-advance to a random next track (real shuffle behavior, not
+      // sequential). Small delay so SoundCloud's internal queue settles.
+      if (_trackCount > 1) {
+        setTimeout(function() {
+          try {
+            widget.skip(_nextShuffledIndex());
+            widget.play();
+          } catch(e){}
+        }, 250);
+      }
+    });
     widget.bind(SC.Widget.Events.PLAY_PROGRESS, function() {
       if (!isPlaying) setPlaying(true);
     });
