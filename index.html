@@ -6641,13 +6641,14 @@
       cursor: pointer;
     }
 
-    /* Mobile focus overlay — match the home gallery's gray gradient
-       backdrop exactly, so opening focus doesn't feel like a different
-       app. Same #585858 → #4a4a4a → #424242 gradient as <body>. */
+    /* Mobile focus overlay — match the mobile shell's flat gray (#505050),
+       NOT the desktop body's gradient. The mobile shell uses var(--bg);
+       focus should sit on the same surface so opening focus feels
+       continuous, not like switching to a different background. */
     body.is-real-mobile .m-focus-overlay {
       position: fixed;
       inset: 0;
-      background: linear-gradient(180deg, #585858 0%, #4a4a4a 50%, #424242 100%);
+      background: var(--bg, #505050);
       z-index: 9999;
       display: none;
       flex-direction: column;
