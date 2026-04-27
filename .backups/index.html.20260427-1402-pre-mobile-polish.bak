@@ -6361,37 +6361,24 @@
     }
     body.is-real-mobile .m-collection-header {
       padding: 0 50px 28px;
-      position: relative;
-    }
-    /* Thin gold/accent hairline above the collection title — exhibition wall feel */
-    body.is-real-mobile .m-collection-header::before {
-      content: '';
-      display: block;
-      width: 60px;
-      height: 1px;
-      background: var(--m-accent, rgba(220,170,80,0.55));
-      margin-bottom: 16px;
-      opacity: 0.7;
     }
     body.is-real-mobile .m-collection-title {
-      font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
       font-size: 56px;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.04em;
       font-style: italic;
       color: rgba(225, 200, 160, 0.96);
-      margin-bottom: 14px;
-      line-height: 1.1;
+      margin-bottom: 10px;
+      line-height: 1.15;
     }
     body.is-real-mobile .m-collection-meta {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 18px;
+      font-size: 22px;
       letter-spacing: 0.22em;
-      color: rgba(180, 170, 150, 0.5);
+      color: rgba(180, 170, 150, 0.55);
       text-transform: uppercase;
     }
 
-    /* Horizontal-swipe artwork strip with edge mask so the strip
-       doesn't hard-cut at the screen edges */
+    /* Horizontal-swipe artwork strip */
     body.is-real-mobile .m-strip {
       display: flex;
       gap: 30px;
@@ -6401,8 +6388,6 @@
       scroll-padding: 0 50px;
       padding: 0 50px;
       -webkit-overflow-scrolling: touch;
-      mask-image: linear-gradient(90deg, transparent 0, #000 30px, #000 calc(100% - 30px), transparent 100%);
-      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 30px, #000 calc(100% - 30px), transparent 100%);
     }
     body.is-real-mobile .m-strip::-webkit-scrollbar { display: none; }
     body.is-real-mobile .m-tile {
@@ -6412,149 +6397,30 @@
       scroll-snap-align: start;
       cursor: pointer;
       position: relative;
-      transition: transform 0.18s cubic-bezier(0.22,0.61,0.36,1);
     }
-    body.is-real-mobile .m-tile:active { transform: scale(0.97); }
     body.is-real-mobile .m-tile-img {
       width: 100%;
       height: auto;
       max-height: 80vh;
       object-fit: contain;
-      border-radius: 6px;
+      border-radius: 4px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       display: block;
-      transition: outline-color 0.25s ease;
-      outline: 1px solid transparent;
-      outline-offset: 0;
-    }
-    body.is-real-mobile .m-tile:active .m-tile-img {
-      outline-color: var(--m-accent, rgba(220,170,80,0.55));
     }
     body.is-real-mobile .m-tile-title {
       margin-top: 14px;
       font-size: 30px;
       font-style: italic;
-      color: rgba(220, 200, 175, 0.88);
+      color: rgba(220, 200, 175, 0.85);
       padding: 0 4px;
     }
     body.is-real-mobile .m-tile-edition {
       margin-top: 4px;
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 16px;
+      font-size: 20px;
       color: rgba(180, 160, 130, 0.5);
-      letter-spacing: 0.14em;
+      letter-spacing: 0.12em;
       padding: 0 4px;
-    }
-    /* Skeleton tile — gold-on-black animated shimmer while images load.
-       Shown on .m-tile that has the .m-skeleton class. */
-    body.is-real-mobile .m-tile.m-skeleton .m-tile-img {
-      background: linear-gradient(
-        90deg,
-        rgba(40,32,20,0.6) 0%,
-        rgba(60,46,28,0.6) 50%,
-        rgba(40,32,20,0.6) 100%
-      );
-      background-size: 200% 100%;
-      animation: mSkeletonShimmer 1.6s ease-in-out infinite;
-      min-height: 75vw;
-    }
-    @keyframes mSkeletonShimmer {
-      0%   { background-position: 100% 0; }
-      100% { background-position: -100% 0; }
-    }
-    /* Mobile focus meta row — the secondary line under the < N/N > nav.
-       Holds: description (left) + opensea link (right) + acquired-by (below) */
-    body.is-real-mobile .m-focus-meta-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 0 50px;
-      margin-top: 12px;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 14px;
-      letter-spacing: 0.10em;
-      color: rgba(180, 165, 140, 0.55);
-      min-height: 22px;
-    }
-    body.is-real-mobile .m-focus-desc {
-      flex: 1 1 auto;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      cursor: pointer;
-      text-transform: lowercase;
-      color: rgba(190, 175, 150, 0.62);
-    }
-    body.is-real-mobile .m-focus-desc:active { color: rgba(220,200,170,0.95); }
-    body.is-real-mobile .m-focus-link {
-      flex: 0 0 auto;
-      color: rgba(120,180,255,0.65);
-      text-decoration: none;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      font-size: 13px;
-      padding: 4px 8px;
-      border-radius: 3px;
-      border: 1px solid rgba(120,180,255,0.25);
-      transition: border-color 0.2s ease, color 0.2s ease;
-    }
-    body.is-real-mobile .m-focus-link:active {
-      color: rgba(180,210,255,1);
-      border-color: rgba(140,200,255,0.6);
-    }
-    body.is-real-mobile .m-focus-collector {
-      padding: 0 50px;
-      margin-top: 8px;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 12px;
-      letter-spacing: 0.14em;
-      color: rgba(160, 150, 130, 0.45);
-      text-align: center;
-    }
-    body.is-real-mobile .m-focus-collector .m-focus-collector-addr {
-      color: rgba(220,180,90,0.7);
-    }
-    /* Description sheet — appears when user taps the truncated description */
-    body.is-real-mobile .m-desc-sheet {
-      position: fixed;
-      inset: 0;
-      z-index: 10000;
-      background: rgba(15,15,18,0.96);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 60px 40px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    body.is-real-mobile .m-desc-sheet.active {
-      display: flex;
-      opacity: 1;
-    }
-    body.is-real-mobile .m-desc-sheet-text {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 22px;
-      line-height: 1.55;
-      color: rgba(225, 200, 170, 0.95);
-      max-width: 560px;
-      text-align: center;
-      font-style: italic;
-    }
-    body.is-real-mobile .m-desc-sheet-close {
-      position: absolute;
-      top: 30px; right: 30px;
-      width: 40px; height: 40px;
-      border: 1px solid rgba(220,180,90,0.4);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: rgba(220,180,90,0.85);
-      font-size: 22px;
-      background: transparent;
-      cursor: pointer;
     }
 
     /* Mobile focus overlay */
@@ -15112,15 +14978,6 @@
         var col = entry.col;
         var section = document.createElement('section');
         section.className = 'm-collection';
-        // Per-collection accent — pull from COLLECTION_PALETTES so the
-        // hairline above the title + the press-outline on tiles tint
-        // with each collection's own color identity.
-        try {
-          var _pal = (typeof COLLECTION_PALETTES !== 'undefined' && COLLECTION_PALETTES[col.name]) || null;
-          if (_pal && _pal.accent) {
-            section.style.setProperty('--m-accent', _pal.accent);
-          }
-        } catch (e) {}
 
         var header = document.createElement('div');
         header.className = 'm-collection-header';
@@ -15179,25 +15036,12 @@
             // src goes LAST so the play attempt sees the muted attribute
             vid.src = 'servant_muse_mobile.mp4';
             tile.appendChild(vid);
-            // iOS often refuses to autoplay videos that aren't on screen.
-            // Use IntersectionObserver to call .play() the moment the tile
-            // enters the viewport — this is what gets us off the static
-            // poster and actually starts the spin loop.
-            try {
-              var _io = new IntersectionObserver(function(entries) {
-                entries.forEach(function(en) {
-                  if (en.isIntersecting && vid.paused) {
-                    var p = vid.play(); if (p && p.catch) p.catch(function(){});
-                  }
-                });
-              }, { threshold: 0.25 });
-              _io.observe(vid);
-            } catch(e) {
-              // Fallback for older browsers — best-effort immediate play
-              setTimeout(function() {
-                try { var p = vid.play(); if (p && p.catch) p.catch(function(){}); } catch(e) {}
-              }, 0);
-            }
+            // Belt + braces — explicitly call play() once it's in DOM.
+            // Safari can ignore the autoplay attribute under some power
+            // states; an explicit muted-play() is allowed without gesture.
+            setTimeout(function() {
+              try { var p = vid.play(); if (p && p.catch) p.catch(function(){}); } catch(e) {}
+            }, 0);
           } else {
             var img = document.createElement('img');
             img.className = 'm-tile-img';
@@ -15254,20 +15098,6 @@
 
         section.appendChild(strip);
         feed.appendChild(section);
-
-        // When the section scrolls within ~1 viewport of view, batch-prefetch
-        // all of its tile thumbnails so taps feel instant. Fires once.
-        try {
-          var _secIO = new IntersectionObserver(function(entries) {
-            entries.forEach(function(en) {
-              if (en.isIntersecting) {
-                _mPrefetchCollectionThumbs(col);
-                _secIO.unobserve(en.target);
-              }
-            });
-          }, { rootMargin: '100% 0px', threshold: 0 });
-          _secIO.observe(section);
-        } catch (e) {}
       });
 
       // Wire up focus overlay controls (close button is in static HTML;
@@ -15451,9 +15281,8 @@
       img.style.transform = 'translate(' + _mPinch.x.toFixed(1) + 'px, ' + _mPinch.y.toFixed(1) + 'px) scale(' + _mPinch.scale.toFixed(3) + ')';
     }
 
-    // ── Preload the ±2 neighbors so swipe transitions feel instant. We
-    //    used to do ±1 — bumping to ±2 adds maybe ~10MB of background load
-    //    but means rapid-swipe through 4 artworks never blocks on network. ──
+    // ── Preload the previous and next artwork in a collection so the swipe
+    //    transition feels instant. Skips servants (single representative). ──
     function _mPreloadNeighbors(col, artIdx) {
       if (!col || !col.artworks || col.name === 'servants' || col.spinCoin) return;
       var n = col.artworks.length;
@@ -15465,59 +15294,10 @@
         if (a.fullRes && !/\.mp4$/i.test(a.fullRes)) return a.fullRes;
         return a.image || '';
       };
-      [
-        (artIdx + 1) % n,
-        (artIdx - 1 + n) % n,
-        (artIdx + 2) % n,
-        (artIdx - 2 + n) % n
-      ].forEach(function(i) {
+      [(artIdx + 1) % n, (artIdx - 1 + n) % n].forEach(function(i) {
         var s = pickSrc(col.artworks[i]);
         if (s) { var pre = new Image(); pre.src = s; }
       });
-    }
-
-    // ── Batch-prefetch ALL feed-thumb images for a collection when its
-    //    section scrolls into view. Tap-to-focus for any tile in that
-    //    collection then has a warm cache. Web thumbs are tiny (~30-100KB),
-    //    so this adds maybe 1-2MB total per collection — cheap. ──
-    function _mPrefetchCollectionThumbs(col) {
-      if (!col || !col.artworks || col._mThumbsPrefetched) return;
-      col._mThumbsPrefetched = true;
-      col.artworks.forEach(function(a) {
-        if (a && a.image) {
-          var pre = new Image();
-          pre.src = a.image;
-        }
-      });
-    }
-
-    // ── Description sheet (fullscreen tap-to-read for the meta row's
-    //    truncated description text on mobile focus view). Lazy-built. ──
-    function _showDescSheet(text) {
-      var existing = document.getElementById('mDescSheet');
-      if (existing) existing.parentNode.removeChild(existing);
-      var sheet = document.createElement('div');
-      sheet.id = 'mDescSheet';
-      sheet.className = 'm-desc-sheet';
-      var close = document.createElement('button');
-      close.className = 'm-desc-sheet-close';
-      close.type = 'button';
-      close.textContent = '×';
-      close.addEventListener('click', function() {
-        sheet.classList.remove('active');
-        setTimeout(function() { if (sheet.parentNode) sheet.parentNode.removeChild(sheet); }, 300);
-      });
-      var p = document.createElement('div');
-      p.className = 'm-desc-sheet-text';
-      p.textContent = text;
-      sheet.appendChild(close);
-      sheet.appendChild(p);
-      // Tap anywhere outside the text closes
-      sheet.addEventListener('click', function(e) {
-        if (e.target === sheet) close.click();
-      });
-      document.body.appendChild(sheet);
-      requestAnimationFrame(function() { sheet.classList.add('active'); });
     }
 
     function _openMobileFocus(colIdx, artIdx) {
@@ -15691,59 +15471,6 @@
         nextBtn.addEventListener('click', function() { _moveMobileFocus(1); });
         nav.appendChild(nextBtn);
         content.appendChild(nav);
-      }
-
-      // ── Meta row beneath the nav: description (truncated), OpenSea link.
-      //    Tap description → opens a fullscreen sheet with the full text. ──
-      if (!isServants) {
-        var metaRow = document.createElement('div');
-        metaRow.className = 'm-focus-meta-row';
-
-        // Description (left, truncates with ellipsis)
-        var desc = (art.description || '').trim();
-        if (desc) {
-          var descEl = document.createElement('div');
-          descEl.className = 'm-focus-desc';
-          descEl.textContent = desc;
-          descEl.title = 'tap to read';
-          descEl.addEventListener('click', function() { _showDescSheet(desc); });
-          metaRow.appendChild(descEl);
-        } else {
-          // Spacer so the link still sits right-aligned even with no description
-          var spacer = document.createElement('div');
-          spacer.className = 'm-focus-desc';
-          spacer.style.visibility = 'hidden';
-          metaRow.appendChild(spacer);
-        }
-
-        // OpenSea link (right) — only when we have contract + tokenId
-        var contract = art.contract || (col && col.contract);
-        var tokenId = (typeof art.tokenId !== 'undefined' && art.tokenId !== null) ? art.tokenId : null;
-        if (contract && tokenId !== null) {
-          var osLink = document.createElement('a');
-          osLink.className = 'm-focus-link';
-          osLink.href = 'https://opensea.io/assets/ethereum/' + contract + '/' + tokenId;
-          osLink.target = '_blank';
-          osLink.rel = 'noopener';
-          osLink.textContent = 'opensea';
-          metaRow.appendChild(osLink);
-        }
-
-        content.appendChild(metaRow);
-
-        // ── Acquired by (ERC-721 only — single owner). ERC-1155 editions
-        //    have many owners; we skip the line entirely for those. ──
-        var isErc1155 = !!(col && col.token && /1155/.test(col.token))
-          || !!(art.edition && /edition of \d+/i.test(art.edition));
-        if (!isErc1155 && art.collector) {
-          var collectorEl = document.createElement('div');
-          collectorEl.className = 'm-focus-collector';
-          var addr = art.collector;
-          var short = addr.length > 10 ? (addr.slice(0, 6) + '…' + addr.slice(-4)) : addr;
-          collectorEl.innerHTML = 'acquired by <span class="m-focus-collector-addr">' +
-            (art.collectorEns ? art.collectorEns : short) + '</span>';
-          content.appendChild(collectorEl);
-        }
       }
 
       var overlay = document.getElementById('mobileFocus');
