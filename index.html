@@ -6039,6 +6039,124 @@
       -webkit-animation-play-state: running !important;
     }
 
+    /* ─────────────────────────────────────────────────────────────────────
+       Safari perf — Round 2 (more aggressive)
+       ─────────────────────────────────────────────────────────────────────
+       Round 1 flattened 3D + paused ambient animations + single shadow.
+       Round 2 attacks the still-expensive bits: filter:drop-shadow stacks,
+       transitions on every transform change, deco-node animations, and the
+       scroll-scale transform churn. */
+
+    /* drop-shadow() is the single biggest GPU cost remaining. Replace ALL
+       filter usages on non-focused thumbnails / collection art with a flat
+       box-shadow already declared above. Focused state keeps real shadows. */
+    body.is-safari .collection-thumbnail,
+    body.is-safari .collection-thumbnail *,
+    body.is-safari .node-card:not(.focused) .node-preview,
+    body.is-safari .node-card:not(.focused) .node-preview * {
+      filter: none !important;
+      -webkit-filter: none !important;
+    }
+
+    /* Kill the scroll-scale transition — every wheel tick triggers a
+       transform animation on every node in the catalog. Safari pays a
+       compositing cost per tick. Snap directly instead. */
+    body.is-safari .scroll-scale-node {
+      transition: none !important;
+    }
+
+    /* Freeze ambient deco-nodes (gems, hearts, pantone swatches, etc) to
+       a single static frame. Their `--sway-dur` keyframe runs forever and
+       Safari composites every frame even off-screen. */
+    body.is-safari [class*="-deco-node"],
+    body.is-safari [class*="-deco-node"] * {
+      animation: none !important;
+      -webkit-animation: none !important;
+      transition: none !important;
+      will-change: auto !important;
+    }
+
+    /* Unify shadow on the .node-card itself — node-card has its own outer
+       shadows in addition to the .node-preview shadow. Strip the card's
+       outer shadow on Safari; preview's box-shadow is enough. */
+    body.is-safari .node-card:not(.focused) {
+      box-shadow: none !important;
+      filter: none !important;
+      -webkit-filter: none !important;
+    }
+
+    /* SVG frame decorative elements often use stroke-dasharray + dashoffset
+       transitions for shimmer. Pause them on non-focused frames. */
+    body.is-safari .node-card:not(.focused) [class*="-frame-svg"] *,
+    body.is-safari .node-card:not(.focused) [class*="-frame-svg"] {
+      animation-play-state: paused !important;
+      -webkit-animation-play-state: paused !important;
+    }
+
+    /* Catalog page — collection-cell hover/perspective transforms create a
+       3D layer per cell. Safari pays for this even when no hover. */
+    body.is-safari .collection-cell {
+      perspective: none !important;
+      transform-style: flat !important;
+    }
+    body.is-safari .collection-cell:not(:hover) {
+      transition: none !important;
+    }
+
+    /* (Skipped content-visibility on imgs — same family of bug that
+       silently clipped our frames last time. Not worth the risk.) */
+
+    /* ─────────────────────────────────────────────────────────────────────
+       Safari fixes — Round 3 (visual quality)
+       ───────────────────────────────────────────────────────────────────── */
+
+    /* Servant coin in main catalog had a faint square halo because the
+       .collection-thumbnail container painted a 1px border + box-shadow
+       even when wrapping a round coin. round-thumb already nuked those,
+       but Safari was still painting the square layer outline due to the
+       transform-style flatten. Force the thumbnail to be visually round
+       by clipping it so the coin really IS the coin. */
+    body.is-safari .collection-thumbnail.round-thumb,
+    .collection-thumbnail.round-thumb {
+      border: 0 !important;
+      outline: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+    /* And size the round thumbnail to its coin contents so any catalog
+       "padding" the user perceives between the coin and other tiles is
+       actual layout space, not a halo. */
+    body.is-safari .collection-thumbnail.round-thumb {
+      border-radius: 50% !important;
+      overflow: visible !important;
+    }
+
+    /* Warothy / focus-image blur on Safari — Safari rasterizes scaled
+       transforms at the source size and bilinear-stretches them, which
+       makes our scaled-up Arweave GIFs look mushy. Force a sharper
+       rendering hint and promote the image to its own layer so Safari
+       re-rasterizes at the post-scale resolution. Focused only — wall
+       view stays default. */
+    body.is-safari .node-card.focused .node-preview img,
+    body.is-safari .node-card.focused .node-preview video {
+      image-rendering: -webkit-optimize-contrast !important;
+      transform: translateZ(0); /* promote to own layer */
+      backface-visibility: hidden;
+    }
+
+    /* "this artwork is loading…" whisper goes blurry in Safari focus
+       because the parent .node-card has `transform: scale(N)` and Safari
+       rasterizes text BEFORE scaling. The whisper's font-size is already
+       inverse-scaled in JS, but the rasterization happens first. Force
+       a high-precision text path + promote to its own layer. */
+    body.is-safari .focus-loading-whisper {
+      text-rendering: geometricPrecision !important;
+      -webkit-font-smoothing: antialiased !important;
+      transform: translateX(-50%) translateZ(0) !important;
+      backface-visibility: hidden !important;
+    }
+
     /* ════════════════════════════════════════════════════════════════════
        MOBILE SHELL — totally separate UI from desktop
        ════════════════════════════════════════════════════════════════════
@@ -18785,12 +18903,9 @@
       var _navCt = document.getElementById('navCenterTitle');
       if (_navCt) { _navCt.textContent = collection.name; _navCt.classList.add('visible'); }
 
-      // Servant ambient music — starts on open, stops on close
-      if (collection.name === 'servants') {
-        _startServantMusic();
-      } else {
-        _stopServantMusic();
-      }
+      // Servant ambient music — REMOVED from collection view per user feedback.
+      // Still always stop on collection open in case it leaked from elsewhere.
+      _stopServantMusic();
 
       // ── VIEWPORT RENDER TRANSITION ──
       // The selected node glows like it's being loaded into the viewport,
@@ -24370,8 +24485,15 @@
                 const _focusSrcIsGif = _focusSrc && _focusSrc.endsWith('.gif');
                 let _desktopUpgradeSrc = null;
                 if (_focusSrcIsGif) {
-                  // Already a GIF — try to upgrade to even-higher-res fullRes
-                  if (artData && artData.fullRes &&
+                  // Already a GIF — try to upgrade to even-higher-res fullRes,
+                  // BUT skip the upgrade for collections whose focusImage is
+                  // already a high-res local file (Warothys 1380×1380+ are
+                  // visually identical to the Arweave masters; the upgrade
+                  // just costs the user 10–20MB of slow Arweave bandwidth
+                  // for no perceivable quality gain).
+                  var _isWarothy = (_focusColName === 'Warothys') || (artData && /^warothy\//i.test(artData.focusImage || ''));
+                  if (!_isWarothy &&
+                      artData && artData.fullRes &&
                       (artData.fullRes.startsWith('http') || artData.fullRes.endsWith('.gif')) &&
                       artData.fullRes !== _focusSrc) {
                     _desktopUpgradeSrc = artData.fullRes;
