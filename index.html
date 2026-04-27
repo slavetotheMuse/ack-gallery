@@ -6383,14 +6383,23 @@
       border-radius: 1.5px;
       box-shadow: 0 0 10px var(--m-accent, rgba(220,170,80,0.45));
     }
+    /* Editorial section number — "01", "02" etc. above the title */
+    body.is-real-mobile .m-collection-num {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px;
+      letter-spacing: 0.4em;
+      color: rgba(180, 160, 130, 0.35);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
     body.is-real-mobile .m-collection-title {
       font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
-      font-size: 64px;
-      letter-spacing: 0.005em;
+      font-size: 72px;
+      letter-spacing: -0.005em;
       font-style: italic;
-      color: rgba(232, 212, 178, 0.98);
-      margin-bottom: 12px;
-      line-height: 1.05;
+      color: rgba(238, 220, 188, 0.98);
+      margin-bottom: 16px;
+      line-height: 0.98;
       font-weight: 500;
     }
     body.is-real-mobile .m-collection-meta {
@@ -6503,94 +6512,82 @@
       100% { background-position: -100% 0; }
     }
     /* ────────────────────────────────────────────────────────────
-       Mobile focus meta block — proper exhibition-style metadata card
+       Mobile focus meta — editorial flow.
+       Description sits as italic body copy directly under the title block.
+       OpenSea + nav arrows + acquired-by live in a unified bottom action bar.
        ──────────────────────────────────────────────────────────── */
-    /* Container row — description gets its own card-like treatment;
-       OpenSea is a real CTA pill. */
+    /* Description: italic Garamond body, full-width, no boxes */
     body.is-real-mobile .m-focus-meta-row {
-      display: flex;
-      align-items: stretch;
-      gap: 14px;
-      padding: 28px 50px 0;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      display: block;
+      padding: 18px 44px 0;
+      font-family: 'EB Garamond', Georgia, serif;
     }
     body.is-real-mobile .m-focus-desc {
-      flex: 1 1 auto;
+      display: block;
+      width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       cursor: pointer;
       font-family: 'EB Garamond', Georgia, serif;
       font-style: italic;
-      font-size: 26px;
+      font-size: 22px;
       line-height: 1.35;
       letter-spacing: 0.005em;
-      color: rgba(210, 195, 170, 0.72);
-      padding: 14px 20px;
-      border-left: 2px solid rgba(220, 180, 100, 0.25);
-      background: linear-gradient(90deg, rgba(40,32,20,0.25), transparent 70%);
-      border-radius: 0 4px 4px 0;
-      align-self: center;
-      transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      color: rgba(200, 188, 162, 0.65);
+      transition: color 0.2s ease;
     }
-    body.is-real-mobile .m-focus-desc:active {
-      color: rgba(232, 215, 185, 1);
-      border-left-color: rgba(220, 180, 100, 0.6);
-      background: linear-gradient(90deg, rgba(60,46,28,0.4), transparent 70%);
-    }
-    /* OpenSea CTA — real pill button with chevron icon */
+    body.is-real-mobile .m-focus-desc:active { color: rgba(232, 215, 185, 1); }
+    /* OpenSea pill — sits in the meta block, NOT in a row anymore */
     body.is-real-mobile .m-focus-link {
-      flex: 0 0 auto;
-      align-self: center;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      color: rgba(140,200,255,0.95);
+      gap: 8px;
+      margin-top: 18px;
+      color: rgba(150, 205, 255, 0.95);
       text-decoration: none;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.24em;
       text-transform: uppercase;
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 18px;
+      font-size: 14px;
       font-weight: 500;
-      padding: 16px 22px;
-      border-radius: 6px;
-      border: 1px solid rgba(140,200,255,0.45);
-      background: linear-gradient(180deg, rgba(20,40,70,0.5), rgba(15,28,50,0.6));
-      box-shadow: 0 4px 14px rgba(0,0,0,0.4),
-                  inset 0 1px 0 rgba(180,220,255,0.08);
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(150, 205, 255, 0.35);
+      background: rgba(20, 32, 50, 0.4);
       transition: all 0.2s ease;
     }
     body.is-real-mobile .m-focus-link::after {
       content: '↗';
-      font-size: 22px;
+      font-size: 16px;
       letter-spacing: 0;
-      color: rgba(140,200,255,0.85);
     }
     body.is-real-mobile .m-focus-link:active {
       color: rgba(220,235,255,1);
-      border-color: rgba(180,220,255,0.95);
-      background: linear-gradient(180deg, rgba(40,70,110,0.6), rgba(25,45,75,0.7));
+      border-color: rgba(180,220,255,0.85);
+      background: rgba(35, 55, 90, 0.6);
       transform: scale(0.97);
     }
-    /* Acquired-by chip — refined card with accent border-left */
+    /* Acquired-by — single hairline detail, lowercase italic, refined */
     body.is-real-mobile .m-focus-collector {
-      margin: 22px 50px 0;
-      padding: 14px 22px;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      margin: 22px 44px 0;
+      padding: 0;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-style: italic;
       font-size: 18px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(170, 158, 135, 0.6);
-      text-align: center;
-      border-top: 1px solid rgba(180, 160, 130, 0.12);
-      border-bottom: 1px solid rgba(180, 160, 130, 0.12);
-      background: linear-gradient(180deg, transparent, rgba(40,32,20,0.18), transparent);
+      letter-spacing: 0.01em;
+      color: rgba(180, 165, 135, 0.55);
+      text-align: left;
+      text-transform: none;
     }
     body.is-real-mobile .m-focus-collector .m-focus-collector-addr {
-      color: rgba(232, 195, 110, 0.95);
-      letter-spacing: 0.10em;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 14px;
+      color: rgba(232, 195, 110, 0.85);
+      letter-spacing: 0.06em;
       font-weight: 500;
-      margin-left: 8px;
+      font-style: normal;
+      margin-left: 4px;
     }
     /* Description sheet — fullscreen tap-to-read, larger mobile type */
     body.is-real-mobile .m-desc-sheet-text {
@@ -6748,6 +6745,19 @@
       0%, 100% { opacity: 0.55; }
       50%      { opacity: 1.0; }
     }
+    /* Full-bleed image area — image asserts itself, no excess padding.
+       Bleeds nearly edge-to-edge with just a 24px breathing margin. */
+    body.is-real-mobile #mobileFocusImg,
+    body.is-real-mobile #mobileFocusVideo {
+      max-width: calc(100vw - 48px) !important;
+      width: calc(100vw - 48px) !important;
+      max-height: 78vh !important;
+      margin: 24px auto 0 !important;
+      object-fit: contain !important;
+      display: block !important;
+      border-radius: 4px !important;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.5) !important;
+    }
     body.is-real-mobile .m-focus-content {
       flex: 1;
       display: flex;
@@ -6763,71 +6773,81 @@
       border-radius: 4px;
       box-shadow: 0 6px 30px rgba(0,0,0,0.6);
     }
-    /* Focus title block — exhibition wall plaque */
+    /* Focus title block — editorial magazine layout, NOT centered. Title is
+       a big italic statement on the left. The collection/token form a small
+       mono caption to the side. OpenSea is appended inline by the meta-row
+       so the eye reads: ~timeReaper~                           [opensea ↗] */
     body.is-real-mobile .m-focus-meta {
-      text-align: center;
-      padding: 32px 50px 0;
+      text-align: left;
+      padding: 38px 44px 4px;
       position: relative;
-    }
-    /* Tiny hairline above the title — caps the artwork visually */
-    body.is-real-mobile .m-focus-meta::before {
-      content: '';
-      display: block;
-      width: 32px;
-      height: 1px;
-      background: rgba(220, 180, 100, 0.45);
-      margin: 0 auto 22px;
     }
     body.is-real-mobile .m-focus-title {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 56px;
+      font-size: 64px;
       font-style: italic;
       font-weight: 500;
-      color: rgba(232, 215, 185, 0.98);
-      margin-bottom: 16px;
-      line-height: 1.1;
-      letter-spacing: 0.005em;
+      color: rgba(238, 220, 190, 0.98);
+      margin-bottom: 14px;
+      line-height: 1.0;
+      letter-spacing: -0.005em;
     }
+    /* Combined caption: COLLECTION · TOKEN #N — single row, mono caps */
     body.is-real-mobile .m-focus-collection {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 18px;
-      color: rgba(180, 165, 140, 0.55);
-      letter-spacing: 0.32em;
+      font-size: 16px;
+      color: rgba(190, 175, 145, 0.55);
+      letter-spacing: 0.30em;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      display: inline-block;
     }
     body.is-real-mobile .m-focus-edition {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 20px;
-      color: rgba(180, 160, 110, 0.7);
-      letter-spacing: 0.10em;
+      font-size: 16px;
+      color: rgba(190, 175, 145, 0.55);
+      letter-spacing: 0.30em;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+    /* Visual separator between collection name and edition/token */
+    body.is-real-mobile .m-focus-edition::before {
+      content: ' · ';
+      margin: 0 8px;
+      color: rgba(180, 160, 110, 0.4);
     }
     body.is-real-mobile .m-focus-nav {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 60px;
-      padding: 30px 0 10px;
+      justify-content: flex-start;
+      gap: 32px;
+      padding: 26px 44px 6px;
     }
     body.is-real-mobile .m-focus-arrow {
-      width: 90px;
-      height: 90px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
-      background: rgba(0, 0, 0, 0.4);
-      color: rgba(220, 200, 170, 0.75);
-      font-size: 60px;
-      border: 1px solid rgba(220, 170, 80, 0.25);
+      background: transparent;
+      color: rgba(225, 200, 165, 0.7);
+      font-size: 36px;
+      border: 1px solid rgba(220, 180, 100, 0.3);
       cursor: pointer;
       line-height: 1;
       padding: 0;
+      transition: border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    }
+    body.is-real-mobile .m-focus-arrow:active {
+      border-color: rgba(232, 200, 130, 0.85);
+      color: rgba(245, 222, 188, 1);
+      transform: scale(0.92);
     }
     body.is-real-mobile .m-focus-counter {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 28px;
-      color: rgba(180, 165, 140, 0.6);
-      letter-spacing: 0.15em;
-      min-width: 200px;
-      text-align: center;
+      font-size: 18px;
+      color: rgba(180, 165, 140, 0.55);
+      letter-spacing: 0.30em;
+      min-width: auto;
+      text-align: left;
+      text-transform: uppercase;
     }
     /* Background grid: keep visible (subtle blueprint feel) but skip the
        reveal animation. */
@@ -15211,13 +15231,12 @@
         }
       });
 
-      ordered.forEach(function(entry) {
+      ordered.forEach(function(entry, sectionIdx) {
         var col = entry.col;
         var section = document.createElement('section');
         section.className = 'm-collection';
         // Per-collection accent — pull from COLLECTION_PALETTES so the
-        // hairline above the title + the press-outline on tiles tint
-        // with each collection's own color identity.
+        // accent bar + tile press outline tint with the collection's color.
         try {
           var _pal = (typeof COLLECTION_PALETTES !== 'undefined' && COLLECTION_PALETTES[col.name]) || null;
           if (_pal && _pal.accent) {
@@ -15227,6 +15246,11 @@
 
         var header = document.createElement('div');
         header.className = 'm-collection-header';
+        // Editorial section number — "01" "02" etc. tracked-out mono
+        var num = document.createElement('div');
+        num.className = 'm-collection-num';
+        num.textContent = String(sectionIdx + 1).padStart(2, '0');
+        header.appendChild(num);
         var title = document.createElement('div');
         title.className = 'm-collection-title';
         title.textContent = col.name || '';
