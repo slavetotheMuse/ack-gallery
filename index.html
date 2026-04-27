@@ -6513,14 +6513,12 @@
       100% { background-position: -100% 0; }
     }
     /* ────────────────────────────────────────────────────────────
-       Mobile focus meta — editorial flow.
-       Description sits as italic body copy directly under the title block.
-       OpenSea + nav arrows + acquired-by live in a unified bottom action bar.
+       Mobile focus meta — bumped to mobile scale, gold accents to match
+       the home gallery's gold-on-gray palette.
        ──────────────────────────────────────────────────────────── */
-    /* Description: italic Garamond body, full-width, no boxes */
     body.is-real-mobile .m-focus-meta-row {
       display: block;
-      padding: 18px 44px 0;
+      padding: 24px 50px 0;
       font-family: 'EB Garamond', Georgia, serif;
     }
     body.is-real-mobile .m-focus-desc {
@@ -6532,63 +6530,63 @@
       cursor: pointer;
       font-family: 'EB Garamond', Georgia, serif;
       font-style: italic;
-      font-size: 22px;
+      font-size: 30px;
       line-height: 1.35;
       letter-spacing: 0.005em;
-      color: rgba(200, 188, 162, 0.65);
+      color: rgba(218, 200, 168, 0.78);
       transition: color 0.2s ease;
     }
-    body.is-real-mobile .m-focus-desc:active { color: rgba(232, 215, 185, 1); }
-    /* OpenSea pill — sits in the meta block, NOT in a row anymore */
+    body.is-real-mobile .m-focus-desc:active { color: rgba(245, 225, 195, 1); }
+    /* OpenSea pill — gold-tinted to match the gallery palette, NOT cyan */
     body.is-real-mobile .m-focus-link {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 18px;
-      color: rgba(150, 205, 255, 0.95);
+      gap: 12px;
+      margin-top: 24px;
+      color: rgba(232, 195, 110, 0.95);
       text-decoration: none;
       letter-spacing: 0.24em;
       text-transform: uppercase;
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 14px;
+      font-size: 20px;
       font-weight: 500;
-      padding: 12px 18px;
+      padding: 18px 28px;
       border-radius: 999px;
-      border: 1px solid rgba(150, 205, 255, 0.35);
-      background: rgba(20, 32, 50, 0.4);
+      border: 1px solid rgba(220, 180, 100, 0.45);
+      background: rgba(40, 32, 18, 0.35);
       transition: all 0.2s ease;
     }
     body.is-real-mobile .m-focus-link::after {
       content: '↗';
-      font-size: 16px;
+      font-size: 22px;
       letter-spacing: 0;
     }
     body.is-real-mobile .m-focus-link:active {
-      color: rgba(220,235,255,1);
-      border-color: rgba(180,220,255,0.85);
-      background: rgba(35, 55, 90, 0.6);
+      color: rgba(250, 230, 180, 1);
+      border-color: rgba(245, 215, 150, 0.95);
+      background: rgba(60, 48, 26, 0.55);
       transform: scale(0.97);
     }
-    /* Acquired-by — single hairline detail, lowercase italic, refined */
+    /* Acquired-by — italic Garamond with gold mono address */
     body.is-real-mobile .m-focus-collector {
-      margin: 22px 44px 0;
+      margin: 28px 50px 0;
       padding: 0;
       font-family: 'EB Garamond', Georgia, serif;
       font-style: italic;
-      font-size: 18px;
+      font-size: 24px;
       letter-spacing: 0.01em;
-      color: rgba(180, 165, 135, 0.55);
+      color: rgba(195, 178, 145, 0.65);
       text-align: left;
       text-transform: none;
     }
     body.is-real-mobile .m-focus-collector .m-focus-collector-addr {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 14px;
-      color: rgba(232, 195, 110, 0.85);
+      font-size: 18px;
+      color: rgba(232, 195, 110, 0.95);
       letter-spacing: 0.06em;
       font-weight: 500;
       font-style: normal;
-      margin-left: 4px;
+      margin-left: 6px;
     }
     /* Description sheet — fullscreen tap-to-read, larger mobile type */
     body.is-real-mobile .m-desc-sheet-text {
@@ -6643,12 +6641,13 @@
       cursor: pointer;
     }
 
-    /* Mobile focus overlay — match the home gallery's dark backdrop, NOT
-       a different gray. Pure black with a slight gradient feel. */
+    /* Mobile focus overlay — match the home gallery's gray gradient
+       backdrop exactly, so opening focus doesn't feel like a different
+       app. Same #585858 → #4a4a4a → #424242 gradient as <body>. */
     body.is-real-mobile .m-focus-overlay {
       position: fixed;
       inset: 0;
-      background: #000;
+      background: linear-gradient(180deg, #585858 0%, #4a4a4a 50%, #424242 100%);
       z-index: 9999;
       display: none;
       flex-direction: column;
@@ -6777,76 +6776,74 @@
     }
     /* Focus title block — editorial magazine layout, NOT centered. Title is
        a big italic statement on the left. The collection/token form a small
-       mono caption to the side. OpenSea is appended inline by the meta-row
-       so the eye reads: ~timeReaper~                           [opensea ↗] */
+       mono caption to the side. */
     body.is-real-mobile .m-focus-meta {
       text-align: left;
-      padding: 38px 44px 4px;
+      padding: 44px 50px 4px;
       position: relative;
     }
     body.is-real-mobile .m-focus-title {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 64px;
+      font-size: 84px;
       font-style: italic;
       font-weight: 500;
       color: rgba(238, 220, 190, 0.98);
-      margin-bottom: 14px;
+      margin-bottom: 20px;
       line-height: 1.0;
       letter-spacing: -0.005em;
     }
     /* Combined caption: COLLECTION · TOKEN #N — single row, mono caps */
     body.is-real-mobile .m-focus-collection {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 16px;
-      color: rgba(190, 175, 145, 0.55);
-      letter-spacing: 0.30em;
+      font-size: 22px;
+      color: rgba(220, 180, 110, 0.65);
+      letter-spacing: 0.28em;
       text-transform: uppercase;
       display: inline-block;
     }
     body.is-real-mobile .m-focus-edition {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 16px;
-      color: rgba(190, 175, 145, 0.55);
-      letter-spacing: 0.30em;
+      font-size: 22px;
+      color: rgba(220, 180, 110, 0.65);
+      letter-spacing: 0.28em;
       text-transform: uppercase;
       display: inline-block;
     }
-    /* Visual separator between collection name and edition/token */
     body.is-real-mobile .m-focus-edition::before {
       content: ' · ';
-      margin: 0 8px;
-      color: rgba(180, 160, 110, 0.4);
+      margin: 0 10px;
+      color: rgba(220, 180, 110, 0.4);
     }
     body.is-real-mobile .m-focus-nav {
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      gap: 32px;
-      padding: 26px 44px 6px;
+      gap: 40px;
+      padding: 36px 50px 8px;
     }
     body.is-real-mobile .m-focus-arrow {
-      width: 56px;
-      height: 56px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background: transparent;
-      color: rgba(225, 200, 165, 0.7);
-      font-size: 36px;
-      border: 1px solid rgba(220, 180, 100, 0.3);
+      color: rgba(232, 195, 130, 0.85);
+      font-size: 50px;
+      border: 1px solid rgba(220, 180, 100, 0.4);
       cursor: pointer;
       line-height: 1;
       padding: 0;
       transition: border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
     }
     body.is-real-mobile .m-focus-arrow:active {
-      border-color: rgba(232, 200, 130, 0.85);
-      color: rgba(245, 222, 188, 1);
+      border-color: rgba(245, 215, 150, 1);
+      color: rgba(250, 230, 195, 1);
       transform: scale(0.92);
     }
     body.is-real-mobile .m-focus-counter {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 18px;
-      color: rgba(180, 165, 140, 0.55);
-      letter-spacing: 0.30em;
+      font-size: 26px;
+      color: rgba(220, 180, 110, 0.7);
+      letter-spacing: 0.28em;
       min-width: auto;
       text-align: left;
       text-transform: uppercase;
