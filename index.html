@@ -6360,30 +6360,43 @@
       z-index: 1;
     }
     /* ────────────────────────────────────────────────────────────
-       Mobile collection header — exhibition wall label
+       Mobile collection — each section gets its own block with a subtle
+       palette-tinted background so collections feel discrete, not endless.
+       The accent shows as a wash, not a literal bar.
        ──────────────────────────────────────────────────────────── */
     body.is-real-mobile .m-collection {
       position: relative;
-      padding-top: 44px;
+      padding: 80px 0 60px;
+      /* Subtle palette tint — invisible-by-default 6% of the accent. Each
+         collection visually inhabits its own color world. */
+      background:
+        radial-gradient(ellipse at 50% 0%,
+          color-mix(in srgb, var(--m-accent, rgb(220,180,100)) 8%, transparent) 0%,
+          transparent 55%),
+        linear-gradient(180deg,
+          color-mix(in srgb, var(--m-accent, rgb(220,180,100)) 4%, transparent) 0%,
+          transparent 80%);
     }
-    body.is-real-mobile .m-collection-header {
-      padding: 0 50px 36px 64px;
-      position: relative;
-    }
-    /* Vertical accent bar to the left of the title — color-codes each
-       collection by its palette accent. Replaces the ambiguous hairline. */
-    body.is-real-mobile .m-collection-header::before {
+    /* Crisp top + bottom dividers — full-width hairlines tinted with the
+       collection's accent. Reads as a section break instead of a fade. */
+    body.is-real-mobile .m-collection::before {
       content: '';
       position: absolute;
-      left: 50px;
-      top: 12px;
-      bottom: 38px;
-      width: 3px;
-      background: var(--m-accent, rgba(220,170,80,0.85));
-      border-radius: 1.5px;
-      box-shadow: 0 0 10px var(--m-accent, rgba(220,170,80,0.45));
+      top: 0; left: 50px; right: 50px;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent,
+        color-mix(in srgb, var(--m-accent, rgb(220,180,100)) 60%, transparent) 30%,
+        color-mix(in srgb, var(--m-accent, rgb(220,180,100)) 60%, transparent) 70%,
+        transparent);
     }
-    /* Editorial section number — "01", "02" etc. above the title */
+    body.is-real-mobile .m-collection:first-of-type::before { display: none; }
+
+    body.is-real-mobile .m-collection-header {
+      padding: 0 50px 36px;
+      position: relative;
+    }
+    /* Editorial section number — "01" "02" etc. */
     body.is-real-mobile .m-collection-num {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 13px;
@@ -6402,36 +6415,24 @@
       line-height: 0.98;
       font-weight: 500;
     }
+    /* Year sits as a small mono caption to the right of (or below) the title */
+    body.is-real-mobile .m-collection-year {
+      display: inline-block;
+      margin-left: 14px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 18px;
+      color: var(--m-accent, rgba(220,180,100,0.7));
+      letter-spacing: 0.18em;
+      vertical-align: middle;
+      opacity: 0.85;
+      font-style: normal;
+    }
     body.is-real-mobile .m-collection-meta {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 17px;
       letter-spacing: 0.32em;
       color: rgba(180, 170, 150, 0.45);
       text-transform: uppercase;
-    }
-    /* Subtle full-width divider between collections (replaces the tiny diamond
-       marker that didn't scale). A long hairline with a centered dot. */
-    body.is-real-mobile .m-collection + .m-collection::before {
-      content: '';
-      display: block;
-      width: 75%;
-      height: 1px;
-      background: linear-gradient(90deg,
-        transparent,
-        rgba(180,160,130,0.18) 25%,
-        rgba(180,160,130,0.18) 75%,
-        transparent);
-      margin: 60px auto 0;
-      position: relative;
-    }
-    body.is-real-mobile .m-collection + .m-collection::after {
-      content: '';
-      display: block;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(220,180,100,0.4);
-      margin: -3px auto 0;
     }
 
     /* Horizontal-swipe artwork strip with edge mask so the strip
@@ -6642,11 +6643,12 @@
       cursor: pointer;
     }
 
-    /* Mobile focus overlay */
+    /* Mobile focus overlay — match the home gallery's dark backdrop, NOT
+       a different gray. Pure black with a slight gradient feel. */
     body.is-real-mobile .m-focus-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(20, 20, 22, 0.98);
+      background: #000;
       z-index: 9999;
       display: none;
       flex-direction: column;
@@ -15254,6 +15256,27 @@
         var title = document.createElement('div');
         title.className = 'm-collection-title';
         title.textContent = col.name || '';
+        // Append year (extracted from mintDate) as a small mono caption next
+        // to the title — pulled from the collection's mintDate field if
+        // present, otherwise scanned from individual artworks' mintDate.
+        var yearText = '';
+        var rawDate = col.mintDate || '';
+        if (!rawDate && col.artworks) {
+          for (var ai = 0; ai < col.artworks.length; ai++) {
+            if (col.artworks[ai] && col.artworks[ai].mintDate) {
+              rawDate = col.artworks[ai].mintDate;
+              break;
+            }
+          }
+        }
+        var ym = rawDate.match(/(\d{4})/);
+        if (ym) yearText = ym[1];
+        if (yearText) {
+          var yEl = document.createElement('span');
+          yEl.className = 'm-collection-year';
+          yEl.textContent = yearText;
+          title.appendChild(yEl);
+        }
         header.appendChild(title);
         var meta = document.createElement('div');
         meta.className = 'm-collection-meta';
