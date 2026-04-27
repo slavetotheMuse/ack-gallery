@@ -10878,11 +10878,16 @@
     var _isRealMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent));
     // Detect Safari (NOT Chrome) — Safari composites differently and CPU-paints
     // many things Chrome does on GPU. Adds body.is-safari for targeted CSS perf.
+    // Also exposes _isSafariDesktop to JS so the focus-mode pipeline can route
+    // through the mobile-style width-resize path (sharp on Safari) instead of
+    // transform:scale (which Safari bilinear-upscales = blurry).
+    var _isSafariDesktop = false;
     (function() {
       try {
         var ua = navigator.userAgent || '';
         var isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
         if (isSafari && !_isRealMobile) {
+          _isSafariDesktop = true;
           if (document.body) {
             document.body.classList.add('is-safari');
           } else {
@@ -25060,7 +25065,9 @@
                 _whisperEl = document.createElement('div');
                 _whisperEl.className = 'focus-loading-whisper';
                 _whisperEl.textContent = _whisperMsgs[0];
-                var _invS = _isRealMobile ? 1 : (1 / scaleFactor);
+                // Safari desktop now uses width-resize (no parent transform:scale),
+                // so it needs invS=1 just like mobile — no counter-scale needed.
+                var _invS = (_isRealMobile || _isSafariDesktop) ? 1 : (1 / scaleFactor);
                 // Keep the fontSize NATIVE (11px) and counter-scale via
                 // transform so Safari rasterizes text at 11px instead of
                 // a giant pre-scale size that gets downscaled blurry.
@@ -25257,12 +25264,17 @@
         node._focusRightEdge = clampedCenterX + finalW / 2;
         node._focusBottomEdge = clampedCenterY + finalH / 2;
         node._focusWidth = finalW;
-        node._focusScale = _isRealMobile ? 1 : scaleFactor;
+        // Safari desktop joins mobile in the width-resize path because Safari's
+        // GPU compositor bilinear-upscales transform:scale() instead of
+        // re-rasterizing at the post-scale size — making focused images
+        // permanently blurry on Safari. Width-resize forces native render.
+        var _useWidthResize = _isRealMobile || _isSafariDesktop;
+        node._focusScale = _useWidthResize ? 1 : scaleFactor;
 
         // Set the transform inline for smooth animation
         requestAnimationFrame(() => {
-          if (_isRealMobile) {
-            // ── MOBILE: Resize node to actual final size — NO CSS scale ──
+          if (_useWidthResize) {
+            // ── MOBILE + SAFARI DESKTOP: Resize node to actual final size — NO CSS scale ──
             // CSS transform: scale() makes the GPU stretch a low-res raster.
             // By setting the node's real width to finalW, the browser renders
             // the image at full resolution. Only translate is used for positioning.
