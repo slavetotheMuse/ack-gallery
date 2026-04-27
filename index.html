@@ -6132,23 +6132,22 @@
       overflow: visible !important;
     }
 
-    /* Warothy / focus-image rendering on Safari.
-       Earlier we set image-rendering:-webkit-optimize-contrast to try to
-       sharpen, but that increases edge contrast which made the GIF
-       dithering pattern look pixelated/noisy. Use `auto` (browser default
-       bilinear/bicubic) and just promote the image to its own GPU layer
-       so Safari composites at the post-transform resolution. */
+    /* Focus-image rendering on Safari.
+       NOTE: We deliberately do NOT set transform: translateZ(0) or
+       will-change: transform on focused imgs/videos. Doing so forces
+       Safari to rasterize the img into a GPU texture at its CURRENT
+       bitmap size — which on first render is the small web thumb. When
+       the hi-res src loads in (two-stage swap), Safari does not
+       regenerate the texture, so the user sees a permanently
+       upscaled-blurry version of the artwork.
+       Letting Safari composite the focused image normally (inheriting
+       the parent .node-card's scale transform) gives a properly
+       resolved hi-res image. */
     body.is-safari .node-card.focused .node-preview img,
     body.is-safari .node-card.focused .node-preview video {
       image-rendering: auto !important;
       -webkit-image-rendering: auto !important;
-      transform: translateZ(0);
-      backface-visibility: hidden;
-      will-change: transform;
     }
-    /* (If Warothy GIFs still look harsh after image-rendering:auto, we can
-       add a 0.3px blur here gated on a .is-warothy-focus class, but trying
-       the simpler fix first.) */
 
     /* "this artwork is loading…" whisper goes blurry in Safari focus
        because the parent .node-card has transform:scale(N) and Safari
