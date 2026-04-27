@@ -24916,14 +24916,19 @@
                 var _invS = _isRealMobile ? 1 : (1 / scaleFactor);
                 // Keep the fontSize NATIVE (11px) and counter-scale via
                 // transform so Safari rasterizes text at 11px instead of
-                // a giant pre-scale size. The earlier "huge fontSize +
-                // no scale" trick produced blurry text on Safari because
-                // the giant text was rasterized THEN downscaled by the
-                // parent's transform:scale.
+                // a giant pre-scale size that gets downscaled blurry.
+                //
+                // CRITICAL: transform-origin must be `center top`. With the
+                // native 11px font, the element's layout box is ~14px tall
+                // (vs ~2.8px when we used inverse-scaled font). Anchoring
+                // at `center bottom` makes the scaled-down text sit INSIDE
+                // the layout box → text appears on the artwork. With
+                // `center top`, the top edge stays at our negative top
+                // offset and the text scales upward away from the artwork.
                 _whisperEl.style.fontSize = '11px';
-                _whisperEl.style.top = '-' + (32 * _invS) + 'px';
+                _whisperEl.style.top = '-' + (16 * _invS) + 'px';
                 _whisperEl.style.transform = 'translateX(-50%) scale(' + _invS.toFixed(3) + ')';
-                _whisperEl.style.transformOrigin = 'center bottom';
+                _whisperEl.style.transformOrigin = 'center top';
                 node.appendChild(_whisperEl);
                 node._whisperCleanup.el = _whisperEl;
                 requestAnimationFrame(() => {
