@@ -27328,17 +27328,19 @@
       '</div>' +
       '<span class="lore-label">lore</span>';
 
-      // Position: to the right of the motherboard with a little gap
+      // Position: to the LEFT of the motherboard with a little gap.
+      // (Right side now belongs to the Derek Pope music note + slide-out chip.)
       var _mn = document.getElementById('masterNode');
       if (_mn) {
         var mnRect = _mn.getBoundingClientRect();
         var pcb = _mn.querySelector('.master-node-pcb');
         var pcbRect = pcb ? pcb.getBoundingClientRect() : mnRect;
-        loreNode.style.left = (pcbRect.right + 14) + 'px';
+        // Lore node is 36px wide — its right edge sits 14px from the pcb's left edge
+        loreNode.style.left = (pcbRect.left - 14 - 36) + 'px';
         loreNode.style.top = (pcbRect.top + (pcbRect.height / 2) - 18) + 'px';
       } else {
-        // Fallback: bottom right area
-        loreNode.style.right = '20px';
+        // Fallback: bottom left area
+        loreNode.style.left = '20px';
         loreNode.style.bottom = '20px';
       }
 
@@ -41464,16 +41466,33 @@
         }
       });
     }
+    var _autoCloseTimer = null;
+    var AUTO_CLOSE_MS = 4000;
+    function _cancelAutoClose() {
+      if (_autoCloseTimer) { clearTimeout(_autoCloseTimer); _autoCloseTimer = null; }
+    }
+    function _scheduleAutoClose() {
+      _cancelAutoClose();
+      _autoCloseTimer = setTimeout(function() {
+        // Only auto-close if user isn't actively hovering the chip right now
+        if (!chip.matches(':hover')) closeChip();
+      }, AUTO_CLOSE_MS);
+    }
     function openChip() {
       chip.setAttribute('data-state', 'open');
       note.setAttribute('data-state', 'open');
-      try { localStorage.setItem(STATE_KEY, 'open'); } catch(e){}
+      // Start the auto-close countdown — gives the user a moment to interact,
+      // then retracts so the chip doesn't stick out forever. Hover cancels it.
+      _scheduleAutoClose();
     }
     function closeChip() {
+      _cancelAutoClose();
       chip.setAttribute('data-state', 'closed');
       note.setAttribute('data-state', 'closed');
-      try { localStorage.setItem(STATE_KEY, 'closed'); } catch(e){}
     }
+    // Hover on chip cancels the timer; mouseleave restarts it.
+    chip.addEventListener('mouseenter', _cancelAutoClose);
+    chip.addEventListener('mouseleave', _scheduleAutoClose);
     function play()  { try { widget.play();  } catch(e){} }
     function pause() { try { widget.pause(); } catch(e){} }
     function next()  { try { widget.next();  } catch(e){} }
@@ -41483,14 +41502,12 @@
         if (sound && sound.title) setTitle(sound.title);
         else setTitle('Derek Pope');
       });
-      // Restore prior preference: if user had music on last visit, try playing
+      // Restore prior preference: if user had music on last visit, try
+      // resuming. Chip stays closed by default — the ♪ note pulses cyan
+      // to show music is active, no need for the chip to stick out.
       try {
         if (localStorage.getItem(STORAGE_KEY) === 'on') {
           play(); // browsers may block; user can click ♪ to retry
-        }
-        if (localStorage.getItem(STATE_KEY) === 'open') {
-          // they had the chip pinned open; restore that visual state
-          openChip();
         }
       } catch(e) {}
     });
