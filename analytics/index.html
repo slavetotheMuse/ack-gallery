@@ -298,6 +298,10 @@
       <div class="section-title">Easter Eggs</div>
       <table id="tableEggs"><thead><tr><th>Easter Egg</th><th class="num">Discoveries</th><th class="num">Unique</th><th>First Found</th></tr></thead><tbody></tbody></table>
     </div>
+    <div class="section">
+      <div class="section-title">Wallet Connections</div>
+      <table id="tableWallets"><thead><tr><th>Wallet</th><th class="num">Connects</th><th class="num">Sessions</th><th>First Seen</th><th>Links</th></tr></thead><tbody></tbody></table>
+    </div>
   </div>
 
   <div class="section">
@@ -363,6 +367,20 @@ function dateFilter() {
   return 'created_at=gte.' + d.toISOString();
 }
 
+// Limit per fetch — bumped substantially when "All Time" is selected so we
+// don't truncate to the first N (oldest) rows. Combined with the
+// `&order=created_at.desc` we now append everywhere, this means All Time
+// shows the most recent 50k rows instead of the oldest 5k.
+function fetchLimit(soft) {
+  return DAYS === 0 ? 50000 : (soft || 5000);
+}
+// Append &order=created_at.desc to every list query so:
+//   • date-filtered queries return the most recent rows first (correct)
+//   • all-time queries return the most recent rows up to fetchLimit (was
+//     returning the OLDEST 5k by default ordering — that's why "All Time"
+//     showed less data than "7 Days")
+function orderRecent() { return '&order=created_at.desc'; }
+
 function loadAll() {
   loadKPIs();
   loadCollections();
@@ -371,6 +389,7 @@ function loadAll() {
   loadDevices();
   loadSessions();
   loadEggs();
+  loadWallets();
   loadRaw();
   loadActiveViewers();
 }
@@ -385,7 +404,7 @@ setInterval(function() {
 function loadKPIs() {
   var df = dateFilter();
   var base = 'select=session_id,visitor_id,event,value' + (df ? '&' + df : '');
-  fetchTable('ack_events', base + '&limit=10000').then(function(rows) {
+  fetchTable('ack_events', base + orderRecent() + '&limit=' + fetchLimit(10000)).then(function(rows) {
     if (!Array.isArray(rows)) { console.error('KPI fetch failed', rows); return; }
     var sessions = new Set();
     var visitors = new Set();
@@ -418,7 +437,7 @@ function loadKPIs() {
 
 function loadCollections() {
   var df = dateFilter();
-  var params = 'select=collection,session_id,value&event=eq.collection_open&collection=not.is.null' + (df ? '&' + df : '') + '&limit=5000';
+  var params = 'select=collection,session_id,value&event=eq.collection_open&collection=not.is.null' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
   fetchTable('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
@@ -428,7 +447,7 @@ function loadCollections() {
       map[r.collection].sessions.add(r.session_id);
     });
     // Get close events for duration
-    var params2 = 'select=collection,value&event=eq.collection_close&collection=not.is.null' + (df ? '&' + df : '') + '&limit=5000';
+    var params2 = 'select=collection,value&event=eq.collection_close&collection=not.is.null' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
     fetchTable('ack_events', params2).then(function(closeRows) {
       if (Array.isArray(closeRows)) {
         closeRows.forEach(function(r) {
@@ -448,7 +467,7 @@ function loadCollections() {
 
 function loadArtworks() {
   var df = dateFilter();
-  var params = 'select=collection,artwork,session_id,value&event=eq.artwork_focus&artwork=not.is.null' + (df ? '&' + df : '') + '&limit=5000';
+  var params = 'select=collection,artwork,session_id,value&event=eq.artwork_focus&artwork=not.is.null' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
   fetchTable('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
@@ -470,7 +489,7 @@ function loadArtworks() {
 
 function loadReferrers() {
   var df = dateFilter();
-  var params = 'select=referrer,session_id&event=eq.page_load' + (df ? '&' + df : '') + '&limit=5000';
+  var params = 'select=referrer,session_id&event=eq.page_load' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
   fetchTable('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
@@ -490,7 +509,7 @@ function loadReferrers() {
 
 function loadDevices() {
   var df = dateFilter();
-  var params = 'select=device,browser,os,session_id&event=eq.page_load' + (df ? '&' + df : '') + '&limit=5000';
+  var params = 'select=device,browser,os,session_id&event=eq.page_load' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
   fetchTable('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
@@ -509,7 +528,7 @@ function loadDevices() {
 
 function loadSessions() {
   var df = dateFilter();
-  var params = 'select=session_id,event,value,created_at' + (df ? '&' + df : '') + '&order=created_at.desc&limit=5000';
+  var params = 'select=session_id,event,value,created_at' + (df ? '&' + df : '') + '&order=created_at.desc&limit=' + fetchLimit();
   fetchTable('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
@@ -534,7 +553,7 @@ function loadSessions() {
 
 function loadEggs() {
   var df = dateFilter();
-  var params = 'select=detail,session_id,created_at&event=eq.easter_egg' + (df ? '&' + df : '') + '&limit=1000';
+  var params = 'select=detail,session_id,created_at&event=eq.easter_egg' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit(2000);
   fetchTable('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
@@ -604,6 +623,52 @@ function loadActiveViewers() {
     var countEl = document.getElementById('activeCount');
     countEl.textContent = count;
     el.style.display = count > 0 ? 'flex' : 'none';
+  });
+}
+
+// ── Wallet Connections — every wallet that hit "Connect Wallet" ──
+function loadWallets() {
+  var df = dateFilter();
+  var params = 'select=detail,session_id,created_at&event=eq.wallet_connect&detail=not.is.null'
+    + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit(2000);
+  fetchTable('ack_events', params).then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    var map = {};
+    rows.forEach(function(r) {
+      var addr = (r.detail || '').trim();
+      if (!addr) return;
+      // Normalize: strip the "..." truncation that may be in older rows so
+      // shortened "0x25ae3bfe..." dedupes with full "0x25ae3bfe...e2c7"
+      var key = addr.replace(/\.\.\..*$/, '').toLowerCase();
+      if (!map[key]) map[key] = { full: addr, count: 0, sessions: new Set(), first: r.created_at };
+      map[key].count++;
+      map[key].sessions.add(r.session_id);
+      // Prefer longer/non-truncated address representation if we see one
+      if (addr.length > map[key].full.length && !addr.endsWith('...')) map[key].full = addr;
+      if (r.created_at < map[key].first) map[key].first = r.created_at;
+    });
+    var sorted = Object.values(map).sort(function(a, b) { return b.count - a.count; });
+    var tbody = document.querySelector('#tableWallets tbody');
+    tbody.innerHTML = sorted.slice(0, 50).map(function(w) {
+      var t = new Date(w.first);
+      var dateStr = t.toLocaleDateString() + ' ' + t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      var addr = w.full;
+      // Etherscan + OpenSea links — only if it looks like a full 0x address
+      var links = '';
+      if (/^0x[0-9a-f]{40}$/i.test(addr)) {
+        links =
+          '<a href="https://etherscan.io/address/' + addr + '" target="_blank" rel="noopener" style="color:rgba(120,180,255,0.85);margin-right:8px;">etherscan</a>' +
+          '<a href="https://opensea.io/' + addr + '" target="_blank" rel="noopener" style="color:rgba(220,180,90,0.85);">opensea</a>';
+      } else {
+        links = '<span style="color:rgba(180,160,130,0.4);">truncated</span>';
+      }
+      return '<tr><td class="gold" style="font-family:\'JetBrains Mono\',monospace;font-size:0.7rem;word-break:break-all;">'
+        + addr + '</td><td class="num">' + w.count + '</td><td class="num">' + w.sessions.size
+        + '</td><td>' + dateStr + '</td><td>' + links + '</td></tr>';
+    }).join('');
+    if (sorted.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:rgba(180,160,130,0.4);text-align:center;padding:24px;">No wallet connections in this period</td></tr>';
+    }
   });
 }
 
