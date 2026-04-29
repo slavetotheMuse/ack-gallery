@@ -24567,6 +24567,23 @@
         scaleFactor = Math.min(availW / nodeW, availH / nodeH, scaleFactor);
       }
 
+      // ── Hard final-size cap — same target regardless of source tile size ──
+      // Without this, opening an artwork from the collector / My Bags page
+      // produces a much larger focus view than from the catalog because the
+      // collector tiles are smaller, which inflates scaleFactor. We pin the
+      // final width to a viewport ratio that matches what the catalog produces,
+      // so the focus view is consistent regardless of entry point.
+      // Mobile is unchanged — its layout is already viewport-relative.
+      if (!_isMobileFocus) {
+        const _hardMaxW = vpW * (isMasterwork ? 0.52 : 0.46);
+        const _hardMaxH = vpH * (isMasterwork ? 0.84 : 0.78);
+        const _projectedW = nodeW * scaleFactor;
+        const _projectedH = nodeH * scaleFactor;
+        if (_projectedW > _hardMaxW || _projectedH > _hardMaxH) {
+          scaleFactor = Math.min(_hardMaxW / nodeW, _hardMaxH / nodeH);
+        }
+      }
+
       // Recalculate after final clamp
       const finalW = nodeW * scaleFactor;
       const finalH = nodeH * scaleFactor;
