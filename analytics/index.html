@@ -360,6 +360,42 @@ function fetchTable(table, params) {
   }).then(r => r.json());
 }
 
+// Paginated fetch — Supabase REST has a hard 1000-row cap per request, so for
+// "All Time" we walk pages via the Range header until we get a partial page.
+// Stops at maxRows for safety so we don't hammer the API.
+function fetchTableAll(table, params, maxRows) {
+  var url = SUPABASE_URL + '/rest/v1/' + table + '?' + (params || '');
+  var collected = [];
+  var pageSize = 1000;
+  var cap = maxRows || 50000;
+  function pull(offset) {
+    return fetch(url, {
+      headers: {
+        'apikey': API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Range-Unit': 'items',
+        'Range': offset + '-' + (offset + pageSize - 1)
+      }
+    }).then(function(r) { return r.json(); }).then(function(rows) {
+      if (!Array.isArray(rows) || rows.length === 0) return collected;
+      collected = collected.concat(rows);
+      // If we got a full page AND haven't hit the cap, fetch next
+      if (rows.length === pageSize && collected.length < cap) {
+        return pull(offset + pageSize);
+      }
+      return collected;
+    }).catch(function() { return collected; });
+  }
+  return pull(0);
+}
+
+// Wrapper: when DAYS === 0 (All Time), use paginated fetch up to the limit.
+// Otherwise stick with the single-page fetchTable for speed.
+function fetchScoped(table, params, maxRows) {
+  if (DAYS === 0) return fetchTableAll(table, params, maxRows || 50000);
+  return fetchTable(table, params + '&limit=' + (maxRows || 5000));
+}
+
 function dateFilter() {
   if (DAYS === 0) return '';
   var d = new Date();
@@ -403,8 +439,8 @@ setInterval(function() {
 
 function loadKPIs() {
   var df = dateFilter();
-  var base = 'select=session_id,visitor_id,event,value' + (df ? '&' + df : '');
-  fetchTable('ack_events', base + orderRecent() + '&limit=' + fetchLimit(10000)).then(function(rows) {
+  var base = 'select=session_id,visitor_id,event,value' + (df ? '&' + df : '') + orderRecent();
+  fetchScoped('ack_events', base, 50000).then(function(rows) {
     if (!Array.isArray(rows)) { console.error('KPI fetch failed', rows); return; }
     var sessions = new Set();
     var visitors = new Set();
@@ -437,8 +473,8 @@ function loadKPIs() {
 
 function loadCollections() {
   var df = dateFilter();
-  var params = 'select=collection,session_id,value&event=eq.collection_open&collection=not.is.null' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
-  fetchTable('ack_events', params).then(function(rows) {
+  var params = 'select=collection,session_id,value&event=eq.collection_open&collection=not.is.null' + (df ? '&' + df : '') + orderRecent();
+  fetchScoped('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
     rows.forEach(function(r) {
@@ -447,8 +483,8 @@ function loadCollections() {
       map[r.collection].sessions.add(r.session_id);
     });
     // Get close events for duration
-    var params2 = 'select=collection,value&event=eq.collection_close&collection=not.is.null' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
-    fetchTable('ack_events', params2).then(function(closeRows) {
+    var params2 = 'select=collection,value&event=eq.collection_close&collection=not.is.null' + (df ? '&' + df : '') + orderRecent();
+    fetchScoped('ack_events', params2).then(function(closeRows) {
       if (Array.isArray(closeRows)) {
         closeRows.forEach(function(r) {
           if (map[r.collection] && r.value) map[r.collection].durations.push(parseFloat(r.value));
@@ -467,8 +503,8 @@ function loadCollections() {
 
 function loadArtworks() {
   var df = dateFilter();
-  var params = 'select=collection,artwork,session_id,value&event=eq.artwork_focus&artwork=not.is.null' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
-  fetchTable('ack_events', params).then(function(rows) {
+  var params = 'select=collection,artwork,session_id,value&event=eq.artwork_focus&artwork=not.is.null' + (df ? '&' + df : '') + orderRecent();
+  fetchScoped('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
     rows.forEach(function(r) {
@@ -489,8 +525,8 @@ function loadArtworks() {
 
 function loadReferrers() {
   var df = dateFilter();
-  var params = 'select=referrer,session_id&event=eq.page_load' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
-  fetchTable('ack_events', params).then(function(rows) {
+  var params = 'select=referrer,session_id&event=eq.page_load' + (df ? '&' + df : '') + orderRecent();
+  fetchScoped('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
     rows.forEach(function(r) {
@@ -509,8 +545,8 @@ function loadReferrers() {
 
 function loadDevices() {
   var df = dateFilter();
-  var params = 'select=device,browser,os,session_id&event=eq.page_load' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit();
-  fetchTable('ack_events', params).then(function(rows) {
+  var params = 'select=device,browser,os,session_id&event=eq.page_load' + (df ? '&' + df : '') + orderRecent();
+  fetchScoped('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
     rows.forEach(function(r) {
@@ -528,8 +564,8 @@ function loadDevices() {
 
 function loadSessions() {
   var df = dateFilter();
-  var params = 'select=session_id,event,value,created_at' + (df ? '&' + df : '') + '&order=created_at.desc&limit=' + fetchLimit();
-  fetchTable('ack_events', params).then(function(rows) {
+  var params = 'select=session_id,event,value,created_at' + (df ? '&' + df : '') + '&order=created_at.desc';
+  fetchScoped('ack_events', params).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
     rows.forEach(function(r) {
@@ -553,8 +589,8 @@ function loadSessions() {
 
 function loadEggs() {
   var df = dateFilter();
-  var params = 'select=detail,session_id,created_at&event=eq.easter_egg' + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit(2000);
-  fetchTable('ack_events', params).then(function(rows) {
+  var params = 'select=detail,session_id,created_at&event=eq.easter_egg' + (df ? '&' + df : '') + orderRecent();
+  fetchScoped('ack_events', params, 5000).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
     rows.forEach(function(r) {
@@ -630,8 +666,8 @@ function loadActiveViewers() {
 function loadWallets() {
   var df = dateFilter();
   var params = 'select=detail,session_id,created_at&event=eq.wallet_connect&detail=not.is.null'
-    + (df ? '&' + df : '') + orderRecent() + '&limit=' + fetchLimit(2000);
-  fetchTable('ack_events', params).then(function(rows) {
+    + (df ? '&' + df : '') + orderRecent();
+  fetchScoped('ack_events', params, 5000).then(function(rows) {
     if (!Array.isArray(rows)) return;
     var map = {};
     rows.forEach(function(r) {
